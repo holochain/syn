@@ -1,8 +1,6 @@
 # sym
 > Generalized DNA for building collaborative hApps on holochain
 
-[![CircleCI](https://circleci.com/gh/holochain/sym.svg?style=svg)](https://circleci.com/gh/holochain/sym)
-
 Sym: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), from σύν (sún, “with, in company with, together with”).
 
 ## Prerequisites
@@ -40,7 +38,7 @@ Sym: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), fr
   The `make clean` command gets rid of all compiled output.
 
   ## License
- [![License: CAL 1.0](https://img.shields.io/badge/License-CAL-1.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
+[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
 
   Copyright (C) 2017-2020, Holo Ltd.
 
