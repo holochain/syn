@@ -13,7 +13,7 @@ Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), fr
 ## Building
 
 - Build the DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
-  - Clone this repo: `git clone https://github.com/holochain/sym && cd ./sym
+  - Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn
   - Assemble the DNA: `make build`
 
   ### Testing
