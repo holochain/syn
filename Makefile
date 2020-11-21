@@ -1,14 +1,14 @@
 #
-# Test and build sym DNA
+# Test and build syn DNA
 #
 # This Makefile is primarily instructional; you can simply enter the Nix environment for
 # holochain development (supplied by holonix; see pkgs.nix) via `nix-shell` and run `cargo
 # test` directly, or build a target directly by running the following two commands:
 #   1. `RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \ --release --target wasm32-unknown-unknown`
-#   2. `dna-util -c sym-app.dna.workdir`.
+#   2. `dna-util -c syn.dna.workdir`.
 
 SHELL		= bash
-DNANAME		= sym
+DNANAME		= syn
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
 .PHONY: all FORCE
@@ -33,7 +33,7 @@ build-cargo:
 	--release --target wasm32-unknown-unknown
 
 build-dna:
-	dna-util -c sym.dna.workdir
+	dna-util -c syn.dna.workdir
 
 .PHONY: test test-all test-unit test-debug test-dna test-dna-debug test-stress test-node
 test-all:	test

@@ -1,0 +1,10 @@
+{
+  "name": "syn",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "syn": {
+      "wasm_path": "../target/wasm32-unknown-unknown/release/syn.wasm"
+    }
+  }
+}

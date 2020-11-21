@@ -2,6 +2,6 @@ import { Orchestrator } from '@holochain/tryorama'
 
 const orchestrator = new Orchestrator()
 
-require('./sym')(orchestrator)
+require('./syn')(orchestrator)
 
 orchestrator.run()
