@@ -5,7 +5,7 @@
     "test-debug": "RUST_LOG=[debug]=debug TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "CAL-1.0",
   "dependencies": {
     "lodash": "^4.17.19",
     "tape": "^5.0.1",
@@ -14,7 +14,7 @@
     "uuidv4": "^6.2.3"
   },
   "devDependencies": {
-    "@holochain/tryorama": "git://github.com/holochain/tryorama.git#rsm",
+    "@holochain/tryorama": "0.4.0-dev.0",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14"
   }
