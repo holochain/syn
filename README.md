@@ -1,7 +1,7 @@
-# sym
+# syn
 > Generalized DNA for building collaborative hApps on holochain
 
-Sym: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), from σύν (sún, “with, in company with, together with”).
+Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), from σύν (sún, “with, in company with, together with”).
 
 ## Prerequisites
 
