@@ -14,15 +14,16 @@ Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), fr
 
 - Build the DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
   - Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn
-  - Assemble the DNA: `make build`
+  - Assemble the DNA:
+
+  ```bash
+  make build
+  ```
 
   ### Testing
 
   ```bash
-    cd ./tests
-    npm install
-    cd ..
-    make test
+  make test
   ```
 
   #### Unit testing
@@ -40,7 +41,7 @@ Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), fr
   ## License
 [![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
 
-  Copyright (C) 2017-2020, Holo Ltd.
+  Copyright (C) 2017-2020, Holochain Foundation
 
 This program is free software: you can redistribute it and/or modify it under the terms of the license
 provided in the LICENSE file (CAL-1.0).  This program is distributed in the hope that it will be useful,
