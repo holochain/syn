@@ -1,7 +1,11 @@
 # syn
-> Generalized DNA for building collaborative hApps on holochain
+> Generalized DNA for building real-time shared-state hApps on holochain
 
 Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), from σύν (sún, “with, in company with, together with”).
+
+## Design
+
+Read the [design documents here](DESIGN.md).
 
 ## Prerequisites
 
