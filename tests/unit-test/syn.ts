@@ -22,12 +22,12 @@ module.exports = (orchestrator) => {
   orchestrator.registerScenario('FIXME', async (s, t) => {
     const [conductor] = await s.players([config])
     const [[happ]] = await conductor.installAgentsHapps(installation)
-    const res = await happ.cells[0].call('syn', 'put', {
-      path: "foo.bar",
-      node: {content:"baz"},
+    const content = {title:"foo", body:"bar"};
+    let res = await happ.cells[0].call('syn', 'put_content', {
+      content
     })
     t.equal(res.length, 39) // is a hash
-   /* const res = await happ.cells[0].call('syn', 'get', "foo.bar")
-    t.equal(res.length, "baz")*/
+    res = await happ.cells[0].call('syn', 'get_content', res)
+    t.equal(res.length, content)
   })
 }
