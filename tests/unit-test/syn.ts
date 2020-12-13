@@ -22,12 +22,32 @@ module.exports = (orchestrator) => {
   orchestrator.registerScenario('FIXME', async (s, t) => {
     const [conductor] = await s.players([config])
     const [[happ]] = await conductor.installAgentsHapps(installation)
+
+    // create an initial snapshot
     const content = {title:"foo", body:"bar"};
     let res = await happ.cells[0].call('syn', 'put_content', {
       content
     })
     t.equal(res.length, 39) // is a hash
-    res = await happ.cells[0].call('syn', 'get_content', res)
-    t.equal(res.length, content)
-  })
+
+    const snapshot_hash = await happ.cells[0].call('syn', 'get_content', res)
+    t.equal(snapshot_hash.length, content)
+
+    // add a content change
+    const commit = {
+        snapshot: snapshot_hash,
+        change: {
+            deltas: [],
+            previous_change: snapshot_hash, // this is the first change so same hash as snapshot
+            meta: {
+                contributors: [],
+                witnesses: [],
+                app_specific: null
+            }
+        }
+    }
+    res = await happ.cells[0].call('syn', 'commit', commit)
+
+
+})
 }
