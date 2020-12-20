@@ -53,18 +53,18 @@ struct Content {
 
 ### Real-time Signals
 All signals are implemented using fire-and-forget remote_call which will be called remote_sginal
-- `ChangeReq(Delta)`: Participant -> Leader. Nodes that have joined a session, send the session leader Deltas
-- `Change(Vec<Delta>)`: Leader -> Prticipant. The leader sends an ordered list of Deltas to apply to the state.
-- `CommitNotice(EntryHash)`: Leader -> Participants.  When making a commit leader sends a commit notice with the hash.  This can be used by participants to resync if they missed any deltas.
-- `SycnReq()` Participant -> Leader: request latest Snapshot and Commit.
-- `SyncResp(SnapshotHash, CommitHash, Deltas)`: Leader -> Participant.  Respond with the data needed for a joining/syncing participant to build the current session full state.
+- `ChangeReq(Delta)`: Participant -> Scribe. Nodes that have joined a session, send the session scribe Deltas
+- `Change(Vec<Delta>)`: Scribe -> Prticipant. The scribe sends an ordered list of Deltas to apply to the state.
+- `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a commit scribe sends a commit notice with the hash.  This can be used by participants to resync if they missed any deltas.
+- `SycnReq()` Participant -> Scribe: request latest Snapshot and Commit.
+- `SyncResp(SnapshotHash, CommitHash, Deltas)`: Scribe -> Participant.  Respond with the data needed for a joining/syncing participant to build the current session full state.
 
 
 ### Sessions
-A "session" is simply the designation of a scribe/leader.  Joining a session is finding out who is currently the scribe/ or self-declaring as if you can't find anybody. To work well this really requires the ephemeral store, but in the mean time we simply commit Session entries which are linked off a anchor, and use the following algorithm:
+A "session" is simply the designation of a scribe.  Joining a session is finding out who is currently the scribe/ or self-declaring as if you can't find anybody. To work well this really requires the ephemeral store, but in the mean time we simply commit Session entries which are linked off a anchor, and use the following algorithm:
 1. Get recent Sessions (get-links)
-2. Send recent leader SyncReq() in order until you get a response fall back to other nodes from the "Users" list, or
-3. Look up latest snapshot from Snapshots anchor and choose one to start from.  This is probably different in an app specific way, it could be latest, or require analysis of session, or User intervention.  Create a new session with yourself as leader (note the human may request skipping to this right away if they know they are off-line)
+2. Send recent scribe SyncReq() in order until you get a response fall back to other nodes from the "Users" list, or
+3. Look up latest snapshot from Snapshots anchor and choose one to start from.  This is probably different in an app specific way, it could be latest, or require analysis of session, or User intervention.  Create a new session with yourself as scribe (note the human may request skipping to this right away if they know they are off-line)
 ```rust
 struct Session {
     scribe: AgentPubKey, // agent responsible for making commits during the session
@@ -73,13 +73,13 @@ struct Session {
 ```
 
 #### Session Broadcast/Refresh
-Leader should broadcast session refresh on a periodic basis for the sessions ephemeral stores.
+Scribe should broadcast session refresh on a periodic basis for the sessions ephemeral stores.
 
 #### Session Merging
-If a node is editing off-line it has basically chosen itself as the leader.  When it comes on-line it will likely need to merge into an existing session.  Additionally nodes may partition and then multi-node sessions may need to merge.
+If a node is editing off-line it has basically chosen itself as the scribe.  When it comes on-line it will likely need to merge into an existing session.  Additionally nodes may partition and then multi-node sessions may need to merge.
 
-1. **1 Joining Many**: When the single node detects this case, it takes on the responsibility of sending a change-set that can merge from what ever state it gets from the scribe/leader.  This may be simple or impossible, in which case you might just throw away your changes, and may depend on user decision.
-2. **Many joining Many**: This requires an app-specific way to choose a leader from the set, and then delegate the merge choice to that leader.
+1. **1 Joining Many**: When the single node detects this case, it takes on the responsibility of sending a change-set that can merge from what ever state it gets from the scribe.  This may be simple or impossible, in which case you might just throw away your changes, and may depend on user decision.
+2. **Many joining Many**: This requires an app-specific way to choose a scribe from the set, and then delegate the merge choice to that scribe.
 
 
 
