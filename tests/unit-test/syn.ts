@@ -25,12 +25,12 @@ module.exports = (orchestrator) => {
 
     // create an initial snapshot
     const content = {title:"foo", body:"bar"};
-    let res = await happ.cells[0].call('syn', 'put_content', {
+    let res = await happ.cells[0].call('syn', 'put_content',
       content
-    })
+    )
     t.equal(res.length, 39) // is a hash
-
     const snapshot_hash = await happ.cells[0].call('syn', 'get_content', res)
+      console.log("FISH:",snapshot_hash)
     t.equal(snapshot_hash.length, content)
 
     // add a content change
