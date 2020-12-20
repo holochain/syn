@@ -12,10 +12,15 @@ Small collaborative teams want to work real-time on documents, kan-ban boards, d
 ### Ontology
 
 **Content State**: we assume that each DHT is used to evolve the state of a single "Work", i.e. a document, or diagram, or what ever is collaboratively being built by the App.
+
 **Delta**: the state is evolved by individual agent's creating a Content Delta using an application specific "patch" grammar, that can be applied to a content state.  Deltas are small scale changes that are intended to be sent to participating nodes in real-time (like adding a character or word to a document) and contain both content delta, and "meta" deltas which can be used to update non-"work" data in UI's for example other participants viewing location, etc.
+
 **Content Commit**: a set of Content Deltas along with the hash of previous state, comprises a Commit.  When commits happen varies across use-cases, but is usually a funciton of crossing thresholds of time and/or quantity of Deltas.
+
 **Snap-Shot**: a periodic commit of the Content State itself, used for initializing UI state as nodes come on-line.
+
 **Session**: in a server-less world, Syn uses the notion of sessions in which a scribe (or leader in usual consensus talk) is chosen to ensure consitent shared state.  Various possibilities exist for the selection but probably the best choice is by lowest-latency (determined by the heartbeat health-check) and/or by most active participant so that they get the best user experience.
+
 **Heartbeat:** Session participants conect with eachother on a regular heartbeat to assemble latency information, and to maintain awarenes of session status.
 
 
@@ -25,14 +30,14 @@ All nodes add a link to a "Users" anchor pointing to their agent pub key so that
 ### Entries
 #### Content Change
 ```rust
-type struct ChangeMeta {
+struct ChangeMeta {
     contributors: Vec<AgentPubKey>,
     witnesses: Vec<AgentPubKey>, // maybe?
     app_specific: SerializedBytes,
 }
-type struct ContentChange {
+struct ContentChange {
     deltas: Vec<SerializedBytes>,
-    previous_change: HoloHash, // hash of Content on which these deltas are to be applied
+    previous_change: EntryHash, // hash of Content on which these deltas are to be applied
     meta: ChangeMeta
 }
 ```
@@ -40,7 +45,7 @@ Notes:
 - when a ContentChange is committed, we add a link from the previous Content snap-shot to the ContentChange using the `previous_change` hash as the tag.  This allows recreation of the exact state as a node joins the network.
 #### Content Snap-shot
 ```rust
-type struct Content {
+struct Content {
     /// ADD YOUR CONTENT STRUCTURE HERE!
 }
 ```
@@ -50,7 +55,7 @@ type struct Content {
 All signals are implemented using fire-and-forget remote_call which will be called remote_sginal
 - `ChangeReq(Delta)`: Participant -> Leader. Nodes that have joined a session, send the session leader Deltas
 - `Change(Vec<Delta>)`: Leader -> Prticipant. The leader sends an ordered list of Deltas to apply to the state.
-- `CommitNotice(HoloHash)`: Leader -> Participants.  When making a commit leader sends a commit notice with the hash.  This can be used by participants to resync if they missed any deltas.
+- `CommitNotice(EntryHash)`: Leader -> Participants.  When making a commit leader sends a commit notice with the hash.  This can be used by participants to resync if they missed any deltas.
 - `SycnReq()` Participant -> Leader: request latest Snapshot and Commit.
 - `SyncResp(SnapshotHash, CommitHash, Deltas)`: Leader -> Participant.  Respond with the data needed for a joining/syncing participant to build the current session full state.
 
@@ -61,9 +66,9 @@ A "session" is simply the designation of a scribe/leader.  Joining a session is 
 2. Send recent leader SyncReq() in order until you get a response fall back to other nodes from the "Users" list, or
 3. Look up latest snapshot from Snapshots anchor and choose one to start from.  This is probably different in an app specific way, it could be latest, or require analysis of session, or User intervention.  Create a new session with yourself as leader (note the human may request skipping to this right away if they know they are off-line)
 ```rust
-type struct Session {
+struct Session {
     scribe: AgentPubKey, // agent responsible for making commits during the session
-    snapshot: HoloHash,  // hash of the starting state for this content
+    snapshot: EntryHash,  // hash of the starting state for this content
 }
 ```
 
@@ -75,3 +80,32 @@ If a node is editing off-line it has basically chosen itself as the leader.  Whe
 
 1. **1 Joining Many**: When the single node detects this case, it takes on the responsibility of sending a change-set that can merge from what ever state it gets from the scribe/leader.  This may be simple or impossible, in which case you might just throw away your changes, and may depend on user decision.
 2. **Many joining Many**: This requires an app-specific way to choose a leader from the set, and then delegate the merge choice to that leader.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.
