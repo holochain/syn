@@ -19,35 +19,34 @@ const installation: InstallAgentsHapps = [
 ]
 
 module.exports = (orchestrator) => {
-  orchestrator.registerScenario('FIXME', async (s, t) => {
-    const [conductor] = await s.players([config])
-    const [[happ]] = await conductor.installAgentsHapps(installation)
+    orchestrator.registerScenario('FIXME', async (s, t) => {
+        const [conductor] = await s.players([config])
+        const [[happ]] = await conductor.installAgentsHapps(installation)
 
-    // create an initial snapshot
-    const content = {title:"foo", body:"bar"};
-    let res = await happ.cells[0].call('syn', 'put_content',
-      content
-    )
-    t.equal(res.length, 39) // is a hash
-    const snapshot_hash = await happ.cells[0].call('syn', 'get_content', res)
-      console.log("FISH:",snapshot_hash)
-    t.equal(snapshot_hash.length, content)
-
-    // add a content change
-    const commit = {
-        snapshot: snapshot_hash,
-        change: {
-            deltas: [],
-            previous_change: snapshot_hash, // this is the first change so same hash as snapshot
-            meta: {
-                contributors: [],
-                witnesses: [],
-                app_specific: null
+        // create an initial snapshot
+        const content = {title:"foo", body:"bar"};
+        let snapshot_hash = await happ.cells[0].call('syn', 'put_content', content)
+        t.equal(snapshot_hash.length, 39) // is a hash
+        console.log("BOINK",snapshot_hash)
+        const returned_content = await happ.cells[0].call('syn', 'get_content', snapshot_hash)
+        console.log("FISH:",returned_content)
+        t.deepEqual(returned_content, content)
+        // add a content change
+        const commit = {
+            snapshot: snapshot_hash,
+            change: {
+                deltas: [],
+                previous_change: snapshot_hash, // this is the first change so same hash as snapshot
+                meta: {
+                    contributors: [],
+                    witnesses: [],
+                    app_specific: null
+                }
             }
         }
-    }
-    res = await happ.cells[0].call('syn', 'commit', commit)
+        const res = await happ.cells[0].call('syn', 'commit', commit)
+        console.log("COW:",res)
 
 
-})
+    })
 }

@@ -3,80 +3,6 @@ use hdk3::prelude::*;
 use link::LinkTag;
 mod error;
 
-
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-pub struct HashString(String);
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "HashString")]
-#[serde(into = "HashString")]
-pub struct WrappedAgentPubKey(pub AgentPubKey);
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "HashString")]
-#[serde(into = "HashString")]
-pub struct WrappedHeaderHash(pub HeaderHash);
-
-#[derive(Debug, Serialize, Deserialize, SerializedBytes, Clone, PartialEq)]
-#[serde(try_from = "HashString")]
-#[serde(into = "HashString")]
-pub struct WrappedEntryHash(pub EntryHash);
-
-impl TryFrom<HashString> for WrappedAgentPubKey {
-    type Error = String;
-    fn try_from(ui_string_hash: HashString) -> Result<Self, Self::Error> {
-        match AgentPubKey::try_from(ui_string_hash.0) {
-            Ok(address) => Ok(Self(address)),
-            Err(e) => Err(format!("{:?}", e)),
-        }
-    }
-}
-
-impl From<WrappedAgentPubKey> for AgentPubKey {
-    fn from(ui_string_hash: WrappedAgentPubKey) -> Self {
-        return ui_string_hash.0;
-    }
-}
-
-impl From<WrappedAgentPubKey> for HashString {
-    fn from(wrapped_agent_pub_key: WrappedAgentPubKey) -> Self {
-        Self(wrapped_agent_pub_key.0.to_string())
-    }
-}
-
-impl TryFrom<HashString> for WrappedHeaderHash {
-    type Error = String;
-    fn try_from(ui_string_hash: HashString) -> Result<Self, Self::Error> {
-        match HeaderHash::try_from(ui_string_hash.0) {
-            Ok(address) => Ok(Self(address)),
-            Err(e) => Err(format!("what is this error {:?}", e)),
-        }
-    }
-}
-impl From<WrappedHeaderHash> for HashString {
-    fn from(wrapped_header_hash: WrappedHeaderHash) -> Self {
-        Self(wrapped_header_hash.0.to_string())
-    }
-}
-
-impl TryFrom<HashString> for WrappedEntryHash {
-    type Error = String;
-    fn try_from(ui_string_hash: HashString) -> Result<Self, Self::Error> {
-        match EntryHash::try_from(ui_string_hash.0) {
-            Ok(address) => Ok(Self(address)),
-            Err(e) => Err(format!("{:?}", e)),
-        }
-    }
-}
-impl From<WrappedEntryHash> for HashString {
-    fn from(wrapped_entry_hash: WrappedEntryHash) -> Self {
-        Self(wrapped_entry_hash.0.to_string())
-    }
-}
-
-
-
 /// Content
 
 // This is structure holds the shared content that is being collaboratively
@@ -108,10 +34,10 @@ impl SnapshotsTag {
 // Used by the clerk to commit a snapshot of the content and link it to
 // the snapshot anchor.
 #[hdk_extern]
-fn put_content(content: Content) -> SynResult<HeaderHash> {
+fn put_content(content: Content) -> SynResult<EntryHash> {
     let path = Path::from("snapshot");
     path.ensure()?;
-    let header_hash = create_entry(&content)?;
+    let _header_hash = create_entry(&content)?;
     let content_hash = hash_entry(&content)?;
 
     // snapshot anchor base
@@ -121,23 +47,19 @@ fn put_content(content: Content) -> SynResult<HeaderHash> {
         content_hash.clone(),
         SnapshotsTag::tag(),
     )?;
-    Ok(header_hash)
+    Ok(content_hash)
 }
 
-// TODO better way to do this?
 /// The optional content
 #[derive(Serialize, Deserialize, SerializedBytes)]
-pub struct OptionContent {
-    result: Option<Content>,
-}
+pub struct OptionContent(Option<Content>);
 
 #[hdk_extern]
-fn get_content(input: WrappedEntryHash) -> SynResult<OptionContent> {
-    let entry_hash :WrappedEntryHash = input.into();
+fn get_content(input: EntryHash) -> SynResult<OptionContent> {
     if let Some(element) = get(input,  GetOptions::content())? {
-        Ok(OptionContent{result: element.into_inner().1.to_app_option()?})
+        Ok(OptionContent(element.into_inner().1.to_app_option()?))
     } else {
-        Ok(OptionContent{result: None})
+        Ok(OptionContent(None))
     }
 }
 
