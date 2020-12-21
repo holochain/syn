@@ -16,7 +16,8 @@ pub struct Content {
 
 entry_defs![
     Path::entry_def(),
-    Content::entry_def()
+    Content::entry_def(),
+    ContentChange::entry_def()
 ];
 
 /// A easy way to create the tag
@@ -63,29 +64,31 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
     }
 }
 
+
 ///  Content Change
-#[derive(Clone, Serialize, Deserialize, SerializedBytes)]
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct ChangeMeta {
     contributors: Vec<AgentPubKey>,
     witnesses: Vec<AgentPubKey>, // maybe?
-    app_specific: SerializedBytes,
+    app_specific: Option<SerializedBytes>,
 }
 
 // Entry type for committing changes to the content, called by the clerk.
 #[hdk_entry(id = "content_change")]
-#[derive(Clone)]
-struct ContentChange {
-    deltas: Vec<SerializedBytes>,
-    previous_change: EntryHash, // hash of Content on which these deltas are to be applied
+#[derive(Clone, Debug)]
+pub struct ContentChange {
+    pub deltas: Vec<SerializedBytes>,
+    pub previous_change: EntryHash, // hash of Content on which these deltas are to be applied
     meta: ChangeMeta,
 }
 
 /// Input to the commit call
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct CommitInput {
-    snapshot: EntryHash,
-    change: ContentChange,
+    pub snapshot: EntryHash,
+    pub change: ContentChange,
 }
+
 
 #[hdk_extern]
 fn commit(input: CommitInput) -> SynResult<HeaderHash> {

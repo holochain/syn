@@ -27,9 +27,7 @@ module.exports = (orchestrator) => {
         const content = {title:"foo", body:"bar"};
         let snapshot_hash = await happ.cells[0].call('syn', 'put_content', content)
         t.equal(snapshot_hash.length, 39) // is a hash
-        console.log("BOINK",snapshot_hash)
         const returned_content = await happ.cells[0].call('syn', 'get_content', snapshot_hash)
-        console.log("FISH:",returned_content)
         t.deepEqual(returned_content, content)
         // add a content change
         const commit = {
@@ -44,9 +42,8 @@ module.exports = (orchestrator) => {
                 }
             }
         }
-        const res = await happ.cells[0].call('syn', 'commit', commit)
-        console.log("COW:",res)
-
+        const commit_header_hash = await happ.cells[0].call('syn', 'commit', commit)
+        t.equal(commit_header_hash.length, 39) // is a hash
 
     })
 }
