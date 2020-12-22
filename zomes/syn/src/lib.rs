@@ -3,6 +3,14 @@ use hdk3::prelude::*;
 use link::LinkTag;
 mod error;
 
+entry_defs![
+    Path::entry_def(),
+    Content::entry_def(),
+    ContentChange::entry_def(),
+    Session::entry_def()
+];
+
+
 /// Content
 // This is structure holds the shared content that is being collaboratively
 // edited by participants in the happ
@@ -16,29 +24,10 @@ pub struct Content {
 /// Session
 /// This entry holds the record of who the scribe is and a hash
 /// of the content at the start of the session
+/// the scribe will always be the author of the session
 #[hdk_entry(id = "session")]
 struct Session {
-    scribe: AgentPubKey, // agent responsible for making commits during the session
-    snapshot: HeaderHash,  // hash of the starting state for this content
-}
-
-entry_defs![
-    Path::entry_def(),
-    Content::entry_def(),
-    ContentChange::entry_def(),
-    Session::entry_def()
-];
-
-/// A easy way to create the tag
-pub(crate) struct SnapshotsTag;
-
-impl SnapshotsTag {
-    const TAG: &'static [u8; 4] = b"snap";
-
-    /// Create the tag
-    pub(crate) fn tag() -> LinkTag {
-        LinkTag::new(*Self::TAG)
-    }
+    snapshot: HeaderHash,  // hash of the starting state for this session
 }
 
 fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
@@ -52,7 +41,7 @@ fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
     create_link(
         snapshots_anchor_hash,
         content_hash.clone(),
-        SnapshotsTag::tag(),
+        (),
     )?;
     Ok((header_hash, content_hash))
 }
@@ -102,7 +91,6 @@ pub struct CommitInput {
     pub change: ContentChange,
 }
 
-
 #[hdk_extern]
 fn commit(input: CommitInput) -> SynResult<HeaderHash> {
     let header_hash = create_entry(&input.change)?;
@@ -132,8 +120,19 @@ pub struct SessionInfo {
 }
 
 fn create_session(session: Session) -> SynResult<HeaderHash> {
-    let session_hash = create_entry(&session)?;
-    Ok(session_hash)
+    let path = Path::from("session");
+    path.ensure()?;
+    let header_hash = create_entry(&session)?;
+    let session_hash = hash_entry(&session)?;
+
+    let session_anchor_hash = path.hash()?;
+    create_link(
+        session_anchor_hash,
+        session_hash,
+        (),
+    )?;
+
+    Ok(header_hash)
 }
 
 #[hdk_extern]
@@ -152,15 +151,14 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
     let content = Content::default();
     let (header_hash, _content_hash) = put_content_inner(content.clone())?;
 
-    let me = agent_info()?.agent_latest_pubkey;
+    let scribe = agent_info()?.agent_latest_pubkey;
     let session = Session {
-        scribe: me.clone(),
         snapshot: header_hash,
     };
     let session_hash = create_session(session)?;
 
     Ok(SessionInfo{
-        scribe: me,
+        scribe,
         session: session_hash,
         content,
     })
