@@ -4,20 +4,29 @@ use link::LinkTag;
 mod error;
 
 /// Content
-
 // This is structure holds the shared content that is being collaboratively
 // edited by participants in the happ
 #[hdk_entry(id = "content")]
-#[derive(Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct Content {
     title: String,
     body: String,
 }
 
+/// Session
+/// This entry holds the record of who the scribe is and a hash
+/// of the content at the start of the session
+#[hdk_entry(id = "session")]
+struct Session {
+    scribe: AgentPubKey, // agent responsible for making commits during the session
+    snapshot: HeaderHash,  // hash of the starting state for this content
+}
+
 entry_defs![
     Path::entry_def(),
     Content::entry_def(),
-    ContentChange::entry_def()
+    ContentChange::entry_def(),
+    Session::entry_def()
 ];
 
 /// A easy way to create the tag
@@ -32,13 +41,10 @@ impl SnapshotsTag {
     }
 }
 
-// Used by the clerk to commit a snapshot of the content and link it to
-// the snapshot anchor.
-#[hdk_extern]
-fn put_content(content: Content) -> SynResult<EntryHash> {
+fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
     let path = Path::from("snapshot");
     path.ensure()?;
-    let _header_hash = create_entry(&content)?;
+    let header_hash = create_entry(&content)?;
     let content_hash = hash_entry(&content)?;
 
     // snapshot anchor base
@@ -48,6 +54,14 @@ fn put_content(content: Content) -> SynResult<EntryHash> {
         content_hash.clone(),
         SnapshotsTag::tag(),
     )?;
+    Ok((header_hash, content_hash))
+}
+
+// Used by the clerk to commit a snapshot of the content and link it to
+// the snapshot anchor.
+#[hdk_extern]
+pub fn put_content(content: Content) -> SynResult<EntryHash> {
+    let (_, content_hash) = put_content_inner(content)?;
     Ok(content_hash)
 }
 
@@ -63,7 +77,6 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
         Ok(OptionContent(None))
     }
 }
-
 
 ///  Content Change
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
@@ -108,4 +121,47 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
 fn hash_content(content: Content) -> SynResult<EntryHash> {
     let hash = hash_entry(&content)?;
     Ok(hash)
+}
+
+///  Session Info need to start working in a session
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SessionInfo {
+    session: HeaderHash,
+    scribe: AgentPubKey,
+    content: Content,
+}
+
+fn create_session(session: Session) -> SynResult<HeaderHash> {
+    let session_hash = create_entry(&session)?;
+    Ok(session_hash)
+}
+
+#[hdk_extern]
+fn join_session(_: ()) -> SynResult<SessionInfo> {
+
+    // get recent sessions
+
+    // see if there's an active one
+
+    // fall back to other users
+
+    // can't find a session so make one ourself
+    // 1. find the Content we will make our session off of
+    // TODO
+    // 2. can't find a Content assume null content and commit it
+    let content = Content::default();
+    let (header_hash, _content_hash) = put_content_inner(content.clone())?;
+
+    let me = agent_info()?.agent_latest_pubkey;
+    let session = Session {
+        scribe: me.clone(),
+        snapshot: header_hash,
+    };
+    let session_hash = create_session(session)?;
+
+    Ok(SessionInfo{
+        scribe: me,
+        session: session_hash,
+        content,
+    })
 }

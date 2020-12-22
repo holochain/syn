@@ -23,6 +23,11 @@ module.exports = (orchestrator) => {
         const [conductor] = await s.players([config])
         const [[happ]] = await conductor.installAgentsHapps(installation)
 
+        let sessionInfo = await happ.cells[0].call('syn', 'join_session')
+        t.equal(sessionInfo.scribe.length, 39) // is a hash
+        // t.deepEqual(sessionInfo.scribe, me)
+        t.deepEqual(sessionInfo.content, {title:"", body:""})
+
         // create an initial snapshot
         const content = {title:"foo", body:"bar"};
         let snapshot_hash = await happ.cells[0].call('syn', 'put_content', content)
