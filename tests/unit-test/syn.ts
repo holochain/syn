@@ -19,7 +19,7 @@ const installation: InstallAgentsHapps = [
 ]
 
 module.exports = (orchestrator) => {
-    orchestrator.registerScenario('FIXME', async (s, t) => {
+    orchestrator.registerScenario('syn basic zome calls', async (s, t) => {
         const [conductor] = await s.players([config])
         const [[happ]] = await conductor.installAgentsHapps(installation)
 
@@ -27,6 +27,8 @@ module.exports = (orchestrator) => {
         const content = {title:"foo", body:"bar"};
         let snapshot_hash = await happ.cells[0].call('syn', 'put_content', content)
         t.equal(snapshot_hash.length, 39) // is a hash
+        const hash = await happ.cells[0].call('syn', 'hash_content', content)
+        t.deepEqual(snapshot_hash, hash)
         const returned_content = await happ.cells[0].call('syn', 'get_content', snapshot_hash)
         t.deepEqual(returned_content, content)
         // add a content change

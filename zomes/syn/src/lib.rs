@@ -103,3 +103,9 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
     )?;
     Ok(header_hash)
 }
+
+#[hdk_extern]
+fn hash_content(content: Content) -> SynResult<EntryHash> {
+    let hash = hash_entry(&content)?;
+    Ok(hash)
+}
