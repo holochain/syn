@@ -12,7 +12,12 @@ Read the [design documents here](DESIGN.md).
 - Build the Holochain tools
   - Clone the repo: `git clone https://github.com/holochain/holochain && cd ./holochain`
   - Ensure correct version of rust tool-chain via nix: `nix-shell`
-  - Install conductor binary & dna-util binary: `hc-install`
+  - Install conductor binary & dna-util binary:
+``` bash
+cargo install --path crates/holochain
+cargo install --path crates/dna_util
+```
+  - Make sure the `path/to/holochain/.cargo/bin` is in your `PATH`
 
 ## Building
 
