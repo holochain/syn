@@ -4,8 +4,8 @@ Real-time shared state on Holochain
 
 ## Context
 
-Small collaborative teams want to work real-time on documents, kan-ban boards, drawings, etc.  Tools like Google Docs, Miro, etc provide the state-of-the-art in user experience in this realm.  All of them rely on central servers to manage shared state.  Syn is an experimental zome and UI library to provide similar level of experience in the fully distributed Holochain context.
-**Intentional Limmitations:** Syn is designed for, and takes advantage of, the assumption of small numbers of non-malicious users.
+Small collaborative teams want to work real-time on text documents, Kanban boards, drawings, etc.  Tools like Google Docs, [HackMD](hackmd.io), and [Miro](https://miro.com/) provide the state-of-the-art in user experience in this realm.  All of them rely on central servers to manage shared state.  Syn is an experimental zome and UI library to provide similar level of experience in the fully distributed Holochain context.
+**Intentional Limitations:** Syn is designed for, and takes advantage of, the assumption of small numbers of non-malicious users.
 
 ## Design Overview
 
@@ -13,22 +13,24 @@ Small collaborative teams want to work real-time on documents, kan-ban boards, d
 
 **Content State**: we assume that each DHT is used to evolve the state of a single "Work", i.e. a document, or diagram, or what ever is collaboratively being built by the App.
 
-**Delta**: the state is evolved by individual agent's creating a Content Delta using an application specific "patch" grammar, that can be applied to a content state.  Deltas are small scale changes that are intended to be sent to participating nodes in real-time (like adding a character or word to a document) and contain both content delta, and "meta" deltas which can be used to update non-"work" data in UI's for example other participants viewing location, etc.
+**Delta**: the state is evolved by individual agents creating a "Content Delta" using an application-specific "Patch Grammar", that can be applied to a Content State.  Deltas are small scale changes that are intended to be sent to participating nodes in real-time (like adding a character or word to a document). Sent along with Content deltas are "Meta Deltas" which can be used to update non-Work data in UIs for example other participants' viewing locations.
 
-**Content Commit**: a set of Content Deltas along with the hash of previous state, comprises a Commit.  When commits happen varies across use-cases, but is usually a funciton of crossing thresholds of time and/or quantity of Deltas.
+**Content Commit**: a set of Content Deltas, along with the hash of the previous state, comprises a "Commit".  You can think of a commit as a recording of a set of changes to the content.  Commits happen at different frequencies depending on the use-case.  Commits are usually triggered by crossing thresholds of time and/or quantity of Deltas.
 
-**Snap-Shot**: a periodic commit of the Content State itself, used for initializing UI state as nodes come on-line.
+**Snapshot**: a periodic commit of the Content State itself, used for initializing UI state as nodes come online.
 
-**Session**: in a server-less world, Syn uses the notion of sessions in which a scribe (or leader in usual consensus talk) is chosen to ensure consitent shared state.  Various possibilities exist for the selection but probably the best choice is by lowest-latency (determined by the heartbeat health-check) and/or by most active participant so that they get the best user experience.
+**Session**: Syn uses the notion of "Sessions" which consist of choosing a Scribe and then continuing on to edit the Work.
 
-**Heartbeat:** Session participants conect with eachother on a regular heartbeat to assemble latency information, and to maintain awarenes of session status.
+**Scribe**: a "Scribe" (or leader in usual consensus talk) is one chosen participant who takes on the role of collecting Deltas and making Commits. Various possibilities exist for how to select a Scribe. Probably best is choosing the lowest network latency participant (determined by the Heartbeat health-check) or choosing the most active participant so that they get the best user experience.
+
+**Heartbeat:** Session participants connect with each other through a regular "Heartbeat" to assemble latency information, and to maintain awareness of Session status.
 
 
-### Intitialization
+### Initialization
 All nodes add a link to a "Users" anchor pointing to their agent pub key so that participating agents can be bootstrapped.
 
 ### Entries
-#### Content Change
+#### Content Change (aka Commit)
 ```rust
 struct ChangeMeta {
     contributors: Vec<AgentPubKey>,
@@ -42,70 +44,44 @@ struct ContentChange {
 }
 ```
 Notes:
-- when a ContentChange is committed, we add a link from the previous Content snap-shot to the ContentChange using the `previous_change` hash as the tag.  This allows recreation of the exact state as a node joins the network.
-#### Content Snap-shot
+- when a `ContentChange` is committed, we add a link from the previous Content Snapshot to the `ContentChange` using the `previous_change` hash as the tag.  This allows recreation of the exact state as a node joins the network.
+#### Content Snapshot
 ```rust
 struct Content {
     /// ADD YOUR CONTENT STRUCTURE HERE!
 }
 ```
-**Notes**: Add link from "Snapshots" anchor to Content when added.  This is needed for creating a new session.  See below.
+Notes:
+- when a Content Snapshot is created, we add a link from the "Snapshots" anchor to the new Snapshot.  This is needed for creating a new session.  See below.
 
 ### Real-time Signals
-All signals are implemented using fire-and-forget remote_call which will be called remote_sginal
-- `ChangeReq(Delta)`: Participant -> Scribe. Nodes that have joined a session, send the session scribe Deltas
-- `Change(Vec<Delta>)`: Scribe -> Prticipant. The scribe sends an ordered list of Deltas to apply to the state.
-- `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a commit scribe sends a commit notice with the hash.  This can be used by participants to resync if they missed any deltas.
+All signals are implemented using fire-and-forget remote_call which will be called remote_signal
+- `ChangeReq(Delta)`: Participant -> Scribe. A node that has joined a Session sends the Session's Scribe a Delta (in the Work's Patch Grammar) representing a change to the Work.
+- `Change(Vec<Delta>)`: Scribe -> Participants. The Scribe sends all participants ordered Deltas to apply to their local states.
+- `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a Commit, Scribe sends a Commit Notice with the hash.  This can be used by participants to resync if they missed any Deltas.
 - `SycnReq()` Participant -> Scribe: request latest Snapshot and Commit.
-- `SyncResp(SnapshotHash, CommitHash, Deltas)`: Scribe -> Participant.  Respond with the data needed for a joining/syncing participant to build the current session full state.
+- `SyncResp(SnapshotHash, CommitHash, Deltas)`: Scribe -> Participant.  Respond with the data needed for a joining/syncing participant to build the current Session's full state.
 
 
 ### Sessions
-A "session" is simply the designation of a scribe.  Joining a session is finding out who is currently the scribe/ or self-declaring as if you can't find anybody. To work well this really requires the ephemeral store, but in the mean time we simply commit Session entries which are linked off a anchor, and use the following algorithm:
-1. Get recent Sessions (get-links)
-2. Send recent scribe SyncReq() in order until you get a response fall back to other nodes from the "Users" list, or
-3. Look up latest snapshot from Snapshots anchor and choose one to start from.  This is probably different in an app specific way, it could be latest, or require analysis of session, or User intervention.  Create a new session with yourself as scribe (note the human may request skipping to this right away if they know they are off-line)
+Making a Session is as simple as designating a Scribe.  Joining a Session is finding out who the Scribe is, or self-declaring as such if you can't find anybody.  To work well this really requires Holochain's upcoming ephemeral store feature, but in the mean time we simply commit Session entries which are linked off an anchor, and use the following algorithm:
+1. Get recent Sessions (`get-links`)
+2. Send the Scribes of these sessions `SyncReq()`s, in order, until you get a response, which will allow you to build the Session state and start sending Deltas to the Scribe who responded.
+3. If this doesn't work, fall back to requesting from other nodes on the "Users" list.
+4. If still nobody replies with a `SyncResp`, assume you are offline or an active Session can't be found.  Look up Snapshots from the "Snapshots" anchor and choose one to start from. (This is probably different in an app-specific way; it could be the latest Snapshot, or require analysis of the Session, or User intervention.)
+5. Create a new Session with yourself as Scribe (note that the human may request skipping to this right away if they know they are offline)
 ```rust
 struct Session {
-    scribe: AgentPubKey, // agent responsible for making commits during the session
-    snapshot: EntryHash,  // hash of the starting state for this content
+    scribe: AgentPubKey, // agent responsible for making Commits during the session
+    snapshot: EntryHash,  // hash of the starting Content State for this Session
 }
 ```
 
 #### Session Broadcast/Refresh
-Scribe should broadcast session refresh on a periodic basis for the sessions ephemeral stores.
+Scribe should broadcast session refresh on a periodic basis for the Session's ephemeral stores.
 
 #### Session Merging
-If a node is editing off-line it has basically chosen itself as the scribe.  When it comes on-line it will likely need to merge into an existing session.  Additionally nodes may partition and then multi-node sessions may need to merge.
+If a node is editing offline it has basically chosen itself as the Scribe.  When it comes online it will likely need to merge into an existing session.  Additionally nodes may partition and then multi-node sessions may need to merge.
 
-1. **1 Joining Many**: When the single node detects this case, it takes on the responsibility of sending a change-set that can merge from what ever state it gets from the scribe.  This may be simple or impossible, in which case you might just throw away your changes, and may depend on user decision.
-2. **Many joining Many**: This requires an app-specific way to choose a scribe from the set, and then delegate the merge choice to that scribe.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-.
+1. **One Joining Many**: When the single node detects this case, it takes on the responsibility of sending a change-set that can merge from what ever state it gets from the scribe.  This may be simple or impossible, in which case you might just throw away your changes, and may depend on user decision.
+2. **Many joining Many**: This requires an app-specific way to choose a Scribe from the set, and then delegate the merge choice to that Scribe.
