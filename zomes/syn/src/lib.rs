@@ -17,8 +17,8 @@ entry_defs![
 #[hdk_entry(id = "content")]
 #[derive(Clone, Debug, Default)]
 pub struct Content {
-    title: String,
-    body: String,
+    pub title: String,
+    pub body: String,
 }
 
 /// Session
@@ -27,14 +27,16 @@ pub struct Content {
 /// the scribe will always be the author of the session
 #[hdk_entry(id = "session")]
 struct Session {
-    snapshot: HeaderHash,  // hash of the starting state for this session
+    pub snapshot: HeaderHash,  // hash of the starting state for this session
+    // scribe:  // scribe will always be the author of the session, look in the header
 }
 
 fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
-    let path = Path::from("snapshot");
-    path.ensure()?;
     let header_hash = create_entry(&content)?;
     let content_hash = hash_entry(&content)?;
+
+    let path = Path::from("snapshot");
+    path.ensure()?;
 
     // snapshot anchor base
     let snapshots_anchor_hash = path.hash()?;
@@ -70,18 +72,18 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
 ///  Content Change
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct ChangeMeta {
-    contributors: Vec<AgentPubKey>,
-    witnesses: Vec<AgentPubKey>, // maybe?
-    app_specific: Option<SerializedBytes>,
+    pub contributors: Vec<AgentPubKey>,
+    pub witnesses: Vec<AgentPubKey>, // maybe?
+    pub app_specific: Option<SerializedBytes>,
 }
 
-// Entry type for committing changes to the content, called by the clerk.
+/// Entry type for committing changes to the content, called by the clerk.
 #[hdk_entry(id = "content_change")]
 #[derive(Clone, Debug)]
 pub struct ContentChange {
     pub deltas: Vec<SerializedBytes>,
     pub previous_change: EntryHash, // hash of Content on which these deltas are to be applied
-    meta: ChangeMeta,
+    pub meta: ChangeMeta,
 }
 
 /// Input to the commit call
@@ -111,12 +113,12 @@ fn hash_content(content: Content) -> SynResult<EntryHash> {
     Ok(hash)
 }
 
-///  Session Info need to start working in a session
+///  Session Info needed to start working in a session
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SessionInfo {
-    session: HeaderHash,
-    scribe: AgentPubKey,
-    content: Content,
+    pub session: HeaderHash,
+    pub scribe: AgentPubKey,
+    pub content: Content,
 }
 
 fn create_session(session: Session) -> SynResult<HeaderHash> {
@@ -154,6 +156,7 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
     let scribe = agent_info()?.agent_latest_pubkey;
     let session = Session {
         snapshot: header_hash,
+        // scribe is author
     };
     let session_hash = create_session(session)?;
 
