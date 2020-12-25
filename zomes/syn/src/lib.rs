@@ -120,6 +120,7 @@ pub struct SessionInfo {
     pub session: HeaderHash,
     pub scribe: AgentPubKey,
     pub content: Content,
+    pub content_hash: EntryHash,
 }
 
 fn get_sessions_path() -> Path {
@@ -156,7 +157,7 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
     // TODO
     // 2. can't find a Content assume null content and commit it
     let content = Content::default();
-    let (header_hash, _content_hash) = put_content_inner(content.clone())?;
+    let (header_hash, content_hash) = put_content_inner(content.clone())?;
 
     let scribe = agent_info()?.agent_latest_pubkey;
     let session = Session {
@@ -169,6 +170,7 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         scribe,
         session: session_hash,
         content,
+        content_hash,
     })
 }
 
