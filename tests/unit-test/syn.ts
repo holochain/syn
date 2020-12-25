@@ -41,7 +41,7 @@ module.exports = (orchestrator) => {
         t.deepEqual(sessionInfo.content, {title:"", body:""})
 
         // check the hash_content zome call.
-        const hash = await me_happ.call('syn', 'hash_content', sessionInfo.content)
+        let hash = await me_happ.call('syn', 'hash_content', sessionInfo.content)
         t.deepEqual(sessionInfo.content_hash, hash)
 
         // check get_sessions utility zome call
@@ -67,6 +67,18 @@ module.exports = (orchestrator) => {
         }
         const commit_header_hash = await me_happ.call('syn', 'commit', commit)
         t.equal(commit_header_hash.length, 39) // is a hash
+
+        // alice joins session
+        sessionInfo = await alice_happ.call('syn', 'join_session')
+        // alice should get my session
+        t.deepEqual(sessionInfo.scribe, me_pubkey)
+
+        // TODO: maybe content can't be applied from deltas by zome and should only be calculated by
+        // by UI, maybe not.  If not sessionInfo should also return deltas.
+        t.deepEqual(sessionInfo.content, {title:"foo title", body:"bar content"})
+        hash = await me_happ.call('syn', 'hash_content', sessionInfo.content)
+        t.deepEqual(sessionInfo.content_hash, hash)
+
 
 
         /*        // create an initial snapshot
