@@ -231,11 +231,8 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
 
 fn get_sessions_inner() -> SynResult<Vec<EntryHash>> {
     let path = get_sessions_path();
-    let mut sessions = Vec::new();
     let links = get_links(path.hash()?, None)?.into_inner();
-    for target in links.into_iter().map(|link| link.target) {
-        sessions.push(target);
-    }
+    let sessions = links.into_iter().map(|l| l.target).collect();
     Ok(sessions)
 }
 
