@@ -158,10 +158,16 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
 /// builds the content out from a given snapshot by looking at commits on that snapshot
 /// return error if hash not found rather than option because we
 /// shouldn't be calling this function on a hash that doesn't exist
-fn build_content_from_snapshot(_header_hash: HeaderHash) -> SynResult<(EntryHash, Content)> {
-    let content = Content::default();
-    let content_hash = hash_entry(&content)?;
-    Ok((content_hash, content))
+fn build_content_from_snapshot(header_hash: HeaderHash) -> SynResult<(EntryHash, Content)> {
+    if let Some(element) = get(header_hash,  GetOptions::content())? {
+        let maybe_content: Option<Content> = element.entry().to_app_option()?;
+        if let Some(content) = maybe_content {
+            // TODO: we should be able to get the entry hash from the
+            // element, but I don't quite know how to yet
+            return Ok((hash_entry(&content)?, content));
+        };
+    };
+    Err(SynError::HashNotFound)
 }
 
 /// builds out the session info from a given session hash.
