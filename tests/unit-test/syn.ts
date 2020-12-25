@@ -70,15 +70,15 @@ module.exports = (orchestrator) => {
         t.equal(commit_header_hash.length, 39) // is a hash
 
         // alice joins session
-        sessionInfo = await alice.call('syn', 'join_session')
+        const aliceSessionInfo = await alice.call('syn', 'join_session')
         // alice should get my session
-        t.deepEqual(sessionInfo.scribe, me_pubkey)
+        t.deepEqual(aliceSessionInfo.scribe, me_pubkey)
 
         // TODO: maybe content can't be applied from deltas by zome and should only be calculated by
         // by UI, maybe not.  If not sessionInfo should also return deltas.
-        t.deepEqual(sessionInfo.content, {title:"foo title", body:"bar content"})
-        hash = await me.call('syn', 'hash_content', sessionInfo.content)
-        t.deepEqual(sessionInfo.content_hash, hash)
+        t.deepEqual(aliceSessionInfo.content, {title:"foo title", body:"bar content"})
+        hash = await alice.call('syn', 'hash_content', aliceSessionInfo.content)
+        t.deepEqual(aliceSessionInfo.content_hash, hash)
 
 
 
