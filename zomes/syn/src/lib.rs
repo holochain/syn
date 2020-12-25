@@ -1,4 +1,4 @@
-use error::SynResult;
+use error::{SynError, SynResult};
 use hdk3::prelude::*;
 use link::LinkTag;
 mod error;
@@ -155,58 +155,88 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     Ok(header_hash)
 }
 
+/// builds the content out from a given snapshot by looking at commits on that snapshot
+/// return error if hash not found rather than option because we
+/// shouldn't be calling this function on a hash that doesn't exist
+fn build_content_from_snapshot(_header_hash: HeaderHash) -> SynResult<(EntryHash, Content)> {
+    let content = Content::default();
+    let content_hash = hash_entry(&content)?;
+    Ok((content_hash, content))
+}
+
+/// builds out the session info from a given session hash.
+/// return error if hash not found rather than option because we
+/// shouldn't be calling this function on a hash that doesn't exist
+fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
+    if let Some(element) = get(session_hash,  GetOptions::content())? {
+        let maybe_session: Option<Session> = element.entry().to_app_option()?;
+        if let Some(session) = maybe_session {
+            let (content_hash, content) = build_content_from_snapshot(session.snapshot)?;
+            debug!("h {:?}, c {:?}", content_hash, content);
+            return Ok(SessionInfo {
+                scribe: element.header().author().clone(),
+                session: element.header_address().clone(),
+                content,
+                content_hash
+            });
+        };
+    };
+    Err(SynError::HashNotFound)
+}
+
 #[hdk_extern]
 fn join_session(_: ()) -> SynResult<SessionInfo> {
 
     // get recent sessions
-
+    let sessions = get_sessions_inner()?;
     // see if there's an active one
+    if sessions.len() > 0 {
+        debug!("session found: {:?}", sessions);
+        // for now just pick the first!
+        Ok(build_session_info(sessions[0].clone())?)
+    }
+    else {
+        debug!("no sessions found");
 
-    // fall back to other users
+        // fall back to other users
 
-    // can't find a session so make one ourself
-    // 1. find the Content we will make our session off of
-    // TODO
-    // 2. can't find a Content assume null content and commit it
-    let content = Content::default();
-    let (header_hash, content_hash) = put_content_inner(content.clone())?;
+        // can't find a session so make one ourself
+        // 1. find the Content we will make our session off of
+        // TODO
+        // 2. can't find a Content assume null content and commit it
+        let content = Content::default();
+        let (header_hash, content_hash) = put_content_inner(content.clone())?;
 
-    let scribe = agent_info()?.agent_latest_pubkey;
-    let session = Session {
-        snapshot: header_hash,
-        // scribe is author
-    };
-    let session_hash = create_session(session)?;
+        let scribe = agent_info()?.agent_latest_pubkey;
+        let session = Session {
+            snapshot: header_hash,
+            // scribe is author
+        };
+        let session_hash = create_session(session)?;
 
-    Ok(SessionInfo{
-        scribe,
-        session: session_hash,
-        content,
-        content_hash,
-    })
+        Ok(SessionInfo{
+            scribe,
+            session: session_hash,
+            content,
+            content_hash,
+        })
+    }
 }
 
-#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-pub struct SessionList(Vec<EntryHash>);
-
-#[hdk_extern]
-pub fn get_sessions(_: ()) -> SynResult<SessionList> {
+fn get_sessions_inner() -> SynResult<Vec<EntryHash>> {
     let path = get_sessions_path();
     let mut sessions = Vec::new();
     let links = get_links(path.hash()?, None)?.into_inner();
     for target in links.into_iter().map(|link| link.target) {
         sessions.push(target);
-/*        if let Some(element) = get(target,  GetOptions::content())? {
-            let s: Option<Session> = element.entry().to_app_option()?;
-            debug!("element {:?}", s );
-            if let Some(content) = element.entry().to_app_option()? {
-                debug!("conetnt {:?}", content);
-                sessions.push(SessionInfo {
-                    scribe: element.header().author().clone(),
-                    session: element.header_address().clone(),
-                    content});
-            }
-        }*/
     }
+    Ok(sessions)
+}
+
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SessionList(Vec<EntryHash>);
+#[hdk_extern]
+pub fn get_sessions(_: ()) -> SynResult<SessionList> {
+    let sessions = get_sessions_inner()?;
     Ok(SessionList(sessions))
 }

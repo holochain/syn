@@ -13,6 +13,8 @@ pub enum SynError {
     Wasm(#[from] WasmError),
     #[error(transparent)]
     HdkError(#[from] HdkError),
+    #[error("hash not found")]
+    HashNotFound // internal error for functions that should be given an known hash
 }
 
 pub type SynResult<T> = Result<T, SynError>;
