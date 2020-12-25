@@ -26,6 +26,7 @@ pub struct Content {
 /// of the content at the start of the session
 /// the scribe will always be the author of the session
 #[hdk_entry(id = "session")]
+#[derive(Debug)]
 struct Session {
     pub snapshot: HeaderHash,  // hash of the starting state for this session
     // scribe:  // scribe will always be the author of the session, look in the header
@@ -121,8 +122,12 @@ pub struct SessionInfo {
     pub content: Content,
 }
 
+fn get_sessions_path() -> Path {
+    Path::from("sessions")
+}
+
 fn create_session(session: Session) -> SynResult<HeaderHash> {
-    let path = Path::from("session");
+    let path = get_sessions_path();
     path.ensure()?;
     let header_hash = create_entry(&session)?;
     let session_hash = hash_entry(&session)?;
@@ -165,4 +170,29 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         session: session_hash,
         content,
     })
+}
+
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SessionList(Vec<EntryHash>);
+
+#[hdk_extern]
+pub fn get_sessions(_: ()) -> SynResult<SessionList> {
+    let path = get_sessions_path();
+    let mut sessions = Vec::new();
+    let links = get_links(path.hash()?, None)?.into_inner();
+    for target in links.into_iter().map(|link| link.target) {
+        sessions.push(target);
+/*        if let Some(element) = get(target,  GetOptions::content())? {
+            let s: Option<Session> = element.entry().to_app_option()?;
+            debug!("element {:?}", s );
+            if let Some(content) = element.entry().to_app_option()? {
+                debug!("conetnt {:?}", content);
+                sessions.push(SessionInfo {
+                    scribe: element.header().author().clone(),
+                    session: element.header_address().clone(),
+                    content});
+            }
+        }*/
+    }
+    Ok(SessionList(sessions))
 }
