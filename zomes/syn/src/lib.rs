@@ -36,7 +36,7 @@ fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
     let header_hash = create_entry(&content)?;
     let content_hash = hash_entry(&content)?;
 
-    let path = Path::from("snapshot");
+    let path = get_snapshots_path();
     path.ensure()?;
 
     // snapshot anchor base
@@ -139,6 +139,10 @@ fn get_sessions_path() -> Path {
     Path::from("sessions")
 }
 
+fn get_snapshots_path() -> Path {
+    Path::from("snapshots")
+}
+
 fn create_session(session: Session) -> SynResult<HeaderHash> {
     let path = get_sessions_path();
     path.ensure()?;
@@ -159,11 +163,24 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
 /// return error if hash not found rather than option because we
 /// shouldn't be calling this function on a hash that doesn't exist
 fn build_content_from_snapshot(header_hash: HeaderHash) -> SynResult<(EntryHash, Content)> {
-    if let Some(element) = get(header_hash,  GetOptions::content())? {
+    if let Some(element) = get(header_hash, GetOptions::content())? {
         let maybe_content: Option<Content> = element.entry().to_app_option()?;
-        if let Some(content) = maybe_content {
+        if let Some(mut content) = maybe_content {
+            // get commits from this snapshot
             // TODO: we should be able to get the entry hash from the
             // element, but I don't quite know how to yet
+            let snapshot_hash = hash_entry(&content)?;
+            let commits = get_links_and_load_type::<ContentChange>(snapshot_hash, None)?;
+            // TODO sort commits in correct order
+            for commit in commits {
+                for delta in commit.deltas {
+                    match delta {
+                        Delta::Title(new) => content.title = new,
+                        Delta::Add((start, value)) => content.body.insert_str(start, &value),
+                        Delta::Delete((start, stop)) => content.body.replace_range(start..stop, ""),
+                    }
+                }
+            }
             return Ok((hash_entry(&content)?, content));
         };
     };
@@ -242,4 +259,27 @@ pub struct SessionList(Vec<EntryHash>);
 pub fn get_sessions(_: ()) -> SynResult<SessionList> {
     let sessions = get_sessions_inner()?;
     Ok(SessionList(sessions))
+}
+
+
+pub fn get_links_and_load_type<R: TryFrom<Entry>>(
+    base: EntryHash,
+    tag: Option<LinkTag>,
+) -> SynResult<Vec<R>> {
+    let links = get_links(base.into(), tag)?.into_inner();
+
+    Ok(links
+       .iter()
+       .map(
+           |link|  {
+               if let Some(element) = get(link.target.clone(), Default::default())? {
+                   let e: Entry = element.entry().clone().into_option().ok_or(SynError::HashNotFound)?;
+                   let entry: R = R::try_from(e).map_err(|_e| SynError::HashNotFound)?;
+                   return Ok(entry);
+               };
+               Err(SynError::HashNotFound)
+           },
+       )
+       .filter_map(Result::ok)
+       .collect())
 }

@@ -14,7 +14,9 @@ pub enum SynError {
     #[error(transparent)]
     HdkError(#[from] HdkError),
     #[error("hash not found")]
-    HashNotFound // internal error for functions that should be given an known hash
+    HashNotFound, // internal error for functions that should be given an known hash
+    #[error("{0}")]
+    Generic(String)
 }
 
 pub type SynResult<T> = Result<T, SynError>;
