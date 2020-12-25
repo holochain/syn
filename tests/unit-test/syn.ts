@@ -50,7 +50,7 @@ module.exports = (orchestrator) => {
         const commit = {
             snapshot: sessionInfo.content_hash,
             change: {
-                deltas: [],
+                deltas: [{type:"Title",content: "foo title"},{type:"Add", content:[0,"bar content"]}],
                 previous_change: sessionInfo.content_hash, // this is the first change so same hash as snapshot
                 meta: {
                     contributors: [],
