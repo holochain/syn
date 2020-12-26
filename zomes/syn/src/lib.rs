@@ -2,6 +2,7 @@ use error::{SynError, SynResult};
 use hdk3::prelude::*;
 use link::LinkTag;
 mod error;
+use std::collections::HashMap;
 
 entry_defs![
     Path::entry_def(),
@@ -75,7 +76,7 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
 /// appropriate for your content.  In this example the grammar is an indicator
 /// to delete or add text at a given offset in the body, or to set a title value
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(tag = "type", content = "content")]
+#[serde(tag = "type", content = "value")]
 pub enum Delta {
     Title(String),
     Add((usize,String)),
@@ -96,6 +97,7 @@ pub struct ChangeMeta {
 pub struct ContentChange {
     pub deltas: Vec<Delta>,
     pub previous_change: EntryHash, // hash of Content on which these deltas are to be applied
+    pub content_hash: EntryHash, // hash of Content with these deltas applied
     pub meta: ChangeMeta,
 }
 
@@ -131,7 +133,8 @@ fn hash_content(content: Content) -> SynResult<EntryHash> {
 pub struct SessionInfo {
     pub session: HeaderHash,
     pub scribe: AgentPubKey,
-    pub content: Content,
+    pub snapshot_content: Content,
+    pub deltas: Vec<Delta>,
     pub content_hash: EntryHash,
 }
 
@@ -159,29 +162,44 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     Ok(header_hash)
 }
 
-/// builds the content out from a given snapshot by looking at commits on that snapshot
+/// collects the deltas from commits since given snapshot and returns:
+///   - snapshot content to which they should be applied
+///   - deltas in order,
+///   - content hash that would result from their application
 /// return error if hash not found rather than option because we
 /// shouldn't be calling this function on a hash that doesn't exist
-fn build_content_from_snapshot(header_hash: HeaderHash) -> SynResult<(EntryHash, Content)> {
+fn get_snapshot_info_for_session(header_hash: HeaderHash) -> SynResult<(Content, Vec<Delta>, EntryHash)> {
     if let Some(element) = get(header_hash, GetOptions::content())? {
         let maybe_content: Option<Content> = element.entry().to_app_option()?;
-        if let Some(mut content) = maybe_content {
+        if let Some(content) = maybe_content {
             // get commits from this snapshot
             // TODO: we should be able to get the entry hash from the
             // element, but I don't quite know how to yet
             let snapshot_hash = hash_entry(&content)?;
-            let commits = get_links_and_load_type::<ContentChange>(snapshot_hash, None)?;
-            // TODO sort commits in correct order
-            for commit in commits {
-                for delta in commit.deltas {
-                    match delta {
-                        Delta::Title(new) => content.title = new,
-                        Delta::Add((start, value)) => content.body.insert_str(start, &value),
-                        Delta::Delete((start, stop)) => content.body.replace_range(start..stop, ""),
-                    }
+            let commits = get_links_and_load_type::<ContentChange>(snapshot_hash.clone(), None)?;
+            // build hash map from commits vec, with keys as previous_change
+            let tuples = commits.into_iter().map(|c| (c.previous_change , (c.content_hash, c.deltas)));
+            let mut commits_map:HashMap<_,_> = tuples.into_iter().collect();
+            // start with the content hash of the snapshot as previous_change
+            let mut current_hash = snapshot_hash;
+            let mut ordered_deltas = Vec::new();
+            loop {
+                // look for commit with that previous_change
+                if let Some((content_hash, deltas)) = commits_map.get_mut(&current_hash) {
+                    // add deltas from that commit to ordered_deltas list
+                    ordered_deltas.append(deltas);
+                    // repeat with that commit's contentHash as next previous_change
+                    current_hash = content_hash.clone();
                 }
+                else {
+                    // None case (hash-map didn't find anything)
+                    break;
+                }
+
             }
-            return Ok((hash_entry(&content)?, content));
+            // content_hash of last Commit (current_hash) is the hash that would result from
+            // the application of the deltas
+            return Ok((content, ordered_deltas, current_hash));
         };
     };
     Err(SynError::HashNotFound)
@@ -194,13 +212,13 @@ fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
     if let Some(element) = get(session_hash,  GetOptions::content())? {
         let maybe_session: Option<Session> = element.entry().to_app_option()?;
         if let Some(session) = maybe_session {
-            let (content_hash, content) = build_content_from_snapshot(session.snapshot)?;
-            debug!("h {:?}, c {:?}", content_hash, content);
+            let (snapshot_content, deltas, content_hash) = get_snapshot_info_for_session(session.snapshot)?;
             return Ok(SessionInfo {
                 scribe: element.header().author().clone(),
                 session: element.header_address().clone(),
-                content,
-                content_hash
+                snapshot_content,
+                deltas,
+                content_hash,
             });
         };
     };
@@ -227,8 +245,8 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         // 1. find the Content we will make our session off of
         // TODO
         // 2. can't find a Content assume null content and commit it
-        let content = Content::default();
-        let (header_hash, content_hash) = put_content_inner(content.clone())?;
+        let snapshot_content = Content::default();
+        let (header_hash, content_hash) = put_content_inner(snapshot_content.clone())?;
 
         let scribe = agent_info()?.agent_latest_pubkey;
         let session = Session {
@@ -240,8 +258,9 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         Ok(SessionInfo{
             scribe,
             session: session_hash,
-            content,
+            snapshot_content,
             content_hash,
+            deltas: Vec::new()
         })
     }
 }
