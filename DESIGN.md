@@ -59,7 +59,7 @@ All signals are implemented using fire-and-forget remote_call which will be call
 - `ChangeReq(Delta)`: Participant -> Scribe. A node that has joined a Session sends the Session's Scribe a Delta (in the Work's Patch Grammar) representing a change to the Work.
 - `Change(Vec<Delta>)`: Scribe -> Participants. The Scribe sends all participants ordered Deltas to apply to their local states.
 - `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a Commit, Scribe sends a Commit Notice with the hash.  This can be used by participants to resync if they missed any Deltas.
-- `SycnReq()` Participant -> Scribe: request latest Snapshot and Commit.
+- `SycnReq()` Participant -> Scribe: request latest state for joining/syncing.
 - `SyncResp(SnapshotHash, CommitHash, Deltas)`: Scribe -> Participant.  Respond with the data needed for a joining/syncing participant to build the current Session's full state.
 
 
