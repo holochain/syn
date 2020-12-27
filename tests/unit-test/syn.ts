@@ -1,4 +1,5 @@
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
+import { HoloHash } from '@holochain/conductor-api'
 import * as _ from 'lodash'
 import path from 'path'
 
@@ -19,6 +20,23 @@ process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
   console.log('unhandledRejection', error);
 });
+
+// Signal type definitions
+type Delta = {
+  type: string,
+  value: [],
+}
+
+type StateForSync = {
+  snapshot: HoloHash,
+  commit: HoloHash,
+  deltas: Delta[],
+}
+
+type Signal = {
+  signal_name: string,
+  signal_payload?: StateForSync,
+}
 
 module.exports = (orchestrator) => {
     orchestrator.registerScenario('syn basic zome calls', async (s, t) => {
@@ -107,12 +125,19 @@ module.exports = (orchestrator) => {
         }
         commit_header_hash = await me.call('syn', 'commit', commit)
 
-        // set the signal handler so we can confirm what happens when
+        // set my signal handler so we can confirm what happens when
         // someone joins a sessions
-        let me_signals : object[] = []
+        let me_signals : Signal[] = []
         me_player.setSignalHandler((signal) => {
             console.log("Received Signal:",signal)
             me_signals.push(signal.data.payload)
+        })
+
+        // alice signal handler
+        let alice_signals : Signal[] = []
+        alice_player.setSignalHandler((signal) => {
+            console.log("Received Signal:",signal)
+            alice_signals.push(signal.data.payload)
         })
 
         // alice joins session
@@ -137,10 +162,22 @@ module.exports = (orchestrator) => {
         // I should receive alice's request for the state as she joins the session
         t.deepEqual(me_signals[0], {signal_name: "SyncReq"})
 
-        // (send Alice uncommitted deltas)
+        // (send Alice uncommitted deltas with the Fake UI)
+        const uncommittedDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}]
+        const state = {
+          snapshot: sessionInfo.content_hash,
+          commit: commit_header_hash,
+          deltas: uncommittedDeltas,
+        }
+        await me.call('syn', 'send_sync_response', {
+          participant: alice_pubkey,
+          state,
+        })
 
         // Alice should have recieved uncommitted deltas
-
+        await delay(500) // make time for signal to arrive
+        t.equal(alice_signals[0].signal_name, "SyncResp")
+        t.deepEqual(alice_signals[0].signal_payload, state) // deltas, commit, and snapshot match
 
     })
 }

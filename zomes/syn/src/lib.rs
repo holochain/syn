@@ -289,7 +289,6 @@ pub fn get_sessions(_: ()) -> SynResult<SessionList> {
     Ok(SessionList(sessions))
 }
 
-
 pub fn get_links_and_load_type<R: TryFrom<Entry>>(
     base: EntryHash,
     tag: Option<LinkTag>,
@@ -312,11 +311,11 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
        .collect())
 }
 
-
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-struct StateForSync {
-    // SnapshotHash, CommitHash, Vec<Delta>
-    // foo: String,
+pub struct StateForSync {
+    pub snapshot: EntryHash,
+    pub commit: HeaderHash,
+    pub deltas: Vec<Delta>,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -344,4 +343,18 @@ fn recv_remote_signal(signal: SerializedBytes) -> SynResult<()> {
         access: ().into(), functions,
     })?;
     Ok(InitCallbackResult::Pass)
+}
+
+/// Input to the send sync response call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendSyncResponseInput {
+    pub participant: AgentPubKey,
+    pub state: StateForSync,
+}
+
+#[hdk_extern]
+fn send_sync_response(input:SendSyncResponseInput) -> SynResult<()> {
+    // send response signal to the participant
+    remote_signal(&SignalPayload::SyncResp(input.state), vec![input.participant])?;
+    Ok(())
 }
