@@ -302,3 +302,23 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
        .filter_map(Result::ok)
        .collect())
 }
+
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+struct Foo {
+    foo: String,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(tag = "signal_name", content = "signal_payload")]
+enum SignalPayload {
+    Fixme(Foo),
+}
+
+#[hdk_extern]
+fn recv_remote_signal(signal: SerializedBytes) -> SynResult<()> {
+    let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
+    debug!(format!("Received remote signal {:?}", sig));
+    emit_signal(&signal)?;
+    Ok(())
+}

@@ -106,6 +106,15 @@ module.exports = (orchestrator) => {
         }
         commit_header_hash = await me.call('syn', 'commit', commit)
 
+        // set the signal handler so we can confirm what happens when
+        // someone joins a sessions
+        let flag = false
+        conductor.setSignalHandler((signal) => {
+            console.log("Received Signal:",signal)
+            t.deepEqual(signal.data.payload.signal_payload.messageData.message, {fixme: "fixme"})
+            flag = true
+        })
+
         // alice joins session
         const aliceSessionInfo = await alice.call('syn', 'join_session')
         // alice should get my session
@@ -125,13 +134,8 @@ module.exports = (orchestrator) => {
         t.deepEqual(aliceSessionInfo.content_hash, hash)
 
 
-
-        /*        // create an initial snapshot
-                  const content = {title:"foo", body:"bar"};
-                  let snapshot_hash = await me.call('syn', 'put_content', content)
-                  t.equal(snapshot_hash.length, 39) // is a hash
-        */
-
+        // FIXME re signal from alice's joining received by me
+        t.equal(flag, true)
 
 
     })
