@@ -55,7 +55,7 @@ Notes:
 - when a Content Snapshot is created, we add a link from the "Snapshots" anchor to the new Snapshot.  This is needed for creating a new session.  See below.
 
 ### Real-time Signals
-All signals are implemented using fire-and-forget remote_call which will be called remote_signal
+All signals are implemented using fire-and-forget remote_signal
 - `ChangeReq(Delta)`: Participant -> Scribe. A node that has joined a Session sends the Session's Scribe a Delta (in the Work's Patch Grammar) representing a change to the Work.
 - `Change(Vec<Delta>)`: Scribe -> Participants. The Scribe sends all participants ordered Deltas to apply to their local states.
 - `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a Commit, Scribe sends a Commit Notice with the hash.  This can be used by participants to resync if they missed any Deltas.
