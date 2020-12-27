@@ -11,11 +11,8 @@ const dna = path.join(__dirname, '../../syn.dna.gz')
 console.log(dna)
 
 const installation: InstallAgentsHapps = [
-    // three agents
+    // one agents
     [[dna]], // contains 1 dna
-    [[dna]], // contains 1 dna
-    [[dna]] // contains 1 dna
-
 ]
 
 process.on('unhandledRejection', error => {
@@ -25,8 +22,12 @@ process.on('unhandledRejection', error => {
 
 module.exports = (orchestrator) => {
     orchestrator.registerScenario('syn basic zome calls', async (s, t) => {
-        const [conductor] = await s.players([config])
-        const [[me_happ],[alice_happ],[bob_happ]] = await conductor.installAgentsHapps(installation)
+        const [me_player, alice_player, bob_player] = await s.players([config, config, config])
+        const [[me_happ]] = await me_player.installAgentsHapps(installation)
+        const [[alice_happ]] = await alice_player.installAgentsHapps(installation)
+        const [[bob_happ]] = await bob_player.installAgentsHapps(installation)
+
+        await s.shareAllNodes([me_player, alice_player, bob_player]);
 
         const me = me_happ.cells[0]
         const alice = alice_happ.cells[0]
@@ -108,11 +109,10 @@ module.exports = (orchestrator) => {
 
         // set the signal handler so we can confirm what happens when
         // someone joins a sessions
-        let flag = false
-        conductor.setSignalHandler((signal) => {
+        let me_signals : object[] = []
+        me_player.setSignalHandler((signal) => {
             console.log("Received Signal:",signal)
-            t.deepEqual(signal.data.payload, {signal_name: "SyncReq"})
-            flag = true // FIXME
+            me_signals.push(signal.data.payload)
         })
 
         // alice joins session
@@ -134,8 +134,8 @@ module.exports = (orchestrator) => {
         hash = await alice.call('syn', 'hash_content', aliceSessionInfo.snapshot_content)
         t.deepEqual(aliceSessionInfo.content_hash, hash)
 
-        // I should hear that alice joined the session
-        t.equal(flag, true)
+        // I should receive alice's request for the state as she joins the session
+        t.deepEqual(me_signals[0], {signal_name: "SyncReq"})
 
         // (send Alice uncommitted deltas)
 
