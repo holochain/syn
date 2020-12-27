@@ -227,6 +227,8 @@ fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
 
 #[hdk_extern]
 fn join_session(_: ()) -> SynResult<SessionInfo> {
+    // get my pubkey
+    let me = agent_info()?.agent_latest_pubkey;
 
     // get recent sessions
     let sessions = get_sessions_inner()?;
@@ -234,7 +236,14 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
     if sessions.len() > 0 {
         debug!("session found: {:?}", sessions);
         // for now just pick the first!
-        Ok(build_session_info(sessions[0].clone())?)
+        let session = sessions[0].clone();
+        // send SyncReq to scribe of selected session unless scribe is me
+        let session_info = build_session_info(session)?;
+        if session_info.scribe != me {
+            remote_signal(&SignalPayload::SyncReq, vec![session_info.scribe.clone()])?;
+        }
+
+        Ok(session_info)
     }
     else {
         debug!("no sessions found");
@@ -248,7 +257,7 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         let snapshot_content = Content::default();
         let (header_hash, content_hash) = put_content_inner(snapshot_content.clone())?;
 
-        let scribe = agent_info()?.agent_latest_pubkey;
+        let scribe = me;
         let session = Session {
             snapshot: header_hash,
             // scribe is author
@@ -305,14 +314,16 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
 
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-struct Foo {
-    foo: String,
+struct StateForSync {
+    // SnapshotHash, CommitHash, Vec<Delta>
+    // foo: String,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(tag = "signal_name", content = "signal_payload")]
 enum SignalPayload {
-    Fixme(Foo),
+    SyncReq,
+    SyncResp(StateForSync),
 }
 
 #[hdk_extern]
@@ -321,4 +332,16 @@ fn recv_remote_signal(signal: SerializedBytes) -> SynResult<()> {
     debug!(format!("Received remote signal {:?}", sig));
     emit_signal(&signal)?;
     Ok(())
+}
+
+#[hdk_extern] fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    // grant unrestricted access to accept_cap_claim so other agents can send us claims
+    let mut functions: GrantedFunctions = HashSet::new();
+    functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
+    create_cap_grant(CapGrantEntry {
+        tag: "".into(),
+        // empty access converts to unrestricted
+        access: ().into(), functions,
+    })?;
+    Ok(InitCallbackResult::Pass)
 }

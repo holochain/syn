@@ -111,8 +111,8 @@ module.exports = (orchestrator) => {
         let flag = false
         conductor.setSignalHandler((signal) => {
             console.log("Received Signal:",signal)
-            t.deepEqual(signal.data.payload.signal_payload.messageData.message, {fixme: "fixme"})
-            flag = true
+            t.deepEqual(signal.data.payload, {signal_name: "SyncReq"})
+            flag = true // FIXME
         })
 
         // alice joins session
@@ -123,6 +123,7 @@ module.exports = (orchestrator) => {
         t.deepEqual(aliceSessionInfo.snapshot_content, {title:'', body:''})
 
         // check that deltas and snapshot content returned add up to the current real content
+        await delay(500) // make time for integrating new data
         t.deepEqual(
           applyDeltas(aliceSessionInfo.snapshot_content, aliceSessionInfo.deltas),
           {title: "foo title", body: "baz monkey new"} // content after two commits
@@ -133,9 +134,12 @@ module.exports = (orchestrator) => {
         hash = await alice.call('syn', 'hash_content', aliceSessionInfo.snapshot_content)
         t.deepEqual(aliceSessionInfo.content_hash, hash)
 
-
-        // FIXME re signal from alice's joining received by me
+        // I should hear that alice joined the session
         t.equal(flag, true)
+
+        // (send Alice uncommitted deltas)
+
+        // Alice should have recieved uncommitted deltas
 
 
     })
