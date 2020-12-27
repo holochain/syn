@@ -323,6 +323,8 @@ pub struct StateForSync {
 enum SignalPayload {
     SyncReq,
     SyncResp(StateForSync),
+    ChangeReq(Delta),
+    Change(Vec<Delta>)
 }
 
 #[hdk_extern]
@@ -356,5 +358,33 @@ pub struct SendSyncResponseInput {
 fn send_sync_response(input:SendSyncResponseInput) -> SynResult<()> {
     // send response signal to the participant
     remote_signal(&SignalPayload::SyncResp(input.state), vec![input.participant])?;
+    Ok(())
+}
+
+/// Input to the send change call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendChangeRequestInput {
+    pub scribe: AgentPubKey,
+    pub delta: Delta,
+}
+
+#[hdk_extern]
+fn send_change_request(input:SendChangeRequestInput) -> SynResult<()> {
+    // send response signal to the participant
+    remote_signal(&SignalPayload::ChangeReq(input.delta), vec![input.scribe])?;
+    Ok(())
+}
+
+/// Input to the send change response call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendChangeInput {
+    pub participants: Vec<AgentPubKey>,
+    pub deltas: Vec<Delta>,
+}
+
+#[hdk_extern]
+fn send_change(input:SendChangeInput) -> SynResult<()> {
+    // send response signal to the participant
+    remote_signal(&SignalPayload::Change(input.deltas), input.participants)?;
     Ok(())
 }

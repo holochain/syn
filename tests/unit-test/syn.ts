@@ -21,10 +21,15 @@ process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
 
+
+type Add = [number, string]
+type Delete = [number, number]
+type Title = string
+
 // Signal type definitions
 type Delta = {
   type: string,
-  value: [],
+  value: Add | Delete | Title,
 }
 
 type StateForSync = {
@@ -129,15 +134,22 @@ module.exports = (orchestrator) => {
         // someone joins a sessions
         let me_signals : Signal[] = []
         me_player.setSignalHandler((signal) => {
-            console.log("Received Signal:",signal)
+            console.log("Received Signal for me:",signal)
             me_signals.push(signal.data.payload)
         })
 
         // alice signal handler
         let alice_signals : Signal[] = []
         alice_player.setSignalHandler((signal) => {
-            console.log("Received Signal:",signal)
+            console.log("Received Signal for alice:",signal)
             alice_signals.push(signal.data.payload)
+        })
+
+        // bob signal handler
+        let bob_signals : Signal[] = []
+        bob_player.setSignalHandler((signal) => {
+            console.log("Received Signal for bob:",signal)
+            bob_signals.push(signal.data.payload)
         })
 
         // alice joins session
@@ -178,6 +190,35 @@ module.exports = (orchestrator) => {
         await delay(500) // make time for signal to arrive
         t.equal(alice_signals[0].signal_name, "SyncResp")
         t.deepEqual(alice_signals[0].signal_payload, state) // deltas, commit, and snapshot match
+
+
+        // bob joins session
+        const bobSessionInfo = await alice.call('syn', 'join_session')
+        // bob should get my session
+        t.deepEqual(bobSessionInfo.scribe, me_pubkey)
+
+        // alice sends me a change req and I should receive it
+        const alice_delta: Delta = {type: "Title", value: "Alice in Wonderland"}
+        await alice.call('syn', 'send_change_request', {
+            scribe: aliceSessionInfo.scribe,
+            delta: alice_delta})
+        await delay(500) // make time for signal to arrive
+        const sig = me_signals[2]
+        t.equal(sig.signal_name, "ChangeReq")
+        t.deepEqual(sig.signal_payload, alice_delta) // delta_matches
+
+        const my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}]
+        // I send a change, and alice and bob should receive it.
+        await me.call('syn', 'send_change', {
+            participants: [alice_pubkey, bob_pubkey],
+            deltas: my_deltas})
+        await delay(500) // make time for signal to arrive
+        const a_sig = alice_signals[1]
+        const b_sig = bob_signals[0]
+        t.equal(a_sig.signal_name, "Change")
+        t.equal(b_sig.signal_name, "Change")
+        t.deepEqual(a_sig.signal_payload, my_deltas) // delta_matches
+        t.deepEqual(b_sig.signal_payload, my_deltas) // delta_matches
 
     })
 }
