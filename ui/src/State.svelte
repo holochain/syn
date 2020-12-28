@@ -1,27 +1,54 @@
 <script>
-import {callZome} from './Admin.svelte';
-
-let title = 'Default title';
-let content = 'Default content';
-let newTitle = '';
-
-let editingTitle = false;
-function toggleEditingTitle() {
-  if (editingTitle) {
-    title = newTitle;
-    newTitle = "";
-  } else {
-    newTitle = title;
+  import {callZome, session, connection} from './Admin.svelte';
+  import Admin from './Admin.svelte';
+  let content = {
+    title: 'loading session...',
+    body: 'loading session',
   }
-  editingTitle = !editingTitle;
-}
+  let newTitle = '';
 
-// whenever title is updated, send a HC zome changeReq
+  function applyDeltas(deltas) {
+    for (const delta of deltas) {
+      switch(delta.type) {
+      case "Title":
+        content.title = delta.value
+        break
+      case "Add":
+        const [loc, text] = delta.value
+        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
+        break
+      case "Delete":
+        const [start, end] = delta.value
+        content.body = content.body.slice(0, start) + content.body.slice(end)
+        break
+      }
+    }
+  }
 
-$: {
-  let delta = { type: 'Title', value: title};
-  callZome('send_change_request', {scribe: delta: delta});
-}
+  function requestChange(delta) {
+    if (session.scribeStr == connection.me) {
+      applyDeltas([delta])
+    } else {
+      callZome('send_change_request', {scribe: session.scribe, delta});
+    }
+  }
+
+  let editingTitle = false;
+  function toggleEditingTitle() {
+    if (editingTitle) {
+      let delta = { type: 'Title', value: newTitle};
+      requestChange(delta);
+      newTitle = "";
+    } else {
+      newTitle = content.title;
+    }
+    editingTitle = !editingTitle;
+  }
+
+  function setState(event) {
+    content = event.detail
+  }
+
 </script>
 
 <style>
@@ -31,14 +58,14 @@ $: {
   }
 
 </style>
-
+<Admin on:setState={setState}/>
 <div>
   <div>
     Title:
     {#if editingTitle}
     <input bind:value={newTitle}/>
     {:else}
-    {title}
+    {content.title}
     {/if}
 
     <button on:click={toggleEditingTitle} change>
@@ -49,5 +76,5 @@ $: {
     {/if}
     </button>
   </div>
-<textarea bind:value={content}/>
+<textarea bind:value={content.body}/>
 </div>

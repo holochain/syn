@@ -1,12 +1,10 @@
 <script>
-  import Admin from './Admin.svelte';
   import State from './State.svelte';
 </script>
 
 <main>
-	<h1>Groogle docs</h1>
-	<Admin/>
-  <State/>
+  <h1>Groogle docs</h1>
+ <State/>
 </main>
 
 <style>
