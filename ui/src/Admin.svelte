@@ -1,10 +1,10 @@
-<script>
+<script context="module">
 
   import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
   let adminPort=1234;
   let appPort=8888;
   let connection;
-;
+
   async function toggle() {
     if (!connection) {
       connection = {}
@@ -21,19 +21,18 @@
       }
       console.log("active", connection);
       const r = await callZome("join_session");
-      console.log("joined", r, {});
+      console.log("joined", r);
+      dispatch('setState', {
+			     state: r.snapshot_content
+		  });
     } else {
       connection = undefined
     }
   }
 
-  const callZome = async (
-    fn_name,
-    payload,
-    timeout
-  ) => {
+  export async function callZome(fn_name, payload, timeout) {
     if (!connection) {
-      console.og("callZome called when disconnected from conductor");
+      console.log("callZome called when disconnected from conductor");
       return;
     }
     try {
@@ -56,17 +55,18 @@
 // TODO        return doResetConnection(dispatch);
     }
   };
+
+  import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
 </script>
 
 App Port: <input bind:value={appPort}>
 
-{#if connection}
-  <button on:click={toggle}>
-
+<button on:click={toggle}>
+  {#if connection}
     Disconnect
-  </button>
-{:else}
-  <button on:click={toggle}>
+  {:else}
     Connect
-  </button>
-{/if}
+  {/if}
+</button>
