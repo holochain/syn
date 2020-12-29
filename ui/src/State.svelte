@@ -140,7 +140,7 @@
   }
 
 </style>
-<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq}/>
+<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change}/>
 <div>
   <div>
     Title:
