@@ -53,7 +53,22 @@
       const appClient = await AppWebsocket.connect(
         `ws://localhost:${appPort}`,
         signal => {
-          console.log("Got Signal", signal)
+          console.log("Got Signal", signal.data.payload.signal_name, signal)
+          switch (signal.data.payload.signal_name) {
+          case "SyncReq":
+            dispatch('syncReq');
+            break;
+          case "SyncResp":
+            dispatch("syncResp", signal.data.payload.signal_payload);
+            break;
+          case "ChangeReq":
+            console.log("dispatching changeReq")
+            dispatch("changeReq", signal.data.payload.signal_payload);
+            break;
+          case "Change":
+            dipatch("change",signal.data.payload.signal_payload);
+            break;
+          }
         }
       );
       console.log("connected", appClient)
@@ -75,7 +90,7 @@
       session.scribeStr = arrayBufferToBase64(session.scribe);
       console.log("joined", session);
       dispatch('setStateFromSession', {
-        content: {... session.snapshot_content},
+        content: {... session.snapshot_content}, // clone so as not to pass by ref
         contentHash: session.content_hash,
         deltas: session.deltas,
       });

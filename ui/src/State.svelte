@@ -38,6 +38,36 @@
     }
   }
 
+  // handler for the changeReq event
+  function changeReq(event) {
+    if (session.scribeStr == connection.me) {
+      addDeltaAsScribe(event.detail)
+    } else {
+      console.log("change requested but I'm not the scribe")
+    }
+  }
+
+  // handler for the change event
+  function change(event) {
+    if (session.scribeStr == connection.me) {
+      console.log("change sent but I'm the scribe!")
+    } else {
+      console.log("FIXME")
+    }
+  }
+
+  // handler for the syncReq event
+  function syncReq(event) {
+    console.log("FIXME")
+  }
+
+  // handler for the syncResp event
+  function syncResp(event) {
+    console.log("FIXME")
+  }
+
+  // called when requesting a change to the content.
+  // If we are the scribe, no need to go into the zome
   function requestChange(delta) {
     if (session.scribeStr == connection.me) {
       addDeltaAsScribe(delta)
@@ -110,7 +140,7 @@
   }
 
 </style>
-<Admin on:setStateFromSession={setStateFromSession}/>
+<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq}/>
 <div>
   <div>
     Title:
