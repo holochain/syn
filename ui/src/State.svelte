@@ -1,6 +1,6 @@
 <script>
-  import {callZome, session, connection, arrayBufferToBase64} from './Admin.svelte';
-  import Admin from './Admin.svelte';
+  import {callZome, session, connection, arrayBufferToBase64} from './Holochain.svelte';
+  import Holochain from './Holochain.svelte';
   let content = {
     title: 'loading session...',
     body: 'loading session',
@@ -166,7 +166,7 @@
   }
 
 </style>
-<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
+<Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
 <div>
   <div>
     Title:
