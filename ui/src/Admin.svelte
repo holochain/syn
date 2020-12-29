@@ -1,6 +1,7 @@
 <script context="module">
   export let connection
   export let session
+  export let participants = []
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
     var bytes = new Uint8Array(buffer);

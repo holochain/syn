@@ -10,9 +10,23 @@
   let pendingDeltas = [];
   let lastCommitedContentHash;
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
-  function addDeltaAsScribe(delta) {
+  let participants = {};
+  $: participantsPretty =  JSON.stringify(Object.keys(participants).map(p => arrayBufferToBase64(p)))
+
+  function addDeltaAsScribe(change) {
+    let [index, delta] = change;
+    // if we can't apply delta immediatly (i.e. index is our current index)
+    // we must first merge this delta with any previous ones
+    if (pendingDeltas.length != index) {
+      // TODO: maerge
+    }
+    // add delta to the pending deltas and change state
     pendingDeltas = [...pendingDeltas, delta];
     applyDeltas([delta]);
+    // notify all particpants of the change
+    if (participants.length > 0) {
+      callZome("send_change", {participants: Object.keys(participants), deltas: [delta]})
+    }
   }
 
   function applyDeltas(deltas) {
@@ -41,7 +55,7 @@
   // handler for the changeReq event
   function changeReq(event) {
     if (session.scribeStr == connection.me) {
-      addDeltaAsScribe(event.detail)
+      addChangeAsScribe(event.detail)
     } else {
       console.log("change requested but I'm not the scribe")
     }
@@ -64,6 +78,18 @@
   // handler for the syncResp event
   function syncResp(event) {
     console.log("FIXME")
+  }
+
+  // handler for the updateParticipants event
+  function updateParticipants(event) {
+    switch (event.detail.type) {
+    case "set":
+      participants[event.detail.key] = event.detail.data;
+      break;
+    case "del":
+      delete participants[event.detail.key];
+      break;
+    }
   }
 
   // called when requesting a change to the content.
@@ -140,7 +166,7 @@
   }
 
 </style>
-<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change}/>
+<Admin on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
 <div>
   <div>
     Title:
@@ -165,4 +191,5 @@
   <h4>Dev data:</h4>
   <li>lastCommitedContentHash: {lastCommitedContentHashStr}
   <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
+  <li>particpants: {participantsPretty}
 </div>
