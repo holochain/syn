@@ -32,8 +32,10 @@
       return result;
     } catch (error) {
       console.log("ERROR: callZome threw error", error);
-//      if (error == "Error: Socket is not open")
-// TODO        return doResetConnection(dispatch);
+      throw(error);
+      //  if (error == "Error: Socket is not open") {
+      // TODO        return doResetConnection(dispatch);
+      // }
     }
   };
 </script>
@@ -70,7 +72,11 @@
       session = await callZome("join_session");
       session.scribeStr = arrayBufferToBase64(session.scribe);
       console.log("joined", session);
-      dispatch('setState', session.snapshot_content);
+      dispatch('setStateFromSession', {
+        content: session.snapshot_content,
+        contentHash: session.content_hash,
+        deltas: session.deltas,
+      });
     } else {
       connection = undefined
       conn = undefined

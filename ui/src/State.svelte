@@ -1,13 +1,26 @@
 <script>
-  import {callZome, session, connection} from './Admin.svelte';
+  import {callZome, session, connection, arrayBufferToBase64} from './Admin.svelte';
   import Admin from './Admin.svelte';
   let content = {
     title: 'loading session...',
     body: 'loading session',
   }
   let newTitle = '';
+  let commitInProgress = false;
+  let pendingDeltas = [];
+  let lastCommitedContentHash;
+  $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
+  function addDeltaAsScribe(delta) {
+    pendingDeltas = [...pendingDeltas, delta];
+    applyDeltas([delta]);
+  }
 
   function applyDeltas(deltas) {
+    if (commitInProgress) {
+      //FIXME collect them up anyways and apply later?
+      alert("WHOA attempt to apply deltas while commit in progress")
+      return;
+    }
     for (const delta of deltas) {
       switch(delta.type) {
       case "Title":
@@ -27,9 +40,46 @@
 
   function requestChange(delta) {
     if (session.scribeStr == connection.me) {
-      applyDeltas([delta])
+      addDeltaAsScribe(delta)
     } else {
       callZome('send_change_request', {scribe: session.scribe, delta});
+    }
+  }
+
+  async function commitChange() {
+    if (session.scribeStr == connection.me) {
+      if (pendingDeltas.length == 0) {
+        alert("No deltas to commit!");
+        return;
+      }
+      commitInProgress = true
+      const newContentHash = await callZome('hash_content', content)
+      console.log("commiting at snapshot", arrayBufferToBase64(session.content_hash));
+      console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
+      console.log("   new_hash:", arrayBufferToBase64(newContentHash));
+      const commit = {
+        snapshot: session.content_hash,
+        change: {
+          deltas: pendingDeltas,
+          content_hash: newContentHash,
+          previous_change: lastCommitedContentHash,
+          meta: {
+            contributors: [],
+            witnesses: [],
+            app_specific: null
+          }
+        }
+      }
+      try {
+        await callZome('commit', commit)
+        lastCommitedContentHash = newContentHash;
+        pendingDeltas = []
+      }
+      catch (e) {
+      }
+      commitInProgress = false
+    } else {
+      alert("You ain't the scribe!")
     }
   }
 
@@ -45,8 +95,10 @@
     editingTitle = !editingTitle;
   }
 
-  function setState(event) {
-    content = event.detail
+  function setStateFromSession(event) {
+    content = event.detail.content;
+    lastCommitedContentHash = event.detail.contentHash;
+    applyDeltas(event.detail.deltas);
   }
 
 </script>
@@ -58,7 +110,7 @@
   }
 
 </style>
-<Admin on:setState={setState}/>
+<Admin on:setStateFromSession={setStateFromSession}/>
 <div>
   <div>
     Title:
@@ -77,4 +129,10 @@
     </button>
   </div>
 <textarea bind:value={content.body}/>
+</div>
+<button on:click={commitChange}>Commit</button>
+<div>
+  <h4>Dev data:</h4>
+  <li>lastCommitedContentHash: {lastCommitedContentHashStr}
+  <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
 </div>
