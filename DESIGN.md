@@ -56,7 +56,7 @@ Notes:
 
 ### Real-time Signals
 All signals are implemented using fire-and-forget remote_signal
-- `ChangeReq(Delta)`: Participant -> Scribe. A node that has joined a Session sends the Session's Scribe a Delta (in the Work's Patch Grammar) representing a change to the Work.
+- `ChangeReq((Index, Delta))`: Participant -> Scribe. A node that has joined a Session sends the Session's Scribe a Delta (in the Work's Patch Grammar) representing a change to the Work from a given index of previous deltas.  The `Index` indicates after which deltas since the last commit as recorded by the scribe the given delta applies, so that the scribe can appropriately apply the patch given other deltas that may have arrived from other participants.
 - `Change(Vec<Delta>)`: Scribe -> Participants. The Scribe sends all participants ordered Deltas to apply to their local states.
 - `CommitNotice(EntryHash)`: Scribe -> Participants.  When making a Commit, Scribe sends a Commit Notice with the hash.  This can be used by participants to resync if they missed any Deltas.
 - `SycnReq()` Participant -> Scribe: request latest state for joining/syncing.

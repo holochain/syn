@@ -56,7 +56,7 @@ module.exports = (orchestrator) => {
         const alice = alice_happ.cells[0]
         const bob = bob_happ.cells[0]
 
-        const me_pubkey = me.cellId[1]x
+        const me_pubkey = me.cellId[1]
         const alice_pubkey = alice.cellId[1]
         const bob_pubkey = bob.cellId[1]
 
@@ -99,7 +99,7 @@ module.exports = (orchestrator) => {
                     witnesses: [],
                     app_specific: null
                 }
-            }y
+            }
         }
         let commit_header_hash = await me.call('syn', 'commit', commit)
         t.equal(commit_header_hash.length, 39) // is a hash
@@ -115,8 +115,7 @@ module.exports = (orchestrator) => {
         new_content = applyDeltas(new_content, deltas)
         const new_content_hash_2 = await me.call('syn', 'hash_content', new_content)
 
-        commit = {    currentCommitHash = event.detail.contentHash;
-
+        commit = {
             snapshot: sessionInfo.content_hash,
             change: {
                 deltas,
@@ -202,11 +201,12 @@ module.exports = (orchestrator) => {
         const alice_delta: Delta = {type: "Title", value: "Alice in Wonderland"}
         await alice.call('syn', 'send_change_request', {
             scribe: aliceSessionInfo.scribe,
+            index: 1,
             delta: alice_delta})
         await delay(500) // make time for signal to arrive
         const sig = me_signals[2]
         t.equal(sig.signal_name, "ChangeReq")
-        t.deepEqual(sig.signal_payload, alice_delta) // delta_matches
+        t.deepEqual(sig.signal_payload, [1, alice_delta]) // delta_matches
 
         const my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}]
         // I send a change, and alice and bob should receive it.
