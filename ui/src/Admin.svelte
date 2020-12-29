@@ -70,10 +70,12 @@
       conn = connection
       console.log("active", connection);
       session = await callZome("join_session");
+      session.snapshotHash = await callZome('hash_content', session.snapshot_content)
+      session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
       session.scribeStr = arrayBufferToBase64(session.scribe);
       console.log("joined", session);
       dispatch('setStateFromSession', {
-        content: session.snapshot_content,
+        content: {... session.snapshot_content},
         contentHash: session.content_hash,
         deltas: session.deltas,
       });

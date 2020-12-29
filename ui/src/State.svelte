@@ -54,11 +54,11 @@
       }
       commitInProgress = true
       const newContentHash = await callZome('hash_content', content)
-      console.log("commiting at snapshot", arrayBufferToBase64(session.content_hash));
+      console.log("commiting from snapshot", session.snapshotHashStr);
       console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
       const commit = {
-        snapshot: session.content_hash,
+        snapshot: session.snapshotHash,
         change: {
           deltas: pendingDeltas,
           content_hash: newContentHash,
