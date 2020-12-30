@@ -11,14 +11,14 @@
   let lastCommitedContentHash;
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
   let participants = {};
-  $: participantsPretty =  JSON.stringify(Object.keys(participants).map(p => arrayBufferToBase64(p)))
+  $: participantsPretty =  JSON.stringify(Object.keys(participants))
 
-  function addDeltaAsScribe(change) {
+  function addChangeAsScribe(change) {
     let [index, delta] = change;
-    // if we can't apply delta immediatly (i.e. index is our current index)
+    // if we can't apply delta immediately (i.e. index is our current index)
     // we must first merge this delta with any previous ones
     if (pendingDeltas.length != index) {
-      // TODO: maerge
+      // TODO: merge
     }
     // add delta to the pending deltas and change state
     pendingDeltas = [...pendingDeltas, delta];
@@ -57,14 +57,14 @@
     if (session.scribeStr == connection.me) {
       addChangeAsScribe(event.detail)
     } else {
-      console.log("change requested but I'm not the scribe")
+      console.log("change requested but I'm not the scribe.")
     }
   }
 
   // handler for the change event
   function change(event) {
     if (session.scribeStr == connection.me) {
-      console.log("change sent but I'm the scribe!")
+      console.log("change recevied but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log("FIXME")
     }
@@ -72,12 +72,40 @@
 
   // handler for the syncReq event
   function syncReq(event) {
-    console.log("FIXME")
+    const fromStr = arrayBufferToBase64(event.detail.from);
+    if (session.scribeStr == connection.me) {
+      // update participants
+      if (!(fromStr in participants) || event.detail.meta) {
+        participants[fromStr] = event.detail.meta
+        particpants = participants
+      }
+      callZome("send_sync_response", {
+        participant: event.detail.from,
+        state: {
+          snapshot: sessions.snapshotHash,
+          commit: currentCommitHeaderHash, // could be null.
+          commit_content_hash: lastCommitedContentHash,
+          deltas: pendingDeltas
+        }
+      })
+    }
+    else {
+      console.log("syncReq received but I'm not the scribe!")
+    }
   }
 
   // handler for the syncResp event
   function syncResp(event) {
-    console.log("FIXME")
+    const stateForSync = event.detail;
+    // Make sure that we are working off the same snapshot and commit
+    if (
+        arrayBufferToBase64(stateForSynce.commit_content_hash) == lastCommitedContentHashStr
+       ) {
+      applyDeltas(stateForSync.deltas);
+    } else {
+      console.log("WHOA, sync response has different current state assumptions")
+      // TODO: resync somehow
+    }
   }
 
   // handler for the updateParticipants event
@@ -95,11 +123,12 @@
   // called when requesting a change to the content.
   // If we are the scribe, no need to go into the zome
   function requestChange(delta) {
-    if (session.scribeStr == connection.me) {
-      addDeltaAsScribe(delta)
-    } else {
-      callZome('send_change_request', {scribe: session.scribe, delta});
-    }
+//    if (session.scribeStr == connection.me) {
+//      addDeltaAsScribe(delta)
+    //    } else {
+    const index = 0;
+    callZome('send_change_request', {scribe: session.scribe, index, delta});
+//    }
   }
 
   async function commitChange() {
@@ -127,7 +156,7 @@
         }
       }
       try {
-        await callZome('commit', commit)
+        currentCommitHeaderHash = await callZome('commit', commit)
         lastCommitedContentHash = newContentHash;
         pendingDeltas = []
       }
@@ -193,3 +222,4 @@
   <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
   <li>particpants: {participantsPretty}
 </div>
+but

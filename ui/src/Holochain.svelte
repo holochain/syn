@@ -1,7 +1,6 @@
 <script context="module">
   export let connection
   export let session
-  export let participants = []
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
     var bytes = new Uint8Array(buffer);
@@ -57,7 +56,8 @@
           console.log("Got Signal", signal.data.payload.signal_name, signal)
           switch (signal.data.payload.signal_name) {
           case "SyncReq":
-            dispatch('syncReq');
+            const from = signal.data.cellId[1];
+            dispatch('syncReq', from);
             break;
           case "SyncResp":
             dispatch("syncResp", signal.data.payload.signal_payload);

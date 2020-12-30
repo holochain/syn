@@ -134,8 +134,8 @@ pub struct SessionInfo {
     pub session: HeaderHash,
     pub scribe: AgentPubKey,
     pub snapshot_content: Content,
-    pub deltas: Vec<Delta>,
-    pub content_hash: EntryHash,
+    pub deltas: Vec<Delta>,  // deltas since snapshot
+    pub content_hash: EntryHash, // content hash at last commit
 }
 
 fn get_sessions_path() -> Path {
@@ -314,8 +314,9 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct StateForSync {
     pub snapshot: EntryHash,
-    pub commit: HeaderHash,
-    pub deltas: Vec<Delta>,
+    pub commit: Option<HeaderHash>,  // latest commit if there has been one since the snapshot
+    pub commit_content_hash: EntryHash,
+    pub deltas: Vec<Delta>, // all deltas since snapshot or that commit
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
