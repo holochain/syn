@@ -27,6 +27,7 @@
     applyDeltas([delta]);
     // notify all participants of the change
     if (participants.length > 0) {
+      console.log(`Sending change to ${participantsPretty}:`, delta);
       callZome("send_change", {participants: Object.keys(participants), deltas: [delta]})
     }
   }
@@ -89,7 +90,7 @@
       if (currentCommitHeaderHash) {
         state["commit"] = currentCommitHeaderHash;
       }
-      console.log("STATE:", state)
+      console.log(`sending SyncResp ${fromStr}:`, state)
       callZome("send_sync_response", {
         participant: event.detail.from,
         state
@@ -126,15 +127,15 @@
     }
   }
 
-  // called when requesting a change to the content.
+  // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   function requestChange(delta) {
-//    if (session.scribeStr == connection.me) {
-//      addDeltaAsScribe(delta)
-    //    } else {
-    const index = 0;
-    callZome('send_change_request', {scribe: session.scribe, index, delta});
-//    }
+    if (session.scribeStr == connection.me) {
+      addDeltaAsScribe(delta)
+    } else {
+      const index = 0;
+      callZome('send_change_request', {scribe: session.scribe, index, delta});
+    }
   }
 
   async function commitChange() {
