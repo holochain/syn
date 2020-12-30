@@ -70,7 +70,8 @@
     if (session.scribeStr == connection.me) {
       console.log("change recevied but I'm the scribe, so I'm ignoring this!")
     } else {
-      console.log("FIXME")
+      console.log("change arrived:", event.detail)
+      applyDeltas(event.detail)
     }
   }
 
