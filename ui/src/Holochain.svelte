@@ -56,8 +56,7 @@
           console.log("Got Signal", signal.data.payload.signal_name, signal)
           switch (signal.data.payload.signal_name) {
           case "SyncReq":
-            const from = signal.data.cellId[1];
-            dispatch('syncReq', from);
+            dispatch('syncReq', {from: signal.data.cellId[1]});
             break;
           case "SyncResp":
             dispatch("syncResp", signal.data.payload.signal_payload);

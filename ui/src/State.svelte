@@ -8,6 +8,8 @@
   let newTitle = '';
   let commitInProgress = false;
   let pendingDeltas = [];
+  let currentCommitHeaderHash;
+  $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
   let lastCommitedContentHash;
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
   let participants = {};
@@ -23,7 +25,7 @@
     // add delta to the pending deltas and change state
     pendingDeltas = [...pendingDeltas, delta];
     applyDeltas([delta]);
-    // notify all particpants of the change
+    // notify all participants of the change
     if (participants.length > 0) {
       callZome("send_change", {participants: Object.keys(participants), deltas: [delta]})
     }
@@ -77,16 +79,20 @@
       // update participants
       if (!(fromStr in participants) || event.detail.meta) {
         participants[fromStr] = event.detail.meta
-        particpants = participants
+        participants = participants
       }
+      let state = {
+        snapshot: session.snapshotHash,
+        commit_content_hash: lastCommitedContentHash,
+        deltas: pendingDeltas
+      };
+      if (currentCommitHeaderHash) {
+        state["commit"] = currentCommitHeaderHash;
+      }
+      console.log("STATE:", state)
       callZome("send_sync_response", {
         participant: event.detail.from,
-        state: {
-          snapshot: sessions.snapshotHash,
-          commit: currentCommitHeaderHash, // could be null.
-          commit_content_hash: lastCommitedContentHash,
-          deltas: pendingDeltas
-        }
+        state
       })
     }
     else {
@@ -99,7 +105,7 @@
     const stateForSync = event.detail;
     // Make sure that we are working off the same snapshot and commit
     if (
-        arrayBufferToBase64(stateForSynce.commit_content_hash) == lastCommitedContentHashStr
+        arrayBufferToBase64(stateForSync.commit_content_hash) == lastCommitedContentHashStr
        ) {
       applyDeltas(stateForSync.deltas);
     } else {
@@ -220,6 +226,6 @@
   <h4>Dev data:</h4>
   <li>lastCommitedContentHash: {lastCommitedContentHashStr}
   <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
-  <li>particpants: {participantsPretty}
+  <li>participants: {participantsPretty}
 </div>
 but
