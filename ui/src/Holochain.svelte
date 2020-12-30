@@ -66,7 +66,7 @@
             dispatch("changeReq", signal.data.payload.signal_payload);
             break;
           case "Change":
-            dipatch("change",signal.data.payload.signal_payload);
+            dispatch("change",signal.data.payload.signal_payload);
             break;
           }
         }

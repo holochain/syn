@@ -26,9 +26,10 @@
     pendingDeltas = [...pendingDeltas, delta];
     applyDeltas([delta]);
     // notify all participants of the change
-    if (participants.length > 0) {
+    const p = Object.values(participants).map(v=>v.pubkey)
+    if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
-      callZome("send_change", {participants: Object.keys(participants), deltas: [delta]})
+      callZome("send_change", {participants: p, deltas: [delta]})
     }
   }
 
@@ -75,11 +76,18 @@
 
   // handler for the syncReq event
   function syncReq(event) {
-    const fromStr = arrayBufferToBase64(event.detail.from);
+    const from = event.detail.from
+    const fromStr = arrayBufferToBase64(from);
     if (session.scribeStr == connection.me) {
       // update participants
-      if (!(fromStr in participants) || event.detail.meta) {
-        participants[fromStr] = event.detail.meta
+      if (!(fromStr in participants)) {
+        participants[fromStr] = {
+          pubkey: from,
+          meta: event.detail.meta
+        }
+        participants = participants
+      } else if (event.detail.meta) {
+        participants[fromStr].meta = event.detail.meta
         participants = participants
       }
       let state = {
@@ -92,7 +100,7 @@
       }
       console.log(`sending SyncResp ${fromStr}:`, state)
       callZome("send_sync_response", {
-        participant: event.detail.from,
+        participant: from,
         state
       })
     }
