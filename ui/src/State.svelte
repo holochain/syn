@@ -20,6 +20,7 @@
     // if we can't apply delta immediately (i.e. index is our current index)
     // we must first merge this delta with any previous ones
     if (pendingDeltas.length != index) {
+      console.log("WHOA, index didn't match pending deltas!")
       // TODO: merge
     }
     // add delta to the pending deltas and change state
@@ -139,10 +140,11 @@
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   function requestChange(delta) {
+    // any requested change is on top of last pending delta
+    const index = pendingDeltas.length;
     if (session.scribeStr == connection.me) {
-      addDeltaAsScribe(delta)
+      addChangeAsScribe([index, delta])
     } else {
-      const index = 0;
       callZome('send_change_request', {scribe: session.scribe, index, delta});
     }
   }
