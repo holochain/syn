@@ -240,4 +240,3 @@
   <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
   <li>participants: {participantsPretty}
 </div>
-but
