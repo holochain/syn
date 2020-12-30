@@ -172,13 +172,14 @@ module.exports = (orchestrator) => {
         t.deepEqual(aliceSessionInfo.content_hash, hash)
 
         // I should receive alice's request for the state as she joins the session
-        t.deepEqual(me_signals[0], {signal_name: "SyncReq"})
+        t.deepEqual(me_signals[0], {signal_name: "SyncReq", signal_payload: alice_pubkey})
 
         // (send Alice uncommitted deltas with the Fake UI)
         const uncommittedDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}]
         const state = {
           snapshot: sessionInfo.content_hash,
           commit: commit_header_hash,
+          commit_content_hash: new_content_hash_2,
           deltas: uncommittedDeltas,
         }
         await me.call('syn', 'send_sync_response', {

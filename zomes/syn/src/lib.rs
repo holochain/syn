@@ -240,7 +240,7 @@ fn join_session(_: ()) -> SynResult<SessionInfo> {
         // send SyncReq to scribe of selected session unless scribe is me
         let session_info = build_session_info(session)?;
         if session_info.scribe != me {
-            remote_signal(&SignalPayload::SyncReq, vec![session_info.scribe.clone()])?;
+            remote_signal(&SignalPayload::SyncReq(me), vec![session_info.scribe.clone()])?;
         }
 
         Ok(session_info)
@@ -322,7 +322,7 @@ pub struct StateForSync {
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(tag = "signal_name", content = "signal_payload")]
 enum SignalPayload {
-    SyncReq,
+    SyncReq(AgentPubKey), // content is who the request is from
     SyncResp(StateForSync),
     ChangeReq((u32, Delta)),
     Change(Vec<Delta>)
