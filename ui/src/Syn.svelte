@@ -30,6 +30,11 @@
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
 
+  async function synSendHeartbeat(participants, data) {
+    data = JSON.stringify(data)
+    return callZome("send_heartbeat", {participants, data})
+  }
+
   async function synSendChange(participants, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
     return callZome("send_change", {participants, deltas})
@@ -145,6 +150,9 @@
             deltas = deltas.map(d=>JSON.parse(d))
             change(deltas);
             break;
+          case "Heartbeat":
+            let data = JSON.parse(signal.data.payload.signal_payload)
+            heartbeat(data)
           }
         }
       );
@@ -179,7 +187,18 @@
       $conn = undefined
     }
   }
-    // handler for the changeReq event
+
+  // handler for the heartbeat event
+  function heartbeat(data) {
+    console.log("got heartbeat", data)
+    if (session.scribeStr == connection.me) {
+    }
+    else {
+
+    }
+  }
+
+  // handler for the changeReq event
   function changeReq(change) {
     if (session.scribeStr == connection.me) {
       addChangeAsScribe(change)
@@ -198,22 +217,25 @@
     }
   }
 
+  function updateParticipants(pubkey, meta) {
+    const pubkeyStr = arrayBufferToBase64(from);
+    if (!(pubkeyStr in $participants)) {
+      $participants[pubkeyStr] = {
+        pubkey: from,
+        meta: meta
+      }
+      $participants = $participants
+    } else if (meta) {
+      $participants[fromStr].meta = request.meta
+      $participants = $participants
+    }
+  }
+
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
-    const fromStr = arrayBufferToBase64(from);
     if (session.scribeStr == connection.me) {
-      // update participants
-      if (!(fromStr in $participants)) {
-        $participants[fromStr] = {
-          pubkey: from,
-          meta: request.meta
-        }
-        $participants = $participants
-      } else if (request.meta) {
-        $participants[fromStr].meta = request.meta
-        $participants = $participants
-      }
+      updateParticipants(from, request.meta)
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
@@ -222,8 +244,18 @@
       if (currentCommitHeaderHash) {
         state["commit"] = currentCommitHeaderHash;
       }
-      console.log(`sending SyncResp ${fromStr}:`, state)
+      // send a sync response to the sender
       synSendSyncResp(from, state);
+
+      // and send everybody a heartbeat with new participants
+      const p = {...$participants}
+      p[connection.me] = {
+        pubkey: connection.agentPubKey
+      }
+      const data = {
+        participants: p
+      }
+      synSendHeartbeat(participants, data);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
