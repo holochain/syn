@@ -14,12 +14,27 @@
   export async function synSendChangeReq(index, delta) {
     delta.by = connection.me
     delta = JSON.stringify(delta)
-    callZome('send_change_request', {scribe: session.scribe, index, delta});
+    return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
 
   export async function synSendChange(participants, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
-    callZome("send_change", {participants: p, deltas})
+    return callZome("send_change", {participants: p, deltas})
+  }
+
+  export async function synSendSyncResp(to, state) {
+    return callZome("send_sync_response", {
+      participant: to,
+      state
+    })
+  }
+
+  export async function synHashContent(content) {
+    return callZome('hash_content', content)
+  }
+
+  export async function synCommit(commit) {
+    return callZome('commit', commit)
   }
 
   export async function callZome(fn_name, payload, timeout) {

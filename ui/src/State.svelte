@@ -2,7 +2,7 @@
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
   import Users from './Users.svelte';
-  import {callZome, synSendChangeReq, synSendChange, session, arrayBufferToBase64} from './Holochain.svelte';
+  import {synSendChangeReq, synSendChange, synCommit, synHashContent, session, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
   import { onMount } from 'svelte';
   import { content, pendingDeltas, participants, conn } from './stores.js';
@@ -114,10 +114,7 @@
         state["commit"] = currentCommitHeaderHash;
       }
       console.log(`sending SyncResp ${fromStr}:`, state)
-      callZome("send_sync_response", {
-        participant: from,
-        state
-      })
+      synSendSyncResp(from, state);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -157,7 +154,7 @@
         return;
       }
       commitInProgress = true
-      const newContentHash = await callZome('hash_content', $content)
+      const newContentHash = await synHashContent($content);
       console.log("commiting from snapshot", session.snapshotHashStr);
       console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
@@ -175,7 +172,7 @@
         }
       }
       try {
-        currentCommitHeaderHash = await callZome('commit', commit)
+        currentCommitHeaderHash = await synCommit(commit)
         lastCommitedContentHash = newContentHash;
         $pendingDeltas = []
       }
