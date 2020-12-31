@@ -50,7 +50,7 @@
     border: 1px solid black;
     display: block;
     font-family: monospace;
-    white-space: pre;
+    white-space: pre-wrap;
     margin: 1em 0;
     padding: 4px;
   }
