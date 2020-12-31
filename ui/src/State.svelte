@@ -1,20 +1,31 @@
 <script>
+  import Editor from './Editor.svelte';
   import { tick } from 'svelte';
   import {callZome, session, connection, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
   import { onMount } from 'svelte';
-  import { content } from './stores.js';
+  import { content, pendingDeltas, participants } from './stores.js';
 
   let titleBeingTyped = '';
 
   let commitInProgress = false;
-  let pendingDeltas = [];
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
   let lastCommitedContentHash;
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
-  let participants = {};
-  $: participantsPretty =  JSON.stringify(Object.keys(participants))
+  $: participantsPretty =  JSON.stringify(Object.keys($participants))
+
+  // called when requesting a change to the content as a result of user action
+  // If we are the scribe, no need to go into the zome
+  function requestChange(delta) {
+    // any requested change is on top of last pending delta
+    const index = $pendingDeltas.length;
+    if (session.scribeStr == connection.me) {
+      addChangeAsScribe([index, delta])
+    } else {
+      callZome('send_change_request', {scribe: session.scribe, index, delta});
+    }
+  }
 
   function addChangeAsScribe(change) {
     let [index, delta] = change;
@@ -25,13 +36,13 @@
       // TODO: merge
     }
     // add delta to the pending deltas and change state
-    pendingDeltas = [...pendingDeltas, delta];
+    $pendingDeltas = [...$pendingDeltas, delta];
     applyDeltas([delta]);
     // notify all participants of the change
-    const p = Object.values(participants).map(v=>v.pubkey)
+    const p = Object.values($participants).map(v=>v.pubkey)
     if (p.length > 0) {
-      console.log(`Sending change to ${participantsPretty}:`, delta);
-      callZome("send_change", {participants: p, deltas: [delta]})
+//      console.log(`Sending change to ${participantsPretty}:`, delta);
+      callZome("send_change", {$participants: p, deltas: [delta]})
     }
   }
 
@@ -83,20 +94,20 @@
     const fromStr = arrayBufferToBase64(from);
     if (session.scribeStr == connection.me) {
       // update participants
-      if (!(fromStr in participants)) {
-        participants[fromStr] = {
+      if (!(fromStr in $participants)) {
+        $participants[fromStr] = {
           pubkey: from,
           meta: event.detail.meta
         }
-        participants = participants
+        $participants = $participants
       } else if (event.detail.meta) {
-        participants[fromStr].meta = event.detail.meta
-        participants = participants
+        $participants[fromStr].meta = event.detail.meta
+        $participants = $participants
       }
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
-        deltas: pendingDeltas
+        deltas: $pendingDeltas
       };
       if (currentCommitHeaderHash) {
         state["commit"] = currentCommitHeaderHash;
@@ -130,29 +141,17 @@
   function updateParticipants(event) {
     switch (event.detail.type) {
     case "set":
-      participants[event.detail.key] = event.detail.data;
+      $participants[event.detail.key] = event.detail.data;
       break;
     case "del":
-      delete participants[event.detail.key];
+      delete $participants[event.detail.key];
       break;
-    }
-  }
-
-  // called when requesting a change to the content as a result of user action
-  // If we are the scribe, no need to go into the zome
-  function requestChange(delta) {
-    // any requested change is on top of last pending delta
-    const index = pendingDeltas.length;
-    if (session.scribeStr == connection.me) {
-      addChangeAsScribe([index, delta])
-    } else {
-      callZome('send_change_request', {scribe: session.scribe, index, delta});
     }
   }
 
   async function commitChange() {
     if (session.scribeStr == connection.me) {
-      if (pendingDeltas.length == 0) {
+      if ($pendingDeltas.length == 0) {
         alert("No deltas to commit!");
         return;
       }
@@ -164,7 +163,7 @@
       const commit = {
         snapshot: session.snapshotHash,
         change: {
-          deltas: pendingDeltas,
+          deltas: $pendingDeltas,
           content_hash: newContentHash,
           previous_change: lastCommitedContentHash,
           meta: {
@@ -177,7 +176,7 @@
       try {
         currentCommitHeaderHash = await callZome('commit', commit)
         lastCommitedContentHash = newContentHash;
-        pendingDeltas = []
+        $pendingDeltas = []
       }
       catch (e) {
       }
@@ -232,46 +231,6 @@
     lastCommitedContentHash = event.detail.contentHash;
     applyDeltas(event.detail.deltas);
   }
-
-  let editor
-  let loc = 0
-  $: editor_content = $content.body.slice(0, loc) + "|" + $content.body.slice(loc)
-
-  function handleInput(event) {
-    const key = event.key
-    if (key.length == 1) {
-      requestChange({type:'Add', value:[loc, key]})
-      loc += 1
-    } else {
-      switch (key) {
-      case "ArrowRight":
-        if (loc < $content.body.length){
-          loc+=1
-        }
-        break;
-      case "ArrowLeft":
-        if (loc > 0){
-          loc-=1
-        }
-        break;
-      case "Enter":
-        requestChange({type:'Add', value:[loc, "\n"]})
-        loc += 1
-        break;
-      case "Backspace":
-        if (loc>0) {
-          requestChange({type:'Delete', value:[loc-1, loc]})
-          loc -=1
-        }
-      }
-    }
-    console.log("input", event.key)
-  }
-  function handleClick(e) {
-    const offset = window.getSelection().focusOffset;
-    loc = offset > 0 ? offset -1 : 0
-
-  }
 </script>
 
 <style>
@@ -303,16 +262,6 @@
   .untitled {
     color: lightgray;
   }
-
-  editor {
-    width:400px;
-    border: 1px solid black;
-    display: block;
-    font-family: monospace;
-    white-space: pre;
-    margin: 1em 0;
-    padding: 4px;
-  }
 </style>
 
 <Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
@@ -333,18 +282,15 @@
       {/if}
     </div>
   </div>
-  <editor on:click={handleClick} on:keydown={handleInput} tabindex=0 start=0 bind:this={editor}>
-    {editor_content}
-  </editor>
+  <Editor on:requestChange={(event) => requestChange(event.detail)}/>
 </div>
 <button on:click={commitChange}>Commit</button>
 <div>
   <h4>Dev data:</h4>
   <li>lastCommitedContentHash: {lastCommitedContentHashStr}
-  <li>pendingDeltas: {JSON.stringify(pendingDeltas)}
+  <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
   <li>participants: {participantsPretty}
   <li>editingTitle: {editingTitle}
   <li>titleBeingTyped: {titleBeingTyped}
   <li>content.title: {$content.title}
-    <li>editor: {loc} content:{JSON.stringify($content.body)}
 </div>
