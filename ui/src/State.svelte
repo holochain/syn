@@ -225,9 +225,10 @@
 
 <div>
   <h4>Dev data:</h4>
-  <li>lastCommitedContentHash: {lastCommitedContentHashStr}
-  <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
-  <li>participants: {participantsPretty}
-  <li>content.title: {$content.title}
-  <li>connection: {JSON.stringify(connection)}
+  <ul>
+    <li>lastCommitedContentHash: {lastCommitedContentHashStr}
+    <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
+    <li>participants: {participantsPretty}
+    <li>content.title: {$content.title}
+  </ul>
 </div>
