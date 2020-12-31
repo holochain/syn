@@ -3,13 +3,12 @@
 </script>
 
 <main>
-  <h1>Groogle docs</h1>
- <State/>
+  <h1>SynText</h1>
+  <State/>
 </main>
 
 <style>
 	main {
-		text-align: center;
 		padding: 1em;
 		max-width: 240px;
 		margin: 0 auto;

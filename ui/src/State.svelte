@@ -193,18 +193,16 @@
 </script>
 
 <style>
-
-  h1 {
-    color: blue;
-  }
 </style>
 
-<Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
 <div>
   <Title on:requestChange={(event) => requestChange(event.detail)}/>
   <Editor on:requestChange={(event) => requestChange(event.detail)}/>
 </div>
 <button on:click={commitChange}>Commit</button>
+<hr/>
+<Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
+
 <div>
   <h4>Dev data:</h4>
   <li>lastCommitedContentHash: {lastCommitedContentHashStr}

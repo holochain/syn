@@ -100,12 +100,16 @@
     }
   }
 </script>
-
-App Port: <input bind:value={appPort}>
-<button on:click={toggle}>
-  {#if conn}
-    Disconnect
-  {:else}
-    Connect
-  {/if}
-</button>
+<style>
+</style>
+<div>
+  <h4>Holochain Connection:</h4>
+  App Port: <input bind:value={appPort}>
+  <button on:click={toggle}>
+    {#if conn}
+      Disconnect
+    {:else}
+      Connect
+    {/if}
+  </button>
+</div>

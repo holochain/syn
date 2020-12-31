@@ -52,7 +52,7 @@
     /* min-width: 10em;
     min-height: 1em; */
     font-weight: bold;
-
+    display: inline;
     padding: 0.4em;
     -webkit-padding: 0.4em 0;
     margin: 0 0 0.5em 0;
