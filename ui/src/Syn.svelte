@@ -100,7 +100,8 @@
   let commitInProgress = false;
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
-  let lastCommitedContentHash;
+  let lastCommitedContentHash;    // add delta to the pending deltas and change state
+
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
   $: participantsPretty =  JSON.stringify(Object.keys($participants))
 
@@ -214,12 +215,17 @@
   }
 
   // handler for the change event
-  function change(change) {
-    if (session.scribeStr == connection.me && !roundTripForScribe) {
-      console.log("change recevied but I'm the scribe, so I'm ignoring this!")
+  function change(delta) {
+    if (session.scribeStr == connection.me) {
+      if (roundTripForScribe) {
+        $pendingDeltas = [...$pendingDeltas, [delta]];
+        applyDeltas(delta)
+      } else {
+        console.log("change recevied but I'm the scribe, so I'm ignoring this!")
+      }
     } else {
-      console.log("change arrived:", change)
-      applyDeltas(change)
+      console.log("change arrived:", delta)
+      applyDeltas(delta)
     }
   }
 
