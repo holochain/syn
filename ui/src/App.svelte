@@ -42,7 +42,7 @@
   }
 
   .participants-tray {
-    min-width: 84px;
+    min-width: calc((var(--users-padding) * 2) + var(--user-hex-width));
     width: auto;
     background: hsla(255, 20%, 50%, .2);
     grid-column: 2 / 3;

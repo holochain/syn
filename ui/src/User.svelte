@@ -3,12 +3,20 @@
   export let pubKey
   export let me = false
   import { scribeStr } from './stores.js';
+
+
+
 </script>
 <style>
+  :global(:root) {
+    --user-hex-width: 60px;
+    --user-hex-height: calc(var(--user-hex-width) * .8666);
+    --user-hex-border: 2px;
+  }
   .user {
     display: grid;
-    width: 60px;
-    height: 52px;
+    width: var(--user-hex-width);
+    height: var(--user-hex-height);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     place-items: center;
     color: white;
@@ -18,21 +26,21 @@
   .user-color {
     z-index: -1;
     content: '';
-    width: 56px;
-    height: 48px;
+    width: calc(var(--user-hex-width) - (var(--user-hex-border)) * 2);
+    height: calc(var(--user-hex-height) - (var(--user-hex-border)) * 2);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    background-color: green;
+    background-color: yellow;
     position: absolute;
   }
 
   .scribe {
-    background-color: red;
+    background-color: skyblue;
   }
   .participant {
-    background-color: black;
+    background-color: purple;
   }
   .me {
-    background-color: blue;
+    background-color: magenta;
   }
 </style>
 <div class="user {pubKeyStr == $scribeStr ? 'scribe' : 'participant'}" class:me>
