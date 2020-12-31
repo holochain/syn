@@ -42,6 +42,8 @@
   }
 
   .participants-tray {
+
+    width: 40px;
     background: hsla(255, 20%, 50%, .2);
     grid-column: 2 / 3;
     grid-row: 1/4;
@@ -82,13 +84,15 @@
 </div>
 
 <main>
-<Users />
 <div class:noscribe>
   <Editor on:requestChange={(event) => requestChange(event.detail)}/>
 </div>
 <Syn applyDeltas={applyDeltas} />
 </main>
 
-<div class="participants-tray" contenteditable>Folks</div>
+<div class="participants-tray">
+  Folks
+  <Users />
+</div>
 
 <div class="debug-drawer">This is a footer that should be hideable and have debug</div>

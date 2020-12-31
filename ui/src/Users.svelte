@@ -7,7 +7,6 @@
 <style>
 </style>
 <div class="users">
-  Users:
   {#if $conn && $conn.me}
     <User pubKeyStr={$conn.me}/>
   {/if}
