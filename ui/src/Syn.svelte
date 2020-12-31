@@ -35,45 +35,50 @@
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
 
-  var decodedJson = JSON.parse( jsonStr, function( key, value ){
-    // the reviver function looks for the typed array flag
-    try{
-      if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
-        // if found, we convert it back to a typed array
-        return new context[ value.constructor ]( value.data );
+  const FLAG_TYPED_ARRAY = "FLAG_TYPED_ARRAY";
+
+  function decodeJson(jsonStr) {
+    return JSON.parse( jsonStr, function( key, value ){
+      // the reviver function looks for the typed array flag
+      try{
+        if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
+          // if found, we convert it back to a typed array
+          return new context[ value.constructor ]( value.data );
+        }
+      }catch(e){}
+
+      // if flag not found no conversion is done
+      return value;
+    });
+  }
+
+  function encodeJson(obj) {
+    return JSON.stringify( obj , function( key, value ){
+      // the replacer function is looking for some typed arrays.
+      // If found, it replaces it by a trio
+      if ( value instanceof Int8Array         ||
+           value instanceof Uint8Array        ||
+           value instanceof Uint8ClampedArray ||
+           value instanceof Int16Array        ||
+           value instanceof Uint16Array       ||
+           value instanceof Int32Array        ||
+           value instanceof Uint32Array       ||
+           value instanceof Float32Array      ||
+           value instanceof Float64Array       )
+      {
+        var replacement = {
+          constructor: value.constructor.name,
+          data: Array.apply([], value),
+          flag: FLAG_TYPED_ARRAY
+        }
+        return replacement;
       }
-    }catch(e){}
-
-    // if flag not found no conversion is done
-    return value;
-  });
-
-
-  var jsonStr = JSON.stringify( obj , function( key, value ){
-    // the replacer function is looking for some typed arrays.
-    // If found, it replaces it by a trio
-    if ( value instanceof Int8Array         ||
-         value instanceof Uint8Array        ||
-         value instanceof Uint8ClampedArray ||
-         value instanceof Int16Array        ||
-         value instanceof Uint16Array       ||
-         value instanceof Int32Array        ||
-         value instanceof Uint32Array       ||
-         value instanceof Float32Array      ||
-         value instanceof Float64Array       )
-    {
-      var replacement = {
-        constructor: value.constructor.name,
-        data: Array.apply([], value),
-        flag: FLAG_TYPED_ARRAY
-      }
-      return replacement;
-    }
-    return value;
-  });
+      return value;
+    });
+  }
 
   async function synSendHeartbeat(participants, data) {
-    data = jsonStr(data)
+    data = encodeJson(data)
     return callZome("send_heartbeat", {participants, data})
   }
 
@@ -200,7 +205,7 @@
             change(deltas);
             break;
           case "Heartbeat":
-            let data = decodedJson(signal.data.payload.signal_payload)
+            let data = decodeJson(signal.data.payload.signal_payload)
             heartbeat(data)
           }
         }
