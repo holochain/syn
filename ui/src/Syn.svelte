@@ -32,7 +32,7 @@
 
   async function synSendChange(participants, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
-    return callZome("send_change", {participants: p, deltas})
+    return callZome("send_change", {participants, deltas})
   }
 
   async function synSendSyncResp(to, state) {
@@ -112,7 +112,7 @@
     const p = Object.values($participants).map(v=>v.pubkey)
     if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
-      synSendChange(participants, [delta])
+      synSendChange(p , [delta])
     }
   }
 
