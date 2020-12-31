@@ -39,7 +39,7 @@
 
   function decodeJson(jsonStr) {
     return JSON.parse( jsonStr, function( key, value ){
-      // the reviver function looks for the typed array flag
+      // the receiver function looks for the typed array flag
       try{
         if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
           // if found, we convert it back to a typed array
@@ -309,13 +309,11 @@
       }
       // send a sync response to the sender
       synSendSyncResp(from, state);
-      console.log("Part", $participants)
       // and send everybody a heartbeat with new participants
       const p = {...$participants}
       p[connection.me] = {
         pubkey: connection.agentPubKey
       }
-      console.log("Part2", p)
       const data = {
         participants: p
       }
@@ -425,5 +423,6 @@
     <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
     <li>participants: {participantsPretty}
     <li>content.title: {$content.title}
+      <li>scribe: {$scribeStr}
   </ul>
 </div>
