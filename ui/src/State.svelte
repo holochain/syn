@@ -2,7 +2,7 @@
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
   import Users from './Users.svelte';
-  import {callZome, session, arrayBufferToBase64} from './Holochain.svelte';
+  import {callZome, synSendChangeReq, synSendChange, session, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
   import { onMount } from 'svelte';
   import { content, pendingDeltas, participants, conn } from './stores.js';
@@ -21,11 +21,11 @@
   function requestChange(delta) {
     // any requested change is on top of last pending delta
     const index = $pendingDeltas.length;
-    if (session.scribeStr == connection.me) {
-      addChangeAsScribe([index, delta])
-    } else {
-      callZome('send_change_request', {scribe: session.scribe, index, delta});
-    }
+    //if (session.scribeStr == connection.me) {
+    //  addChangeAsScribe([index, delta])
+    //} else {
+    synSendChangeReq(index, delta);
+    //}
   }
 
   function addChangeAsScribe(change) {
@@ -43,7 +43,7 @@
     const p = Object.values($participants).map(v=>v.pubkey)
     if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
-      callZome("send_change", {participants: p, deltas: [delta]})
+      synSendChange(participants, [delta])
     }
   }
 

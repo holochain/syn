@@ -76,12 +76,8 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
 /// appropriate for your content.  In this example the grammar is an indicator
 /// to delete or add text at a given offset in the body, or to set a title value
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(tag = "type", content = "value")]
-pub enum Delta {
-    Title(String),
-    Add((usize,String)),
-    Delete((usize,usize)),
-}
+//#[serde(tag = "type", content = "value")]
+pub struct Delta(String);
 
 ///  Content Change
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]

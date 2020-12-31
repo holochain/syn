@@ -11,6 +11,17 @@
     return window.btoa(binary);
   };
 
+  export async function synSendChangeReq(index, delta) {
+    delta.by = connection.me
+    delta = JSON.stringify(delta)
+    callZome('send_change_request', {scribe: session.scribe, index, delta});
+  }
+
+  export async function synSendChange(participants, deltas) {
+    deltas = deltas.map(d=>JSON.stringify(d))
+    callZome("send_change", {participants: p, deltas})
+  }
+
   export async function callZome(fn_name, payload, timeout) {
     if (!connection) {
       console.log("callZome called when disconnected from conductor");
@@ -63,11 +74,14 @@
             dispatch("syncResp", signal.data.payload.signal_payload);
             break;
           case "ChangeReq":
-            console.log("dispatching changeReq")
-            dispatch("changeReq", signal.data.payload.signal_payload);
+            let req = signal.data.payload.signal_payload
+            req[1] = JSON.parse(req[1])
+            dispatch("changeReq", req);
             break;
           case "Change":
-            dispatch("change",signal.data.payload.signal_payload);
+            let deltas = signal.data.payload.signal_payload
+            deltas = deltas.map(d=>JSON.parse(d))
+            dispatch("change", deltas);
             break;
           }
         }
