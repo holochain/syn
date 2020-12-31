@@ -20,7 +20,7 @@
 
   let titleEl // variable to bind the
   async function beginEditTitle() {
-    console.log("beginning edit title")
+    titleHover=false
     titleBeingTyped = $content.title // fill the field with the current title
     editingTitle = true
     await tick() // wait for the title input element to be created
@@ -48,24 +48,35 @@
 
 </script>
 <style>
+  .title-wrapper {
+    height: 1.6em;
+  }
+
   .title {
     /* min-width: 10em;
     min-height: 1em; */
     font-weight: bold;
-    display: inline;
+    display: inline-block;
     padding: 0.4em;
     -webkit-padding: 0.4em 0;
     margin: 0 0 0.5em 0;
+    border-width: 1px;
+    border-color: #00000000;
+    border-style: solid;
+    border-radius: 2px;
   }
 
   .title-hover {
-    border: 1px dashed #eee;
+    border-style: dashed;
+    border-color: #aaa;
   }
 
   /* input has to be below hover so it overrides */
   .title-input {
-  border: 1px solid #ccc;
-  border-radius: 2px;
+  border-style: solid;
+  border-color: #ccc;
+  font-weight: bold;
+  margin-bottom: 0;
   }
 
   .untitled {
@@ -73,12 +84,12 @@
   }
 </style>
 
-  <div>
+  <div class="title-wrapper">
     Title:
-    <div class="title" class:title-input={editingTitle} class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
-      {#if editingTitle}
-        <input bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
-      {:else}
+    {#if editingTitle}
+      <input class="title-input" bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
+    {:else}
+      <div class="title" class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
         <span class:untitled>
           {#if untitled}
             Untitled Document
@@ -86,6 +97,6 @@
             {$content.title}
           {/if}
         </span>
-      {/if}
-    </div>
+      </div>
+    {/if}
   </div>
