@@ -40,7 +40,7 @@ type StateForSync = {
 
 type Signal = {
   signal_name: string,
-  signal_payload?: StateForSync,
+  signal_payload?
 }
 
 module.exports = (orchestrator) => {
@@ -91,7 +91,7 @@ module.exports = (orchestrator) => {
         let commit = {
             snapshot: sessionInfo.content_hash,
             change: {
-                deltas,
+                deltas: deltas.map(d=>JSON.stringify(d)),
                 content_hash: new_content_hash_1,
                 previous_change: sessionInfo.content_hash, // this is the first change so same hash as snapshot
                 meta: {
@@ -118,7 +118,7 @@ module.exports = (orchestrator) => {
         commit = {
             snapshot: sessionInfo.content_hash,
             change: {
-                deltas,
+                deltas: deltas.map(d=>JSON.stringify(d)),
                 content_hash: new_content_hash_2,
                 previous_change: new_content_hash_1, // this is the second change so previous commit's hash
                 meta: {
@@ -162,7 +162,7 @@ module.exports = (orchestrator) => {
         // check that deltas and snapshot content returned add up to the current real content
         await delay(500) // make time for integrating new data
         t.deepEqual(
-          applyDeltas(aliceSessionInfo.snapshot_content, aliceSessionInfo.deltas),
+          applyDeltas(aliceSessionInfo.snapshot_content, aliceSessionInfo.deltas.map(d=>JSON.parse(d))),
           {title: "foo title", body: "baz monkey new"} // content after two commits
         )
 
@@ -175,7 +175,8 @@ module.exports = (orchestrator) => {
         t.deepEqual(me_signals[0], {signal_name: "SyncReq", signal_payload: alice_pubkey})
 
         // (send Alice uncommitted deltas with the Fake UI)
-        const uncommittedDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}]
+        const uncommittedDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}].map(d=>JSON.stringify(d))
+
         const state = {
           snapshot: sessionInfo.content_hash,
           commit: commit_header_hash,
@@ -203,24 +204,38 @@ module.exports = (orchestrator) => {
         await alice.call('syn', 'send_change_request', {
             scribe: aliceSessionInfo.scribe,
             index: 1,
-            delta: alice_delta})
+            delta: JSON.stringify(alice_delta)})
         await delay(500) // make time for signal to arrive
         const sig = me_signals[2]
         t.equal(sig.signal_name, "ChangeReq")
-        t.deepEqual(sig.signal_payload, [1, alice_delta]) // delta_matches
+        const [sig_index, sig_delta] = sig.signal_payload
+        t.equal(sig_index,1)
+        t.deepEqual(JSON.parse(sig_delta), alice_delta) // delta_matches
 
-        const my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}]
+        const my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}].map(d=>JSON.stringify(d))
         // I send a change, and alice and bob should receive it.
         await me.call('syn', 'send_change', {
             participants: [alice_pubkey, bob_pubkey],
             deltas: my_deltas})
         await delay(500) // make time for signal to arrive
-        const a_sig = alice_signals[1]
-        const b_sig = bob_signals[0]
+        let a_sig = alice_signals[1]
+        let b_sig = bob_signals[0]
         t.equal(a_sig.signal_name, "Change")
         t.equal(b_sig.signal_name, "Change")
         t.deepEqual(a_sig.signal_payload, my_deltas) // delta_matches
         t.deepEqual(b_sig.signal_payload, my_deltas) // delta_matches
+
+        await me.call('syn', 'send_heartbeat', {
+            participants: [alice_pubkey, bob_pubkey],
+            data: "Hello"})
+        await delay(500) // make time for signal to arrive
+
+        a_sig = alice_signals[2]
+        b_sig = bob_signals[1]
+        t.equal(a_sig.signal_name, "Heartbeat")
+        t.equal(b_sig.signal_name, "Heartbeat")
+        t.deepEqual(a_sig.signal_payload, "Hello")
+        t.deepEqual(b_sig.signal_payload, "Hello")
 
     })
 }

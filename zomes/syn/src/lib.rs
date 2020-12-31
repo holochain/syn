@@ -320,7 +320,8 @@ enum SignalPayload {
     SyncReq(AgentPubKey), // content is who the request is from
     SyncResp(StateForSync),
     ChangeReq((u32, Delta)),
-    Change(Vec<Delta>)
+    Change(Vec<Delta>),
+    Heartbeat(String),   // signal for maintaining latency info and other metadata
 }
 
 #[hdk_extern]
@@ -383,5 +384,18 @@ pub struct SendChangeInput {
 fn send_change(input:SendChangeInput) -> SynResult<()> {
     // send response signal to the participant
     remote_signal(&SignalPayload::Change(input.deltas), input.participants)?;
+    Ok(())
+}
+
+/// Input to the send change response call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendHeartbeatInput {
+    pub participants: Vec<AgentPubKey>,
+    pub data: String,
+}
+
+#[hdk_extern]
+fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
+    remote_signal(&SignalPayload::Heartbeat(input.data), input.participants)?;
     Ok(())
 }
