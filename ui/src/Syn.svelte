@@ -12,6 +12,10 @@
     }
     return window.btoa(binary);
   };
+  export const arrayBufferToHex = buffer => {
+    const binary = "";
+    return parseInt(binary, 2).toString(16);
+  };
 
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
@@ -120,7 +124,7 @@
       applyDeltas([delta]);
     }
     // notify all participants of the change
-    const p = Object.values($participants).map(v=>v.pubkey)
+    const p = Object.values($participants).map(v=>v.pubKey)
     if (roundTripForScribe) {
       p.push(connection.agentPubKey)
     }
@@ -249,7 +253,21 @@
   function syncReq(request) {
     const from = request.from
     if (session.scribeStr == connection.me) {
+<<<<<<< HEAD
       updateParticipant(from, request.meta)
+=======
+      // update participants
+      if (!(fromStr in $participants)) {
+        $participants[fromStr] = {
+          pubKey: from,
+          meta: request.meta
+        }
+        $participants = $participants
+      } else if (request.meta) {
+        $participants[fromStr].meta = request.meta
+        $participants = $participants
+      }
+>>>>>>> 8eee2f1... Add hexagon user icons
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,

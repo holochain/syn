@@ -42,12 +42,11 @@
   }
 
   .participants-tray {
-
-    width: 40px;
+    min-width: 84px;
+    width: auto;
     background: hsla(255, 20%, 50%, .2);
     grid-column: 2 / 3;
     grid-row: 1/4;
-    padding: 1rem;
   }
 
   .debug-drawer {
@@ -91,7 +90,6 @@
 </main>
 
 <div class="participants-tray">
-  Folks
   <Users />
 </div>
 
