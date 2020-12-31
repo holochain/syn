@@ -24,30 +24,26 @@
     //}
   }
 
-  export async function synSendChangeReq(index, delta) {
+  async function synSendChangeReq(index, delta) {
     delta.by = connection.me
     delta = JSON.stringify(delta)
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
 
-  export async function synSendChange(participants, deltas) {
+  async function synSendChange(participants, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
     return callZome("send_change", {participants: p, deltas})
   }
 
-  export async function synSendSyncResp(to, state) {
+  async function synSendSyncResp(to, state) {
     return callZome("send_sync_response", {
       participant: to,
       state
     })
   }
 
-  export async function synHashContent(content) {
+  async function synHashContent(content) {
     return callZome('hash_content', content)
-  }
-
-  export async function synCommit(commit) {
-    return callZome('commit', commit)
   }
 
   export async function callZome(fn_name, payload, timeout) {
@@ -165,7 +161,8 @@
       $conn = connection
       console.log("active", connection);
       session = await callZome("join_session");
-      session.snapshotHash = await callZome('hash_content', session.snapshot_content)
+      session.deltas = session.deltas.map(d => JSON.parse(d))
+      session.snapshotHash = await synHashContent(session.snapshot_content);
       session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
       session.scribeStr = arrayBufferToBase64(session.scribe);
       $scribeStr = session.scribeStr
@@ -259,7 +256,7 @@
       const commit = {
         snapshot: session.snapshotHash,
         change: {
-          deltas: $pendingDeltas,
+          deltas: $pendingDeltas.map(d=>JSON.stringify(d)),
           content_hash: newContentHash,
           previous_change: lastCommitedContentHash,
           meta: {
@@ -270,7 +267,7 @@
         }
       }
       try {
-        currentCommitHeaderHash = await synCommit(commit)
+        currentCommitHeaderHash = await callZome('commit', commit)
         lastCommitedContentHash = newContentHash;
         $pendingDeltas = []
       }
