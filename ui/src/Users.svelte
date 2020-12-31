@@ -1,6 +1,6 @@
 <script>
   import { participants } from './stores.js';
-  import {arrayBufferToBase64} from './Holochain.svelte';
+  import {arrayBufferToBase64} from './Syn.svelte';
   import { conn, scribeStr } from './stores.js';
   import User from './User.svelte';
 </script>
