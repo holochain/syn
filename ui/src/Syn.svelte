@@ -284,7 +284,9 @@
   }
 
   function updateParticipant(pubKey, meta) {
+    console.log("pubKey", pubKey)
     const pubKeyStr = arrayBufferToBase64(pubKey);
+    console.log("pubkeyStr", pubKeyStr)
     if (!(pubKeyStr in $participants) && (pubKeyStr != connection.me)) {
       $participants[pubKeyStr] = {pubKey, meta}
       $participants = $participants
@@ -312,7 +314,7 @@
       // and send everybody a heartbeat with new participants
       const p = {...$participants}
       p[connection.me] = {
-        pubkey: connection.agentPubKey
+        pubKey: connection.agentPubKey
       }
       const data = {
         participants: p
