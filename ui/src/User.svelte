@@ -31,12 +31,12 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  // set the color of an element
-  // called by `use:setColor` on new User components
-  function setColor(el) {
+  // Generate a color for a user from their pubKey
+  // returns HSL array: [h,s,l]
+  // used in `use:setColor` on new User components
+  function getUserColor(pubKey) {
     // get a hex color from the user's public key
     const raw_color = '#' + arrayBufferToHex(pubKey).slice(-6)
-    console.log(raw_color);
     // extract the RGB components from the hex color notation.
     // Source: https://stackoverflow.com/questions/3732046
     const r = parseInt(raw_color.substr(1,2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
@@ -44,15 +44,19 @@
     const b = parseInt(raw_color.substr(5,2), 16);
     // convert to HSL
     const hsl = rgbToHsl(r, g, b)
-    console.log('Raw HSL color:', hsl);
     // limit color to be bright enough and colorful enough
     let [h, s, l] = hsl
-    let s_corrected = clamp(s, 10, 100)
-    let l_corrected = clamp(l, 10, 90)
-    return `hsl(${h} ${s_corrected}% ${l_corrected}%)`
-    console.log('Corrected color:', color);
-    console.log('Setting color of user hex:', el, `to ${color}`)
-    el.firstChild.style['background-color'] = color
+    let s_corrected = clamp(s, 10, 90)
+    let l_corrected = clamp(l, 25, 75)
+    return [h, s_corrected, l_corrected]
+  }
+
+  function setColor(el) {
+    let [h,s,l] = getUserColor(pubKey)
+    let mainColorString = `hsl(${h} ${s}% ${l}%)`
+    let picPlaceholderColorString = `hsl(${h} ${s}% ${l*.5}%)`
+    el.style['background-color'] = mainColorString
+    el.firstChild.style['background-color'] = picPlaceholderColorString
   }
 
 </script>
@@ -60,7 +64,7 @@
   :global(:root) {
     --user-hex-width: 60px;
     --user-hex-height: calc(var(--user-hex-width) * .8666);
-    --user-hex-border: 2px;
+    --user-hex-border: 4px;
   }
   .user {
     display: grid;
@@ -80,15 +84,11 @@
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     position: absolute;
   }
-
   .scribe {
-    background-color: skyblue;
   }
   .participant {
-    background-color: black;
   }
   .me {
-    background-color: black;
   }
 </style>
 <div use:setColor class='user {pubKeyStr == $scribeStr ? 'scribe' : 'participant'}' class:me>
