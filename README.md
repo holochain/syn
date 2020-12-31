@@ -19,23 +19,39 @@ cargo install --path crates/dna_util
 ```
   - Make sure the `path/to/holochain/.cargo/bin` is in your `PATH`
 
-## Building
+## Building the DNA
 
 - Build the DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
-  - Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn
+  - Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn`
   - Assemble the DNA:
 
   ```bash
   make build
   ```
 
-  ### Testing
+## UI
+
+We have provided a test UI that implements a minimalist collaborative text editor.  To run this UI in test mode you can install [holochain-run-dna](https://github.com/holochain-open-dev/holochain-run-dna) and spin up the conductor with:
+
+``` bash
+holochain-run-dna -p 8888 -i syn -u kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/-- syn.dna.gz
+```
+Then you can run the UI with:
+
+``` bash
+cd ui
+npm install
+npm run dev
+```
+Now point your browser at `http://localhost:5000`
+
+### Testing
 
   ```bash
   make test
   ```
 
-  #### Unit testing
+#### Unit testing
 
   The `make test-unit` command runs all the unit tests for zomes in cargo.
 
@@ -47,7 +63,7 @@ cargo install --path crates/dna_util
 
   The `make clean` command gets rid of all compiled output.
 
-  ## License
+## License
 [![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
 
   Copyright (C) 2017-2020, Holochain Foundation
