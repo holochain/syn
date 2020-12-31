@@ -238,13 +238,13 @@
     }
   }
 
-  function updateParticipant(pubkey, meta) {
-    const pubkeyStr = arrayBufferToBase64(pubkey);
-    if (!(pubkeyStr in $participants)) {
-      $participants[pubkeyStr] = {pubkey, meta}
+  function updateParticipant(pubKey, meta) {
+    const pubkeyStr = arrayBufferToBase64(pubKey);
+    if (!(pubKeyStr in $participants)) {
+      $participants[pubKeyStr] = {pubKey, meta}
       $participants = $participants
     } else if (meta) {
-      $participants[pubkeyStr].meta = meta
+      $participants[pubKeyStr].meta = meta
       $participants = $participants
     }
   }
@@ -253,21 +253,7 @@
   function syncReq(request) {
     const from = request.from
     if (session.scribeStr == connection.me) {
-<<<<<<< HEAD
       updateParticipant(from, request.meta)
-=======
-      // update participants
-      if (!(fromStr in $participants)) {
-        $participants[fromStr] = {
-          pubKey: from,
-          meta: request.meta
-        }
-        $participants = $participants
-      } else if (request.meta) {
-        $participants[fromStr].meta = request.meta
-        $participants = $participants
-      }
->>>>>>> 8eee2f1... Add hexagon user icons
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
