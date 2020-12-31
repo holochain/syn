@@ -12,10 +12,6 @@
     }
     return window.btoa(binary);
   };
-  export const arrayBufferToHex = buffer => {
-    const binary = "";
-    return parseInt(binary, 2).toString(16);
-  };
 
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome

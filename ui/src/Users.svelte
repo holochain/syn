@@ -1,6 +1,5 @@
 <script>
   import { participants, conn, scribeStr  } from './stores.js';
-  import { arrayBufferToHex } from './Syn.svelte';
   import User from './User.svelte';
 </script>
 <style>

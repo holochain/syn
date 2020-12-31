@@ -18,7 +18,7 @@
     }
   }
 
-  let titleEl // variable to bind the
+  let titleEl // variable to bind the title input to when it's created
   async function beginEditTitle() {
     titleHover=false
     titleBeingTyped = $content.title // fill the field with the current title
