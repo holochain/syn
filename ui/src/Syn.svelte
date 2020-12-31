@@ -285,7 +285,7 @@
 
   function updateParticipant(pubKey, meta) {
     const pubKeyStr = arrayBufferToBase64(pubKey);
-    if (!(pubKeyStr in $participants)) {
+    if (!(pubKeyStr in $participants) && (pubKeyStr != connection.me)) {
       $participants[pubKeyStr] = {pubKey, meta}
       $participants = $participants
     } else if (meta) {
