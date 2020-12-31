@@ -1,6 +1,7 @@
 <script>
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
+  import Users from './Users.svelte';
   import {callZome, session, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
   import { onMount } from 'svelte';
@@ -213,6 +214,7 @@
 }
 </style>
 
+<Users />
 <div class:disconnected>
   <Title on:requestChange={(event) => requestChange(event.detail)}/>
   <Editor on:requestChange={(event) => requestChange(event.detail)}/>
@@ -227,5 +229,5 @@
   <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
   <li>participants: {participantsPretty}
   <li>content.title: {$content.title}
-  <li>connection: {connection}
+  <li>connection: {JSON.stringify(connection)}
 </div>

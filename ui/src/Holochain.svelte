@@ -41,7 +41,7 @@
 </script>
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { conn } from './stores.js';
+  import { conn, scribeStr } from './stores.js';
 
   const dispatch = createEventDispatcher();
 
@@ -89,6 +89,7 @@
       session.snapshotHash = await callZome('hash_content', session.snapshot_content)
       session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
       session.scribeStr = arrayBufferToBase64(session.scribe);
+      $scribeStr = session.scribeStr
       console.log("joined", session);
       dispatch('setStateFromSession', {
         content: {... session.snapshot_content}, // clone so as not to pass by ref

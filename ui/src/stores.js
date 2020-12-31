@@ -7,3 +7,5 @@ export const pendingDeltas = writable([]);
 export const participants = writable({});
 
 export const conn = writable();
+
+export const scribeStr = writable("");
