@@ -45,7 +45,7 @@
 </script>
 <style>
   editor {
-    width:100%;
+    width: auto;
     min-height: 10em;
     border: 1px solid black;
     display: block;
