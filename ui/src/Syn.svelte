@@ -36,6 +36,7 @@
   }
 
   async function synSendSyncResp(to, state) {
+    state.deltas = state.deltas.map(d=>JSON.stringify(d))
     return callZome("send_sync_response", {
       participant: to,
       state
