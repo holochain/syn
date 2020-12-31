@@ -1,4 +1,5 @@
 <script context="module">
+  let roundTripForScribe = true
   let connection
   let _pendingDeltas
   export let session
@@ -17,11 +18,11 @@
   export function requestChange(delta) {
     // any requested change is on top of last pending delta
     const index = _pendingDeltas.length;
-    //if (session.scribeStr == connection.me) {
-    //  addChangeAsScribe([index, delta])
-    //} else {
-    synSendChangeReq(index, delta);
-    //}
+    if (session.scribeStr == connection.me && !roundTripForScribe) {
+      addChangeAsScribe([index, delta])
+    } else {
+      synSendChangeReq(index, delta);
+    }
   }
 
   async function synSendChangeReq(index, delta) {
@@ -112,10 +113,15 @@
       // TODO: merge
     }
     // add delta to the pending deltas and change state
-    $pendingDeltas = [...$pendingDeltas, delta];
-    applyDeltas([delta]);
+    if (!roundTripForScribe) {
+      $pendingDeltas = [...$pendingDeltas, delta];
+      applyDeltas([delta]);
+    }
     // notify all participants of the change
     const p = Object.values($participants).map(v=>v.pubkey)
+    if (roundTripForScribe) {
+      p.push(connection.agentPubKey)
+    }
     if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
       synSendChange(p , [delta])
@@ -209,7 +215,7 @@
 
   // handler for the change event
   function change(change) {
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == connection.me && !roundTripForScribe) {
       console.log("change recevied but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log("change arrived:", change)
