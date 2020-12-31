@@ -5,25 +5,25 @@
 <style>
 	main {
 		padding: 1em;
-    background: coral;
+    background: hsla(100, 20%, 50%, .2);
     grid-column: 1 / 2;
 	}
 
-  header {
-    background: lightpink;
+  .toolbar {
+    background: hsla(19, 20%, 50%, .2);
     padding: 2rem;
     grid-column: 1 / 2;
   }
 
   .participants-tray {
-    background: yellow;
+    background: hsla(255, 20%, 50%, .2);
     grid-column: 2 / 3;
     grid-row: 1/4;
     padding: 1rem;
   }
 
-  footer {
-    background: wheat;
+  .debug-drawer {
+    background: hsla(180, 30%, 40%, .2);
     padding: 2rem;
     text-align: center;
     grid-column: 1 / 2;
@@ -48,10 +48,10 @@
 	}
 </style>
 
-<header>
+<div class="toolbar">
   <h1>SynText</h1>
   title should go up here!
-</header>
+</div>
 
 <main>
   <State/>
@@ -59,4 +59,4 @@
 
 <div class="participants-tray" contenteditable>Folks</div>
 
-<footer>This is a footer that should be hideable and have debug</footer>
+<div class="debug-drawer">This is a footer that should be hideable and have debug</div>
