@@ -35,8 +35,45 @@
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
 
+  var decodedJson = JSON.parse( jsonStr, function( key, value ){
+    // the reviver function looks for the typed array flag
+    try{
+      if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
+        // if found, we convert it back to a typed array
+        return new context[ value.constructor ]( value.data );
+      }
+    }catch(e){}
+
+    // if flag not found no conversion is done
+    return value;
+  });
+
+
+  var jsonStr = JSON.stringify( obj , function( key, value ){
+    // the replacer function is looking for some typed arrays.
+    // If found, it replaces it by a trio
+    if ( value instanceof Int8Array         ||
+         value instanceof Uint8Array        ||
+         value instanceof Uint8ClampedArray ||
+         value instanceof Int16Array        ||
+         value instanceof Uint16Array       ||
+         value instanceof Int32Array        ||
+         value instanceof Uint32Array       ||
+         value instanceof Float32Array      ||
+         value instanceof Float64Array       )
+    {
+      var replacement = {
+        constructor: value.constructor.name,
+        data: Array.apply([], value),
+        flag: FLAG_TYPED_ARRAY
+      }
+      return replacement;
+    }
+    return value;
+  });
+
   async function synSendHeartbeat(participants, data) {
-    data = JSON.stringify(data)
+    data = jsonStr(data)
     return callZome("send_heartbeat", {participants, data})
   }
 
@@ -163,7 +200,7 @@
             change(deltas);
             break;
           case "Heartbeat":
-            let data = JSON.parse(signal.data.payload.signal_payload)
+            let data = decodedJson(signal.data.payload.signal_payload)
             heartbeat(data)
           }
         }
@@ -207,8 +244,11 @@
     }
     else {
       if (data.participants) {
-        Object.values($participants).forEach(
-          p => updateParticipant(p.pubkey, p.meta)
+        Object.values(data.participants).forEach(
+          p => {
+            console.log("p", p)
+            updateParticipant(p.pubKey, p.meta)
+          }
         );
       }
     }
@@ -264,12 +304,13 @@
       }
       // send a sync response to the sender
       synSendSyncResp(from, state);
-
+      console.log("Part", $participants)
       // and send everybody a heartbeat with new participants
       const p = {...$participants}
       p[connection.me] = {
         pubkey: connection.agentPubKey
       }
+      console.log("Part2", p)
       const data = {
         participants: p
       }
