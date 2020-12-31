@@ -73,10 +73,9 @@ fn get_content(input: EntryHash) -> SynResult<OptionContent> {
 
 /// Delta
 /// change this for your app to indicate a small change in a patch-grammar
-/// appropriate for your content.  In this example the grammar is an indicator
-/// to delete or add text at a given offset in the body, or to set a title value
+/// appropriate for your content.  Here we are just using as plain String
+/// which works if you just want to convert all your Delta's to JSON.
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-//#[serde(tag = "type", content = "value")]
 pub struct Delta(String);
 
 ///  Content Change
