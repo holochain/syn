@@ -43,7 +43,7 @@
       try{
         if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
           // if found, we convert it back to a typed array
-          return new context[ value.constructor ]( value.data );
+          return new window[ value.constructor ]( value.data );
         }
       }catch(e){}
 
