@@ -1,5 +1,5 @@
 <script context="module">
-  export let connection
+  let connection
   export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
@@ -41,12 +41,13 @@
 </script>
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { conn } from './stores.js';
+
   const dispatch = createEventDispatcher();
 
   import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
   let adminPort=1234;
   let appPort=8888;
-  let conn
   async function toggle() {
     if (!connection) {
       connection = {}
@@ -82,7 +83,7 @@
         agentPubKey,
         me: arrayBufferToBase64(agentPubKey)
       }
-      conn = connection
+      $conn = connection
       console.log("active", connection);
       session = await callZome("join_session");
       session.snapshotHash = await callZome('hash_content', session.snapshot_content)
@@ -96,7 +97,7 @@
       });
     } else {
       connection = undefined
-      conn = undefined
+      $conn = undefined
     }
   }
 </script>
@@ -106,7 +107,7 @@
   <h4>Holochain Connection:</h4>
   App Port: <input bind:value={appPort}>
   <button on:click={toggle}>
-    {#if conn}
+    {#if $conn}
       Disconnect
     {:else}
       Connect

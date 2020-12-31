@@ -1,11 +1,12 @@
 <script>
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
-  import {callZome, session, connection, arrayBufferToBase64} from './Holochain.svelte';
+  import {callZome, session, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
   import { onMount } from 'svelte';
-  import { content, pendingDeltas, participants } from './stores.js';
+  import { content, pendingDeltas, participants, conn } from './stores.js';
 
+  $: connection = $conn
 
   let commitInProgress = false;
   let currentCommitHeaderHash;
@@ -30,7 +31,7 @@
     let [index, delta] = change;
     // if we can't apply delta immediately (i.e. index is our current index)
     // we must first merge this delta with any previous ones
-    if (pendingDeltas.length != index) {
+    if ($pendingDeltas.length != index) {
       console.log("WHOA, index didn't match pending deltas!")
       // TODO: merge
     }
@@ -40,8 +41,8 @@
     // notify all participants of the change
     const p = Object.values($participants).map(v=>v.pubkey)
     if (p.length > 0) {
-//      console.log(`Sending change to ${participantsPretty}:`, delta);
-      callZome("send_change", {$participants: p, deltas: [delta]})
+      console.log(`Sending change to ${participantsPretty}:`, delta);
+      callZome("send_change", {participants: p, deltas: [delta]})
     }
   }
 
@@ -190,16 +191,33 @@
     lastCommitedContentHash = event.detail.contentHash;
     applyDeltas(event.detail.deltas);
   }
+  $: disconnected = !connection
 </script>
 
 <style>
+  .disconnected {
+  pointer-events: none;
+  position: relative;
+  }
+
+  .disconnected:after {
+  content: " ";
+  z-index: 10;
+  display: block;
+  position: absolute;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.7);
+}
 </style>
 
-<div>
+<div class:disconnected>
   <Title on:requestChange={(event) => requestChange(event.detail)}/>
   <Editor on:requestChange={(event) => requestChange(event.detail)}/>
 </div>
-<button on:click={commitChange}>Commit</button>
+<button class:disconnected on:click={commitChange}>Commit</button>
 <hr/>
 <Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
 
@@ -208,5 +226,6 @@
   <li>lastCommitedContentHash: {lastCommitedContentHashStr}
   <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
   <li>participants: {participantsPretty}
-    <li>content.title: {$content.title}
+  <li>content.title: {$content.title}
+  <li>connection: {connection}
 </div>
