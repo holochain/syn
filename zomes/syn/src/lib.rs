@@ -396,6 +396,7 @@ pub struct SendHeartbeatInput {
 
 #[hdk_extern]
 fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
+    debug!("{:?}", input);
     remote_signal(&SignalPayload::Heartbeat(input.data), input.participants)?;
     Ok(())
 }
