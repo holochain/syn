@@ -60,6 +60,7 @@
     }
     try {
       const zome_name = "syn";
+      console.log(`Making zome call ${fn_name} with:`, payload)
       const result = await connection.appClient.callZome(
         {
           cap: null,
@@ -201,7 +202,11 @@
     if (session.scribeStr == connection.me) {
     }
     else {
-
+      if (data.participants) {
+        Object.values($participants).forEach(
+          p => updateParticipant(p.pubkey, p.meta)
+        );
+      }
     }
   }
 
@@ -229,16 +234,13 @@
     }
   }
 
-  function updateParticipants(pubkey, meta) {
-    const pubkeyStr = arrayBufferToBase64(from);
+  function updateParticipant(pubkey, meta) {
+    const pubkeyStr = arrayBufferToBase64(pubkey);
     if (!(pubkeyStr in $participants)) {
-      $participants[pubkeyStr] = {
-        pubkey: from,
-        meta: meta
-      }
+      $participants[pubkeyStr] = {pubkey, meta}
       $participants = $participants
     } else if (meta) {
-      $participants[fromStr].meta = request.meta
+      $participants[pubkeyStr].meta = meta
       $participants = $participants
     }
   }
@@ -247,7 +249,7 @@
   function syncReq(request) {
     const from = request.from
     if (session.scribeStr == connection.me) {
-      updateParticipants(from, request.meta)
+      updateParticipant(from, request.meta)
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
@@ -267,7 +269,7 @@
       const data = {
         participants: p
       }
-      synSendHeartbeat(participants, data);
+      synSendHeartbeat(Object.values($participants).map(v=>v.pubkey), data);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
