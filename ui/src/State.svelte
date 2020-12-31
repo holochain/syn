@@ -2,11 +2,11 @@
   import { tick } from 'svelte';
   import {callZome, session, connection, arrayBufferToBase64} from './Holochain.svelte';
   import Holochain from './Holochain.svelte';
-  let content = {
-    title: 'loading session...',
-    body: 'loading session',
-  }
+  import { onMount } from 'svelte';
+  import { content } from './stores.js';
+
   let titleBeingTyped = '';
+
   let commitInProgress = false;
   let pendingDeltas = [];
   let currentCommitHeaderHash;
@@ -44,15 +44,15 @@
     for (const delta of deltas) {
       switch(delta.type) {
       case "Title":
-        content.title = delta.value
+        $content.title = delta.value
         break
       case "Add":
         const [loc, text] = delta.value
-        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
+        $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
         break
       case "Delete":
         const [start, end] = delta.value
-        content.body = content.body.slice(0, start) + content.body.slice(end)
+        $content.body = $content.body.slice(0, start) + $content.body.slice(end)
         break
       }
     }
@@ -157,7 +157,7 @@
         return;
       }
       commitInProgress = true
-      const newContentHash = await callZome('hash_content', content)
+      const newContentHash = await callZome('hash_content', $content)
       console.log("commiting from snapshot", session.snapshotHashStr);
       console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
@@ -202,7 +202,7 @@
   let titleEl // variable to bind the
   async function beginEditTitle() {
     console.log("beginning edit title")
-    titleBeingTyped = content.title // fill the field with the current title
+    titleBeingTyped = $content.title // fill the field with the current title
     editingTitle = true
     await tick() // wait for the title input element to be created
     titleEl.focus()
@@ -222,17 +222,56 @@
 
   // keep track of whether the doc is untitled
   let untitled
-  $: untitled = (content.title === '')
+  $: untitled = ($content.title === '')
 
   let titleHover // whether the title is being hovered
 
 
   function setStateFromSession(event) {
-    content = event.detail.content;
+    $content = event.detail.content;
     lastCommitedContentHash = event.detail.contentHash;
     applyDeltas(event.detail.deltas);
   }
 
+  let editor
+  let loc = 0
+  $: editor_content = $content.body.slice(0, loc) + "|" + $content.body.slice(loc)
+
+  function handleInput(event) {
+    const key = event.key
+    if (key.length == 1) {
+      requestChange({type:'Add', value:[loc, key]})
+      loc += 1
+    } else {
+      switch (key) {
+      case "ArrowRight":
+        if (loc < $content.body.length){
+          loc+=1
+        }
+        break;
+      case "ArrowLeft":
+        if (loc > 0){
+          loc-=1
+        }
+        break;
+      case "Enter":
+        requestChange({type:'Add', value:[loc, "\n"]})
+        loc += 1
+        break;
+      case "Backspace":
+        if (loc>0) {
+          requestChange({type:'Delete', value:[loc-1, loc]})
+          loc -=1
+        }
+      }
+    }
+    console.log("input", event.key)
+  }
+  function handleClick(e) {
+    const offset = window.getSelection().focusOffset;
+    loc = offset > 0 ? offset -1 : 0
+
+  }
 </script>
 
 <style>
@@ -265,6 +304,15 @@
     color: lightgray;
   }
 
+  editor {
+    width:400px;
+    border: 1px solid black;
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0;
+    padding: 4px;
+  }
 </style>
 
 <Holochain on:setStateFromSession={setStateFromSession} on:changeReq={changeReq} on:syncReq={syncReq} on:syncResp={syncResp} on:change={change} on:updateParticipants={updateParticipants}/>
@@ -279,13 +327,15 @@
           {#if untitled}
             Untitled Document
           {:else}
-            {content.title}
+            {$content.title}
           {/if}
         </span>
       {/if}
     </div>
   </div>
-<textarea bind:value={content.body}/>
+  <editor on:click={handleClick} on:keydown={handleInput} tabindex=0 start=0 bind:this={editor}>
+    {editor_content}
+  </editor>
 </div>
 <button on:click={commitChange}>Commit</button>
 <div>
@@ -295,5 +345,6 @@
   <li>participants: {participantsPretty}
   <li>editingTitle: {editingTitle}
   <li>titleBeingTyped: {titleBeingTyped}
-  <li>content.title: {content.title}
+  <li>content.title: {$content.title}
+    <li>editor: {loc} content:{JSON.stringify($content.body)}
 </div>
