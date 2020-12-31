@@ -239,7 +239,7 @@
   }
 
   function updateParticipant(pubKey, meta) {
-    const pubkeyStr = arrayBufferToBase64(pubKey);
+    const pubKeyStr = arrayBufferToBase64(pubKey);
     if (!(pubKeyStr in $participants)) {
       $participants[pubKeyStr] = {pubKey, meta}
       $participants = $participants
@@ -273,7 +273,7 @@
       const data = {
         participants: p
       }
-      synSendHeartbeat(Object.values($participants).map(v=>v.pubkey), data);
+      synSendHeartbeat(Object.values($participants).map(v=>v.pubKey), data);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
