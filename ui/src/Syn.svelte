@@ -188,7 +188,9 @@
             syncReq({from: signal.data.payload.signal_payload});
             break;
           case "SyncResp":
-            syncResp(signal.data.payload.signal_payload);
+            const state = signal.data.payload.signal_payload;
+            state.deltas = state.deltas.map(d=>JSON.parse(d))
+            syncResp(state);
             break;
           case "ChangeReq":
             let req = signal.data.payload.signal_payload
@@ -197,9 +199,7 @@
             break;
           case "Change":
             let deltas = signal.data.payload.signal_payload
-            console.log("pre",deltas)
             deltas = deltas.map(d=>JSON.parse(d))
-            console.log("pre",deltas)
             change(deltas);
             break;
           case "Heartbeat":
