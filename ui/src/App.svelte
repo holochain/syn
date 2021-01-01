@@ -3,7 +3,6 @@
   import Title from './Title.svelte';
   import Users from './Users.svelte';
   import Syn from './Syn.svelte';
-  import {requestChange} from './Syn.svelte';
   $: disconnected = false
   import { content, scribeStr } from './stores.js';
 
@@ -25,6 +24,7 @@
     }
   }
   $: noscribe = $scribeStr === ""
+  let syn
 
 </script>
 
@@ -78,15 +78,15 @@
 <div class="toolbar">
   <h1>SynText</h1>
 <div class:noscribe>
-    <Title on:requestChange={(event) => requestChange(event.detail)}/>
+    <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
 </div>
 
 <main>
 <div class:noscribe>
-  <Editor on:requestChange={(event) => requestChange(event.detail)}/>
+  <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
-<Syn applyDeltas={applyDeltas} />
+<Syn applyDeltas={applyDeltas} bind:this={syn} />
 </main>
 
 <div class="participants-tray">

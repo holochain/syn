@@ -1,7 +1,9 @@
-<script context="module">
+<script >
+  import { connection, scribeStr, content, pendingDeltas, participants} from './stores.js';
+  import { createEventDispatcher } from 'svelte';
+  import {decodeJson, encodeJson} from './json.js'
+
   let roundTripForScribe = true
-  let connection
-  let _pendingDeltas
   export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
@@ -17,8 +19,8 @@
   // If we are the scribe, no need to go into the zome
   export function requestChange(delta) {
     // any requested change is on top of last pending delta
-    const index = _pendingDeltas.length;
-    if (session.scribeStr == connection.me && !roundTripForScribe) {
+    const index = $pendingDeltas.length;
+    if (session.scribeStr == $connection.me && !roundTripForScribe) {
       addChangeAsScribe([index, delta])
     } else {
       synSendChangeReq(index, delta);
@@ -26,51 +28,9 @@
   }
 
   async function synSendChangeReq(index, delta) {
-    delta.by = connection.me
+    delta.by = $connection.me
     delta = JSON.stringify(delta)
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
-  }
-
-  const FLAG_TYPED_ARRAY = "FLAG_TYPED_ARRAY";
-
-  function decodeJson(jsonStr) {
-    return JSON.parse( jsonStr, function( key, value ){
-      // the receiver function looks for the typed array flag
-      try{
-        if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
-          // if found, we convert it back to a typed array
-          return new window[ value.constructor ]( value.data );
-        }
-      }catch(e){}
-
-      // if flag not found no conversion is done
-      return value;
-    });
-  }
-
-  function encodeJson(obj) {
-    return JSON.stringify( obj , function( key, value ){
-      // the replacer function is looking for some typed arrays.
-      // If found, it replaces it by a trio
-      if ( value instanceof Int8Array         ||
-           value instanceof Uint8Array        ||
-           value instanceof Uint8ClampedArray ||
-           value instanceof Int16Array        ||
-           value instanceof Uint16Array       ||
-           value instanceof Int32Array        ||
-           value instanceof Uint32Array       ||
-           value instanceof Float32Array      ||
-           value instanceof Float64Array       )
-      {
-        var replacement = {
-          constructor: value.constructor.name,
-          data: Array.apply([], value),
-          flag: FLAG_TYPED_ARRAY
-        }
-        return replacement;
-      }
-      return value;
-    });
   }
 
   async function synSendHeartbeat(participants, data) {
@@ -95,21 +55,21 @@
     return callZome('hash_content', content)
   }
 
-  export async function callZome(fn_name, payload, timeout) {
-    if (!connection) {
+  async function callZome(fn_name, payload, timeout) {
+    if (!$connection) {
       console.log("callZome called when disconnected from conductor");
       return;
     }
     try {
       const zome_name = "syn";
       console.log(`Making zome call ${fn_name} with:`, payload)
-      const result = await connection.appClient.callZome(
+      const result = await $connection.appClient.callZome(
         {
           cap: null,
-          cell_id: connection.cellId,
+          cell_id: $connection.cellId,
           zome_name,
           fn_name,
-          provenance: connection.agentPubKey,
+          provenance: $connection.agentPubKey,
           payload
         },
         timeout
@@ -128,13 +88,6 @@
     alert("WHOA attempt to apply deltas while commit in progress")
     return;
   }*/
-
-</script>
-<script>
-  import { conn, scribeStr, content, pendingDeltas, participants} from './stores.js';
-  import { createEventDispatcher } from 'svelte';
-
-  _pendingDeltas = $pendingDeltas
 
   export let applyDeltas;
 
@@ -164,7 +117,7 @@
     // notify all participants of the change
     const p = Object.values($participants).map(v=>v.pubKey)
     if (roundTripForScribe) {
-      p.push(connection.agentPubKey)
+      p.push($connection.agentPubKey)
     }
     if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
@@ -177,8 +130,8 @@
   let adminPort=1234;
   let appPort=8888;
   async function toggle() {
-    if (!connection) {
-      connection = {}
+    if (!$connection) {
+      $connection = {}
       const appClient = await AppWebsocket.connect(
         `ws://localhost:${appPort}`,
         signal => {
@@ -213,15 +166,14 @@
       const appInfo = await appClient.appInfo({ installed_app_id: "syn" });
       const cellId = appInfo.cell_data[0][0];
       const agentPubKey = cellId[1];
-      connection = {
+      $connection = {
         appClient,
         appInfo,
         cellId,
         agentPubKey,
         me: arrayBufferToBase64(agentPubKey)
       }
-      $conn = connection
-      console.log("active", connection);
+      console.log("active", $connection);
       session = await callZome("join_session");
       session.deltas = session.deltas.map(d => JSON.parse(d))
       session.snapshotHash = await synHashContent(session.snapshot_content);
@@ -236,15 +188,14 @@
       });
     } else {
       $scribeStr = ""
-      connection = undefined
-      $conn = undefined
+      $connection = undefined
     }
   }
 
   // handler for the heartbeat event
   function heartbeat(data) {
     console.log("got heartbeat", data)
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == $connection.me) {
     }
     else {
       if (data.participants) {
@@ -260,7 +211,7 @@
 
   // handler for the changeReq event
   function changeReq(change) {
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == $connection.me) {
       addChangeAsScribe(change)
     } else {
       console.log("change requested but I'm not the scribe.")
@@ -269,7 +220,7 @@
 
   // handler for the change event
   function change(deltas) {
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == $connection.me) {
       if (roundTripForScribe) {
         pendingDeltas.update(d=>d.concat(deltas));
         applyDeltas(deltas)
@@ -283,10 +234,8 @@
   }
 
   function updateParticipant(pubKey, meta) {
-    console.log("pubKey", pubKey)
     const pubKeyStr = arrayBufferToBase64(pubKey);
-    console.log("pubkeyStr", pubKeyStr)
-    if (!(pubKeyStr in $participants) && (pubKeyStr != connection.me)) {
+    if (!(pubKeyStr in $participants) && (pubKeyStr != $connection.me)) {
       $participants[pubKeyStr] = {pubKey, meta}
       $participants = $participants
     } else if (meta) {
@@ -298,7 +247,7 @@
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == $connection.me) {
       updateParticipant(from, request.meta)
       let state = {
         snapshot: session.snapshotHash,
@@ -312,8 +261,8 @@
       synSendSyncResp(from, state);
       // and send everybody a heartbeat with new participants
       const p = {...$participants}
-      p[connection.me] = {
-        pubKey: connection.agentPubKey
+      p[$connection.me] = {
+        pubKey: $connection.agentPubKey
       }
       const data = {
         participants: p
@@ -338,7 +287,7 @@
   }
 
   async function commitChange() {
-    if (session.scribeStr == connection.me) {
+    if (session.scribeStr == $connection.me) {
       if ($pendingDeltas.length == 0) {
         alert("No deltas to commit!");
         return;
@@ -405,7 +354,7 @@
   <h4>Holochain Connection:</h4>
   App Port: <input bind:value={appPort}>
   <button on:click={toggle}>
-    {#if $conn}
+    {#if $connection}
       Disconnect
     {:else}
       Connect
