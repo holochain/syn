@@ -129,7 +129,7 @@ pub struct SessionInfo {
     pub session: HeaderHash,
     pub scribe: AgentPubKey,
     pub snapshot_content: Content,
-    pub deltas: Vec<Delta>,  // deltas since snapshot
+    pub deltas: Vec<Delta>,      // deltas since snapshot
     pub content_hash: EntryHash, // content hash at last commit
 }
 
@@ -320,7 +320,7 @@ enum SignalPayload {
     SyncReq(AgentPubKey), // content is who the request is from
     SyncResp(StateForSync),
     ChangeReq((u32, Delta)),
-    Change(Vec<Delta>),
+    Change(Change),
     Heartbeat(String),   // signal for maintaining latency info and other metadata
 }
 
@@ -358,6 +358,15 @@ fn send_sync_response(input:SendSyncResponseInput) -> SynResult<()> {
     Ok(())
 }
 
+/// Change struct that is sent by the scribe to participants
+/// consists of a set of deltas, an and indicator of the index
+/// into the list of uncommited deltas this change starts at.
+/// UI's are expected to be able to receive and handle changes
+/// out of order by looking at the index, and can use sync requests
+/// to catch up if necessary.
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct Change((u32, Vec<Delta>));
+
 /// Input to the send change call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SendChangeRequestInput {
@@ -377,13 +386,13 @@ fn send_change_request(input:SendChangeRequestInput) -> SynResult<()> {
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SendChangeInput {
     pub participants: Vec<AgentPubKey>,
-    pub deltas: Vec<Delta>,
+    pub change: Change,
 }
 
 #[hdk_extern]
 fn send_change(input:SendChangeInput) -> SynResult<()> {
     // send response signal to the participant
-    remote_signal(&SignalPayload::Change(input.deltas), input.participants)?;
+    remote_signal(&SignalPayload::Change(input.change), input.participants)?;
     Ok(())
 }
 

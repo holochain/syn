@@ -45,6 +45,11 @@ type Signal = {
 
 module.exports = (orchestrator) => {
     orchestrator.registerScenario('syn basic zome calls', async (s, t) => {
+
+        // Delta representation could be JSON or not, for now we are using
+        // json so setting this variable to true
+        const jsonDeltas = true;
+
         const [me_player, alice_player, bob_player] = await s.players([config, config, config])
         const [[me_happ]] = await me_player.installAgentsHapps(installation)
         const [[alice_happ]] = await alice_player.installAgentsHapps(installation)
@@ -82,16 +87,18 @@ module.exports = (orchestrator) => {
         const returned_content = await me.call('syn', 'get_content', sessionInfo.content_hash)
         t.deepEqual(returned_content, sessionInfo.snapshot_content)
 
-        let deltas = [{type:"Title",value: "foo title"},{type:"Add", value:[0,"bar content"]}]
+        // set up the pending deltas array
+        let pendingDeltas = [{type:"Title",value: "foo title"}, {type:"Add", value:[0,"bar content"]}]
 
-        let new_content = applyDeltas(sessionInfo.snapshot_content, deltas)
+        let new_content = applyDeltas(sessionInfo.snapshot_content, pendingDeltas)
         const new_content_hash_1 = await me.call('syn', 'hash_content', new_content)
 
+        let deltas = jsonDeltas ? pendingDeltas.map(d=>JSON.stringify(d)) : pendingDeltas;
         // add a content change
         let commit = {
             snapshot: sessionInfo.content_hash,
             change: {
-                deltas: deltas.map(d=>JSON.stringify(d)),
+                deltas,
                 content_hash: new_content_hash_1,
                 previous_change: sessionInfo.content_hash, // this is the first change so same hash as snapshot
                 meta: {
@@ -105,20 +112,21 @@ module.exports = (orchestrator) => {
         t.equal(commit_header_hash.length, 39) // is a hash
 
         // add a second content change
-        deltas = [
+        pendingDeltas = [
           {type:"Delete", value:[0,3]},
           {type:"Add", value:[0,"baz"]},
           {type:"Add", value:[11," new"]},  // 'baz content new'
           {type:"Delete", value:[4,11]},    // 'baz  new'
           {type:"Add", value:[4,"monkey"]}, // 'baz monkey new'
         ]
-        new_content = applyDeltas(new_content, deltas)
+        new_content = applyDeltas(new_content, pendingDeltas)
         const new_content_hash_2 = await me.call('syn', 'hash_content', new_content)
 
+        deltas = jsonDeltas ? pendingDeltas.map(d=>JSON.stringify(d)) : pendingDeltas;
         commit = {
             snapshot: sessionInfo.content_hash,
             change: {
-                deltas: deltas.map(d=>JSON.stringify(d)),
+                deltas,
                 content_hash: new_content_hash_2,
                 previous_change: new_content_hash_1, // this is the second change so previous commit's hash
                 meta: {
@@ -129,6 +137,8 @@ module.exports = (orchestrator) => {
             }
         }
         commit_header_hash = await me.call('syn', 'commit', commit)
+        // clear the pendingDeltas
+        pendingDeltas = []
 
         // set my signal handler so we can confirm what happens when
         // someone joins a sessions
@@ -161,8 +171,9 @@ module.exports = (orchestrator) => {
 
         // check that deltas and snapshot content returned add up to the current real content
         await delay(500) // make time for integrating new data
+        const receivedDeltas = jsonDeltas ? aliceSessionInfo.deltas.map(d=>JSON.parse(d)) : aliceSessionInfo.deltas;
         t.deepEqual(
-          applyDeltas(aliceSessionInfo.snapshot_content, aliceSessionInfo.deltas.map(d=>JSON.parse(d))),
+          applyDeltas(aliceSessionInfo.snapshot_content, receivedDeltas),
           {title: "foo title", body: "baz monkey new"} // content after two commits
         )
 
@@ -174,14 +185,16 @@ module.exports = (orchestrator) => {
         // I should receive alice's request for the state as she joins the session
         t.deepEqual(me_signals[0], {signal_name: "SyncReq", signal_payload: alice_pubkey})
 
-        // (send Alice uncommitted deltas with the Fake UI)
-        const uncommittedDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}].map(d=>JSON.stringify(d))
+        // I add some pending deltas which I will then need to send to Alice as part of her Joining.
+        pendingDeltas = [{type:"Title",value: "I haven't committed yet"},{type:"Add", value:[14,"\nBut made a new line! 🍑"]}]
+
+        deltas = jsonDeltas ? pendingDeltas.map(d=>JSON.stringify(d)) : pendingDeltas;
 
         const state = {
           snapshot: sessionInfo.content_hash,
           commit: commit_header_hash,
           commit_content_hash: new_content_hash_2,
-          deltas: uncommittedDeltas,
+          deltas: deltas,
         }
         await me.call('syn', 'send_sync_response', {
           participant: alice_pubkey,
@@ -191,8 +204,8 @@ module.exports = (orchestrator) => {
         // Alice should have recieved uncommitted deltas
         await delay(500) // make time for signal to arrive
         t.equal(alice_signals[0].signal_name, "SyncResp")
-        t.deepEqual(alice_signals[0].signal_payload, state) // deltas, commit, and snapshot match
-
+        let receivedState = alice_signals[0].signal_payload;
+        t.deepEqual(receivedState, state) // deltas, commit, and snapshot match
 
         // bob joins session
         const bobSessionInfo = await alice.call('syn', 'join_session')
@@ -201,29 +214,33 @@ module.exports = (orchestrator) => {
 
         // alice sends me a change req and I should receive it
         const alice_delta: Delta = {type: "Title", value: "Alice in Wonderland"}
+        let delta = jsonDeltas ? JSON.stringify(alice_delta) : alice_delta;
         await alice.call('syn', 'send_change_request', {
             scribe: aliceSessionInfo.scribe,
             index: 1,
-            delta: JSON.stringify(alice_delta)})
+            delta})
         await delay(500) // make time for signal to arrive
         const sig = me_signals[2]
         t.equal(sig.signal_name, "ChangeReq")
         const [sig_index, sig_delta] = sig.signal_payload
         t.equal(sig_index,1)
-        t.deepEqual(JSON.parse(sig_delta), alice_delta) // delta_matches
+        const receiveDelta = jsonDeltas ? JSON.parse(sig_delta) : sig_delta;
+        t.deepEqual(receiveDelta, alice_delta) // delta_matches
 
-        const my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}].map(d=>JSON.stringify(d))
+
+        let my_deltas = [{type: "Add", value:[0, "Whoops!\n"]},{type: "Title", value: "Alice in Wonderland"}];
+        deltas = jsonDeltas ? my_deltas.map(d=>JSON.stringify(d)) : deltas;
         // I send a change, and alice and bob should receive it.
         await me.call('syn', 'send_change', {
             participants: [alice_pubkey, bob_pubkey],
-            deltas: my_deltas})
+            change: [2, deltas]})
         await delay(500) // make time for signal to arrive
         let a_sig = alice_signals[1]
         let b_sig = bob_signals[0]
         t.equal(a_sig.signal_name, "Change")
         t.equal(b_sig.signal_name, "Change")
-        t.deepEqual(a_sig.signal_payload, my_deltas) // delta_matches
-        t.deepEqual(b_sig.signal_payload, my_deltas) // delta_matches
+        t.deepEqual(a_sig.signal_payload, [2, deltas]) // delta_matches
+        t.deepEqual(b_sig.signal_payload, [2, deltas]) // delta_matches
 
         await me.call('syn', 'send_heartbeat', {
             participants: [alice_pubkey, bob_pubkey],
