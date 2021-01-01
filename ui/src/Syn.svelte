@@ -1,5 +1,5 @@
 <script context="module">
-  let roundTripForScribe = false
+  let roundTripForScribe = true
   let connection
   let _pendingDeltas
   export let session
@@ -188,9 +188,7 @@
             syncReq({from: signal.data.payload.signal_payload});
             break;
           case "SyncResp":
-            const state = signal.data.payload.signal_payload
-            state.deltas = state.deltas.map(d=>JSON.parse(d))
-            syncResp(state);
+            syncResp(signal.data.payload.signal_payload);
             break;
           case "ChangeReq":
             let req = signal.data.payload.signal_payload
@@ -199,7 +197,9 @@
             break;
           case "Change":
             let deltas = signal.data.payload.signal_payload
+            console.log("pre",deltas)
             deltas = deltas.map(d=>JSON.parse(d))
+            console.log("pre",deltas)
             change(deltas);
             break;
           case "Heartbeat":
@@ -267,17 +267,17 @@
   }
 
   // handler for the change event
-  function change(delta) {
+  function change(deltas) {
     if (session.scribeStr == connection.me) {
       if (roundTripForScribe) {
-        $pendingDeltas = [...$pendingDeltas, [delta]];
-        applyDeltas(delta)
+        pendingDeltas.update(d=>d.concat(deltas));
+        applyDeltas(deltas)
       } else {
         console.log("change recevied but I'm the scribe, so I'm ignoring this!")
       }
     } else {
-      console.log("change arrived:", delta)
-      applyDeltas(delta)
+      console.log("change arrived:", deltas)
+      applyDeltas(deltas)
     }
   }
 
