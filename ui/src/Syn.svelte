@@ -28,7 +28,7 @@
   }
 
   async function synSendChangeReq(index, delta) {
-    delta.by = $connection.me
+//    delta.by = $connection.me
     delta = JSON.stringify(delta)
     return callZome('send_change_request', {scribe: session.scribe, index, delta});
   }
@@ -38,9 +38,9 @@
     return callZome("send_heartbeat", {participants, data})
   }
 
-  async function synSendChange(participants, deltas) {
+  async function synSendChange(participants, index, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
-    return callZome("send_change", {participants, deltas})
+    return callZome("send_change", {participants, change: [index, deltas]})
   }
 
   async function synSendSyncResp(to, state) {
@@ -121,7 +121,7 @@
     }
     if (p.length > 0) {
       console.log(`Sending change to ${participantsPretty}:`, delta);
-      synSendChange(p , [delta])
+      synSendChange(p, index, [delta])
     }
   }
 
@@ -152,9 +152,9 @@
             changeReq(req);
             break;
           case "Change":
-            let deltas = signal.data.payload.signal_payload
+            let [index, deltas] = signal.data.payload.signal_payload
             deltas = deltas.map(d=>JSON.parse(d))
-            change(deltas);
+            change(index, deltas);
             break;
           case "Heartbeat":
             let data = decodeJson(signal.data.payload.signal_payload)
@@ -219,7 +219,7 @@
   }
 
   // handler for the change event
-  function change(deltas) {
+  function change(index, deltas) {
     if (session.scribeStr == $connection.me) {
       if (roundTripForScribe) {
         pendingDeltas.update(d=>d.concat(deltas));
