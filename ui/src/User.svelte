@@ -2,25 +2,25 @@
   export let pubKeyStr = ''
   export let pubKey
   export let me = false
-  import { scribeStr } from './stores.js';
+  import { scribeStr } from './stores.js'
   $: scribe = pubKeyStr == $scribeStr
 
   // retruns binary input as hex number string (e.g. 'a293b8e1a')
   function arrayBufferToHex(buffer){
-    let hexString = '';
+    let hexString = ''
     for (const byte of buffer) {
-      hexString += byte.toString(16);
+      hexString += byte.toString(16)
     }
-    return hexString;
-  };
+    return hexString
+  }
 
   // converts RGB to HSL
   // Source: https://gist.github.com/mjackson/5311256
   function rgbToHsl(r, g, b) {
     r /= 255, g /= 255, b /= 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b); var h, s, l = (max + min) / 2;
+    let max = Math.max(r, g, b), min = Math.min(r, g, b); let h, s, l = (max + min) / 2;
     if (max == min) { h = s = 0;} else {
-        var d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        let d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch(max) {
             case r: h = (g - b) / d + (g < b ? 6 : 0); break;
             case g: h = (b - r) / d + 2; break;
@@ -29,7 +29,7 @@
 
   // Source: https://stackoverflow.com/questions/5842747
   function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
+    return Math.min(Math.max(value, min), max)
   }
 
   // Generate an object of colors for a user from their pubKey
