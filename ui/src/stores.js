@@ -4,7 +4,7 @@ export const content = writable({title:"", body:""});
 
 export const pendingDeltas = writable([]);
 
-export const participants = writable({});
+export const folks = writable({});
 
 export const connection = writable();
 

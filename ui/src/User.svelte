@@ -32,7 +32,7 @@
     return Math.min(Math.max(value, min), max)
   }
 
-  // Generate an object of colors for a user from their pubKey
+  // Generate an object of colors for a folk from their pubKey
   // returns Object:
   //           primary: Color,            // used for hex outline and norrmal cursor
   //           hexagon: Color,            // used for hexagon picture placeholder
@@ -40,9 +40,9 @@
   //           lookingSelection: Color,   // used for selection when "looking at"
   //           lookingCursor: Color,      // used for cursor when "looking at"
   // where Color is array: [h, s, l]
-  // used in `use:setColor` on new User components
-  function getUserColors(pubKey) {
-    // get a hex color from the user's public key
+  // used in `use:setColor` on new Folk components
+  function getFolkColors(pubKey) {
+    // get a hex color from the folk's public key
     const hexColor = '#' + arrayBufferToHex(pubKey).slice(-6)
     // extract the RGB components from the hex color notation.
     // Source: https://stackoverflow.com/questions/3732046
@@ -69,7 +69,7 @@
   }
 
   function setUpHex(hexEl) {
-    const colors = getUserColors(pubKey)
+    const colors = getFolkColors(pubKey)
     hexEl.style['background-color'] = CSSifyHSL(colors.primary)
     // hex element's first child is its picture/hexagonColor div
     hexEl.firstChild.style['background-color'] = CSSifyHSL(colors.hexagon)
@@ -78,27 +78,27 @@
 </script>
 <style>
   :global(:root) {
-    --participant-hex-width: 60px;
-    --participant-hex-height: calc(var(--participant-hex-width) * .8666);
+    --folk-hex-width: 60px;
+    --folk-hex-height: calc(var(--folk-hex-width) * .8666);
     --hex-border: 4px;
-    --scribe-hex-width: calc(var(--participant-hex-width) - 2 * var(--hex-border));
-    --scribe-hex-height: calc(var(--participant-hex-height) - 2 * var(--hex-border));
+    --scribe-hex-width: calc(var(--folk-hex-width) - 2 * var(--hex-border));
+    --scribe-hex-height: calc(var(--folk-hex-height) - 2 * var(--hex-border));
   }
-  .user {
+  .folk {
     display: grid;
-    width: var(--participant-hex-width);
-    height: var(--participant-hex-height);
+    width: var(--folk-hex-width);
+    height: var(--folk-hex-height);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     place-items: center;
     color: white;
     text-shadow: 0 0 5px black;
     cursor: pointer;
   }
-  .user-color {
+  .folk-color {
     z-index: -1;
     content: '';
-    width: calc(var(--participant-hex-width) - (var(--hex-border)) * 2);
-    height: calc(var(--participant-hex-height) - (var(--hex-border)) * 2);
+    width: calc(var(--folk-hex-width) - (var(--hex-border)) * 2);
+    height: calc(var(--folk-hex-height) - (var(--hex-border)) * 2);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     position: absolute;
   }
@@ -110,8 +110,8 @@
   }
   .scribe-halo {
     z-index: -2;
-    width: var(--participant-hex-width);
-    height: var(--participant-hex-height);
+    width: var(--folk-hex-width);
+    height: var(--folk-hex-height);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%, 1% 50%, 28% 97%, 72% 97%, 97% 50%, 72% 3%, 28% 3%, 25% 0%); /* FIXME not right shape yet */
     background-color: grey;
     position: absolute;
@@ -136,15 +136,15 @@
 </style>
 {#if scribe}
   <div class='scribe-wrapper'>
-    <div use:setUpHex class='user scribe' class:me>
+    <div use:setUpHex class='folk scribe' class:me>
       <div class='scribe-color'></div>
       {pubKeyStr.slice(-4)}
     </div>
     <div class='scribe-halo'></div>
   </div>
 {:else}
-  <div use:setUpHex class='user' class:me>
-    <div class='user-color' class:scribe-color={scribe}></div>
+  <div use:setUpHex class='folk' class:me>
+    <div class='folk-color' class:scribe-color={scribe}></div>
     {pubKeyStr.slice(-4)}
   </div>
 {/if}

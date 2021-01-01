@@ -1,5 +1,5 @@
 <script >
-  import { connection, scribeStr, content, pendingDeltas, participants} from './stores.js';
+  import { connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
@@ -99,7 +99,7 @@
   let lastCommitedContentHash;    // add delta to the pending deltas and change state
 
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
-  $: participantsPretty =  JSON.stringify(Object.keys($participants))
+  $: folksPretty =  JSON.stringify(Object.keys($folks))
 
   function addChangeAsScribe(change) {
     let [index, delta] = change;
@@ -115,12 +115,12 @@
       applyDeltas([delta]);
     }
     // notify all participants of the change
-    const p = Object.values($participants).map(v=>v.pubKey)
+    const p = Object.values($folks).map(v=>v.pubKey)
     if (roundTripForScribe) {
       p.push($connection.agentPubKey)
     }
     if (p.length > 0) {
-      console.log(`Sending change to ${participantsPretty}:`, delta);
+      console.log(`Sending change to ${folksPretty}:`, delta);
       synSendChange(p, index, [delta])
     }
   }
@@ -235,12 +235,12 @@
 
   function updateParticipant(pubKey, meta) {
     const pubKeyStr = arrayBufferToBase64(pubKey);
-    if (!(pubKeyStr in $participants) && (pubKeyStr != $connection.me)) {
-      $participants[pubKeyStr] = {pubKey, meta}
-      $participants = $participants
+    if (!(pubKeyStr in $folks) && (pubKeyStr != $connection.me)) {
+      $folks[pubKeyStr] = {pubKey, meta}
+      $folks = $folks
     } else if (meta) {
-      $participants[pubKeyStr].meta = meta
-      $participants = $participants
+      $folks[pubKeyStr].meta = meta
+      $folks = $folks
     }
   }
 
@@ -260,14 +260,14 @@
       // send a sync response to the sender
       synSendSyncResp(from, state);
       // and send everybody a heartbeat with new participants
-      const p = {...$participants}
+      const p = {...$folks}
       p[$connection.me] = {
         pubKey: $connection.agentPubKey
       }
       const data = {
         participants: p
       }
-      synSendHeartbeat(Object.values($participants).map(v=>v.pubKey), data);
+      synSendHeartbeat(Object.values($folks).map(v=>v.pubKey), data);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -370,7 +370,7 @@
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
     <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
-    <li>participants: {participantsPretty}
+    <li>folks: {folksPretty}
     <li>content.title: {$content.title}
       <li>scribe: {$scribeStr}
   </ul>

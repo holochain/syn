@@ -1,7 +1,7 @@
 <script>
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
-  import Users from './Users.svelte';
+  import Folks from './Users.svelte';
   import Syn from './Syn.svelte';
   $: disconnected = false
   import { content, scribeStr } from './stores.js';
@@ -41,8 +41,8 @@
     grid-column: 1 / 2;
   }
 
-  .participants-tray {
-    min-width: calc((var(--users-padding) * 2) + var(--participant-hex-width));
+  .folks-tray {
+    min-width: calc((var(--folks-padding) * 2) + var(--folk-hex-width));
     width: auto;
     background: hsla(255, 20%, 50%, .2);
     grid-column: 2 / 3;
@@ -89,8 +89,8 @@
 <Syn applyDeltas={applyDeltas} bind:this={syn} />
 </main>
 
-<div class="participants-tray">
-  <Users />
+<div class="folks-tray">
+  <Folks />
 </div>
 
 <div class="debug-drawer">This is a footer that should be hideable and have debug</div>
