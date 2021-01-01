@@ -9,3 +9,5 @@ export const folks = writable({});
 export const connection = writable();
 
 export const scribeStr = writable("");
+
+export const history = writable([]);

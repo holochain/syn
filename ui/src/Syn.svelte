@@ -1,5 +1,5 @@
 <script >
-  import { connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
+  import { history, connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
@@ -89,11 +89,13 @@
     return;
   }*/
 
-  export let applyDeltas;
+  // this property is the app-defined function to apply deltas to the content
+  export let applyDeltasFn;
 
   const dispatch = createEventDispatcher();
 
   let commitInProgress = false;
+  let currentIndex = 0; // stores the index of deltas we are at on top of the current commit
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
   let lastCommitedContentHash;    // add delta to the pending deltas and change state
@@ -218,6 +220,14 @@
     }
   }
 
+  function applyDeltas(deltas) {
+    currentIndex += deltas.length
+    // save these deltas to the history
+    $history = [...$history, deltas ]
+    // apply the deltas to the content
+    applyDeltasFn(deltas)
+  }
+
   // handler for the change event
   function change(index, deltas) {
     if (session.scribeStr == $connection.me) {
@@ -228,8 +238,12 @@
         console.log("change recevied but I'm the scribe, so I'm ignoring this!")
       }
     } else {
-      console.log("change arrived:", deltas)
-      applyDeltas(deltas)
+      console.log(`change arrived to be on top of ${index}:`, deltas)
+      if (currentIndex == index) {
+        applyDeltas(deltas)
+      } else {
+        console.log(`change arrived out of sequence currentIndex: ${currentIndex}, change index:${index}`)
+      }
     }
   }
 
@@ -369,6 +383,7 @@
   <h4>Dev data:</h4>
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
+    <li>currentIndex: {currentIndex}
     <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
     <li>folks: {folksPretty}
     <li>content.title: {$content.title}

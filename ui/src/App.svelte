@@ -86,7 +86,7 @@
 <div class:noscribe>
   <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
-<Syn applyDeltas={applyDeltas} bind:this={syn} />
+<Syn applyDeltasFn={applyDeltas} bind:this={syn} />
 </main>
 
 <div class="folks-tray">
