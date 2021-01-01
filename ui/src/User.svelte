@@ -105,6 +105,8 @@
     margin: var(--hex-border) 0;
     width: var(--scribe-hex-width);
     height: var(--scribe-hex-height);
+    /* font-size of scribe hex scales by ratio of normal size to scribe size */
+    font-size: calc((52/60) * 1rem);
   }
   .scribe-color{
     z-index: -1;
