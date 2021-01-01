@@ -217,8 +217,7 @@ module.exports = (orchestrator) => {
         let delta = jsonDeltas ? JSON.stringify(alice_delta) : alice_delta;
         await alice.call('syn', 'send_change_request', {
             scribe: aliceSessionInfo.scribe,
-            index: 1,
-            delta})
+            change: [1, [delta]]})
         await delay(500) // make time for signal to arrive
         const sig = me_signals[2]
         t.equal(sig.signal_name, "ChangeReq")

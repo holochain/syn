@@ -319,7 +319,7 @@ pub struct StateForSync {
 enum SignalPayload {
     SyncReq(AgentPubKey), // content is who the request is from
     SyncResp(StateForSync),
-    ChangeReq((u32, Delta)),
+    ChangeReq(Change),
     Change(Change),
     Heartbeat(String),   // signal for maintaining latency info and other metadata
 }
@@ -371,14 +371,13 @@ pub struct Change((u32, Vec<Delta>));
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SendChangeRequestInput {
     pub scribe: AgentPubKey,
-    pub index: u32,
-    pub delta: Delta,
+    pub change: Change,
 }
 
 #[hdk_extern]
 fn send_change_request(input:SendChangeRequestInput) -> SynResult<()> {
     // send response signal to the participant
-    remote_signal(&SignalPayload::ChangeReq((input.index,input.delta)), vec![input.scribe])?;
+    remote_signal(&SignalPayload::ChangeReq(input.change), vec![input.scribe])?;
     Ok(())
 }
 

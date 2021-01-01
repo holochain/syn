@@ -24,14 +24,14 @@
       const index = $pendingDeltas.length;
       addChangeAsScribe([index, delta])
     } else {
-      synSendChangeReq(currentIndex, delta);
+      synSendChangeReq(currentIndex, [delta]);
     }
   }
 
-  async function synSendChangeReq(index, delta) {
+  async function synSendChangeReq(index, deltas) {
 //    delta.by = $connection.me
-    delta = JSON.stringify(delta)
-    return callZome('send_change_request', {scribe: session.scribe, index, delta});
+    deltas = deltas.map(d=>JSON.stringify(d))
+    return callZome('send_change_request', {scribe: session.scribe, change: [index, deltas]});
   }
 
   async function synSendHeartbeat(participants, data) {
