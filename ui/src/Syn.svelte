@@ -1,5 +1,5 @@
 <script context="module">
-  let roundTripForScribe = true
+  let roundTripForScribe = false
   let connection
   let _pendingDeltas
   export let session
@@ -188,7 +188,9 @@
             syncReq({from: signal.data.payload.signal_payload});
             break;
           case "SyncResp":
-            syncResp(signal.data.payload.signal_payload);
+            const state = signal.data.payload.signal_payload
+            state.deltas = state.deltas.map(d=>JSON.parse(d))
+            syncResp(state);
             break;
           case "ChangeReq":
             let req = signal.data.payload.signal_payload
