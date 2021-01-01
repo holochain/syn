@@ -32,32 +32,47 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  // Generate a color for a user from their pubKey
-  // returns HSL array: [h,s,l]
+  // Generate an object of colors for a user from their pubKey
+  // returns Object:
+  //           primary: Color,            // used for hex outline and norrmal cursor
+  //           hexagon: Color,            // used for hexagon picture placeholder
+  //           selection: Color,          // used for normal selection
+  //           lookingSelection: Color,   // used for selection when "looking at"
+  //           lookingCursor: Color,      // used for cursor when "looking at"
+  // where Color is array: [h, s, l]
   // used in `use:setColor` on new User components
-  function getUserColor(pubKey) {
+  function getUserColors(pubKey) {
     // get a hex color from the user's public key
-    const raw_color = '#' + arrayBufferToHex(pubKey).slice(-6)
+    const hexColor = '#' + arrayBufferToHex(pubKey).slice(-6)
     // extract the RGB components from the hex color notation.
     // Source: https://stackoverflow.com/questions/3732046
-    const r = parseInt(raw_color.substr(1,2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
-    const g = parseInt(raw_color.substr(3,2), 16);
-    const b = parseInt(raw_color.substr(5,2), 16);
+    const r = parseInt(hexColor.substr(1,2), 16) // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
+    const g = parseInt(hexColor.substr(3,2), 16)
+    const b = parseInt(hexColor.substr(5,2), 16)
     // convert to HSL
-    const hsl = rgbToHsl(r, g, b)
-    // limit color to be bright enough and colorful enough
-    let [h, s, l] = hsl
-    let s_corrected = clamp(s, 10, 90)
-    let l_corrected = clamp(l, 25, 75)
-    return [h, s_corrected, l_corrected]
+    let hsl = rgbToHsl(r, g, b)
+    // limit color to be bright enough and not too bright
+    hsl[1] = clamp(hsl[1], 10, 90) // limit s
+    const [h,s,l] = hsl // destructure
+    return {
+               primary: [h, s, 50],
+               hexagon: [h, s, 25],
+             selection: [h, s, 90], // placeholder values from here down
+      lookingSelection: [h, s, 80],
+         lookingCursor: [h, s+10, 40],
+    }
   }
 
-  function setColor(el) {
-    let [h,s,l] = getUserColor(pubKey)
-    let mainColorString = `hsl(${h} ${s}% ${l}%)`
-    let picPlaceholderColorString = `hsl(${h} ${s}% ${l*.5}%)`
-    el.style['background-color'] = mainColorString
-    el.firstChild.style['background-color'] = picPlaceholderColorString
+  function CSSifyHSL(hslArray) {
+    const [h,s,l] = hslArray
+    return `hsl(${h} ${s}% ${l}%)`
+  }
+
+  function setUpHex(hexEl) {
+    const colors = getUserColors(pubKey)
+    hexEl.style['background-color'] = CSSifyHSL(colors.primary)
+    // hex element's first child is its picture/hexagonColor div
+    hexEl.firstChild.style['background-color'] = CSSifyHSL(colors.hexagon)
   }
 
 </script>
@@ -121,14 +136,14 @@
 </style>
 {#if scribe}
   <div class='scribe-wrapper'>
-    <div use:setColor class='user scribe' class:me>
+    <div use:setUpHex class='user scribe' class:me>
       <div class='scribe-color'></div>
       {pubKeyStr.slice(-4)}
     </div>
     <div class='scribe-halo'></div>
   </div>
 {:else}
-  <div use:setColor class='user' class:me>
+  <div use:setUpHex class='user' class:me>
     <div class='user-color' class:scribe-color={scribe}></div>
     {pubKeyStr.slice(-4)}
   </div>
