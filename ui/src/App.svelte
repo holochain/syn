@@ -1,7 +1,7 @@
 <script>
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
-  import Folks from './Users.svelte';
+  import Folks from './Folks.svelte';
   import Syn from './Syn.svelte';
   $: disconnected = false
   import { content, scribeStr } from './stores.js';

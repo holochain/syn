@@ -1,6 +1,6 @@
 <script>
   import { folks, connection, scribeStr  } from './stores.js';
-  import Folk from './User.svelte';
+  import Folk from './Folk.svelte';
 </script>
 <style>
   :global(:root) {
