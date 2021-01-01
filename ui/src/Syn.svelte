@@ -19,11 +19,12 @@
   // If we are the scribe, no need to go into the zome
   export function requestChange(delta) {
     // any requested change is on top of last pending delta
-    const index = $pendingDeltas.length;
     if (session.scribeStr == $connection.me && !roundTripForScribe) {
+      // if I'm the scribe the index is implicit in my pending delta's list
+      const index = $pendingDeltas.length;
       addChangeAsScribe([index, delta])
     } else {
-      synSendChangeReq(index, delta);
+      synSendChangeReq(currentIndex, delta);
     }
   }
 
