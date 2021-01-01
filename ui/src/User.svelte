@@ -3,6 +3,7 @@
   export let pubKey
   export let me = false
   import { scribeStr } from './stores.js';
+  $: scribe = pubKeyStr == $scribeStr
 
   // retruns binary input as hex number string (e.g. 'a293b8e1a')
   function arrayBufferToHex(buffer){
@@ -62,14 +63,16 @@
 </script>
 <style>
   :global(:root) {
-    --user-hex-width: 60px;
-    --user-hex-height: calc(var(--user-hex-width) * .8666);
-    --user-hex-border: 4px;
+    --participant-hex-width: 60px;
+    --participant-hex-height: calc(var(--participant-hex-width) * .8666);
+    --hex-border: 4px;
+    --scribe-hex-width: calc(var(--participant-hex-width) - 2 * var(--hex-border));
+    --scribe-hex-height: calc(var(--participant-hex-height) - 2 * var(--hex-border));
   }
   .user {
     display: grid;
-    width: var(--user-hex-width);
-    height: var(--user-hex-height);
+    width: var(--participant-hex-width);
+    height: var(--participant-hex-height);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     place-items: center;
     color: white;
@@ -79,19 +82,52 @@
   .user-color {
     z-index: -1;
     content: '';
-    width: calc(var(--user-hex-width) - (var(--user-hex-border)) * 2);
-    height: calc(var(--user-hex-height) - (var(--user-hex-border)) * 2);
+    width: calc(var(--participant-hex-width) - (var(--hex-border)) * 2);
+    height: calc(var(--participant-hex-height) - (var(--hex-border)) * 2);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
     position: absolute;
   }
-  .scribe {
+
+  .scribe-wrapper {
+    display: grid;
+    position: relative;
+    place-items: center;
   }
-  .participant {
+  .scribe-halo {
+    z-index: -2;
+    width: var(--participant-hex-width);
+    height: var(--participant-hex-height);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%, 1% 50%, 28% 97%, 72% 97%, 97% 50%, 72% 3%, 28% 3%, 25% 0%); /* FIXME not right shape yet */
+    background-color: grey;
+    position: absolute;
+  }
+  .scribe {
+    margin: var(--hex-border) 0;
+    width: var(--scribe-hex-width);
+    height: var(--scribe-hex-height);
+  }
+  .scribe-color{
+    z-index: -1;
+    content: '';
+    width: calc(var(--scribe-hex-width) - (var(--hex-border)) * 2);
+    height: calc(var(--scribe-hex-height) - (var(--hex-border)) * 2);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+    position: absolute;
   }
   .me {
   }
 </style>
-<div use:setColor class='user {pubKeyStr == $scribeStr ? 'scribe' : 'participant'}' class:me>
-  <div class='user-color'></div>
-  {pubKeyStr.slice(-4)}
-</div>
+{#if scribe}
+  <div class='scribe-wrapper'>
+    <div use:setColor class='user scribe' class:me>
+      <div class='scribe-color'></div>
+      {pubKeyStr.slice(-4)}
+    </div>
+    <div class='scribe-halo'></div>
+  </div>
+{:else}
+  <div use:setColor class='user' class:me>
+    <div class='user-color' class:scribe-color={scribe}></div>
+    {pubKeyStr.slice(-4)}
+  </div>
+{/if}

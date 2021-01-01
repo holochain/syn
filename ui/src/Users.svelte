@@ -11,6 +11,7 @@
     display: grid;
     grid-gap: var(--users-grid-gap);
     padding: var(--users-grid-gap) var(--users-padding) var(--users-padding);
+    place-items: center;
   }
 </style>
 <div class="users">
