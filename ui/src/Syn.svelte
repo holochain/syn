@@ -190,6 +190,7 @@
           case "SyncResp":
             const state = signal.data.payload.signal_payload;
             state.deltas = state.deltas.map(d=>JSON.parse(d))
+            console.log("post",state)
             syncResp(state);
             break;
           case "ChangeReq":
@@ -327,9 +328,8 @@
   // handler for the syncResp event
   function syncResp(stateForSync) {
     // Make sure that we are working off the same snapshot and commit
-    if (
-        arrayBufferToBase64(stateForSync.commit_content_hash) == lastCommitedContentHashStr
-       ) {
+    const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
+    if (commitContentHashStr == lastCommitedContentHashStr) {
       applyDeltas(stateForSync.deltas);
     } else {
       console.log("WHOA, sync response has different current state assumptions")
