@@ -3,25 +3,49 @@
   import Title from './Title.svelte';
   import Folks from './Folks.svelte';
   import Syn from './Syn.svelte';
+  import History from './History.svelte'
   $: disconnected = false
   import { content, scribeStr } from './stores.js';
 
-  function applyDeltas(deltas) {
-    for (const delta of deltas) {
-      switch(delta.type) {
-      case "Title":
-        $content.title = delta.value
-        break
-      case "Add":
-        const [loc, text] = delta.value
-        $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
-        break
-      case "Delete":
-        const [start, end] = delta.value
-        $content.body = $content.body.slice(0, start) + $content.body.slice(end)
-        break
-      }
+  // definition of how to apply a delta to the content
+  // if the delta is destructive also returns what was
+  // destroyed for use by undo
+  function applyDelta(delta) {
+    let deleted
+    switch(delta.type) {
+    case "Title":
+      deleted = $content.title
+      $content.title = delta.value
+      return {delta, deleted}
+    case "Add":
+      const [loc, text] = delta.value
+      $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
+      return {delta}
+    case "Delete":
+      const [start, end] = delta.value
+      deleted = $content.body.slice(start,end)
+      $content.body = $content.body.slice(0, start) + $content.body.slice(end)
+      return {delta, deleted}
     }
+  }
+
+  // definition of how to undo a change, returns a delta that will undo the change
+  function undo(change) {
+    const delta = change.delta
+    switch(delta.type) {
+    case "Title":
+      return {type:"Title", value:change.deleted}
+      break
+    case "Add":
+      const [loc, text] = delta.value
+      return {type:"Delete", value: [loc, loc+text.length]}
+      break
+    case "Delete":
+      const [start, end] = delta.value
+      return {type:"Add", value:[start, change.deleted]}
+      break
+    }
+
   }
   $: noscribe = $scribeStr === ""
   let syn
@@ -86,7 +110,10 @@
 <div class:noscribe>
   <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
-<Syn applyDeltasFn={applyDeltas} bind:this={syn} />
+
+<History/>
+
+<Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>
 
 <div class="folks-tray">

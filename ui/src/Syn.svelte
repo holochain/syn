@@ -1,5 +1,5 @@
 <script >
-  import { history, connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
+  import { nextIndex, requestedChanges, recordedChanges, connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
@@ -18,13 +18,21 @@
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   export function requestChange(delta) {
+
+    // immediately apply the delta and store it as requested
+    const change = applyDeltaFn(delta)
+    const index = $nextIndex + $requestedChanges.length
+
+    // append changes to the requested queue
+    requestedChanges.update(h=>[...h, change])
+
+    console.log("REQ", $requestedChanges)
     // any requested change is on top of last pending delta
     if (session.scribeStr == $connection.me && !roundTripForScribe) {
       // if I'm the scribe the index is implicit in my pending delta's list
-      const index = $pendingDeltas.length;
-      addChangeAsScribe([index, delta])
+      addChangeAsScribe([index, [delta]])
     } else {
-      synSendChangeReq(currentIndex, [delta]);
+      synSendChangeReq(index, [delta]);
     }
   }
 
@@ -91,12 +99,11 @@
   }*/
 
   // this property is the app-defined function to apply deltas to the content
-  export let applyDeltasFn;
+  export let applyDeltaFn;
 
   const dispatch = createEventDispatcher();
 
   let commitInProgress = false;
-  let currentIndex = 0; // stores the index of deltas we are at on top of the current commit
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
   let lastCommitedContentHash;    // add delta to the pending deltas and change state
@@ -105,17 +112,17 @@
   $: folksPretty =  JSON.stringify(Object.keys($folks))
 
   function addChangeAsScribe(change) {
-    let [index, delta] = change;
+    let [index, deltas] = change;
     // if we can't apply delta immediately (i.e. index is our current index)
     // we must first merge this delta with any previous ones
-    if ($pendingDeltas.length != index) {
-      console.log("WHOA, index didn't match pending deltas!")
+    if ($nextIndex != index) {
+      console.log("WHOA, index didn't match next!")
       // TODO: merge
     }
     // add delta to the pending deltas and change state
     if (!roundTripForScribe) {
-      $pendingDeltas = [...$pendingDeltas, delta];
-      applyDeltas([delta]);
+      $pendingDeltas = [...$pendingDeltas, deltas];
+      _recordDeltas(deltas);
     }
     // notify all participants of the change
     const p = Object.values($folks).map(v=>v.pubKey)
@@ -123,8 +130,8 @@
       p.push($connection.agentPubKey)
     }
     if (p.length > 0) {
-      console.log(`Sending change to ${folksPretty}:`, delta);
-      synSendChange(p, index, [delta])
+      console.log(`Sending change for ${nextIndex} to ${folksPretty}:`, deltas);
+      synSendChange(p, index, deltas)
     }
   }
 
@@ -149,16 +156,18 @@
             console.log("post",state)
             syncResp(state);
             break;
-          case "ChangeReq":
-            let req = signal.data.payload.signal_payload
-            req[1] = JSON.parse(req[1])
-            changeReq(req);
+          case "ChangeReq": {
+            let [index, deltas] = signal.data.payload.signal_payload
+            deltas = deltas.map(d=>JSON.parse(d))
+            changeReq([index, deltas]);
             break;
-          case "Change":
+          }
+          case "Change": {
             let [index, deltas] = signal.data.payload.signal_payload
             deltas = deltas.map(d=>JSON.parse(d))
             change(index, deltas);
             break;
+          }
           case "Heartbeat":
             let data = decodeJson(signal.data.payload.signal_payload)
             heartbeat(data)
@@ -221,12 +230,44 @@
     }
   }
 
-  function applyDeltas(deltas) {
-    currentIndex += deltas.length
-    // save these deltas to the history
-    $history = [...$history, deltas ]
-    // apply the deltas to the content
-    applyDeltasFn(deltas)
+  function _recordDelta(delta) {
+    // apply the deltas to the content which returns the undoable change
+    const change = applyDeltaFn(delta)
+    // append changes to the recorded history
+    recordedChanges.update(h=>[...h, change])
+  }
+
+  function _recordDeltas(deltas) {
+    // apply the deltas to the content which returns the undoable change
+    for (const delta of deltas) {
+      _recordDelta(delta)
+    }
+  }
+
+
+  // apply changes confirmed as recorded by the scribe while reconciling
+  // and possibly rebasing our requested changes
+  function recordDeltas(index, deltas) {
+    for (const delta of deltas) {
+      if ($requestedChanges.length > 0) {
+        // if this change is our next requested change then remove it
+        if (JSON.stringify(delta) == JSON.stringify($requestedChanges[0].delta)) {
+          requestedChanges.update(h=>{
+            recordedChanges.update(c => [...c, h.shift()]);
+            return h
+          })
+        } else {
+          // TODO rebaise?
+          console.log("REBASE NEEDED?")
+          console.log("requeted ", $requestedChanges[0].delta)
+          console.log("to be recorded ", delta)
+        }
+      } else {
+        // no requested changes so this must be from someone else
+        _recordDelta(delta)
+      }
+      $nextIndex += 1
+    }
   }
 
   // handler for the change event
@@ -234,16 +275,17 @@
     if (session.scribeStr == $connection.me) {
       if (roundTripForScribe) {
         pendingDeltas.update(d=>d.concat(deltas));
-        applyDeltas(deltas)
+        recordDeltas(index, deltas)
       } else {
-        console.log("change recevied but I'm the scribe, so I'm ignoring this!")
+        console.log("change received but I'm the scribe, so I'm ignoring this!")
       }
     } else {
-      console.log(`change arrived to be on top of ${index}:`, deltas)
-      if (currentIndex == index) {
-        applyDeltas(deltas)
+      console.log(`change arrived for ${index}:`, deltas)
+      if ($nextIndex == index) {
+        recordDeltas(index, deltas)
       } else {
-        console.log(`change arrived out of sequence currentIndex: ${currentIndex}, change index:${index}`)
+        console.log(`change arrived out of sequence nextIndex: ${$nextIndex}, change index:${index}`)
+        // TODO either call for sync, or do some waiting algorithm
       }
     }
   }
@@ -294,7 +336,7 @@
     // Make sure that we are working off the same snapshot and commit
     const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
     if (commitContentHashStr == lastCommitedContentHashStr) {
-      applyDeltas(stateForSync.deltas);
+      _recordDeltas(stateForSync.deltas);
     } else {
       console.log("WHOA, sync response has different current state assumptions")
       // TODO: resync somehow
@@ -341,7 +383,7 @@
   function setStateFromSession(sessionData) {
     $content = sessionData.content;
     lastCommitedContentHash = sessionData.contentHash;
-    applyDeltas(sessionData.deltas);
+    _recordDeltas(sessionData.deltas);
   }
   $: noscribe = $scribeStr === ""
 </script>
@@ -379,15 +421,16 @@
 
 
 <hr/>
-
 <div>
   <h4>Dev data:</h4>
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
-    <li>currentIndex: {currentIndex}
+    <li>nextIndex: {$nextIndex}
     <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
     <li>folks: {folksPretty}
     <li>content.title: {$content.title}
-      <li>scribe: {$scribeStr}
+    <li>scribe: {$scribeStr}
+    <li>requested: {JSON.stringify($requestedChanges)}
+    <li>recorded: {JSON.stringify($recordedChanges)}
   </ul>
 </div>

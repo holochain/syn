@@ -10,4 +10,8 @@ export const connection = writable();
 
 export const scribeStr = writable("");
 
-export const history = writable([]);
+export const recordedChanges = writable([]);
+
+export const requestedChanges = writable([]);
+
+export const nextIndex = writable(0)
