@@ -3,6 +3,10 @@
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
+  // this properties are the app-defined functions to apply and undo changes
+  export let applyDeltaFn;
+  export let undoFn;
+
   export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
@@ -20,38 +24,51 @@
   let requestChecker = window.setInterval(() => {
     if ($requestedChanges.length > 0) {
       if ((Date.now() - $requestedChanges[0].at) > reqTimeout) {
-        console.log("requested change timed out! Retrying all changes", $requestedChanges[0])
-        for (const change of $requestedChanges) {
-
-//          synSendChangeReq(index, [delta]);
+        // for now let's just do the most drastic thing!
+        console.log("requested change timed out! Undoing all changes", $requestedChanges[0])
+        // TODO: make sure this is transactional and no requestChanges squeek in !
+        while ($requestedChanges.length > 0) {
+          requestedChanges.update(changes => {
+            const change = changes.pop()
+            console.log("undoing ",change)
+            const undoDelta = undoFn(change);
+            console.log("undoDelta: ", undoDelta)
+            applyDeltaFn(undoDelta)
+            return changes
+          })
         }
       }
     }
   }, reqTimeout/2)
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
-  export function requestChange(delta) {
+  export function requestChange(deltas) {
 
     // any requested made by the scribe should be recorded immediately
     if (session.scribeStr == $connection.me) {
-      _recordDeltas([delta]);
+      _recordDeltas(deltas);
     } else {
       // otherwise apply the change and queue it to requested changes for
       // confirmation later and send request change to scribe
-      const undoableChange = applyDeltaFn(delta)
 
       // create a unique id for each change
       // TODO: this should be part of actual changeReqs
-      undoableChange.id = $connection.me.slice(-4)+"."+reqCounter;
-      undoableChange.at = Date.now()
+      const changeId = $connection.me.slice(-4)+"."+reqCounter;
+      const changeAt = Date.now()
 
       // we want to apply this to current nextIndex plus any previously
       // requested changes that haven't yet be recorded
       const index = $nextIndex + $requestedChanges.length
 
-      // append changes to the requested queue
-      requestedChanges.update(h=>[...h, undoableChange])
-      synSendChangeReq(index, [delta]);
+      for (const delta of deltas) {
+        const undoableChange = applyDeltaFn(delta)
+        undoableChange.id = changeId
+        undoableChange.at = changeAt
+        // append changes to the requested queue
+        requestedChanges.update(h=>[...h, undoableChange])
+      }
+
+      synSendChangeReq(index, deltas);
       reqCounter+= 1
     }
   }
@@ -117,9 +134,6 @@
     alert("WHOA attempt to apply deltas while commit in progress")
     return;
   }*/
-
-  // this property is the app-defined function to apply deltas to the content
-  export let applyDeltaFn;
 
   const dispatch = createEventDispatcher();
 
@@ -217,8 +231,10 @@
       session.scribeStr = arrayBufferToBase64(session.scribe);
       $scribeStr = session.scribeStr
       console.log("joined", session);
+      const newContent = {... session.snapshot_content}; // clone so as not to pass by ref
+      newContent.meta = {}
       setStateFromSession({
-        content: {... session.snapshot_content}, // clone so as not to pass by ref
+        content: newContent,
         contentHash: session.content_hash,
         deltas: session.deltas,
       });

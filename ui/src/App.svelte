@@ -11,21 +11,33 @@
   // if the delta is destructive also returns what was
   // destroyed for use by undo
   function applyDelta(delta) {
-    let deleted
     switch(delta.type) {
     case "Title":
-      deleted = $content.title
-      $content.title = delta.value
-      return {delta, deleted}
+      {
+        const deleted = $content.title
+        $content.title = delta.value
+        return {delta, deleted}
+      }
     case "Add":
-      const [loc, text] = delta.value
-      $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
-      return {delta}
+      {
+        const [loc, text] = delta.value
+        $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
+        return {delta}
+      }
     case "Delete":
-      const [start, end] = delta.value
-      deleted = $content.body.slice(start,end)
-      $content.body = $content.body.slice(0, start) + $content.body.slice(end)
-      return {delta, deleted}
+      {
+        const [start, end] = delta.value
+        const deleted = $content.body.slice(start,end)
+        $content.body = $content.body.slice(0, start) + $content.body.slice(end)
+        return {delta, deleted}
+      }
+    case "Meta":
+      {
+        const [tag, loc] = delta.value.setLoc
+        const deleted = [tag, $content.meta[tag]]
+        $content.meta[tag] = loc
+        return {delta, deleted}
+      }
     }
   }
 
@@ -44,6 +56,8 @@
       const [start, end] = delta.value
       return {type:"Add", value:[start, change.deleted]}
       break
+    case "Meta":
+      return {type:"Meta", value:{setLoc: change.deleted}}
     }
 
   }

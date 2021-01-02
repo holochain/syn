@@ -253,6 +253,13 @@ module.exports = (orchestrator) => {
         t.deepEqual(a_sig.signal_payload, "Hello")
         t.deepEqual(b_sig.signal_payload, "Hello")
 
+        // alice asks for a sync request
+        await alice.call('syn', 'send_sync_request', {
+            scribe: me_pubkey})
+        await delay(500) // make time for signal to arrive
+        const me_sig = me_signals[3]
+        t.equal(me_sig.signal_name, "SyncReq")
+
     })
 }
 

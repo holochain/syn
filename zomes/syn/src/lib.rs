@@ -358,6 +358,19 @@ fn send_sync_response(input:SendSyncResponseInput) -> SynResult<()> {
     Ok(())
 }
 
+/// Input to the send sync req call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendSyncRequestInput {
+    pub scribe: AgentPubKey,
+}
+
+#[hdk_extern]
+fn send_sync_request(input:SendSyncRequestInput) -> SynResult<()> {
+    let me = agent_info()?.agent_latest_pubkey;
+    remote_signal(&SignalPayload::SyncReq(me), vec![input.scribe])?;
+    Ok(())
+}
+
 /// Change struct that is sent by the scribe to participants
 /// consists of a set of deltas, an and indicator of the index
 /// into the list of uncommited deltas this change starts at.

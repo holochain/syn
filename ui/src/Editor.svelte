@@ -1,37 +1,52 @@
 <script>
-  import { content } from './stores.js';
+  import { content, connection } from './stores.js';
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
 
+  function getLoc(tag) {
+    return $content.meta ? ($content.meta[myTag] ? $content.meta[myTag] : 0) : 0
+  }
+
   let editor
-  let loc = 0
-  $: editor_content = $content.body.slice(0, loc) + "|" + $content.body.slice(loc)
+  $: myTag = $connection ? ($connection.me ? $connection.me.slice(-4) : "") : ""
+  $: editor_content = $content.body.slice(0, getLoc(myTag)) + "|" + $content.body.slice(getLoc(myTag))
 
   function handleInput(event) {
+    const loc = getLoc(myTag)
     const key = event.key
     if (key.length == 1) {
-      dispatch("requestChange", {type:'Add', value:[loc, key]})
-      loc += 1
+      dispatch("requestChange",
+               [{type:'Add', value:[loc, key]},
+                {type:'Meta', value: {setLoc: [myTag,loc+1] }}]
+              )
     } else {
       switch (key) {
       case "ArrowRight":
-        if (loc < $content.body.length){
-          loc+=1
+        if (loc < $content.body.length) {
+          dispatch("requestChange", [
+            {type:'Meta', value:{setLoc: [myTag, loc+1]}}
+          ])
         }
         break;
       case "ArrowLeft":
         if (loc > 0){
-          loc-=1
+          dispatch("requestChange", [
+            {type:'Meta', value:{setLoc: [myTag, loc-1]}}
+          ])
         }
         break;
       case "Enter":
-        dispatch("requestChange", {type:'Add', value:[loc, "\n"]})
-        loc += 1
+        dispatch("requestChange", [
+          {type:'Add', value:[loc, "\n"]},
+          {type:'Meta', value:{setLoc: [myTag, loc+1]}}
+        ])
         break;
       case "Backspace":
         if (loc>0) {
-          dispatch("requestChange", {type:'Delete', value:[loc-1, loc]})
-          loc -=1
+          dispatch("requestChange", [
+            {type:'Delete', value:[loc-1, loc]},
+            {type:'Meta', value:{setLoc: [myTag, loc-1]}}
+          ])
         }
       }
     }
@@ -39,8 +54,12 @@
   }
   function handleClick(e) {
     const offset = window.getSelection().focusOffset;
-    loc = offset > 0 ? offset -1 : 0
-
+    const loc = offset > 0 ? offset -1 : 0
+    if (loc != getLoc(myTag)) {
+      dispatch("requestChange", [
+        {type:'Meta', value:{setLoc: [myTag, loc]}}
+      ])
+    }
   }
 </script>
 <style>
