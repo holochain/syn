@@ -20,7 +20,11 @@
   let requestChecker = window.setInterval(() => {
     if ($requestedChanges.length > 0) {
       if ((Date.now() - $requestedChanges[0].at) > reqTimeout) {
-        console.log("requested change timed out!", $requestedChanges[0])
+        console.log("requested change timed out! Retrying all changes", $requestedChanges[0])
+        for (const change of $requestedChanges) {
+
+//          synSendChangeReq(index, [delta]);
+        }
       }
     }
   }, reqTimeout/2)
@@ -38,8 +42,8 @@
 
       // create a unique id for each change
       // TODO: this should be part of actual changeReqs
-      undoableChange.id = $connection.me+"."+reqConter;
-      unduableChange.at = Date.now()
+      undoableChange.id = $connection.me.slice(-4)+"."+reqCounter;
+      undoableChange.at = Date.now()
 
       // we want to apply this to current nextIndex plus any previously
       // requested changes that haven't yet be recorded
@@ -273,7 +277,7 @@
         // if this change is our next requested change then remove it
         if (JSON.stringify(delta) == JSON.stringify($requestedChanges[0].delta)) {
           requestedChanges.update(h=>{
-            const change = h.shift
+            const change = h.shift()
             //delete(change.id) // clean out the id for the history
             recordedChanges.update(c => [...c, change]);
             return h
@@ -329,7 +333,7 @@
       let state = {
         snapshot: session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
-        deltas: $pendingDeltas
+        deltas: $recordedChanges.map(c => c.delta)
       };
       if (currentCommitHeaderHash) {
         state["commit"] = currentCommitHeaderHash;
