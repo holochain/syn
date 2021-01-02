@@ -46,7 +46,9 @@
 
     // any requested made by the scribe should be recorded immediately
     if (session.scribeStr == $connection.me) {
+      const index = $nextIndex
       _recordDeltas(deltas);
+      synSendChange(index,deltas);
     } else {
       // otherwise apply the change and queue it to requested changes for
       // confirmation later and send request change to scribe
@@ -74,7 +76,6 @@
   }
 
   async function synSendChangeReq(index, deltas) {
-//    delta.by = $connection.me
     deltas = deltas.map(d=>JSON.stringify(d))
     return callZome('send_change_request', {scribe: session.scribe, change: [index, deltas]});
   }
@@ -84,9 +85,13 @@
     return callZome("send_heartbeat", {participants, data})
   }
 
-  async function synSendChange(participants, index, deltas) {
-    deltas = deltas.map(d=>JSON.stringify(d))
-    return callZome("send_change", {participants, change: [index, deltas]})
+  async function synSendChange(index, deltas) {
+    const participants = Object.values($folks).map(v=>v.pubKey)
+    if (participants.length > 0) {
+      console.log(`Sending change for ${index} to ${folksPretty}:`, deltas);
+      deltas = deltas.map(d=>JSON.stringify(d))
+      return callZome("send_change", {participants, change: [index, deltas]})
+    }
   }
 
   async function synSendSyncResp(to, state) {
@@ -166,11 +171,7 @@
     recordDeltas(index, deltas);
 
     // notify all participants of the change
-    const p = Object.values($folks).map(v=>v.pubKey)
-    if (p.length > 0) {
-      console.log(`Sending change for ${nextIndex} to ${folksPretty}:`, deltas);
-      synSendChange(p, index, deltas)
-    }
+    synSendChange(index, deltas)
   }
 
 
