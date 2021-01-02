@@ -3,7 +3,6 @@
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
-  let roundTripForScribe = false
   export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
@@ -26,9 +25,8 @@
     // append changes to the requested queue
     requestedChanges.update(h=>[...h, change])
 
-    // any requested change is on top of last pending delta
-    if (session.scribeStr == $connection.me && !roundTripForScribe) {
-      // if I'm the scribe the index is implicit in my pending delta's list
+    // any requested made by the scribe should be added immediately
+    if (session.scribeStr == $connection.me) {
       addChangeAsScribe([index, [delta]])
     } else {
       synSendChangeReq(index, [delta]);
@@ -112,24 +110,16 @@
 
   function addChangeAsScribe(change) {
     let [index, deltas] = change;
-    // if we can't apply delta immediately (i.e. index is our current index)
-    // we must first merge this delta with any previous ones
+
     if ($nextIndex != index) {
-      console.log("WHOA, index didn't match next!")
-      console.log("nextIndex = ",$nextIndex)
-      console.log("deltas", deltas)
-      // TODO: merge
+      console.log("Scribe is receiving change out of order!")
+      console.log(`nextIndex: ${$nextIndex}, changeIndex:${index} for deltas:`, deltas)
     }
 
-    // if we aren't round-tripping the change we can record it immediately
-    if (!roundTripForScribe) {
-      recordDeltas(index, deltas);
-    }
+    recordDeltas(index, deltas);
+
     // notify all participants of the change
     const p = Object.values($folks).map(v=>v.pubKey)
-    if (roundTripForScribe) {
-      p.push($connection.agentPubKey)
-    }
     if (p.length > 0) {
       console.log(`Sending change for ${nextIndex} to ${folksPretty}:`, deltas);
       synSendChange(p, index, deltas)
@@ -276,12 +266,7 @@
   // handler for the change event
   function change(index, deltas) {
     if (session.scribeStr == $connection.me) {
-      if (roundTripForScribe) {
-        pendingDeltas.update(d=>d.concat(deltas));
-        recordDeltas(index, deltas)
-      } else {
         console.log("change received but I'm the scribe, so I'm ignoring this!")
-      }
     } else {
       console.log(`change arrived for ${index}:`, deltas)
       if ($nextIndex == index) {
