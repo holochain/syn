@@ -14,22 +14,41 @@
     return window.btoa(binary);
   };
 
+  let reqCounter = 0
+  let reqTimeout = 1000
+
+  let requestChecker = window.setInterval(() => {
+    if ($requestedChanges.length > 0) {
+      if ((Date.now() - $requestedChanges[0].at) > reqTimeout) {
+        console.log("requested change timed out!", $requestedChanges[0])
+      }
+    }
+  }, reqTimeout/2)
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   export function requestChange(delta) {
 
-    // immediately apply the delta and store it as requested
-    const change = applyDeltaFn(delta)
-    const index = $nextIndex + $requestedChanges.length
-
-    // append changes to the requested queue
-    requestedChanges.update(h=>[...h, change])
-
-    // any requested made by the scribe should be added immediately
+    // any requested made by the scribe should be recorded immediately
     if (session.scribeStr == $connection.me) {
-      addChangeAsScribe([index, [delta]])
+      _recordDeltas([delta]);
     } else {
+      // otherwise apply the change and queue it to requested changes for
+      // confirmation later and send request change to scribe
+      const undoableChange = applyDeltaFn(delta)
+
+      // create a unique id for each change
+      // TODO: this should be part of actual changeReqs
+      undoableChange.id = $connection.me+"."+reqConter;
+      unduableChange.at = Date.now()
+
+      // we want to apply this to current nextIndex plus any previously
+      // requested changes that haven't yet be recorded
+      const index = $nextIndex + $requestedChanges.length
+
+      // append changes to the requested queue
+      requestedChanges.update(h=>[...h, undoableChange])
       synSendChangeReq(index, [delta]);
+      reqCounter+= 1
     }
   }
 
@@ -114,6 +133,16 @@
     if ($nextIndex != index) {
       console.log("Scribe is receiving change out of order!")
       console.log(`nextIndex: ${$nextIndex}, changeIndex:${index} for deltas:`, deltas)
+
+      if (index < $nextIndex) {
+        // change is too late, nextIndex has moved on
+        // TODO: rebase? notify sender?
+        return
+      } else {
+        // change is in the future, possibly some other change was dropped or is slow in arriving
+        // TODO: wait a bit?  Ask sender for other changes?
+        return
+      }
     }
 
     recordDeltas(index, deltas);
@@ -223,15 +252,16 @@
 
   function _recordDelta(delta) {
     // apply the deltas to the content which returns the undoable change
-    const change = applyDeltaFn(delta)
+    const undoableChange = applyDeltaFn(delta)
     // append changes to the recorded history
-    recordedChanges.update(h=>[...h, change])
+    recordedChanges.update(h=>[...h, undoableChange])
   }
 
   function _recordDeltas(deltas) {
     // apply the deltas to the content which returns the undoable change
     for (const delta of deltas) {
       _recordDelta(delta)
+      $nextIndex += 1
     }
   }
 
@@ -243,7 +273,9 @@
         // if this change is our next requested change then remove it
         if (JSON.stringify(delta) == JSON.stringify($requestedChanges[0].delta)) {
           requestedChanges.update(h=>{
-            recordedChanges.update(c => [...c, h.shift()]);
+            const change = h.shift
+            //delete(change.id) // clean out the id for the history
+            recordedChanges.update(c => [...c, change]);
             return h
           })
         } else {
