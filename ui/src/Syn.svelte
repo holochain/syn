@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
-  let roundTripForScribe = true
+  let roundTripForScribe = false
   export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
@@ -26,7 +26,6 @@
     // append changes to the requested queue
     requestedChanges.update(h=>[...h, change])
 
-    console.log("REQ", $requestedChanges)
     // any requested change is on top of last pending delta
     if (session.scribeStr == $connection.me && !roundTripForScribe) {
       // if I'm the scribe the index is implicit in my pending delta's list
@@ -117,12 +116,14 @@
     // we must first merge this delta with any previous ones
     if ($nextIndex != index) {
       console.log("WHOA, index didn't match next!")
+      console.log("nextIndex = ",$nextIndex)
+      console.log("deltas", deltas)
       // TODO: merge
     }
-    // add delta to the pending deltas and change state
+
+    // if we aren't round-tripping the change we can record it immediately
     if (!roundTripForScribe) {
-      $pendingDeltas = [...$pendingDeltas, deltas];
-      _recordDeltas(deltas);
+      recordDeltas(index, deltas);
     }
     // notify all participants of the change
     const p = Object.values($folks).map(v=>v.pubKey)
@@ -244,7 +245,6 @@
     }
   }
 
-
   // apply changes confirmed as recorded by the scribe while reconciling
   // and possibly rebasing our requested changes
   function recordDeltas(index, deltas) {
@@ -263,7 +263,10 @@
           console.log("to be recorded ", delta)
         }
       } else {
-        // no requested changes so this must be from someone else
+        // no requested changes so this must be from someone else so we don't have
+        // to check our requested changes
+        // TODO: do we need to check if this is a change that we did send and have already
+        // integrated somehow and ignore if so.  (Seems unlikely?)
         _recordDelta(delta)
       }
       $nextIndex += 1
