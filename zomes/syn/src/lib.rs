@@ -261,51 +261,13 @@ fn new_session(input: NewSessionInput) -> SynResult<SessionInfo> {
     })
 }
 
-#[hdk_extern]
-fn join_session(_: ()) -> SynResult<SessionInfo> {
-    // get my pubkey
-    let me = agent_info()?.agent_latest_pubkey;
-
-    // get recent sessions
-    let sessions = get_sessions_inner()?;
-    // see if there's an active one
-    if sessions.len() > 0 {
-        debug!("session found: {:?}", sessions);
-        // for now just pick the first!
-        let session = sessions[0].clone();
-        // send SyncReq to scribe of selected session unless scribe is me
-        let session_info = build_session_info(session)?;
-        if session_info.scribe != me {
-            remote_signal(&SignalPayload::SyncReq(me), vec![session_info.scribe.clone()])?;
-        }
-
-        Ok(session_info)
-    }
-    else {
-        debug!("no sessions found");
-
-        // fall back to other users
-
-        // can't find a session so make one ourself
-        // 1. find the Content we will make our session off of
-        // TODO
-        // 2. can't find a Content assume null content and commit it
-        new_session(NewSessionInput{content: Content::default()})
-    }
-}
-
-fn get_sessions_inner() -> SynResult<Vec<EntryHash>> {
-    let path = get_sessions_path();
-    let links = get_links(path.hash()?, None)?.into_inner();
-    let sessions = links.into_iter().map(|l| l.target).collect();
-    Ok(sessions)
-}
-
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SessionList(Vec<EntryHash>);
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> SynResult<SessionList> {
-    let sessions = get_sessions_inner()?;
+    let path = get_sessions_path();
+    let links = get_links(path.hash()?, None)?.into_inner();
+    let sessions = links.into_iter().map(|l| l.target).collect();
     Ok(SessionList(sessions))
 }
 

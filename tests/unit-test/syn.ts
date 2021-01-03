@@ -69,11 +69,12 @@ module.exports = (orchestrator) => {
         t.equal(sessions.length, 0)
 
         // create initial session
-        let sessionInfo = await me.call('syn', 'join_session')
+        let sessionInfo = await me.call('syn', 'new_session', {content: {title:"", body:""}})
         // I created the session, so I should be the scribe
         t.deepEqual(sessionInfo.scribe, me_pubkey)
         // First ever session so content should be default content
         t.deepEqual(sessionInfo.snapshot_content, {title:"", body:""})
+        let sessionHash = sessionInfo.session;
 
         // check the hash_content zome call.
         let hash = await me.call('syn', 'hash_content', sessionInfo.snapshot_content)
@@ -82,9 +83,10 @@ module.exports = (orchestrator) => {
         // check get_sessions utility zome call
         sessions = await me.call('syn', 'get_sessions')
         t.equal(sessions.length, 1)
+        t.deepEqual(sessions[0],sessionHash)
 
         // exercise the get_session zome call
-        const returnedSessionInfo = await me.call('syn', 'get_session', sessions[0])
+        const returnedSessionInfo = await me.call('syn', 'get_session', sessionHash)
         t.equal(sessions.length, 1)
         t.deepEqual(sessionInfo, returnedSessionInfo)
 
@@ -168,11 +170,12 @@ module.exports = (orchestrator) => {
         })
 
         // alice joins session
-        const aliceSessionInfo = await alice.call('syn', 'join_session')
+        const aliceSessionInfo = await alice.call('syn', 'get_session', sessionHash)
         // alice should get my session
+        t.deepEqual(aliceSessionInfo.session, sessionHash)
         t.deepEqual(aliceSessionInfo.scribe, me_pubkey)
-
         t.deepEqual(aliceSessionInfo.snapshot_content, {title:'', body:''})
+        await alice.call('syn', 'send_sync_request', {scribe: me_pubkey })
 
         // check that deltas and snapshot content returned add up to the current real content
         await delay(500) // make time for integrating new data
@@ -213,9 +216,10 @@ module.exports = (orchestrator) => {
         t.deepEqual(receivedState, state) // deltas, commit, and snapshot match
 
         // bob joins session
-        const bobSessionInfo = await alice.call('syn', 'join_session')
+        const bobSessionInfo = await alice.call('syn', 'get_session', sessionHash)
         // bob should get my session
         t.deepEqual(bobSessionInfo.scribe, me_pubkey)
+        await bob.call('syn', 'send_sync_request', {scribe: me_pubkey })
 
         // alice sends me a change req and I should receive it
         const alice_delta: Delta = {type: "Title", value: "Alice in Wonderland"}

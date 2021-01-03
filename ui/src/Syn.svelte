@@ -111,6 +111,14 @@
     return callZome('get_sessions');
   }
 
+  async function synNewSession(content) {
+    return callZome('new_session', {content})
+  }
+
+  async function synGetSession(session_hash) {
+    return callZome('get_session', session_hash)
+  }
+
   async function synSendSyncResp(to, state) {
     state.deltas = state.deltas.map(d=>JSON.stringify(d))
     return callZome("send_sync_response", {
@@ -261,8 +269,12 @@
   }
 
   async function joinSession() {
-    const sessionInfo = await callZome("join_session")
-    setupSession(sessionInfo);
+    if (sessions.length == 0) {
+      setupSession(await synNewSession({title:"", body:""}))
+    } else {
+      setupSession(await synGetSession(sessions[0]))
+      await synSendSyncReq()
+    }
   }
 
   function clearState() {
