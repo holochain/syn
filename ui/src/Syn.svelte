@@ -23,10 +23,11 @@
   let reqCounter = 0
   let reqTimeout = 1000
 
-  let requestChecker = window.setInterval(() => {
+  let requestChecker = window.setInterval(async () => {
     if ($requestedChanges.length > 0) {
       if ((Date.now() - $requestedChanges[0].at) > reqTimeout) {
         // for now let's just do the most drastic thing!
+        /*
         console.log("requested change timed out! Undoing all changes", $requestedChanges[0])
         // TODO: make sure this is transactional and no requestChanges squeek in !
         while ($requestedChanges.length > 0) {
@@ -38,9 +39,12 @@
             applyDeltaFn(undoDelta)
             return changes
           })
-        }
+          }*/
+        $requestedChanges = []
+        $recordedChanges = []
         // and send a sync request incase something just got out of sequence
         // TODO: prepare for shifting to new scribe if they went offline
+        setupSession(await synGetSession($session.session))
         synSendSyncReq()
       }
     }
@@ -263,6 +267,9 @@
 
     $content = newContent
     lastCommitedContentHash = $session.content_hash
+    $recordedChanges = []
+    // use the _recordDeltas function to get the undable changes loaded into the history
+    // and then move these items into the committed changes
     _recordDeltas($session.deltas);
     committedChanges.update(c => c.concat($recordedChanges))
     $recordedChanges = []
