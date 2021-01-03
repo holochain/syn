@@ -286,7 +286,6 @@
     // apply the deltas to the content which returns the undoable change
     for (const delta of deltas) {
       _recordDelta(delta)
-      $nextIndex += 1
     }
   }
 
@@ -316,7 +315,6 @@
         // integrated somehow and ignore if so.  (Seems unlikely?)
         _recordDelta(delta)
       }
-      $nextIndex += 1
     }
   }
 
@@ -417,7 +415,6 @@
         lastCommitedContentHash = newContentHash;
         committedChanges.update(c => c.concat($recordedChanges))
         $recordedChanges = []
-        $nextIndex = 0
       }
       catch (e) {
       }
@@ -433,7 +430,6 @@
     _recordDeltas(sessionData.deltas);
     committedChanges.update(c => c.concat($recordedChanges))
     $recordedChanges = []
-    $nextIndex = 0
   }
   $: noscribe = $scribeStr === ""
 </script>
@@ -481,6 +477,6 @@
     <li>scribe: {$scribeStr}
     <li>requested: {JSON.stringify($requestedChanges)}
     <li>recorded count: {$recordedChanges.length}
-    <li>committed: {JSON.stringify($committedChanges)}
+    <li>committed count: {$committedChanges.length}
   </ul>
 </div>

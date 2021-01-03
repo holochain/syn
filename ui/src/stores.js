@@ -14,4 +14,7 @@ export const recordedChanges = writable([]);
 
 export const committedChanges = writable([]);
 
-export const nextIndex = writable(0)
+export const nextIndex = derived(
+  recordedChanges,
+  c => c.length
+);
