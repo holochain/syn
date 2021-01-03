@@ -8,17 +8,25 @@
   }
 
   let editor
-  $: myTag = $connection ? ($connection.me ? $connection.me.slice(-4) : "") : ""
+  $: myTag = $connection ? $connection.myTag : ""
   $: editor_content = $content.body.slice(0, getLoc(myTag)) + "|" + $content.body.slice(getLoc(myTag))
+
+  function addText(text) {
+    const loc = getLoc(myTag)
+    const deltas = [{type:'Add', value:[loc, text]}]
+    for (const [tag, tagLoc] of Object.entries($content.meta)) {
+      if (tagLoc >=  loc) {
+        deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc+text.length] }})
+      }
+    }
+    dispatch("requestChange", deltas)
+  }
 
   function handleInput(event) {
     const loc = getLoc(myTag)
     const key = event.key
     if (key.length == 1) {
-      dispatch("requestChange",
-               [{type:'Add', value:[loc, key]},
-                {type:'Meta', value: {setLoc: [myTag,loc+1] }}]
-              )
+      addText(key)
     } else {
       switch (key) {
       case "ArrowRight":
@@ -36,17 +44,16 @@
         }
         break;
       case "Enter":
-        dispatch("requestChange", [
-          {type:'Add', value:[loc, "\n"]},
-          {type:'Meta', value:{setLoc: [myTag, loc+1]}}
-        ])
+        addText("\n")
         break;
       case "Backspace":
         if (loc>0) {
-          dispatch("requestChange", [
-            {type:'Delete', value:[loc-1, loc]},
-            {type:'Meta', value:{setLoc: [myTag, loc-1]}}
-          ])
+          const deltas = [{type:'Delete', value:[loc-1, loc]}]
+          for (const [tag, tagLoc] of Object.entries($content.meta)) {
+            if (tagLoc >=  loc) {
+              deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc-1] }})
+            }
+          }
         }
       }
     }

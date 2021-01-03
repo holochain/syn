@@ -55,7 +55,7 @@
 
       // create a unique id for each change
       // TODO: this should be part of actual changeReqs
-      const changeId = $connection.me.slice(-4)+"."+reqCounter;
+      const changeId = $connection.myTag+"."+reqCounter;
       const changeAt = Date.now()
 
       // we want to apply this to current nextIndex plus any previously
@@ -217,12 +217,15 @@
       const appInfo = await appClient.appInfo({ installed_app_id: "syn" });
       const cellId = appInfo.cell_data[0][0];
       const agentPubKey = cellId[1];
+      const me = arrayBufferToBase64(agentPubKey);
+      const myTag = me.slice(-4);
       $connection = {
         appClient,
         appInfo,
         cellId,
         agentPubKey,
-        me: arrayBufferToBase64(agentPubKey)
+        me,
+        myTag,
       }
       console.log("active", $connection);
       session = await callZome("join_session");
@@ -234,6 +237,7 @@
       console.log("joined", session);
       const newContent = {... session.snapshot_content}; // clone so as not to pass by ref
       newContent.meta = {}
+      newContent.meta[myTag] = 0
       setStateFromSession({
         content: newContent,
         contentHash: session.content_hash,
