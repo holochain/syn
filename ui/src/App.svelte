@@ -3,6 +3,7 @@
   import Title from './Title.svelte';
   import Folks from './Folks.svelte';
   import Syn from './Syn.svelte';
+  import Debug from './Debug.svelte';
   import History from './History.svelte'
   $: disconnected = false
   import { content, scribeStr } from './stores.js';
@@ -212,7 +213,6 @@
 <div class="debug-drawer" bind:this={resizeable} use:initResizeable>
   <div class="handle" bind:this={resizeHandle} use:initResizeHandle></div>
   <div class="debug-content">
-    content!<br>
-    This is a footer that should be hideable and have debug
+    <Debug />
   </div>
 </div>

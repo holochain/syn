@@ -210,6 +210,7 @@
     const agentPubKey = cellId[1];
     const me = arrayBufferToBase64(agentPubKey);
     const myTag = me.slice(-4);
+    const Dna = arrayBufferToBase64(cellId[0]);
     $connection = {
       appClient,
       appInfo,
@@ -217,6 +218,7 @@
       agentPubKey,
       me,
       myTag,
+      Dna
     }
     console.log("connection active:", $connection);
   }
@@ -489,10 +491,8 @@
 
 <hr/>
 <div>
-  <h4>Dev data:</h4>
+  <h4>Syn data:</h4>
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
-    <li>nextIndex: {$nextIndex}
-    <li>scribe: {$scribeStr}
   </ul>
 </div>
