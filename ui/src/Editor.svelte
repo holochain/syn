@@ -54,6 +54,7 @@
               deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc-1] }})
             }
           }
+          dispatch("requestChange", deltas)
         }
       }
     }
