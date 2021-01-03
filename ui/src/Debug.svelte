@@ -2,6 +2,9 @@
   import {session, connection, scribeStr, nextIndex} from './stores.js';
 </script>
 <style>
+ul {
+  margin-bottom: 2rem;
+}
 </style>
 <div>
   <h4>Debug data:</h4>

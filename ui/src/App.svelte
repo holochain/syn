@@ -163,6 +163,10 @@
 
   .debug-content {
     padding: 2rem;
+    word-wrap: break-word;
+    height: 100%;
+    overflow-y: scroll;
+    box-sizing: border-box;
   }
 
   body {
