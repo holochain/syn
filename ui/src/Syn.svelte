@@ -1,5 +1,5 @@
 <script >
-  import { nextIndex, requestedChanges, recordedChanges, connection, scribeStr, content, pendingDeltas, folks} from './stores.js';
+  import { nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
@@ -145,7 +145,7 @@
   let commitInProgress = false;
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
-  let lastCommitedContentHash;    // add delta to the pending deltas and change state
+  let lastCommitedContentHash;
 
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
   $: folksPretty =  JSON.stringify(Object.keys($folks))
@@ -390,8 +390,8 @@
 
   async function commitChange() {
     if (session.scribeStr == $connection.me) {
-      if ($pendingDeltas.length == 0) {
-        alert("No deltas to commit!");
+      if ($recordedChanges.length == 0) {
+        alert("No changes to commit!");
         return;
       }
       commitInProgress = true
@@ -402,7 +402,7 @@
       const commit = {
         snapshot: session.snapshotHash,
         change: {
-          deltas: $pendingDeltas.map(d=>JSON.stringify(d)),
+          deltas: $recordedChanges.map(c=>JSON.stringify(c.delta)),
           content_hash: newContentHash,
           previous_change: lastCommitedContentHash,
           meta: {
@@ -415,7 +415,9 @@
       try {
         currentCommitHeaderHash = await callZome('commit', commit)
         lastCommitedContentHash = newContentHash;
-        $pendingDeltas = []
+        committedChanges.update(c => c.concat($recordedChanges))
+        $recordedChanges = []
+        $nextIndex = 0
       }
       catch (e) {
       }
@@ -429,6 +431,9 @@
     $content = sessionData.content;
     lastCommitedContentHash = sessionData.contentHash;
     _recordDeltas(sessionData.deltas);
+    committedChanges.update(c => c.concat($recordedChanges))
+    $recordedChanges = []
+    $nextIndex = 0
   }
   $: noscribe = $scribeStr === ""
 </script>
@@ -471,11 +476,11 @@
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
     <li>nextIndex: {$nextIndex}
-    <li>pendingDeltas: {JSON.stringify($pendingDeltas)}
     <li>folks: {folksPretty}
     <li>content.title: {$content.title}
     <li>scribe: {$scribeStr}
     <li>requested: {JSON.stringify($requestedChanges)}
     <li>recorded count: {$recordedChanges.length}
+    <li>committed: {JSON.stringify($committedChanges)}
   </ul>
 </div>

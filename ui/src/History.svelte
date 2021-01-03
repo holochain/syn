@@ -1,5 +1,5 @@
 <script>
-  import { requestedChanges, recordedChanges} from './stores.js';
+  import { requestedChanges, recordedChanges, committedChanges} from './stores.js';
 
   function change2Html(change) {
     let html = ""
@@ -23,14 +23,25 @@
     display: inline-block;
     border: 1px solid #ccc
   }
+  .recorded {
+    background-color: lightyellow
+  }
+  .committed {
+    background-color: lightgreen
+  }
   .requested {
-    background-color: gray
+    background-color: lightred
   }
 </style>
 <div>
 History:
+{#each $committedChanges as change}
+  <div class="change commited">
+    {@html change2Html(change)}
+  </div>
+{/each}
 {#each $recordedChanges as change}
-  <div class="change">
+  <div class="change recorded">
     {@html change2Html(change)}
   </div>
 {/each}
