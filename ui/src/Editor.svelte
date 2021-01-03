@@ -9,7 +9,8 @@
 
   let editor
   $: myTag = $connection ? $connection.myTag : ""
-  $: editor_content = $content.body.slice(0, getLoc(myTag)) + "|" + $content.body.slice(getLoc(myTag))
+  $: editor_content1 = $content.body.slice(0, getLoc(myTag))
+  $: editor_content2 = $content.body.slice(getLoc(myTag))
 
   function addText(text) {
     const loc = getLoc(myTag)
@@ -62,7 +63,10 @@
   }
   function handleClick(e) {
     const offset = window.getSelection().focusOffset;
-    const loc = offset > 0 ? offset -1 : 0
+    let loc = offset > 0 ? offset : 0
+    if (window.getSelection().focusNode.parentElement == editor.lastChild) {
+      loc += editor_content1.length
+    }
     if (loc != getLoc(myTag)) {
       dispatch("requestChange", [
         {type:'Meta', value:{setLoc: [myTag, loc]}}
@@ -81,8 +85,18 @@
     margin: 1em 0;
     padding: 4px;
   }
+  .cursor {
+    display: inline-block;
+    width: 0px;
+  }
+  .cursor::after {
+    content: "|";
+    position: relative;
+    left: -3.5px;
+    color: fuchsia; /* Should be the Folk's main color */
+  }
 </style>
 
 <editor on:click={handleClick} on:keydown={handleInput} tabindex=0 start=0 bind:this={editor}>
-  {editor_content}
+  <span>{editor_content1}</span><span class="cursor"></span><span>{editor_content2}</span>
 </editor>
