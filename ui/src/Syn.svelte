@@ -1,5 +1,5 @@
 <script >
-  import { nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks} from './stores.js';
+  import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
 
@@ -7,7 +7,6 @@
   export let applyDeltaFn;
   export let undoFn;
 
-  export let session
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
     var bytes = new Uint8Array(buffer);
@@ -45,7 +44,7 @@
   export function requestChange(deltas) {
 
     // any requested made by the scribe should be recorded immediately
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
       const index = $nextIndex
       _recordDeltas(deltas);
       synSendChange(index,deltas);
@@ -77,7 +76,7 @@
 
   async function synSendChangeReq(index, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
-    return callZome('send_change_request', {scribe: session.scribe, change: [index, deltas]});
+    return callZome('send_change_request', {scribe: $session.scribe, change: [index, deltas]});
   }
 
   async function synSendHeartbeat(participants, data) {
@@ -223,20 +222,20 @@
   }
 
   async function joinSession() {
-    session = await callZome("join_session");
-    session.deltas = session.deltas.map(d => JSON.parse(d))
-    session.snapshotHash = await synHashContent(session.snapshot_content);
-    session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
-    session.scribeStr = arrayBufferToBase64(session.scribe);
-    $scribeStr = session.scribeStr
-    console.log("session joined:", session);
-    const newContent = {... session.snapshot_content}; // clone so as not to pass by ref
+    $session = await callZome("join_session");
+    $session.deltas = $session.deltas.map(d => JSON.parse(d))
+    $session.snapshotHash = await synHashContent($session.snapshot_content);
+    $session.snapshotHashStr = arrayBufferToBase64($session.snapshotHash);
+    $session.scribeStr = arrayBufferToBase64($session.scribe);
+    $scribeStr = $session.scribeStr
+    console.log("session joined:", $session);
+    const newContent = {... $session.snapshot_content}; // clone so as not to pass by ref
     newContent.meta = {}
     newContent.meta[$connection.myTag] = 0
     setStateFromSession({
       content: newContent,
-      contentHash: session.content_hash,
-      deltas: session.deltas,
+      contentHash: $session.content_hash,
+      deltas: $session.deltas,
     });
   }
 
@@ -248,6 +247,7 @@
     $requestedChanges = []
     $recordedChanges = []
     $committedChanges = []
+    $session = undefined
   }
 
   import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
@@ -273,7 +273,7 @@
   // handler for the heartbeat event
   function heartbeat(data) {
     console.log("got heartbeat", data)
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
     }
     else {
       if (data.participants) {
@@ -289,7 +289,7 @@
 
   // handler for the changeReq event
   function changeReq(change) {
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
       addChangeAsScribe(change)
     } else {
       console.log("change requested but I'm not the scribe.")
@@ -341,7 +341,7 @@
 
   // handler for the change event
   function change(index, deltas) {
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
         console.log("change received but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log(`change arrived for ${index}:`, deltas)
@@ -368,10 +368,10 @@
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
       updateParticipant(from, request.meta)
       let state = {
-        snapshot: session.snapshotHash,
+        snapshot: $session.snapshotHash,
         commit_content_hash: lastCommitedContentHash,
         deltas: $recordedChanges.map(c => c.delta)
       };
@@ -408,18 +408,18 @@
   }
 
   async function commitChange() {
-    if (session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.me) {
       if ($recordedChanges.length == 0) {
         alert("No changes to commit!");
         return;
       }
       commitInProgress = true
       const newContentHash = await synHashContent($content);
-      console.log("commiting from snapshot", session.snapshotHashStr);
+      console.log("commiting from snapshot", $session.snapshotHashStr);
       console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
       const commit = {
-        snapshot: session.snapshotHash,
+        snapshot: $session.snapshotHash,
         change: {
           deltas: $recordedChanges.map(c=>JSON.stringify(c.delta)),
           content_hash: newContentHash,

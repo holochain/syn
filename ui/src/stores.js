@@ -1,5 +1,7 @@
 import { writable, readable, derived } from 'svelte/store';
 
+export const session = writable();
+
 export const content = writable({title:"", body:""});
 
 export const folks = writable({});
