@@ -64,6 +64,50 @@
   $: noscribe = $scribeStr === ""
   let syn
 
+
+  let resizeable
+  let resizeHandle
+  const minPaneSize = 150
+  const maxPaneSize = 300
+  const initResizeable = (el) => {
+    resizeable = el
+    resizeable.style.setProperty('--max-height', `${maxPaneSize}px`)
+    resizeable.style.setProperty('--min-height', `${minPaneSize}px`)
+  }
+  const initResizeHandle = (el) => {
+    resizeHandle = el
+    resizeHandle.addEventListener('mousedown', startDragging)
+  }
+
+  const setPaneHeight = (height) => {
+    resizeable.style
+      .setProperty('--resizeable-height', `${height}px`)
+  }
+  const getPaneHeight = () => {
+    const pxHeight = getComputedStyle(resizeable)
+      .getPropertyValue('--resizeable-height')
+    return parseInt(pxHeight, 10)
+  }
+
+  const startDragging = (event) => {
+    event.preventDefault()
+    const host = resizeable
+    const startingPaneHeight = getPaneHeight()
+    const yOffset = event.pageY
+
+    const mouseDragHandler = (moveEvent) => {
+      moveEvent.preventDefault()
+      const primaryButtonPressed = moveEvent.buttons === 1
+      if (!primaryButtonPressed) {
+        setPaneHeight(Math.min(Math.max(getPaneHeight(), minPaneSize), maxPaneSize))
+        document.body.removeEventListener('pointermove', mouseDragHandler)
+        return
+      }
+      setPaneHeight((yOffset - moveEvent.pageY ) + startingPaneHeight)
+    }
+    const remove = window.addEventListener('pointermove', mouseDragHandler)
+  }
+
 </script>
 
 <style>
@@ -88,10 +132,41 @@
   }
 
   .debug-drawer {
-    background: hsla(180, 30%, 40%, .2);
-    padding: 2rem;
-    text-align: center;
+    --resizeable-height: 300px;
+    width: 100%;
+    box-sizing: border-box;
+    height: var(--resizeable-height);
+    min-height: var(--min-height);
+    max-height: var(--max-height);
+    background: hsla(180, 30%, 85%);
+    position: absolute;
+    bottom: 0;
+    text-align: left;
     grid-column: 1 / 2;
+    overflow: scroll;
+  }
+
+  .handle {
+    height: 1px;
+    width: 100%;
+    background-color: gray;
+    z-index: 1;
+  }
+
+  .handle::after {
+    content: "";
+    height: 9px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-bottom: -4px;
+    background-color: transparent;
+    cursor: ns-resize;
+    z-index: 2;
+  }
+
+  .debug-content {
+    padding: 2rem;
   }
 
   body {
@@ -134,4 +209,10 @@
   <Folks />
 </div>
 
-<div class="debug-drawer">This is a footer that should be hideable and have debug</div>
+<div class="debug-drawer" bind:this={resizeable} use:initResizeable>
+  <div class="handle" bind:this={resizeHandle} use:initResizeHandle></div>
+  <div class="debug-content">
+    content!<br>
+    This is a footer that should be hideable and have debug
+  </div>
+</div>
