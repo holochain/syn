@@ -10,7 +10,7 @@
   function saveTitle() {
     if (editingTitle) {
       let delta = { type: 'Title', value: titleBeingTyped}
-      dispatch("requestChange", delta)
+      dispatch("requestChange", [delta])
       titleBeingTyped = ''
       editingTitle = false
     } else {
