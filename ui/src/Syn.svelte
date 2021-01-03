@@ -148,7 +148,7 @@
   let lastCommitedContentHash;
 
   $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
-  $: folksPretty =  JSON.stringify(Object.keys($folks))
+  $: folksPretty =  JSON.stringify(Object.keys($folks).map(f => f.slice(-4)))
 
   function addChangeAsScribe(change) {
     let [index, deltas] = change;
@@ -174,78 +174,99 @@
     synSendChange(index, deltas)
   }
 
+  function holochainSignalHandler(signal) {
+    console.log("Got Signal", signal.data.payload.signal_name, signal)
+    switch (signal.data.payload.signal_name) {
+    case "SyncReq":
+      syncReq({from: signal.data.payload.signal_payload});
+      break;
+    case "SyncResp":
+      const state = signal.data.payload.signal_payload;
+      state.deltas = state.deltas.map(d=>JSON.parse(d))
+      console.log("post",state)
+      syncResp(state);
+      break;
+    case "ChangeReq": {
+      let [index, deltas] = signal.data.payload.signal_payload
+      deltas = deltas.map(d=>JSON.parse(d))
+      changeReq([index, deltas]);
+      break;
+    }
+    case "Change": {
+      let [index, deltas] = signal.data.payload.signal_payload
+      deltas = deltas.map(d=>JSON.parse(d))
+      change(index, deltas);
+      break;
+    }
+    case "Heartbeat":
+      let data = decodeJson(signal.data.payload.signal_payload)
+      heartbeat(data)
+    }
+  }
+
+  async function setupConnection(appClient) {
+    $connection = {appClient}
+    const appInfo = await appClient.appInfo({ installed_app_id: "syn" });
+    const cellId = appInfo.cell_data[0][0];
+    const agentPubKey = cellId[1];
+    const me = arrayBufferToBase64(agentPubKey);
+    const myTag = me.slice(-4);
+    $connection = {
+      appClient,
+      appInfo,
+      cellId,
+      agentPubKey,
+      me,
+      myTag,
+    }
+    console.log("connection active:", $connection);
+  }
+
+  async function joinSession() {
+    session = await callZome("join_session");
+    session.deltas = session.deltas.map(d => JSON.parse(d))
+    session.snapshotHash = await synHashContent(session.snapshot_content);
+    session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
+    session.scribeStr = arrayBufferToBase64(session.scribe);
+    $scribeStr = session.scribeStr
+    console.log("session joined:", session);
+    const newContent = {... session.snapshot_content}; // clone so as not to pass by ref
+    newContent.meta = {}
+    newContent.meta[$connection.myTag] = 0
+    setStateFromSession({
+      content: newContent,
+      contentHash: session.content_hash,
+      deltas: session.deltas,
+    });
+  }
+
+  function clearState() {
+    $scribeStr = ""
+    $connection = undefined
+    $folks = {}
+    $content = {title:"", body:""}
+    $requestedChanges = []
+    $recordedChanges = []
+    $committedChanges = []
+  }
 
   import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
   let adminPort=1234;
   let appPort=8888;
   async function toggle() {
     if (!$connection) {
-      $connection = {}
       const appClient = await AppWebsocket.connect(
         `ws://localhost:${appPort}`,
-        signal => {
-          console.log("Got Signal", signal.data.payload.signal_name, signal)
-          switch (signal.data.payload.signal_name) {
-          case "SyncReq":
-            syncReq({from: signal.data.payload.signal_payload});
-            break;
-          case "SyncResp":
-            const state = signal.data.payload.signal_payload;
-            state.deltas = state.deltas.map(d=>JSON.parse(d))
-            console.log("post",state)
-            syncResp(state);
-            break;
-          case "ChangeReq": {
-            let [index, deltas] = signal.data.payload.signal_payload
-            deltas = deltas.map(d=>JSON.parse(d))
-            changeReq([index, deltas]);
-            break;
-          }
-          case "Change": {
-            let [index, deltas] = signal.data.payload.signal_payload
-            deltas = deltas.map(d=>JSON.parse(d))
-            change(index, deltas);
-            break;
-          }
-          case "Heartbeat":
-            let data = decodeJson(signal.data.payload.signal_payload)
-            heartbeat(data)
-          }
-        }
+        holochainSignalHandler
       );
       console.log("connected", appClient)
-      const appInfo = await appClient.appInfo({ installed_app_id: "syn" });
-      const cellId = appInfo.cell_data[0][0];
-      const agentPubKey = cellId[1];
-      const me = arrayBufferToBase64(agentPubKey);
-      const myTag = me.slice(-4);
-      $connection = {
-        appClient,
-        appInfo,
-        cellId,
-        agentPubKey,
-        me,
-        myTag,
-      }
-      console.log("active", $connection);
-      session = await callZome("join_session");
-      session.deltas = session.deltas.map(d => JSON.parse(d))
-      session.snapshotHash = await synHashContent(session.snapshot_content);
-      session.snapshotHashStr = arrayBufferToBase64(session.snapshotHash);
-      session.scribeStr = arrayBufferToBase64(session.scribe);
-      $scribeStr = session.scribeStr
-      console.log("joined", session);
-      const newContent = {... session.snapshot_content}; // clone so as not to pass by ref
-      newContent.meta = {}
-      newContent.meta[myTag] = 0
-      setStateFromSession({
-        content: newContent,
-        contentHash: session.content_hash,
-        deltas: session.deltas,
-      });
-    } else {
-      $scribeStr = ""
-      $connection = undefined
+      await setupConnection(appClient)
+      console.log("joining session...")
+      await joinSession()
+    }
+    else {
+      console.log("disconnected")
+      clearState()
     }
   }
 
@@ -472,11 +493,6 @@
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
     <li>nextIndex: {$nextIndex}
-    <li>folks: {folksPretty}
-    <li>content.title: {$content.title}
     <li>scribe: {$scribeStr}
-    <li>requested: {JSON.stringify($requestedChanges)}
-    <li>recorded count: {$recordedChanges.length}
-    <li>committed count: {$committedChanges.length}
   </ul>
 </div>
