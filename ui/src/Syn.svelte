@@ -494,7 +494,7 @@
 
   :global(.noscribe:after) {
   content: " ";
-  z-index: 10;
+  z-index: 0;
   display: block;
   position: absolute;
   height: 100%;

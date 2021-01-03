@@ -68,16 +68,11 @@
 
   let resizeable
   let resizeHandle
-  const minPaneSize = 150
-  const maxPaneSize = 300
-  const initResizeable = (el) => {
-    resizeable = el
-    resizeable.style.setProperty('--max-height', `${maxPaneSize}px`)
-    resizeable.style.setProperty('--min-height', `${minPaneSize}px`)
-  }
-  const initResizeHandle = (el) => {
-    resizeHandle = el
-    resizeHandle.addEventListener('mousedown', startDragging)
+  const minPaneSize = 100
+  const maxPaneSize = document.documentElement.clientHeight - 10
+  const initResizeable = (resizeableEl) => {
+    resizeableEl.style.setProperty('--max-height', `${maxPaneSize}px`)
+    resizeableEl.style.setProperty('--min-height', `${minPaneSize}px`)
   }
 
   const setPaneHeight = (height) => {
@@ -101,7 +96,7 @@
       const primaryButtonPressed = moveEvent.buttons === 1
       if (!primaryButtonPressed) {
         setPaneHeight(Math.min(Math.max(getPaneHeight(), minPaneSize), maxPaneSize))
-        document.body.removeEventListener('pointermove', mouseDragHandler)
+        window.removeEventListener('pointermove', mouseDragHandler)
         return
       }
       setPaneHeight((yOffset - moveEvent.pageY ) + startingPaneHeight)
@@ -144,7 +139,7 @@
     bottom: 0;
     text-align: left;
     grid-column: 1 / 2;
-    overflow: scroll;
+    overflow: hidden;
   }
 
   .handle {
@@ -211,7 +206,7 @@
 </div>
 
 <div class="debug-drawer" bind:this={resizeable} use:initResizeable>
-  <div class="handle" bind:this={resizeHandle} use:initResizeHandle></div>
+  <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging}></div>
   <div class="debug-content">
     <Debug />
   </div>
