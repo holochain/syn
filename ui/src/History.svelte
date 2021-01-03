@@ -30,7 +30,7 @@
     background-color: lightgreen
   }
   .requested {
-    background-color: lightred
+    background-color: lightcoral
   }
 </style>
 <div>
