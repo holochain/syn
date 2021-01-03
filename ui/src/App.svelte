@@ -128,7 +128,7 @@
   }
 
   .debug-drawer {
-    --resizeable-height: 300px;
+    --resizeable-height: 100px;
     width: 100%;
     box-sizing: border-box;
     height: var(--resizeable-height);
