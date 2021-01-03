@@ -113,30 +113,7 @@
     width: var(--folk-hex-width);
     height: var(--folk-hex-height);
     /* https://www.desmos.com/calculator/bgt97otugr */
-    clip-path: polygon(
-      /* outer */     /* inner */
-      25%0%,
-      75%0%,
-      100%50%,
-      75%100%,
-      25%100%,
-      12.5% 75%,
-                      calc(12.5% + 1.732px) calc(75% - 1px),
-                      calc(25% + 1.15px) calc(100% - 2px),
-                      50% calc(100% - 2px),
-      50% 100%,
-      75% 100%,
-      87.5% 75%,
-                      calc(87.5% - 1.732px) calc(75% - 1px),
-                      calc(100% - 2.31px) 50%,
-                      calc(87.5% - 1.732px) calc(25% + 1px),
-      87.5% 25%,
-      75%0%,
-      50%0%,
-                      50% calc(0% + 2px),
-                      calc(25% + 1.15px) calc(0% + 2px),
-                      calc(12.5% + 1.732px) calc(25% + 1px),
-      12.5% 25%);
+    clip-path: polygon(25%0%,75%0%,100%50%,75%100%,25%100%,12.5% 75%,calc(12.5% + 1.732px) calc(75% - 1px),calc(25% + 1.15px) calc(100% - 2px),50% calc(100% - 2px),50% 100%,75% 100%,87.5% 75%,calc(87.5% - 1.732px) calc(75% - 1px),calc(100% - 2.31px) 50%,calc(87.5% - 1.732px) calc(25% + 1px),87.5% 25%,75%0%,50%0%,50% calc(0% + 2px),calc(25% + 1.15px) calc(0% + 2px),calc(12.5% + 1.732px) calc(25% + 1px),12.5% 25%);
     background-color: hsl(0, 0%, 10%);
     position: absolute;
   }
