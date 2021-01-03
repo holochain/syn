@@ -83,6 +83,11 @@ module.exports = (orchestrator) => {
         sessions = await me.call('syn', 'get_sessions')
         t.equal(sessions.length, 1)
 
+        // exercise the get_session zome call
+        const returnedSessionInfo = await me.call('syn', 'get_session', sessions[0])
+        t.equal(sessions.length, 1)
+        t.deepEqual(sessionInfo, returnedSessionInfo)
+
         // check that initial snapshot was created by using the get_content zome call
         const returned_content = await me.call('syn', 'get_content', sessionInfo.content_hash)
         t.deepEqual(returned_content, sessionInfo.snapshot_content)

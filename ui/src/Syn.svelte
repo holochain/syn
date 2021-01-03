@@ -7,6 +7,9 @@
   export let applyDeltaFn;
   export let undoFn;
 
+  // this is the list of sessions returned by the DNA
+  let sessions;
+
   export const arrayBufferToBase64 = buffer => {
     var binary = "";
     var bytes = new Uint8Array(buffer);
@@ -36,6 +39,9 @@
             return changes
           })
         }
+        // and send a sync request incase something just got out of sequence
+        // TODO: prepare for shifting to new scribe if they went offline
+        synSendSyncReq()
       }
     }
   }, reqTimeout/2)
@@ -74,6 +80,10 @@
     }
   }
 
+  // -------------------------------------------------------------------------------------
+  // Syn functions are wrappers of the zome calls
+  // TODO: refactor to separate library file, requires thinking through if state info should be
+  //       passed in as parameters, or if it should actually be a class that holds this state
   async function synSendChangeReq(index, deltas) {
     deltas = deltas.map(d=>JSON.stringify(d))
     return callZome('send_change_request', {scribe: $session.scribe, change: [index, deltas]});
@@ -91,6 +101,14 @@
       deltas = deltas.map(d=>JSON.stringify(d))
       return callZome("send_change", {participants, change: [index, deltas]})
     }
+  }
+
+  async function synSendSyncReq() {
+    return callZome('send_sync_request', {scribe: $session.scribe});
+  }
+
+  async function synGetSessions() {
+    return callZome('get_sessions');
   }
 
   async function synSendSyncResp(to, state) {
@@ -138,6 +156,7 @@
     alert("WHOA attempt to apply deltas while commit in progress")
     return;
   }*/
+  // -----------------------------------------------------------------------
 
   const dispatch = createEventDispatcher();
 
@@ -223,22 +242,27 @@
     console.log("connection active:", $connection);
   }
 
-  async function joinSession() {
-    $session = await callZome("join_session");
+  function setupSession(sessionInfo) {
+    $session = sessionInfo
     $session.deltas = $session.deltas.map(d => JSON.parse(d))
-    $session.snapshotHash = await synHashContent($session.snapshot_content);
-    $session.snapshotHashStr = arrayBufferToBase64($session.snapshotHash);
+    $session.snapshotHashStr = arrayBufferToBase64($session.snapshot_hash);
     $session.scribeStr = arrayBufferToBase64($session.scribe);
     $scribeStr = $session.scribeStr
     console.log("session joined:", $session);
     const newContent = {... $session.snapshot_content}; // clone so as not to pass by ref
     newContent.meta = {}
     newContent.meta[$connection.myTag] = 0
-    setStateFromSession({
-      content: newContent,
-      contentHash: $session.content_hash,
-      deltas: $session.deltas,
-    });
+
+    $content = newContent
+    lastCommitedContentHash = $session.content_hash
+    _recordDeltas($session.deltas);
+    committedChanges.update(c => c.concat($recordedChanges))
+    $recordedChanges = []
+  }
+
+  async function joinSession() {
+    const sessionInfo = await callZome("join_session")
+    setupSession(sessionInfo);
   }
 
   function clearState() {
@@ -263,6 +287,7 @@
       );
       console.log("connected", appClient)
       await setupConnection(appClient)
+      sessions = await synGetSessions()
       console.log("joining session...")
       await joinSession()
     }
@@ -373,7 +398,7 @@
     if ($session.scribeStr == $connection.me) {
       updateParticipant(from, request.meta)
       let state = {
-        snapshot: $session.snapshotHash,
+        snapshot: $session.snapshot_hash,
         commit_content_hash: lastCommitedContentHash,
         deltas: $recordedChanges.map(c => c.delta)
       };
@@ -421,7 +446,7 @@
       console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
       const commit = {
-        snapshot: $session.snapshotHash,
+        snapshot: $session.snapshot_hash,
         change: {
           deltas: $recordedChanges.map(c=>JSON.stringify(c.delta)),
           content_hash: newContentHash,
@@ -447,13 +472,6 @@
     }
   }
 
-  function setStateFromSession(sessionData) {
-    $content = sessionData.content;
-    lastCommitedContentHash = sessionData.contentHash;
-    _recordDeltas(sessionData.deltas);
-    committedChanges.update(c => c.concat($recordedChanges))
-    $recordedChanges = []
-  }
   $: noscribe = $scribeStr === ""
 </script>
 <style>
@@ -494,5 +512,6 @@
   <h4>Syn data:</h4>
   <ul>
     <li>lastCommitedContentHash: {lastCommitedContentHashStr}
+    <li>sessions: {JSON.stringify(sessions ? sessions.map(s=>arrayBufferToBase64(s).slice(-4)) : undefined)}
   </ul>
 </div>
