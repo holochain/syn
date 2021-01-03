@@ -476,6 +476,6 @@
     <li>content.title: {$content.title}
     <li>scribe: {$scribeStr}
     <li>requested: {JSON.stringify($requestedChanges)}
-    <li>recorded: {JSON.stringify($recordedChanges)}
+    <li>recorded count: {$recordedChanges.length}
   </ul>
 </div>
