@@ -98,8 +98,12 @@
     return callZome("send_heartbeat", {participants, data})
   }
 
+  function particpantsForScribeSignals() {
+    return Object.values($folks).map(v=>v.pubKey)
+  }
+
   async function synSendChange(index, deltas) {
-    const participants = Object.values($folks).map(v=>v.pubKey)
+    const participants = particpantsForScribeSignals()
     if (participants.length > 0) {
       console.log(`Sending change for ${index} to ${folksPretty}:`, deltas);
       deltas = deltas.map(d=>JSON.stringify(d))
@@ -235,7 +239,7 @@
       heartbeat(data)
       break;
     case "CommitNotice":
-      commtNotice(signal.data.payload.signal_payload)
+      commitNotice(signal.data.payload.signal_payload)
     }
   }
 
@@ -243,7 +247,7 @@
     // make sure we are at the right place to be able to just move forward with the commit
     if (lastCommitedContentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
         $nextIndex == commitInfo.deltas_committed) {
-      lastCommittedContentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
+      lastCommitedContentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
       committedChanges.update(c => c.concat($recordedChanges))
       $recordedChanges = []
     } else {
@@ -453,7 +457,7 @@
       const data = {
         participants: p
       }
-      synSendHeartbeat(Object.values($folks).map(v=>v.pubKey), data);
+      synSendHeartbeat(particpantsForScribeSignals(), data);
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -494,7 +498,8 @@
             witnesses: [],
             app_specific: null
           }
-        }
+        },
+        participants: particpantsForScribeSignals()
       }
       try {
         currentCommitHeaderHash = await callZome('commit', commit)
