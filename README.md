@@ -37,10 +37,10 @@ cargo install --path crates/dna_util
 
 ## UI
 
-We have provided a test UI that implements a minimalist collaborative text editor.  To run this UI in test mode you can install [holochain-run-dna](https://github.com/holochain-open-dev/holochain-run-dna) and spin up the conductor with:
+We have provided a sample UI that implements collaborative text editing.  To run this UI in test mode you can install [holochain-run-dna](https://github.com/holochain-open-dev/holochain-run-dna) and spin up the conductor with two instances of the hApp:
 
 ``` bash
-holochain-run-dna -p 8888 -i syn -u kitsune-proxy://CIW6PxKxsPPlcuvUCbMcKwUpaMSmB7kLD8xyyj4mqcw/kitsune-quic/h/proxy.holochain.org/p/5778/-- syn.dna.gz
+holochain-run-dna -c run-dna-config.yaml -m
 ```
 Then you can run the UI with:
 
@@ -49,7 +49,7 @@ cd ui
 npm install
 npm run dev
 ```
-Now point your browser at `http://localhost:5000`
+Now open two tabs in your browser pointing at `http://localhost:5000`.  In the second tab, change the appPort to 8887 and the appId to `syn1` before you click `Connect` and should be able to see both agents and start editing text on either tab and see it appear on the other.
 
 ### Testing
 
