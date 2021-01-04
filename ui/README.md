@@ -1,6 +1,8 @@
 ---
 
-# syn sample UI
+# syntext
+
+A syn sample app for collaborative text editing.
 
 This is UI is built using svelte from the standard svelte template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
 
@@ -24,17 +26,10 @@ Navigate to [localhost:5000](http://localhost:5000). You should see the UI runni
 
 Note: the syn happ must be running with the installed_app_id="syn" on port 8888.  Which will happen if you launch it with [holochain-run-dna](https://github.com/holochain-open-dev/holochain-run-dna)
 
+For testing you can use `holochain-run-dna` spin up a conductor with two instances of the app like this:
 
-## Using TypeScript
-
-This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
-
-```bash
-node scripts/setupTypeScript.js
+``` bash
+holochain-run-dna -c run-dna-config.yaml -m
 ```
 
-Or remove the script via:
-
-```bash
-rm scripts/setupTypeScript.js
-```
+Then open a second tab and change the port to 8887 and the appId to `syn` before you connect and you can start testing between the two instances.

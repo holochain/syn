@@ -5,7 +5,13 @@ Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), fr
 
 ## Design
 
-Read the [design documents here](DESIGN.md).
+This project makes it easy to build collaborative apps in the distributed peer-to-peer context of Holochain.  Syn uses Holochain's infrastructure for data integrity and peer-to-peer networking to store regular "commits" of the shared content's state, while coordinating batches of delta's that comprise those commits between nodes.  The approach is generalized for many different use-cases, where the app-developer need only define:
+1. A renderer for content state
+2. A patch-grammar for applying deltas to content
+3. A function to apply deltas to the content state
+4. Any user interaction that should generate those deltas in the given grammar
+
+For more details read the [design documents here](DESIGN.md) and check out the example app SynText svelte in the [/ui](ui/Readme.md) directory.
 
 ## Prerequisites
 
