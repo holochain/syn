@@ -309,7 +309,8 @@
 
   async function joinSession() {
     if (sessions.length == 0) {
-      setupSession(await synNewSession({title:"", body:""}))
+      sessions[0] = await synNewSession({title:"", body:""})
+      setupSession(sessions[0])
     } else {
       setupSession(await synGetSession(sessions[0]))
       await synSendSyncReq()
