@@ -40,6 +40,7 @@ struct ChangeMeta {
 struct ContentChange {
     deltas: Vec<SerializedBytes>,
     previous_change: EntryHash, // hash of Content on which these deltas are to be applied
+    pub content_hash: EntryHash, // hash of Content with these deltas applied
     meta: ChangeMeta
 }
 ```
