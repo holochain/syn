@@ -119,7 +119,7 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
     if input.participants.len() > 0 {
         let commit_info = CommitInfo {
             deltas_committed: input.change.deltas.len(),
-            commit_content_hash: change_hash,
+            commit_content_hash: input.change.content_hash,
             previous_content_hash,
             commit: header_hash.clone(),
         };

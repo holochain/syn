@@ -255,7 +255,12 @@
       committedChanges.update(c => c.concat($recordedChanges))
       $recordedChanges = []
     } else {
-      console.log("recevied commit notice for beyond our last commit, gotta resync");
+      console.log("received commit notice for beyond our last commit, gotta resync");
+      console.log("commit.commit_content_hash:", arrayBufferToBase64(commitInfo.commit_content_hash))
+      console.log("commit.previous_content_hash:", arrayBufferToBase64(commitInfo.previous_content_hash))
+      console.log("commit.deltas_committed:", commitInfo.deltas_committed)
+      console.log("my lastCommitedContentHashStr", lastCommitedContentHashStr)
+      console.log("my nextIndex", $nextIndex)
       // TODO resync
     }
 
