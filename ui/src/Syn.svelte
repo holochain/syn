@@ -209,6 +209,10 @@
   }
 
   function holochainSignalHandler(signal) {
+    // ignore signals not meant for me
+    if (arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
+      return;
+    }
     console.log("Got Signal", signal.data.payload.signal_name, signal)
     switch (signal.data.payload.signal_name) {
     case "SyncReq":
@@ -259,7 +263,7 @@
 
   async function setupConnection(appClient) {
     $connection = {appClient}
-    const appInfo = await appClient.appInfo({ installed_app_id: "syn" });
+    const appInfo = await appClient.appInfo({ installed_app_id: appId });
     const cellId = appInfo.cell_data[0][0];
     const agentPubKey = cellId[1];
     const me = arrayBufferToBase64(agentPubKey);
@@ -321,6 +325,7 @@
   import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
   let adminPort=1234;
   let appPort=8888;
+  let appId="syn"
   async function toggle() {
     if (!$connection) {
       const appClient = await AppWebsocket.connect(
@@ -534,12 +539,18 @@
   right: 0;
   background: rgba(255, 255, 255, 0.7);
   }
+  input {
+    width: 4em;
+    //border: 2px solid red;
+    border-radius: 4px;
+  }
 </style>
 <button class:noscribe on:click={commitChange}>Commit</button>
 
 <div>
   <h4>Holochain Connection:</h4>
   App Port: <input bind:value={appPort}>
+  AppId: <input bind:value={appId}>
   <button on:click={toggle}>
     {#if $connection}
       Disconnect

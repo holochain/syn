@@ -1,0 +1,8 @@
+- dnas:
+  - '../syn/syn.dna.gz'
+  app_name: syn
+  app_port: 8888
+- dnas:
+  - '../syn/syn.dna.gz'
+  app_name: syn1
+  app_port: 8887
