@@ -101,6 +101,28 @@ module.exports = (orchestrator) => {
         const new_content_hash_1 = await me.call('syn', 'hash_content', new_content)
 
         let deltas = jsonDeltas ? pendingDeltas.map(d=>JSON.stringify(d)) : pendingDeltas;
+
+        // set signal handlers so we can confirm they get sent and received appropriately
+        let me_signals : Signal[] = []
+        me_player.setSignalHandler((signal) => {
+            console.log("Received Signal for me:",signal)
+            me_signals.push(signal.data.payload)
+        })
+
+        // alice signal handler
+        let alice_signals : Signal[] = []
+        alice_player.setSignalHandler((signal) => {
+            console.log("Received Signal for alice:",signal)
+            alice_signals.push(signal.data.payload)
+        })
+
+        // bob signal handler
+        let bob_signals : Signal[] = []
+        bob_player.setSignalHandler((signal) => {
+            console.log("Received Signal for bob:",signal)
+            bob_signals.push(signal.data.payload)
+        })
+
         // add a content change
         let commit = {
             snapshot: sessionInfo.content_hash,
@@ -113,7 +135,8 @@ module.exports = (orchestrator) => {
                     witnesses: [],
                     app_specific: null
                 }
-            }
+            },
+            participants: []
         }
         let commit_header_hash = await me.call('syn', 'commit', commit)
         t.equal(commit_header_hash.length, 39) // is a hash
@@ -141,33 +164,12 @@ module.exports = (orchestrator) => {
                     witnesses: [],
                     app_specific: null
                 }
-            }
+            },
+            participants: []
         }
         commit_header_hash = await me.call('syn', 'commit', commit)
         // clear the pendingDeltas
         pendingDeltas = []
-
-        // set my signal handler so we can confirm what happens when
-        // someone joins a sessions
-        let me_signals : Signal[] = []
-        me_player.setSignalHandler((signal) => {
-            console.log("Received Signal for me:",signal)
-            me_signals.push(signal.data.payload)
-        })
-
-        // alice signal handler
-        let alice_signals : Signal[] = []
-        alice_player.setSignalHandler((signal) => {
-            console.log("Received Signal for alice:",signal)
-            alice_signals.push(signal.data.payload)
-        })
-
-        // bob signal handler
-        let bob_signals : Signal[] = []
-        bob_player.setSignalHandler((signal) => {
-            console.log("Received Signal for bob:",signal)
-            bob_signals.push(signal.data.payload)
-        })
 
         // alice joins session
         const aliceSessionInfo = await alice.call('syn', 'get_session', sessionHash)

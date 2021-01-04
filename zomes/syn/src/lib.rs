@@ -101,12 +101,14 @@ pub struct ContentChange {
 pub struct CommitInput {
     pub snapshot: EntryHash,
     pub change: ContentChange,
+    pub participants: Vec<AgentPubKey>, // list of participants to notify
 }
 
 #[hdk_extern]
 fn commit(input: CommitInput) -> SynResult<HeaderHash> {
     let header_hash = create_entry(&input.change)?;
     let change_hash = hash_entry(&input.change)?;
+    let previous_content_hash = input.change.previous_change.clone();
     let bytes: SerializedBytes = input.change.previous_change.try_into()?;
     let tag = LinkTag::from(bytes.bytes().to_vec());
     create_link(
@@ -114,6 +116,15 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
         change_hash.clone(),
         tag,
     )?;
+    if input.participants.len() > 0 {
+        let commit_info = CommitInfo {
+            deltas_committed: input.change.deltas.len(),
+            commit_content_hash: change_hash,
+            previous_content_hash,
+            commit: header_hash.clone(),
+        };
+        remote_signal(&SignalPayload::CommitNotice(commit_info), input.participants)?;
+    }
     Ok(header_hash)
 }
 
@@ -302,6 +313,14 @@ pub struct StateForSync {
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct CommitInfo {
+    pub deltas_committed: usize,
+    pub commit_content_hash: EntryHash,
+    pub previous_content_hash: EntryHash,
+    pub commit: HeaderHash,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(tag = "signal_name", content = "signal_payload")]
 enum SignalPayload {
     SyncReq(AgentPubKey), // content is who the request is from
@@ -309,6 +328,7 @@ enum SignalPayload {
     ChangeReq(Change),
     Change(Change),
     Heartbeat(String),   // signal for maintaining latency info and other metadata
+    CommitNotice(CommitInfo) // signal for sennding commit and content hash after commit
 }
 
 #[hdk_extern]
@@ -404,7 +424,6 @@ pub struct SendHeartbeatInput {
 
 #[hdk_extern]
 fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
-    debug!("{:?}", input);
     remote_signal(&SignalPayload::Heartbeat(input.data), input.participants)?;
     Ok(())
 }

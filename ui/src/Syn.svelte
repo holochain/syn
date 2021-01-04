@@ -216,22 +216,41 @@
       console.log("post",state)
       syncResp(state);
       break;
-    case "ChangeReq": {
-      let [index, deltas] = signal.data.payload.signal_payload
-      deltas = deltas.map(d=>JSON.parse(d))
-      changeReq([index, deltas]);
-      break;
-    }
-    case "Change": {
-      let [index, deltas] = signal.data.payload.signal_payload
-      deltas = deltas.map(d=>JSON.parse(d))
-      change(index, deltas);
-      break;
-    }
+    case "ChangeReq":
+      {
+        let [index, deltas] = signal.data.payload.signal_payload
+        deltas = deltas.map(d=>JSON.parse(d))
+        changeReq([index, deltas]);
+        break;
+      }
+    case "Change":
+      {
+        let [index, deltas] = signal.data.payload.signal_payload
+        deltas = deltas.map(d=>JSON.parse(d))
+        change(index, deltas);
+        break;
+      }
     case "Heartbeat":
       let data = decodeJson(signal.data.payload.signal_payload)
       heartbeat(data)
+      break;
+    case "CommitNotice":
+      commtNotice(signal.data.payload.signal_payload)
     }
+  }
+
+  function commitNotice(commitInfo) {
+    // make sure we are at the right place to be able to just move forward with the commit
+    if (lastCommitedContentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
+        $nextIndex == commitInfo.deltas_committed) {
+      lastCommittedContentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
+      committedChanges.update(c => c.concat($recordedChanges))
+      $recordedChanges = []
+    } else {
+      console.log("recevied commit notice for beyond our last commit, gotta resync");
+      // TODO resync
+    }
+
   }
 
   async function setupConnection(appClient) {
