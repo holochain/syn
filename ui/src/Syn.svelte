@@ -550,6 +550,10 @@
     //border: 2px solid red;
     border-radius: 4px;
   }
+  .session {
+    border-radius: 4px;
+    background-color: pink
+  }
 </style>
 <button class:noscribe on:click={commitChange}>Commit</button>
 
@@ -566,11 +570,13 @@
   </button>
 </div>
 
-
-<hr/>
-<div>
-  <h4>Syn data:</h4>
-  <ul>
-    <li>sessions: {JSON.stringify(sessions ? sessions.map(s=>arrayBufferToBase64(s).slice(-4)) : undefined)}
-  </ul>
+<div class="sessions">
+  Sessions:
+  {#if sessions}
+  {#each sessions as session}
+    <span class="session">
+      Id: {arrayBufferToBase64(session).slice(-4)}
+    </span>
+  {/each}
+  {/if}
 </div>

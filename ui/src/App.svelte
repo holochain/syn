@@ -154,7 +154,7 @@
   }
 
   .debug-drawer {
-    --resizeable-height: 100px;
+    --resizeable-height: 200px;
     width: 100%;
     box-sizing: border-box;
     height: var(--resizeable-height);
@@ -188,7 +188,7 @@
   }
 
   .debug-content {
-    padding: 2rem;
+    padding: 1rem;
     word-wrap: break-word;
     height: 100%;
     overflow-y: scroll;
@@ -225,7 +225,6 @@
   <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
 
-<History changeToTextFn={changeToText}/>
 
 <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>
@@ -237,6 +236,7 @@
 <div class="debug-drawer" bind:this={resizeable} use:initResizeable>
   <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging}></div>
   <div class="debug-content">
+    <History changeToTextFn={changeToText}/>
     <Debug />
   </div>
 </div>

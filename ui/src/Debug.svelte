@@ -3,11 +3,10 @@
 </script>
 <style>
 ul {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 </style>
 <div>
-  <h4>Debug data:</h4>
   <ul>
     <li>
       {#if $connection}

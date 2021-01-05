@@ -77,7 +77,7 @@
 <style>
   editor {
     width: auto;
-    min-height: 10em;
+    min-height: 20em;
     border: 1px solid black;
     display: block;
     font-family: monospace;

@@ -35,9 +35,10 @@
   .history {
   }
   .changes {
-    max-width: 900px;
+    max-height: 33px;
     overflow-x: scroll;
-  }
+    overflow-y: hidden;
+    overflow-wrap: normal;  }
 </style>
 <div class="history">
   History:
