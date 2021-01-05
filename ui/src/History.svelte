@@ -1,68 +1,59 @@
 <script>
-  import { requestedChanges, recordedChanges, committedChanges} from './stores.js';
+  import { requestedChanges, recordedChanges, committedChanges } from './stores.js';
+  import { afterUpdate } from 'svelte';
+  import HistoryEntry from './HistoryEntry.svelte'
   export let changeToTextFn
 
-  function change2Html(list) {
-    let r = []
-    for (let i=list.length-1; i>=0; i--) {
-      const text = changeToTextFn(list[i])
-      r.push(text)
+  // returns a list of historyEntry objects with some text
+  // and a status (for styling)
+  function changesToEntriesList(changes, status) {
+    let entriesList = []
+    for (let i=changes.length-1; i>=0; i--) {
+      const text = changeToTextFn(changes[i])
+      entriesList.push({'text': text, 'status': status})
     }
-    return r
+    return entriesList
   }
+
+  let requestedH
   let recordedH
   let committedH
-  let requestedH
-  $: {requestedH = change2Html($requestedChanges)}
-  $: {recordedH = change2Html($recordedChanges)}
-  $: {committedH = change2Html($committedChanges)}
+  let historyEntries = []
+  $: {requestedH = changesToEntriesList($requestedChanges, 'requested')}
+  $: {recordedH = changesToEntriesList($recordedChanges, 'recorded')}
+  $: {committedH = changesToEntriesList($committedChanges, 'committed')}
+  $: {historyEntries = [...requestedH, ...recordedH, ...committedH]}
+
+  // when updating the list, also scroll to the newest historyEntry
+  afterUpdate(async () => {
+		let entryElem = document.getElementsByClassName('history-entries')[0]
+    "entry elem!",entryElem.firstChild.scrollIntoView(false)
+	})
+
 </script>
 <style>
-  .change {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 1px;
-    width: 10%;
-    height: 75px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-  }
-  .recorded {
-    background-color: lightyellow;
-  }
-  .committed {
-    background-color: lightgreen;
-  }
-  .requested {
-    background-color: lightcoral;
-  }
   .history {
     width: auto;
     border: 1px solid lightgrey;
     border-radius: 4px;
-    padding: .5em;
+    padding: .5em .5em 0;
+    background-color: hsla(0, 0%, 100%, .25)
   }
-  .changes {
+  .history-entries {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 1em;
     overflow-x: scroll;
-    padding: 1em 0 1em;
+    padding: .5em 0 1.2em;
   }
 </style>
-<div class="history">
+
+<div class='history'>
   History:
-  <div class="changes">
-    {#each requestedH as change}
-      <div class="change requested">{change}</div>
+  <div class='history-entries'>
+    {#each historyEntries as historyEntry}
+      <HistoryEntry status={historyEntry.status} text={historyEntry.text}/>
     {/each}
-    {#each recordedH as change}
-      <div class="change recorded">{change}</div>
-    {/each}
-    {#each committedH as change}
-      <div class="change committed">{change}</div>
-    {/each}
-    </div>
+  </div>
 </div>

@@ -65,26 +65,21 @@
   // definition of how to convert a change to text for the history renderer
   function changeToText(change) {
     let delta = change.delta
-    let alt
-    let sym = ""
+    let detail
     switch(delta.type) {
     case "Add":
-      sym = "+"
-      alt = `${delta.value[1]}@${delta.value[0]}`
+      detail = `${delta.value[1]}@${delta.value[0]}`
       break;
     case "Delete":
-      sym = "-"
-      alt = `${change.deleted}@${delta.value[0]}`
+      detail = `${change.deleted}@${delta.value[0]}`
       break;
     case "Title":
-      sym = "T"
-      alt = `${change.deleted}->${delta.value}`
+      detail = `${change.deleted}->${delta.value}`
       break;
     case "Meta":
-      sym = "."
-      alt = ""
+      detail = ''
     }
-    return `${sym}${alt}`
+    return `${delta.type}:\n${detail}`
   }
 
 
