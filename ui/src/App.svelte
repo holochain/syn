@@ -60,8 +60,34 @@
     case "Meta":
       return {type:"Meta", value:{setLoc: change.deleted}}
     }
-
   }
+
+  // definition of how to convert a change to text for the history renderer
+  function changeToText(change) {
+    let delta = change.delta
+    let alt
+    let sym = ""
+    switch(delta.type) {
+    case "Add":
+      sym = "+"
+      alt = `${delta.value[1]}@${delta.value[0]}`
+      break;
+    case "Delete":
+      sym = "-"
+      alt = `${change.deleted}@${delta.value[0]}`
+      break;
+    case "Title":
+      sym = "T"
+      alt = `${change.deleted}->${delta.value}`
+      break;
+    case "Meta":
+      sym = "."
+      alt = ""
+    }
+    return `${sym}${alt}`
+  }
+
+
   $: noscribe = $scribeStr === ""
   let syn
 
@@ -194,13 +220,12 @@
     <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
 </div>
-
 <main>
 <div class:noscribe>
   <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
 </div>
 
-<History/>
+<History changeToTextFn={changeToText}/>
 
 <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>

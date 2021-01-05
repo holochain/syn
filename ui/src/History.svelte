@@ -1,30 +1,12 @@
 <script>
   import { requestedChanges, recordedChanges, committedChanges} from './stores.js';
+  export let changeToTextFn
 
   function change2Html(list) {
     let r = []
     for (let i=list.length-1; i>=0; i--) {
-      let delta = list[i].delta
-      let alt
-      let sym = ""
-      switch(delta.type) {
-      case "Add":
-        sym = "+"
-        alt = `${delta.value[1]}@${delta.value[0]}`
-        break;
-      case "Delete":
-        sym = "-"
-        alt = `${list[i].deleted}@${delta.value[0]}`
-        break;
-      case "Title":
-        sym = "T"
-        alt = `${list[i].deleted}->${delta.value}`
-        break;
-      case "Meta":
-        sym = "."
-        alt = ""
-      }
-      r.push(`${sym}${alt}`)
+      const text = changeToTextFn(list[i])
+      r.push(text)
     }
     return r
   }
@@ -37,8 +19,9 @@
 </script>
 <style>
   .change {
-    display: inline-block;
     border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1px;
   }
   .recorded {
     background-color: lightyellow;
@@ -50,18 +33,23 @@
     background-color: lightcoral;
   }
   .history {
+  }
+  .changes {
+    max-width: 900px;
     overflow-x: scroll;
   }
 </style>
 <div class="history">
   History:
-  {#each requestedH as change}
-    <div class="change requested">{change}</div>
-  {/each}
-  {#each recordedH as change}
-    <div class="change recorded">{change}</div>
-  {/each}
-  {#each committedH as change}
-    <div class="change committed">{change}</div>
-  {/each}
+  <div class="changes">
+    {#each requestedH as change}
+      <span class="change requested">{change}</span>
+    {/each}
+    {#each recordedH as change}
+      <span class="change recorded">{change}</span>
+    {/each}
+    {#each committedH as change}
+      <span class="change committed">{change}</span>
+    {/each}
+    </div>
 </div>
