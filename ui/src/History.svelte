@@ -27,7 +27,9 @@
   // when updating the list, also scroll to the newest historyEntry
   afterUpdate(async () => {
 		let entryElem = document.getElementsByClassName('history-entries')[0]
-    "entry elem!",entryElem.firstChild.scrollIntoView(false)
+    if (entryElem.firstChild !== null) {
+      entryElem.firstChild.scrollIntoView(false)
+    }
 	})
 
 </script>
