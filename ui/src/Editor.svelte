@@ -77,23 +77,21 @@
 <style>
   editor {
     width: auto;
-    min-height: 20em;
+    min-height: 10em;
     border: 1px solid black;
+    background-color: hsla(0, 0%, 100%, .5);
+    font-family: Arial;
     display: block;
-    font-family: monospace;
     white-space: pre-wrap;
-    margin: 1em 0;
+    margin: 1em 0 .4em 0;
     padding: 4px;
   }
   .cursor {
-    display: inline-block;
-    width: 0px;
-  }
-  .cursor::after {
-    content: "|";
+    display: inline;
+    border-left: solid 2px fuchsia; /* Should be the Folk's main color */
+    margin-right: -2px;
+    z-index: 100;
     position: relative;
-    left: -3.5px;
-    color: fuchsia; /* Should be the Folk's main color */
   }
 </style>
 
