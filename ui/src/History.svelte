@@ -22,6 +22,11 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 1px;
+    width: 10%;
+    height: 75px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
   }
   .recorded {
     background-color: lightyellow;
@@ -33,24 +38,31 @@
     background-color: lightcoral;
   }
   .history {
+    width: auto;
+    border: 1px solid lightgrey;
+    border-radius: 4px;
+    padding: .5em;
   }
   .changes {
-    max-height: 33px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1em;
     overflow-x: scroll;
-    overflow-y: hidden;
-    overflow-wrap: normal;  }
+    padding: 1em 0 1em;
+  }
 </style>
 <div class="history">
   History:
   <div class="changes">
     {#each requestedH as change}
-      <span class="change requested">{change}</span>
+      <div class="change requested">{change}</div>
     {/each}
     {#each recordedH as change}
-      <span class="change recorded">{change}</span>
+      <div class="change recorded">{change}</div>
     {/each}
     {#each committedH as change}
-      <span class="change committed">{change}</span>
+      <div class="change committed">{change}</div>
     {/each}
     </div>
 </div>
