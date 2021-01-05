@@ -1,53 +1,67 @@
 <script>
   import { requestedChanges, recordedChanges, committedChanges} from './stores.js';
 
-  function change2Html(change) {
-    let html = ""
-    const delta = change.delta
-    switch(delta.type) {
-    case "Add":
-      html += `+${delta.value[1]}<br/>@${delta.value[0]}`
-      break;
-    case "Delete":
-      html += `-${change.deleted}<br/>@${delta.value[0]}`
-      break;
-    case "Title":
-      html += `T=${change.deleted}-><br/>${delta.value}`
-      break;
+  function change2Html(list) {
+    let r = []
+    for (let i=list.length-1; i>=0; i--) {
+      let delta = list[i].delta
+      let alt
+      let sym = ""
+      switch(delta.type) {
+      case "Add":
+        sym = "+"
+        alt = `${delta.value[1]}@${delta.value[0]}`
+        break;
+      case "Delete":
+        sym = "-"
+        alt = `${list[i].deleted}@${delta.value[0]}`
+        break;
+      case "Title":
+        sym = "T"
+        alt = `${list[i].deleted}->${delta.value}`
+        break;
+      case "Meta":
+        sym = "."
+        alt = ""
+      }
+      r.push(`${sym}${alt}`)
     }
-    return html
+    return r
   }
+  let recordedH
+  let committedH
+  let requestedH
+  $: {requestedH = change2Html($requestedChanges)}
+  $: {recordedH = change2Html($recordedChanges)}
+  $: {committedH = change2Html($committedChanges)}
 </script>
 <style>
   .change {
     display: inline-block;
-    border: 1px solid #ccc
+    border: 1px solid #ccc;
   }
   .recorded {
-    background-color: lightyellow
+    background-color: lightyellow;
   }
   .committed {
-    background-color: lightgreen
+    background-color: lightgreen;
   }
   .requested {
-    background-color: lightcoral
+    background-color: lightcoral;
+  }
+  .history {
+    overflow-x: scroll;
   }
 </style>
-<div>
-History:
-{#each $committedChanges as change}
-  <div class="change commited">
-    {@html change2Html(change)}
-  </div>
-{/each}
-{#each $recordedChanges as change}
-  <div class="change recorded">
-    {@html change2Html(change)}
-  </div>
-{/each}
-{#each $requestedChanges as change}
-  <div class="change requested">
-    {@html change2Html(change)}
-  </div>
-{/each}
+<div class="history">
+  History:
+  {#each requestedH as change}
+    <div class="change requested">{change}</div>
+  {/each}
+  {#each recordedH as change}
+    <div class="change recorded">{change}</div>
+  {/each}
+  {#each committedH as change}
+    <div class="change committed">{change}</div>
+  {/each}
 </div>
