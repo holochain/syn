@@ -554,6 +554,9 @@
     border-radius: 4px;
     background-color: pink
   }
+  button {
+    cursor: pointer;
+  }
 </style>
 <button class:noscribe on:click={commitChange}>Commit</button>
 
