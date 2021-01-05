@@ -1,6 +1,7 @@
 <script>
   import { content, connection } from './stores.js';
   import { createEventDispatcher } from 'svelte';
+  import { CSSifyHSL } from './colors.js'
   const dispatch = createEventDispatcher();
 
   function getLoc(tag) {
@@ -73,13 +74,23 @@
       ])
     }
   }
+
+  let cursor
+  $: {
+    // wait for cursor and connection and color inside connection to exist
+    // before updating the cursor color
+    if (cursor && $connection && $connection.myColors) {
+      cursor.style['border-color'] = CSSifyHSL($connection.myColors.primary)
+    }
+  }
+
 </script>
 <style>
   editor {
     width: auto;
     min-height: 10em;
     border: 1px solid black;
-    background-color: hsla(0, 0%, 100%, .5);
+    background-color: hsla(0, 0%, 100%, .6);
     font-family: Arial;
     display: block;
     white-space: pre-wrap;
@@ -88,13 +99,12 @@
   }
   .cursor {
     display: inline;
-    border-left: solid 2px fuchsia; /* Should be the Folk's main color */
+    border-left: solid 2px; /* Should be the Folk's main color */
     margin-right: -2px;
     z-index: 100;
     position: relative;
   }
 </style>
-
 <editor on:click={handleClick} on:keydown={handleInput} tabindex=0 start=0 bind:this={editor}>
-  <span>{editor_content1}</span><span class="cursor"></span><span>{editor_content2}</span>
+  <span>{editor_content1}</span><span class="cursor" bind:this={cursor}></span><span>{editor_content2}</span>
 </editor>

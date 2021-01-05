@@ -2,6 +2,7 @@
   import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks} from './stores.js';
   import { createEventDispatcher } from 'svelte';
   import {decodeJson, encodeJson} from './json.js'
+  import { getFolkColors } from './colors.js'
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn;
@@ -270,6 +271,7 @@
     const cellId = appInfo.cell_data[0][0];
     const agentPubKey = cellId[1];
     const me = arrayBufferToBase64(agentPubKey);
+    const myColors = getFolkColors(agentPubKey)
     const myTag = me.slice(-4);
     const Dna = arrayBufferToBase64(cellId[0]);
     $connection = {
@@ -279,6 +281,7 @@
       agentPubKey,
       me,
       myTag,
+      myColors,
       Dna
     }
     console.log("connection active:", $connection);
@@ -435,7 +438,8 @@
   function updateParticipant(pubKey, meta) {
     const pubKeyStr = arrayBufferToBase64(pubKey);
     if (!(pubKeyStr in $folks) && (pubKeyStr != $connection.me)) {
-      $folks[pubKeyStr] = {pubKey, meta}
+      const colors = getFolkColors(pubKey)
+      $folks[pubKeyStr] = {pubKey, meta, colors}
       $folks = $folks
     } else if (meta) {
       $folks[pubKeyStr].meta = meta
