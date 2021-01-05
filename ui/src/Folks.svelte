@@ -1,6 +1,6 @@
 <script>
-  import { folks, connection, scribeStr  } from './stores.js';
-  import Folk from './Folk.svelte';
+  import { folks, connection, scribeStr  } from './stores.js'
+  import Folk from './Folk.svelte'
 </script>
 <style>
   :global(:root) {
@@ -14,7 +14,7 @@
     place-items: center;
   }
 </style>
-<div class="folks">
+<div class='folks'>
   {#if $connection && $connection.me}
     <Folk me={true} pubKeyStr={$connection.me} pubKey={$connection.agentPubKey}/>
   {/if}

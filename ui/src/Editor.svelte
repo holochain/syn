@@ -1,15 +1,16 @@
 <script>
-  import { content, connection } from './stores.js';
-  import { createEventDispatcher } from 'svelte';
+  import { content, connection } from './stores.js'
+  import { createEventDispatcher } from 'svelte'
   import { CSSifyHSL } from './colors.js'
-  const dispatch = createEventDispatcher();
+
+  const dispatch = createEventDispatcher()
 
   function getLoc(tag) {
     return $content.meta ? ($content.meta[myTag] ? $content.meta[myTag] : 0) : 0
   }
 
   let editor
-  $: myTag = $connection ? $connection.myTag : ""
+  $: myTag = $connection ? $connection.myTag : ''
   $: editor_content1 = $content.body.slice(0, getLoc(myTag))
   $: editor_content2 = $content.body.slice(getLoc(myTag))
 
@@ -21,7 +22,7 @@
         deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc+text.length] }})
       }
     }
-    dispatch("requestChange", deltas)
+    dispatch('requestChange', deltas)
   }
 
   function handleInput(event) {
@@ -31,24 +32,24 @@
       addText(key)
     } else {
       switch (key) {
-      case "ArrowRight":
+      case 'ArrowRight':
         if (loc < $content.body.length) {
-          dispatch("requestChange", [
+          dispatch('requestChange', [
             {type:'Meta', value:{setLoc: [myTag, loc+1]}}
           ])
         }
-        break;
-      case "ArrowLeft":
+        break
+      case 'ArrowLeft':
         if (loc > 0){
-          dispatch("requestChange", [
+          dispatch('requestChange', [
             {type:'Meta', value:{setLoc: [myTag, loc-1]}}
           ])
         }
-        break;
-      case "Enter":
-        addText("\n")
-        break;
-      case "Backspace":
+        break
+      case 'Enter':
+        addText('\n')
+        break
+      case 'Backspace':
         if (loc>0) {
           const deltas = [{type:'Delete', value:[loc-1, loc]}]
           for (const [tag, tagLoc] of Object.entries($content.meta)) {
@@ -56,20 +57,20 @@
               deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc-1] }})
             }
           }
-          dispatch("requestChange", deltas)
+          dispatch('requestChange', deltas)
         }
       }
     }
-    console.log("input", event.key)
+    console.log('input', event.key)
   }
   function handleClick(e) {
-    const offset = window.getSelection().focusOffset;
+    const offset = window.getSelection().focusOffset
     let loc = offset > 0 ? offset : 0
     if (window.getSelection().focusNode.parentElement == editor.lastChild) {
       loc += editor_content1.length
     }
     if (loc != getLoc(myTag)) {
-      dispatch("requestChange", [
+      dispatch('requestChange', [
         {type:'Meta', value:{setLoc: [myTag, loc]}}
       ])
     }
@@ -106,5 +107,5 @@
   }
 </style>
 <editor on:click={handleClick} on:keydown={handleInput} tabindex=0 start=0 bind:this={editor}>
-  <span>{editor_content1}</span><span class="cursor" bind:this={cursor}></span><span>{editor_content2}</span>
+  <span>{editor_content1}</span><span class='cursor' bind:this={cursor}></span><span>{editor_content2}</span>
 </editor>

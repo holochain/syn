@@ -1,38 +1,39 @@
 <script>
-  import Editor from './Editor.svelte';
-  import Title from './Title.svelte';
-  import Folks from './Folks.svelte';
-  import Syn from './Syn.svelte';
-  import Debug from './Debug.svelte';
+  import Editor from './Editor.svelte'
+  import Title from './Title.svelte'
+  import Folks from './Folks.svelte'
+  import Syn from './Syn.svelte'
+  import Debug from './Debug.svelte'
   import History from './History.svelte'
+  import { content, scribeStr } from './stores.js'
+
   $: disconnected = false
-  import { content, scribeStr } from './stores.js';
 
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
   function applyDelta(delta) {
     switch(delta.type) {
-    case "Title":
+    case 'Title':
       {
         const deleted = $content.title
         $content.title = delta.value
         return {delta, deleted}
       }
-    case "Add":
+    case 'Add':
       {
         const [loc, text] = delta.value
         $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
         return {delta}
       }
-    case "Delete":
+    case 'Delete':
       {
         const [start, end] = delta.value
         const deleted = $content.body.slice(start,end)
         $content.body = $content.body.slice(0, start) + $content.body.slice(end)
         return {delta, deleted}
       }
-    case "Meta":
+    case 'Meta':
       {
         const [tag, loc] = delta.value.setLoc
         const deleted = [tag, $content.meta[tag]]
@@ -46,19 +47,19 @@
   function undo(change) {
     const delta = change.delta
     switch(delta.type) {
-    case "Title":
-      return {type:"Title", value:change.deleted}
+    case 'Title':
+      return {type:'Title', value:change.deleted}
       break
-    case "Add":
+    case 'Add':
       const [loc, text] = delta.value
-      return {type:"Delete", value: [loc, loc+text.length]}
+      return {type:'Delete', value: [loc, loc+text.length]}
       break
-    case "Delete":
+    case 'Delete':
       const [start, end] = delta.value
-      return {type:"Add", value:[start, change.deleted]}
+      return {type:'Add', value:[start, change.deleted]}
       break
-    case "Meta":
-      return {type:"Meta", value:{setLoc: change.deleted}}
+    case 'Meta':
+      return {type:'Meta', value:{setLoc: change.deleted}}
     }
   }
 
@@ -67,23 +68,23 @@
     let delta = change.delta
     let detail
     switch(delta.type) {
-    case "Add":
+    case 'Add':
       detail = `${delta.value[1]}@${delta.value[0]}`
-      break;
-    case "Delete":
+      break
+    case 'Delete':
       detail = `${change.deleted}@${delta.value[0]}`
-      break;
-    case "Title":
+      break
+    case 'Title':
       detail = `${change.deleted}->${delta.value}`
-      break;
-    case "Meta":
+      break
+    case 'Meta':
       detail = ''
     }
     return `${delta.type}:\n${detail}`
   }
 
 
-  $: noscribe = $scribeStr === ""
+  $: noscribe = $scribeStr === ''
   let syn
 
 
@@ -171,7 +172,7 @@
   }
 
   .handle::after {
-    content: "";
+    content: '';
     height: 9px;
     position: absolute;
     left: 0;
@@ -209,7 +210,7 @@
   }
 </style>
 
-<div class="toolbar">
+<div class='toolbar'>
   <h1>SynText</h1>
 <div class:noscribe>
     <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
@@ -224,13 +225,13 @@
 <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>
 
-<div class="folks-tray">
+<div class='folks-tray'>
   <Folks />
 </div>
 
-<div class="debug-drawer" bind:this={resizeable} use:initResizeable>
-  <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging}></div>
-  <div class="debug-content">
+<div class='debug-drawer' bind:this={resizeable} use:initResizeable>
+  <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
+  <div class='debug-content'>
     <History changeToTextFn={changeToText}/>
     <Debug />
   </div>

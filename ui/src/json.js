@@ -1,20 +1,20 @@
 // JSON parsing for code with arrays
 // Thanks to: https://gist.github.com/jonathanlurie/04fa6343e64f750d03072ac92584b5df
-const FLAG_TYPED_ARRAY = "FLAG_TYPED_ARRAY";
+const FLAG_TYPED_ARRAY = 'FLAG_TYPED_ARRAY'
 
 export function decodeJson(jsonStr) {
   return JSON.parse( jsonStr, function( key, value ){
     // the receiver function looks for the typed array flag
     try{
-      if( "flag" in value && value.flag === FLAG_TYPED_ARRAY){
+      if( 'flag' in value && value.flag === FLAG_TYPED_ARRAY){
         // if found, we convert it back to a typed array
-        return new window[ value.constructor ]( value.data );
+        return new window[ value.constructor ]( value.data )
       }
     }catch(e){}
 
     // if flag not found no conversion is done
-    return value;
-  });
+    return value
+  })
 }
 
 export function encodeJson(obj) {
@@ -36,8 +36,8 @@ export function encodeJson(obj) {
         data: Array.apply([], value),
         flag: FLAG_TYPED_ARRAY
       }
-      return replacement;
+      return replacement
     }
-    return value;
-  });
+    return value
+  })
 }

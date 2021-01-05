@@ -1,5 +1,5 @@
 <script>
-  import {session, connection, scribeStr, nextIndex} from './stores.js';
+  import { session, connection, scribeStr, nextIndex } from './stores.js'
 </script>
 <style>
 ul {
@@ -14,7 +14,7 @@ ul {
       {:else}
         No connection
       {/if}
-    <li>lastCommitedContentHash: {$session ? $session.contentHashStr : ""}
+    <li>lastCommitedContentHash: {$session ? $session.contentHashStr : ''}
     <li>session: {JSON.stringify($session)}
     <li>nextIndex: {$nextIndex}
     <li>scribe: {$scribeStr}

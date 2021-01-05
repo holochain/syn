@@ -25,6 +25,6 @@
     background-color: lightcoral;
   }
 </style>
-<div class="history-entry {status}">
+<div class='history-entry {status}'>
   {text}
 </div>

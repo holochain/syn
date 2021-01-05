@@ -1,20 +1,19 @@
 <script>
-  import { content } from './stores.js';
-  import { createEventDispatcher } from 'svelte';
-  import { tick } from 'svelte';
-  const dispatch = createEventDispatcher();
+  import { content } from './stores.js'
+  import { createEventDispatcher, tick } from 'svelte'
+  const dispatch = createEventDispatcher()
 
-  let titleBeingTyped = '';
+  let titleBeingTyped = ''
 
-  let editingTitle = false;
+  let editingTitle = false
   function saveTitle() {
     if (editingTitle) {
       let delta = { type: 'Title', value: titleBeingTyped}
-      dispatch("requestChange", [delta])
+      dispatch('requestChange', [delta])
       titleBeingTyped = ''
       editingTitle = false
     } else {
-      console.log("Can't saveTitle when it wasn't being edited!")
+      console.log('Can't saveTitle when it wasn't being edited!')
     }
   }
 
@@ -28,12 +27,10 @@
   }
 
   function handleTitleKeypress() {
-    // console.log("Keypress in field detected!", event)
-		if (event.key == "Enter") {
+		if (event.key == 'Enter') {
       saveTitle()
-    } else if (event.key == "Escape") {
-      // return to past
-      console.log("test");
+    } else if (event.key == 'Escape') {
+      // don't save new title
       // turn off editing
       editingTitle=false
     }
@@ -84,12 +81,12 @@
   }
 </style>
 
-  <div class="title-wrapper">
+  <div class='title-wrapper'>
     Title:
     {#if editingTitle}
-      <input class="title-input" bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
+      <input class='title-input' bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
     {:else}
-      <div class="title" class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
+      <div class='title' class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
         <span class:untitled>
           {#if untitled}
             Untitled Document

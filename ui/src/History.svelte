@@ -1,7 +1,8 @@
 <script>
-  import { requestedChanges, recordedChanges, committedChanges } from './stores.js';
-  import { afterUpdate } from 'svelte';
+  import { requestedChanges, recordedChanges, committedChanges } from './stores.js'
+  import { afterUpdate } from 'svelte'
   import HistoryEntry from './HistoryEntry.svelte'
+  
   export let changeToTextFn
 
   // returns a list of historyEntry objects with some text

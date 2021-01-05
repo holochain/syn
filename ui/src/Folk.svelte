@@ -1,9 +1,11 @@
 <script>
+  import { scribeStr, folks, connection } from './stores.js'
+  import { CSSifyHSL } from './colors.js'
+
   export let pubKeyStr = ''
   export let pubKey
   export let me = false
-  import { scribeStr, folks, connection } from './stores.js'
-  import { CSSifyHSL } from './colors.js'
+  
   $: scribe = pubKeyStr == $scribeStr
 
   function setUpHex(hexEl) {
