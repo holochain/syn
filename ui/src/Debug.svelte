@@ -15,6 +15,7 @@ ul {
       {:else}
         No connection
       {/if}
+    <li>lastCommitedContentHash: {$session ? $session.contentHashStr : ""}
     <li>session: {JSON.stringify($session)}
     <li>nextIndex: {$nextIndex}
     <li>scribe: {$scribeStr}

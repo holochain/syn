@@ -179,9 +179,7 @@
   let commitInProgress = false;
   let currentCommitHeaderHash;
   $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
-  let lastCommitedContentHash;
 
-  $: lastCommitedContentHashStr = arrayBufferToBase64(lastCommitedContentHash)
   $: folksPretty =  JSON.stringify(Object.keys($folks).map(f => f.slice(-4)))
 
   function addChangeAsScribe(change) {
@@ -249,9 +247,9 @@
 
   function commitNotice(commitInfo) {
     // make sure we are at the right place to be able to just move forward with the commit
-    if (lastCommitedContentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
+    if ($session.contentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
         $nextIndex == commitInfo.deltas_committed) {
-      lastCommitedContentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
+      $session.contentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
       committedChanges.update(c => c.concat($recordedChanges))
       $recordedChanges = []
     } else {
@@ -259,7 +257,7 @@
       console.log("commit.commit_content_hash:", arrayBufferToBase64(commitInfo.commit_content_hash))
       console.log("commit.previous_content_hash:", arrayBufferToBase64(commitInfo.previous_content_hash))
       console.log("commit.deltas_committed:", commitInfo.deltas_committed)
-      console.log("my lastCommitedContentHashStr", lastCommitedContentHashStr)
+      console.log("my $session.contentHashStr", $session.contentHashStr)
       console.log("my nextIndex", $nextIndex)
       // TODO resync
     }
@@ -290,6 +288,7 @@
     $session = sessionInfo
     $session.deltas = $session.deltas.map(d => JSON.parse(d))
     $session.snapshotHashStr = arrayBufferToBase64($session.snapshot_hash);
+    $session.contentHashStr = arrayBufferToBase64($session.content_hash);
     $session.scribeStr = arrayBufferToBase64($session.scribe);
     $scribeStr = $session.scribeStr
     console.log("session joined:", $session);
@@ -298,7 +297,6 @@
     newContent.meta[$connection.myTag] = 0
 
     $content = newContent
-    lastCommitedContentHash = $session.content_hash
     $recordedChanges = []
     // use the _recordDeltas function to get the undable changes loaded into the history
     // and then move these items into the committed changes
@@ -452,7 +450,7 @@
       updateParticipant(from, request.meta)
       let state = {
         snapshot: $session.snapshot_hash,
-        commit_content_hash: lastCommitedContentHash,
+        commit_content_hash: $session.content_hash,
         deltas: $recordedChanges.map(c => c.delta)
       };
       if (currentCommitHeaderHash) {
@@ -479,7 +477,7 @@
   function syncResp(stateForSync) {
     // Make sure that we are working off the same snapshot and commit
     const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
-    if (commitContentHashStr == lastCommitedContentHashStr) {
+    if (commitContentHashStr == $session.contentHashStr) {
       _recordDeltas(stateForSync.deltas);
     } else {
       console.log("WHOA, sync response has different current state assumptions")
@@ -496,14 +494,14 @@
       commitInProgress = true
       const newContentHash = await synHashContent($content);
       console.log("commiting from snapshot", $session.snapshotHashStr);
-      console.log("  prev_hash:", arrayBufferToBase64(lastCommitedContentHash));
+      console.log("  prev_hash:", $session.contentHashStr);
       console.log("   new_hash:", arrayBufferToBase64(newContentHash));
       const commit = {
         snapshot: $session.snapshot_hash,
         change: {
           deltas: $recordedChanges.map(c=>JSON.stringify(c.delta)),
           content_hash: newContentHash,
-          previous_change: lastCommitedContentHash,
+          previous_change: $session.content_hash,
           meta: {
             contributors: [],
             witnesses: [],
@@ -514,7 +512,9 @@
       }
       try {
         currentCommitHeaderHash = await callZome('commit', commit)
-        lastCommitedContentHash = newContentHash;
+        // if commit successfull we need to update the content hash and its string in the session
+        $session.content_hash = newContentHash;
+        $session.contentHashStr = arrayBufferToBase64($session.content_hash);
         committedChanges.update(c => c.concat($recordedChanges))
         $recordedChanges = []
       }
@@ -571,7 +571,6 @@
 <div>
   <h4>Syn data:</h4>
   <ul>
-    <li>lastCommitedContentHash: {lastCommitedContentHashStr}
     <li>sessions: {JSON.stringify(sessions ? sessions.map(s=>arrayBufferToBase64(s).slice(-4)) : undefined)}
   </ul>
 </div>
