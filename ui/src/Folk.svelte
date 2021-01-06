@@ -28,6 +28,7 @@
     --hex-border: 4px;
     --scribe-hex-width: calc(var(--folk-hex-width) - 2 * var(--hex-border));
     --scribe-hex-height: calc(var(--folk-hex-height) - 2 * var(--hex-border));
+    --scribe-scale: 0.8666
   }
   .folk {
     display: grid;
@@ -63,18 +64,7 @@
   }
   .scribe {
     margin: var(--hex-border) 0;
-    width: var(--scribe-hex-width);
-    height: var(--scribe-hex-height);
-    /* font-size of scribe hex scales by ratio of normal size to scribe size */
-    font-size: calc((52/60) * 1rem);
-  }
-  .scribe-color{
-    z-index: -10;
-    content: '';
-    width: calc(var(--scribe-hex-width) - (var(--hex-border)) * 2);
-    height: calc(var(--scribe-hex-height) - (var(--hex-border)) * 2);
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    position: absolute;
+    scale: var(--scribe-scale);
   }
   .me {
   }
@@ -83,14 +73,14 @@
   {#if scribe}
     <div class='scribe-wrapper'>
       <div use:setUpHex class='folk scribe' class:me>
-        <div class='scribe-color'></div>
+        <div class='folk-color'></div>
         {pubKeyStr.slice(-4)}
       </div>
       <div class='scribe-halo'></div>
     </div>
   {:else}
     <div use:setUpHex class='folk' class:me>
-      <div class='folk-color' class:scribe-color={scribe}></div>
+      <div class='folk-color'></div>
       {pubKeyStr.slice(-4)}
     </div>
   {/if}
