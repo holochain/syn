@@ -8,12 +8,16 @@
   let editingTitle = false
   function saveTitle() {
     if (editingTitle) {
-      let delta = { type: 'Title', value: titleBeingTyped}
-      dispatch('requestChange', [delta])
+      // only dispatch a changeReq if the title trying to be saved is different
+      // than the current title
+      if (titleBeingTyped !== $content.title) {
+        let delta = { type: 'Title', value: titleBeingTyped }
+        dispatch('requestChange', [delta])
+      }
       titleBeingTyped = ''
       editingTitle = false
     } else {
-      console.log("Can't saveTitle when it wasn't being edited!")
+      console.log("Can't run saveTitle when it wasn't being edited!")
     }
   }
 
@@ -30,7 +34,8 @@
 		if (event.key == 'Enter') {
       saveTitle()
     } else if (event.key == 'Escape') {
-      // don't save new title
+      // don't save new title & discard changes
+      titleBeingTyped = ''
       // turn off editing
       editingTitle=false
     }
@@ -81,19 +86,19 @@
   }
 </style>
 
-  <div class='title-wrapper'>
-    Title:
-    {#if editingTitle}
-      <input class='title-input' bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
-    {:else}
-      <div class='title' class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
-        <span class:untitled>
-          {#if untitled}
-            Untitled Document
-          {:else}
-            {$content.title}
-          {/if}
-        </span>
-      </div>
-    {/if}
-  </div>
+<div class='title-wrapper'>
+  Title:
+  {#if editingTitle}
+    <input class='title-input' bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
+  {:else}
+    <div class='title' class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
+      <span class:untitled>
+        {#if untitled}
+          Untitled Document
+        {:else}
+          {$content.title}
+        {/if}
+      </span>
+    </div>
+  {/if}
+</div>
