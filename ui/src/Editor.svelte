@@ -102,7 +102,7 @@
     display: inline;
     border-left: solid 2px; /* Should be the Folk's main color */
     margin-right: -2px;
-    z-index: 100;
+    z-index: 10;
     position: relative;
   }
 </style>

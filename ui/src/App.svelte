@@ -162,13 +162,14 @@
     text-align: left;
     grid-column: 1 / 2;
     overflow: hidden;
+    z-index: 90;
   }
 
   .handle {
     height: 1px;
     width: 100%;
     background-color: gray;
-    z-index: 1;
+    z-index: 100;
   }
 
   .handle::after {
@@ -180,7 +181,7 @@
     margin-bottom: -4px;
     background-color: transparent;
     cursor: ns-resize;
-    z-index: 2;
+    z-index: 101;
   }
 
   .debug-content {
@@ -189,6 +190,7 @@
     height: 100%;
     overflow-y: scroll;
     box-sizing: border-box;
+    z-index: 90;
   }
 
   body {

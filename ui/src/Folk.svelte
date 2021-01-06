@@ -5,7 +5,7 @@
   export let pubKeyStr = ''
   export let pubKey
   export let me = false
-  
+
   $: scribe = pubKeyStr == $scribeStr
 
   function setUpHex(hexEl) {
@@ -40,7 +40,7 @@
     cursor: pointer;
   }
   .folk-color {
-    z-index: -1;
+    z-index: -10;
     content: '';
     width: calc(var(--folk-hex-width) - (var(--hex-border)) * 2);
     height: calc(var(--folk-hex-height) - (var(--hex-border)) * 2);
@@ -54,7 +54,6 @@
     place-items: center;
   }
   .scribe-halo {
-    z-index: -2;
     width: var(--folk-hex-width);
     height: var(--folk-hex-height);
     /* https://www.desmos.com/calculator/bgt97otugr */
@@ -70,7 +69,7 @@
     font-size: calc((52/60) * 1rem);
   }
   .scribe-color{
-    z-index: -1;
+    z-index: -10;
     content: '';
     width: calc(var(--scribe-hex-width) - (var(--hex-border)) * 2);
     height: calc(var(--scribe-hex-height) - (var(--hex-border)) * 2);

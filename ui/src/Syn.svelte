@@ -540,7 +540,7 @@
 
   :global(.noscribe:after) {
   content: ' ';
-  z-index: 0;
+  z-index: 20;
   display: block;
   position: absolute;
   height: 100%;
