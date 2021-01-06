@@ -373,7 +373,7 @@
     if ($session.scribeStr == $connection.me) {
       addChangeAsScribe(change)
     } else {
-      console.log('change requested but I'm not the scribe.')
+      console.log("change requested but I'm not the scribe.")
     }
   }
 
@@ -423,7 +423,7 @@
   // handler for the change event
   function change(index, deltas) {
     if ($session.scribeStr == $connection.me) {
-        console.log('change received but I'm the scribe, so I'm ignoring this!')
+        console.log("change received but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log(`change arrived for ${index}:`, deltas)
       if ($nextIndex == index) {
@@ -473,7 +473,7 @@
       synSendHeartbeat(particpantsForScribeSignals(), data)
     }
     else {
-      console.log('syncReq received but I'm not the scribe!')
+      console.log("syncReq received but I'm not the scribe!")
     }
   }
 
@@ -526,7 +526,7 @@
       }
       commitInProgress = false
     } else {
-      alert('You ain't the scribe!')
+      alert("You ain't the scribe!")
     }
   }
 

@@ -13,7 +13,7 @@
       titleBeingTyped = ''
       editingTitle = false
     } else {
-      console.log('Can't saveTitle when it wasn't being edited!')
+      console.log("Can't saveTitle when it wasn't being edited!")
     }
   }
 
