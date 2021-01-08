@@ -90,18 +90,17 @@
 
   let resizeable
   let resizeHandle
-  const minPaneSize = 100
-  const maxPaneSize = document.documentElement.clientHeight - 10
+  const minDrawerSize = 100
+  const maxDrawerSize = document.documentElement.clientHeight - 10
   const initResizeable = (resizeableEl) => {
-    resizeableEl.style.setProperty('--max-height', `${maxPaneSize}px`)
-    resizeableEl.style.setProperty('--min-height', `${minPaneSize}px`)
+    resizeableEl.style.setProperty('--max-height', `${maxDrawerSize}px`)
+    resizeableEl.style.setProperty('--min-height', `${minDrawerSize}px`)
   }
 
-  const setPaneHeight = (height) => {
-    resizeable.style
-      .setProperty('--resizeable-height', `${height}px`)
+  const setDrawerHeight = (height) => {
+    resizeable.style.setProperty('--resizeable-height', `${height}px`)
   }
-  const getPaneHeight = () => {
+  const getDrawerHeight = () => {
     const pxHeight = getComputedStyle(resizeable)
       .getPropertyValue('--resizeable-height')
     return parseInt(pxHeight, 10)
@@ -110,20 +109,24 @@
   const startDragging = (event) => {
     event.preventDefault()
     const host = resizeable
-    const startingPaneHeight = getPaneHeight()
+    const startingDrawerHeight = getDrawerHeight()
     const yOffset = event.pageY
 
     const mouseDragHandler = (moveEvent) => {
       moveEvent.preventDefault()
       const primaryButtonPressed = moveEvent.buttons === 1
       if (!primaryButtonPressed) {
-        setPaneHeight(Math.min(Math.max(getPaneHeight(), minPaneSize), maxPaneSize))
+        setDrawerHeight(Math.min(Math.max(getDrawerHeight(), minDrawerSize), maxDrawerSize))
         window.removeEventListener('pointermove', mouseDragHandler)
         return
       }
-      setPaneHeight((yOffset - moveEvent.pageY ) + startingPaneHeight)
+      setDrawerHeight((yOffset - moveEvent.pageY ) + startingDrawerHeight)
     }
     const remove = window.addEventListener('pointermove', mouseDragHandler)
+  }
+
+  const hideDrawer = () => {
+    resizeable.style.setProperty('--resizeable-height', `${height}px`)
   }
 
 </script>
