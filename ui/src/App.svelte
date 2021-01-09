@@ -88,17 +88,18 @@
   let syn
 
 
+  // The debug drawer's ability to resized and hidden
   let resizeable
   let resizeHandle
-  const minDrawerSize = 100
-  const maxDrawerSize = document.documentElement.clientHeight - 10
+  const minDrawerSize = 0
+  const maxDrawerSize = document.documentElement.clientHeight - 30
   const initResizeable = (resizeableEl) => {
     resizeableEl.style.setProperty('--max-height', `${maxDrawerSize}px`)
     resizeableEl.style.setProperty('--min-height', `${minDrawerSize}px`)
   }
 
   const setDrawerHeight = (height) => {
-    resizeable.style.setProperty('--resizeable-height', `${height}px`)
+    document.documentElement.style.setProperty('--resizeable-height', `${height}px`)
   }
   const getDrawerHeight = () => {
     const pxHeight = getComputedStyle(resizeable)
@@ -120,13 +121,25 @@
         window.removeEventListener('pointermove', mouseDragHandler)
         return
       }
-      setDrawerHeight((yOffset - moveEvent.pageY ) + startingDrawerHeight)
+      setDrawerHeight(Math.min(Math.max((yOffset - moveEvent.pageY ) + startingDrawerHeight, minDrawerSize), maxDrawerSize))
     }
     const remove = window.addEventListener('pointermove', mouseDragHandler)
   }
 
+  let drawerHidden = false
   const hideDrawer = () => {
-    resizeable.style.setProperty('--resizeable-height', `${height}px`)
+    drawerHidden = true
+  }
+  const showDrawer = () => {
+    drawerHidden = false
+  }
+
+  let tabShown = false;
+  const showTab = () => {
+    tabShown = true
+  }
+  const hideTab = () => {
+    tabShown = false
   }
 
 </script>
@@ -152,8 +165,12 @@
     grid-row: 1/4;
   }
 
-  .debug-drawer {
+  :global(:root) {
     --resizeable-height: 200px;
+    --tab-width: 60px;
+  }
+
+  .debug-drawer {
     width: 100%;
     box-sizing: border-box;
     height: var(--resizeable-height);
@@ -166,6 +183,11 @@
     grid-column: 1 / 2;
     overflow: hidden;
     z-index: 90;
+  }
+
+  .hidden {
+    height: 0;
+    min-height: 0;
   }
 
   .handle {
@@ -185,6 +207,51 @@
     background-color: transparent;
     cursor: ns-resize;
     z-index: 101;
+  }
+
+  /* tab styling reverse-engineered from Atom */
+  .tab {
+    z-index: 130;
+    position: absolute;
+    width: var(--tab-width);
+    height: calc(var(--tab-width) / 2);
+    left: calc(50% - (var(--tab-width) / 2));
+    bottom: var(--resizeable-height);
+    overflow: hidden;
+    margin-bottom: -2px;
+    border-top-left-radius: calc(var(--tab-width) / 2);
+    border-top-right-radius: calc(var(--tab-width) / 2);
+
+    pointer-events: none;
+  }
+
+  .tab-inner {
+    position: absolute;
+    box-sizing: border-box;  /* borders included in size */
+    width: var(--tab-width);
+    height: var(--tab-width);
+    background: hsla(180, 30%, 85%);
+    border: 1px solid gray;
+    border-radius: calc(var(--tab-width) / 2);
+    cursor: pointer;
+
+    top: calc(var(--tab-width) / 2);
+    transition: transform 0.2s ease-out 0.1s
+  }
+
+  .tab-shown {
+    pointer-events: all;
+  }
+
+  .tab-inner-shown {
+    transform: translateY(-50%);
+    transition: transform 0.2s ease-out 0s;
+  }
+
+  /* allow the tab to pop up when drawer is hidden */
+  .tab-drawer-hidden {
+    bottom: 0;
+    pointer-events: all;
   }
 
   .debug-content {
@@ -234,7 +301,10 @@
   <Folks />
 </div>
 
-<div class='debug-drawer' bind:this={resizeable} use:initResizeable>
+<div class='tab' class:tab-shown={tabShown} class:tab-drawer-hidden={drawerHidden} on:mouseenter={showTab} on:mouseleave={hideTab}>
+  <div class='tab-inner' class:tab-inner-shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}></div>
+</div>
+<div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab} class:hidden={drawerHidden}>
   <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
   <div class='debug-content'>
     <History changeToTextFn={changeToText}/>
