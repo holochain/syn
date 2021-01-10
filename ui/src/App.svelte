@@ -239,17 +239,17 @@
     transition: transform 0.2s ease-out 0.1s
   }
 
-  .tab-shown {
+  .tab.shown {
     pointer-events: all;
   }
 
-  .tab-inner-shown {
+  .tab-inner.shown {
     transform: translateY(-50%);
     transition: transform 0.2s ease-out 0s;
   }
 
   /* allow the tab to pop up when drawer is hidden */
-  .tab-drawer-hidden {
+  .tab.drawer-hidden {
     bottom: 0;
     pointer-events: all;
   }
@@ -301,8 +301,8 @@
   <Folks />
 </div>
 
-<div class='tab' class:tab-shown={tabShown} class:tab-drawer-hidden={drawerHidden} on:mouseenter={showTab} on:mouseleave={hideTab}>
-  <div class='tab-inner' class:tab-inner-shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}></div>
+<div class='tab' class:shown={tabShown} class:drawer-hidden={drawerHidden} on:mouseenter={showTab} on:mouseleave={hideTab}>
+  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}></div>
 </div>
 <div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab} class:hidden={drawerHidden}>
   <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
