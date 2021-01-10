@@ -232,8 +232,10 @@
     height: var(--tab-width);
     background: hsla(180, 30%, 85%);
     border: 1px solid gray;
+    color: hsla(180, 20%, 50%, 1); /* color of chevron */
     border-radius: calc(var(--tab-width) / 2);
     cursor: pointer;
+    text-align: center;
 
     top: calc(var(--tab-width) / 2);
     transition: transform 0.2s ease-out 0.2s;
@@ -252,6 +254,10 @@
   .tab.drawer-hidden {
     bottom: 0;
     pointer-events: all;
+  }
+
+  .tab-icon {
+    margin-top: 9px;
   }
 
   .debug-content {
@@ -282,6 +288,10 @@
   }
 </style>
 
+<svelte:head>
+  <script src='https://kit.fontawesome.com/80d72fa568.js' crossorigin='anonymous'></script>
+</svelte:head>
+
 <div class='toolbar'>
   <h1>SynText</h1>
 <div class:noscribe>
@@ -302,7 +312,9 @@
 </div>
 
 <div class='tab' class:shown={tabShown} class:drawer-hidden={drawerHidden} on:mouseenter={showTab} on:mouseleave={hideTab}>
-  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}></div>
+  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}>
+    <i class:drawer-hidden={drawerHidden} class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+  </div>
 </div>
 <div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab} class:hidden={drawerHidden}>
   <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
