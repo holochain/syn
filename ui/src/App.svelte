@@ -92,7 +92,7 @@
   let resizeable
   let resizeHandle
   const minDrawerSize = 0
-  const maxDrawerSize = document.documentElement.clientHeight - 30
+  const maxDrawerSize = document.documentElement.clientHeight - 30 - 10
   const initResizeable = (resizeableEl) => {
     resizeableEl.style.setProperty('--max-height', `${maxDrawerSize}px`)
     resizeableEl.style.setProperty('--min-height', `${minDrawerSize}px`)
@@ -176,7 +176,7 @@
     height: var(--resizeable-height);
     min-height: var(--min-height);
     max-height: var(--max-height);
-    background: hsla(180, 30%, 85%);
+    background: hsla(180, 30%, 85%, 1);
     position: absolute;
     bottom: 0;
     text-align: left;
@@ -193,7 +193,7 @@
   .handle {
     height: 1px;
     width: 100%;
-    background-color: gray;
+    background-color: hsla(180, 15%, 65%, 1);
     z-index: 100;
   }
 
@@ -231,7 +231,7 @@
     width: var(--tab-width);
     height: var(--tab-width);
     background: hsla(180, 30%, 85%);
-    border: 1px solid gray;
+    border: 1px solid hsla(180, 20%, 65%, 1);
     color: hsla(180, 20%, 50%, 1); /* color of chevron */
     border-radius: calc(var(--tab-width) / 2);
     cursor: pointer;

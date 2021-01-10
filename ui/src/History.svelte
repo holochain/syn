@@ -37,10 +37,10 @@
 <style>
   .history {
     width: auto;
-    border: 1px solid lightgrey;
+    border: 1px solid hsla(0, 0%, 0%, 0.25);
     border-radius: 4px;
     padding: .5em .5em 0;
-    background-color: hsla(0, 0%, 100%, .25)
+    background-color: hsla(0, 0%, 100%, .25);
   }
   .history-entries {
     display: flex;
