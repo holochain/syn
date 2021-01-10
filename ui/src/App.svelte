@@ -236,7 +236,7 @@
     cursor: pointer;
 
     top: calc(var(--tab-width) / 2);
-    transition: transform 0.2s ease-out 0.1s
+    transition: transform 0.2s ease-out 0.2s;
   }
 
   .tab.shown {
