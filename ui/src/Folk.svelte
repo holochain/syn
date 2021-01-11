@@ -4,9 +4,14 @@
 
   export let pubKeyStr = ''
   export let pubKey
+  export let lastSeen
   export let me = false
 
   $: scribe = pubKeyStr == $scribeStr
+
+  // const outOfSessionTimout = 30 * 1000
+  const outOfSessionTimout = 8 * 1000 // testing code :)
+  $: outOfSession = (!$folks[pubKeyStr] || (Date.now() - $folks[pubKeyStr].lastSeen) > outOfSessionTimout) && !me
 
   function setUpHex(hexEl) {
     let colors
@@ -68,18 +73,28 @@
   }
   .me {
   }
+
+  .out-of-session { /* folk hex outline */
+    background-color: goldenrod !important;
+  }
+  .out-of-session div { /* folk-color */
+    background-color: goldenrodyellow !important;
+    /* FIXME: this should grey out the hex instead of make it yellow :)*/
+  }
+
 </style>
 {#if $connection}
+  {outOfSession}
   {#if scribe}
     <div class='scribe-wrapper'>
-      <div use:setUpHex class='folk scribe' class:me>
+      <div use:setUpHex class='folk scribe' class:me class:out-of-session={outOfSession}>
         <div class='folk-color'></div>
         {pubKeyStr.slice(-4)}
       </div>
       <div class='scribe-halo'></div>
     </div>
   {:else}
-    <div use:setUpHex class='folk' class:me>
+    <div use:setUpHex class='folk' class:me class:out-of-session={outOfSession}>
       <div class='folk-color'></div>
       {pubKeyStr.slice(-4)}
     </div>

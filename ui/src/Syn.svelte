@@ -25,8 +25,13 @@
   let heartbeatInterval = 2  * 1000 // for testing ;)
   // Send heartbeat to scribe every [heartbeat interval]
   let heart = window.setInterval(async () => {
-    if ($session && $session.scribeStr != $connection.me) {
-      await synSendHeartbeat('Hello')
+    if ($session) {
+      if ($session.scribeStr == $connection.me) {
+        // Scribe's heartbeat nudges the folks store so svelte detects an update
+        $folks = $folks
+      } else {
+        await synSendHeartbeat('Hello')
+      }
     }
   }, heartbeatInterval)
 
@@ -382,15 +387,8 @@
       console.log("heartbeat received but I'm not the scribe.")
     }
     else {
-      // TODO: examine participant's data and see if we need to send out a folk-lore update
-      if (data.participants) {
-        Object.values(data.participants).forEach(
-          p => {
-            console.log('p', p)
-            updateParticipant(p.pubKey, p.meta)
-          }
-        )
-      }
+      // I am the scribe and I've recieved a heartbeat from a concerned Folk
+      updateFolkLastSeen(from)
     }
   }
 
@@ -480,7 +478,10 @@
 
   function updateParticipant(pubKey, meta) {
     const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (!(pubKeyStr in $folks) && (pubKeyStr != $connection.me)) {
+    if (pubKeyStr == $connection.me) {
+      return
+    }
+    if (!(pubKeyStr in $folks)) {
       const colors = getFolkColors(pubKey)
       $folks[pubKeyStr] = {pubKey, meta, colors}
       $folks = $folks
@@ -488,6 +489,18 @@
       $folks[pubKeyStr].meta = meta
       $folks = $folks
     }
+  }
+
+  function updateFolkLastSeen(pubKey) {
+    const pubKeyStr = arrayBufferToBase64(pubKey)
+    if (pubKeyStr == $connection.me) {
+      return
+    }
+    if (!(pubKeyStr in $folks)) {
+      updateParticipant(pubKey, undefined)
+    }
+    // see the folk
+    $folks[pubKeyStr].lastSeen = Date.now()
   }
 
   // handler for the syncReq event
