@@ -27,9 +27,16 @@
   let heart = window.setInterval(async () => {
     if ($session) {
       if ($session.scribeStr == $connection.me) {
-        // Scribe's heartbeat nudges the folks store so svelte detects an update
-        $folks = $folks
+        // examine folks last seen time and see if any have crossed the session out-of-session
+        // timeout so we can tell everybody else about them having dropped.
+        let gone = updateRecentlyTimedOutFolks()
+        if (gone.length > 0) {
+          synSendFolkLore(particpantsForScribeSignals(), {gone})
+          // Scribe's heartbeat nudges the folks store so svelte detects an update
+          $folks = $folks
+        }
       } else {
+        // I'm not the scribe so send them a heartbeat
         await synSendHeartbeat('Hello')
       }
     }
@@ -120,7 +127,17 @@
   }
 
   function particpantsForScribeSignals() {
+    // TODO: don't include those not in session, i.e. not seen recently
     return Object.values($folks).map(v=>v.pubKey)
+  }
+
+  // updates folks in-session status by checking their last-seen time
+  function updateRecentlyTimedOutFolks() {
+    let result = []
+    for (const [keStr, folk] of Object.entries($folks)) {
+
+    }
+    return result
   }
 
   async function synSendChange(index, deltas) {
@@ -508,6 +525,7 @@
     const from = request.from
     if ($session.scribeStr == $connection.me) {
       updateParticipant(from, request.meta)
+      updateFolkLastSeen(from)
       let state = {
         snapshot: $session.snapshot_hash,
         commit_content_hash: $session.content_hash,
