@@ -327,7 +327,7 @@ enum SignalPayload {
     SyncResp(StateForSync),
     ChangeReq(Change),
     Change(Change),
-    Heartbeat(String),   // signal to scribe for maintaining participant info
+    Heartbeat((AgentPubKey, String)),   // signal to scribe for maintaining participant info
     FolkLore(String),     // signal to participants to update other participants info
     CommitNotice(CommitInfo) // signal for sennding commit and content hash after commit
 }
@@ -425,7 +425,8 @@ pub struct SendHeartbeatInput {
 
 #[hdk_extern]
 fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
-    remote_signal(&SignalPayload::Heartbeat(input.data), vec![input.scribe])?;
+    let me = agent_info()?.agent_latest_pubkey;
+    remote_signal(&SignalPayload::Heartbeat((me, input.data)), vec![input.scribe])?;
     Ok(())
 }
 

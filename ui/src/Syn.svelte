@@ -21,6 +21,15 @@
     return window.btoa(binary)
   }
 
+  // let heartbeatInterval = 15 * 1000 // 15 seconds
+  let heartbeatInterval = 2  * 1000 // for testing ;)
+  // Send heartbeat to scribe every [heartbeat interval]
+  let heart = window.setInterval(async () => {
+    if ($session && $session.scribeStr != $connection.me) {
+      await synSendHeartbeat('Hello')
+    }
+  }, heartbeatInterval)
+
   let reqCounter = 0
   let reqTimeout = 1000
 
@@ -50,6 +59,7 @@
       }
     }
   }, reqTimeout/2)
+
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   export function requestChange(deltas) {
@@ -250,8 +260,9 @@
       }
     case 'Heartbeat':
       {
-        let data = decodeJson(signal.data.payload.signal_payload)
-        heartbeat(data)
+        let [from, jsonData] = signal.data.payload.signal_payload
+        const data = decodeJson(jsonData)
+        heartbeat(from, data)
         break
       }
     case 'CommitNotice':
@@ -365,9 +376,9 @@
   }
 
   // handler for the heartbeat event
-  function heartbeat(data) {
-    console.log('got heartbeat', data)
-    if ($session.scribeStr == $connection.me) {
+  function heartbeat(from, data) {
+    console.log('got heartbeat', data, 'from:', from)
+    if ($session.scribeStr != $connection.me) {
       console.log("heartbeat received but I'm not the scribe.")
     }
     else {
@@ -494,7 +505,7 @@
       }
       // send a sync response to the sender
       synSendSyncResp(from, state)
-      // and send everybody a heartbeat with new participants
+      // and send everybody a folk lore p2p message with new participants
       const p = {...$folks}
       p[$connection.me] = {
         pubKey: $connection.agentPubKey
