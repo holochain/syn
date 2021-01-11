@@ -4,15 +4,11 @@
 
   export let pubKeyStr = ''
   export let pubKey
-  export let lastSeen
   export let me = false
 
   $: scribe = pubKeyStr == $scribeStr
 
-  // const outOfSessionTimout = 30 * 1000
-  const outOfSessionTimout = 8 * 1000 // testing code :)
-  $: outOfSession = (!$folks[pubKeyStr] || (Date.now() - $folks[pubKeyStr].lastSeen) > outOfSessionTimout) && !me
-
+  $: outOfSession = (!$folks[pubKeyStr] ||  !$folks[pubKeyStr].inSession) && !me
   function setUpHex(hexEl) {
     let colors
     if (me) {
@@ -84,7 +80,6 @@
 
 </style>
 {#if $connection}
-  {outOfSession}
   {#if scribe}
     <div class='scribe-wrapper'>
       <div use:setUpHex class='folk scribe' class:me class:out-of-session={outOfSession}>

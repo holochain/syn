@@ -31,7 +31,7 @@
         // timeout so we can tell everybody else about them having dropped.
         let gone = updateRecentlyTimedOutFolks()
         if (gone.length > 0) {
-          synSendFolkLore(particpantsForScribeSignals(), {gone})
+          synSendFolkLore(folksForScribeSignals(), {gone})
           // Scribe's heartbeat nudges the folks store so svelte detects an update
           $folks = $folks
         }
@@ -122,26 +122,33 @@
   }
 
   async function synSendFolkLore(participants, data) {
-    data = encodeJson(data)
-    return callZome('send_folk_lore', {participants, data})
+    if (participants.length > 0) {
+      data = encodeJson(data)
+      return callZome('send_folk_lore', {participants, data})
+    }
   }
 
-  function particpantsForScribeSignals() {
-    // TODO: don't include those not in session, i.e. not seen recently
-    return Object.values($folks).map(v=>v.pubKey)
+  function folksForScribeSignals() {
+    return Object.values($folks).filter(v=>v.inSession).map(v=>v.pubKey)
   }
+
+  // const outOfSessionTimout = 30 * 1000
+  const outOfSessionTimout = 8 * 1000 // testing code :)
 
   // updates folks in-session status by checking their last-seen time
   function updateRecentlyTimedOutFolks() {
     let result = []
-    for (const [keStr, folk] of Object.entries($folks)) {
-
+    for (const [pubKeyStr, folk] of Object.entries($folks)) {
+      if (folk.inSession && (Date.now() - $folks[pubKeyStr].lastSeen > outOfSessionTimout)) {
+        folk.inSession = false
+        result.push($folks[pubKeyStr].pubKey)
+      }
     }
     return result
   }
 
   async function synSendChange(index, deltas) {
-    const participants = particpantsForScribeSignals()
+    const participants = folksForScribeSignals()
     if (participants.length > 0) {
       console.log(`Sending change for ${index} to ${folksPretty}:`, deltas)
       deltas = deltas.map(d=>JSON.stringify(d))
@@ -246,7 +253,7 @@
 
   function holochainSignalHandler(signal) {
     // ignore signals not meant for me
-    if (arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
+    if (!$connection || arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
       return
     }
     console.log('Got Signal', signal.data.payload.signal_name, signal)
@@ -415,6 +422,13 @@
       console.log("folklore received but I'm the scribe!")
     }
     else {
+      if (data.gone) {
+        Object.values(data.participants).forEach(
+          pubKey => {
+            updateFolkLastSeen(pubKey, true)
+          }
+        )
+      }
       if (data.participants) {
         Object.values(data.participants).forEach(
           p => {
@@ -508,7 +522,7 @@
     }
   }
 
-  function updateFolkLastSeen(pubKey) {
+  function updateFolkLastSeen(pubKey, gone) {
     const pubKeyStr = arrayBufferToBase64(pubKey)
     if (pubKeyStr == $connection.me) {
       return
@@ -516,8 +530,13 @@
     if (!(pubKeyStr in $folks)) {
       updateParticipant(pubKey, undefined)
     }
-    // see the folk
-    $folks[pubKeyStr].lastSeen = Date.now()
+    if (gone) {
+      $folks[pubKeyStr].inSession = false
+    } else {
+      // see the folk
+      $folks[pubKeyStr].lastSeen = Date.now()
+      $folks[pubKeyStr].inSession = true
+    }
   }
 
   // handler for the syncReq event
@@ -544,7 +563,7 @@
       const data = {
         participants: p
       }
-      synSendFolkLore(particpantsForScribeSignals(), data)
+      synSendFolkLore(folksForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -586,7 +605,7 @@
             app_specific: null
           }
         },
-        participants: particpantsForScribeSignals()
+        participants: folksForScribeSignals()
       }
       try {
         currentCommitHeaderHash = await callZome('commit', commit)
