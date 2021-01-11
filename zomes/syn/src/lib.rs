@@ -327,7 +327,8 @@ enum SignalPayload {
     SyncResp(StateForSync),
     ChangeReq(Change),
     Change(Change),
-    Heartbeat(String),   // signal for maintaining latency info and other metadata
+    Heartbeat(String),   // signal to scribe for maintaining participant info
+    FolkLore(String),     // signal to participants to update other participants info
     CommitNotice(CommitInfo) // signal for sennding commit and content hash after commit
 }
 
@@ -415,15 +416,29 @@ fn send_change(input:SendChangeInput) -> SynResult<()> {
     Ok(())
 }
 
-/// Input to the send change response call
+/// Input to the send heartbeat call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SendHeartbeatInput {
-    pub participants: Vec<AgentPubKey>,
+    pub scribe: AgentPubKey,
     pub data: String,
 }
 
 #[hdk_extern]
 fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
-    remote_signal(&SignalPayload::Heartbeat(input.data), input.participants)?;
+    remote_signal(&SignalPayload::Heartbeat(input.data), vec![input.scribe])?;
+    Ok(())
+}
+
+
+/// Input to the send folklore call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct SendFolkLoreInput {
+    pub participants: Vec<AgentPubKey>,
+    pub data: String,
+}
+
+#[hdk_extern]
+fn send_folk_lore(input:SendFolkLoreInput) -> SynResult<()> {
+    remote_signal(&SignalPayload::FolkLore(input.data), input.participants)?;
     Ok(())
 }

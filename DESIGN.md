@@ -23,11 +23,12 @@ Small collaborative teams want to work real-time on text documents, Kanban board
 
 **Scribe**: a "Scribe" (or leader in usual consensus talk) is one chosen participant who takes on the role of collecting Deltas and making Commits. Various possibilities exist for how to select a Scribe. Probably best is choosing the lowest network latency participant (determined by the Heartbeat health-check) or choosing the most active participant so that they get the best user experience.
 
-**Heartbeat:** Session participants connect with each other through a regular "Heartbeat" to assemble latency information, and to maintain awareness of Session status.
+**Heartbeat:** Session participants connect with the scribe through a regular "Heartbeat" to assemble latency information, and to maintain sharing of participant status during a Session.
 
+**P2P Message:** a generalized message between participant nodes for app-specific coordination not covered by Syn protocols.
 
 ### Initialization
-All nodes add a link to a "Users" anchor pointing to their agent pub key so that participating agents can be bootstrapped.
+All nodes add a link to a "Folks" anchor pointing to their agent pub key so that participating agents can be bootstrapped.
 
 ### Entries
 #### Content Change (aka Commit)
@@ -62,13 +63,14 @@ All signals are implemented using fire-and-forget remote_signal
 - `CommitNotice(CommitInfo)`: Scribe -> Participants.  When making a Commit, Scribe sends a Commit Notice with the info needed by the participants to update state.  This can be used by participants to resync if they missed any Deltas.
 - `SycnReq()` Participant -> Scribe: request latest state for joining/syncing.
 - `SyncResp(SnapshotHash, CommitHash, Vec<Delta>)`: Scribe -> Participant.  Respond with the data needed for a joining/syncing participant to build the current Session's full state.
-
+- `Heartbeat`, Participant -> Scribe: regular message to maintain session presence
+- `FolkLore`, Scribe -> Participant: notification of changes of presence of participants
 
 ### Sessions
 Making a Session is as simple as designating a Scribe.  Joining a Session is finding out who the Scribe is, or self-declaring as such if you can't find anybody.  To work well this really requires Holochain's upcoming ephemeral store feature, but in the mean time we simply commit Session entries which are linked off an anchor, and use the following algorithm:
 1. Get recent Sessions (`get-links`)
 2. Send the Scribes of these sessions `SyncReq()`s, in order, until you get a response, which will allow you to build the Session state and start sending Deltas to the Scribe who responded.
-3. If this doesn't work, fall back to requesting from other nodes on the "Users" list.
+3. If this doesn't work, fall back to requesting from other nodes on the "Folks" list.
 4. If still nobody replies with a `SyncResp`, assume you are offline or an active Session can't be found.  Look up Snapshots from the "Snapshots" anchor and choose one to start from. (This is probably different in an app-specific way; it could be the latest Snapshot, or require analysis of the Session, or User intervention.)
 5. Create a new Session with yourself as Scribe (note that the human may request skipping to this right away if they know they are offline)
 ```rust

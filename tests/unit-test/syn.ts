@@ -252,23 +252,32 @@ module.exports = (orchestrator) => {
         t.deepEqual(a_sig.signal_payload, [2, deltas]) // delta_matches
         t.deepEqual(b_sig.signal_payload, [2, deltas]) // delta_matches
 
-        await me.call('syn', 'send_heartbeat', {
-            participants: [alice_pubkey, bob_pubkey],
+
+        await alice.call('syn', 'send_heartbeat', {
+            scribe: me_pubkey,
             data: "Hello"})
+        await delay(500) // make time for signal to arrive
+        let me_sig = me_signals[3]
+        t.equal(me_sig.signal_name, "Heartbeat")
+        t.deepEqual(me_sig.signal_payload, "Hello")
+
+        await me.call('syn', 'send_folk_lore', {
+            participants: [alice_pubkey, bob_pubkey],
+            data: "Alice said hello"})
         await delay(500) // make time for signal to arrive
 
         a_sig = alice_signals[2]
         b_sig = bob_signals[1]
-        t.equal(a_sig.signal_name, "Heartbeat")
-        t.equal(b_sig.signal_name, "Heartbeat")
-        t.deepEqual(a_sig.signal_payload, "Hello")
-        t.deepEqual(b_sig.signal_payload, "Hello")
+        t.equal(a_sig.signal_name, "FolkLore")
+        t.equal(b_sig.signal_name, "FolkLore")
+        t.deepEqual(a_sig.signal_payload, "Alice said hello")
+        t.deepEqual(b_sig.signal_payload, "Alice said hello")
 
         // alice asks for a sync request
         await alice.call('syn', 'send_sync_request', {
             scribe: me_pubkey})
         await delay(500) // make time for signal to arrive
-        const me_sig = me_signals[3]
+        me_sig = me_signals[4]
         t.equal(me_sig.signal_name, "SyncReq")
 
     })

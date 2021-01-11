@@ -94,9 +94,14 @@
     return callZome('send_change_request', {scribe: $session.scribe, change: [index, deltas]})
   }
 
-  async function synSendHeartbeat(participants, data) {
+  async function synSendHeartbeat(data) {
     data = encodeJson(data)
-    return callZome('send_heartbeat', {participants, data})
+    return callZome('send_heartbeat', {scribe: $session.scribe, data})
+  }
+
+  async function synSendFolkLore(participants, data) {
+    data = encodeJson(data)
+    return callZome('send_folk_lore', {participants, data})
   }
 
   function particpantsForScribeSignals() {
@@ -237,10 +242,18 @@
         change(index, deltas)
         break
       }
+    case 'FolkLore':
+      {
+        let data = decodeJson(signal.data.payload.signal_payload)
+        folklore(data)
+        break
+      }
     case 'Heartbeat':
-      let data = decodeJson(signal.data.payload.signal_payload)
-      heartbeat(data)
-      break
+      {
+        let data = decodeJson(signal.data.payload.signal_payload)
+        heartbeat(data)
+        break
+      }
     case 'CommitNotice':
       commitNotice(signal.data.payload.signal_payload)
     }
@@ -355,6 +368,25 @@
   function heartbeat(data) {
     console.log('got heartbeat', data)
     if ($session.scribeStr == $connection.me) {
+      console.log("heartbeat received but I'm not the scribe.")
+    }
+    else {
+      // TODO: examine participant's data and see if we need to send out a folk-lore update
+      if (data.participants) {
+        Object.values(data.participants).forEach(
+          p => {
+            console.log('p', p)
+            updateParticipant(p.pubKey, p.meta)
+          }
+        )
+      }
+    }
+  }
+
+  function folklore(data) {
+    console.log('got folklore', data)
+    if ($session.scribeStr == $connection.me) {
+      console.log("folklore received but I'm the scribe!")
     }
     else {
       if (data.participants) {
@@ -470,7 +502,7 @@
       const data = {
         participants: p
       }
-      synSendHeartbeat(particpantsForScribeSignals(), data)
+      synSendFolkLore(particpantsForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
