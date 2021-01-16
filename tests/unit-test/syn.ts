@@ -281,6 +281,11 @@ module.exports = (orchestrator) => {
         me_sig = me_signals[4]
         t.equal(me_sig.signal_name, "SyncReq")
 
+        // confirm that all agents got added to the folks anchor
+        // TODO figure out why init doesn't happen immediately.
+        let folks = await me.call('syn', 'get_folks')
+        t.equal(folks.length, 3)
+
     })
 }
 
