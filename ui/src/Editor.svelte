@@ -10,7 +10,7 @@
   }
 
   let editor
-  $: myTag = $connection ? $connection.myTag : ''
+  $: myTag = ($connection && $connection.syn) ? $connection.syn.myTag : ''
   $: editor_content1 = $content.body.slice(0, getLoc(myTag))
   $: editor_content2 = $content.body.slice(getLoc(myTag))
 
@@ -80,8 +80,8 @@
   $: {
     // wait for cursor and connection and color inside connection to exist
     // before updating the cursor color
-    if (cursor && $connection && $connection.myColors) {
-      cursor.style['border-color'] = CSSifyHSL($connection.myColors.primary)
+    if (cursor && $connection && $connection.syn && $connection.syn.myColors) {
+      cursor.style['border-color'] = CSSifyHSL($connection.syn.myColors.primary)
     }
   }
 

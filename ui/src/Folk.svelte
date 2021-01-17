@@ -12,7 +12,7 @@
   function setUpHex(hexEl) {
     let colors
     if (me) {
-      colors = $connection.myColors
+      colors = $connection.syn.myColors
     } else {
       colors = $folks[pubKeyStr].colors
     }
@@ -79,7 +79,7 @@
   }
 
 </style>
-{#if $connection}
+{#if $connection && $connection.syn}
   {#if scribe}
     <div class='scribe-wrapper'>
       <div use:setUpHex class='folk scribe' class:me class:out-of-session={outOfSession}>

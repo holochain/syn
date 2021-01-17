@@ -1,8 +1,12 @@
 <script>
-  import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
+  import { nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
   import { createEventDispatcher } from 'svelte'
   import {decodeJson, encodeJson} from './json.js'
   import { getFolkColors } from './colors.js'
+  import { Syn, Connection } from './syn.js'
+
+//  let x = new Syn()
+  let session// = x.session
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn
@@ -26,7 +30,7 @@
   // Send heartbeat to scribe every [heartbeat interval]
   let heart = window.setInterval(async () => {
     if ($session) {
-      if ($session.scribeStr == $connection.me) {
+      if ($session.scribeStr == $connection.syn.me) {
         // examine folks last seen time and see if any have crossed the session out-of-session
         // timeout so we can tell everybody else about them having dropped.
         let gone = updateRecentlyTimedOutFolks()
@@ -77,7 +81,7 @@
   export function requestChange(deltas) {
 
     // any requested made by the scribe should be recorded immediately
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
       const index = $nextIndex
       _recordDeltas(deltas)
       synSendChange(index,deltas)
@@ -87,7 +91,7 @@
 
       // create a unique id for each change
       // TODO: this should be part of actual changeReqs
-      const changeId = $connection.myTag+'.'+reqCounter
+      const changeId = $connection.syn.myTag+'.'+reqCounter
       const changeAt = Date.now()
 
       // we want to apply this to current nextIndex plus any previously
@@ -160,14 +164,6 @@
     return callZome('send_sync_request', {scribe: $session.scribe})
   }
 
-  async function synGetSessions() {
-    return callZome('get_sessions')
-  }
-
-  async function synGetFolks() {
-    return callZome('get_folks')
-  }
-
   async function synNewSession(content) {
     return callZome('new_session', {content})
   }
@@ -189,7 +185,7 @@
   }
 
   async function callZome(fn_name, payload, timeout) {
-    if (!$connection) {
+    if (!$connection || !$connection.syn) {
       console.log('callZome called when disconnected from conductor')
       return
     }
@@ -199,10 +195,10 @@
       const result = await $connection.appClient.callZome(
         {
           cap: null,
-          cell_id: $connection.cellId,
+          cell_id: $connection.syn.cellId,
           zome_name,
           fn_name,
-          provenance: $connection.agentPubKey,
+          provenance: $connection.syn.agentPubKey,
           payload
         },
         timeout
@@ -257,7 +253,7 @@
 
   function holochainSignalHandler(signal) {
     // ignore signals not meant for me
-    if (!$connection || arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
+    if (!$connection || arrayBufferToBase64(signal.data.cellId[1]) != $connection.syn.me) {
       return
     }
     console.log('Got Signal', signal.data.payload.signal_name, signal)
@@ -322,6 +318,7 @@
 
   }
 
+  /*
   async function setupConnection(appClient) {
     $connection = {appClient}
     const appInfo = await appClient.appInfo({ installed_app_id: appId })
@@ -342,7 +339,7 @@
       Dna
     }
     console.log('connection active:', $connection)
-  }
+  }*/
 
   function setupSession(sessionInfo) {
     $session = sessionInfo
@@ -354,7 +351,7 @@
     console.log('session joined:', $session)
     const newContent = {... $session.snapshot_content} // clone so as not to pass by ref
     newContent.meta = {}
-    newContent.meta[$connection.myTag] = 0
+    newContent.meta[$connection.syn.myTag] = 0
 
     $content = newContent
     $recordedChanges = []
@@ -377,32 +374,23 @@
 
   function clearState() {
     $scribeStr = ''
-    $connection = undefined
-    $folks = {}
-    $content = {title:'', body:''}
-    $requestedChanges = []
-    $recordedChanges = []
-    $committedChanges = []
-    $session = undefined
+    $connection.syn.clearState({title:'', body:''})
   }
 
-  import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
   let adminPort=1234
   let appPort=8888
   let appId='syn'
+  function bang() {
+    $connection.syn.fish()
+  }
   async function toggle() {
     if (!$connection) {
-      const appClient = await AppWebsocket.connect(
-        `ws://localhost:${appPort}`,
-        holochainSignalHandler
-      )
-      console.log('connected', appClient)
-      await setupConnection(appClient)
-      let folks = await synGetFolks()
-      for (const folk of folks) {
-        updateParticipant(folk)
-      }
-      sessions = await synGetSessions()
+      $connection = new Connection(appPort, appId, holochainSignalHandler)
+      await $connection.open()
+
+      sessions = await $connection.syn.getSessions()
+      session = $connection.syn.session
+
       console.log('joining session...')
       await joinSession()
     }
@@ -415,7 +403,7 @@
   // handler for the heartbeat event
   function heartbeat(from, data) {
     console.log('got heartbeat', data, 'from:', from)
-    if ($session.scribeStr != $connection.me) {
+    if ($session.scribeStr != $connection.syn.me) {
       console.log("heartbeat received but I'm not the scribe.")
     }
     else {
@@ -426,7 +414,7 @@
 
   function folklore(data) {
     console.log('got folklore', data)
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
       console.log("folklore received but I'm the scribe!")
     }
     else {
@@ -450,7 +438,7 @@
 
   // handler for the changeReq event
   function changeReq(change) {
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
       addChangeAsScribe(change)
     } else {
       console.log("change requested but I'm not the scribe.")
@@ -502,7 +490,7 @@
 
   // handler for the change event
   function change(index, deltas) {
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
         console.log("change received but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log(`change arrived for ${index}:`, deltas)
@@ -516,41 +504,34 @@
   }
 
   function updateParticipant(pubKey, meta) {
-    const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (pubKeyStr == $connection.me) {
-      return
-    }
-    if (!(pubKeyStr in $folks)) {
-      const colors = getFolkColors(pubKey)
-      $folks[pubKeyStr] = {pubKey, meta, colors}
-      $folks = $folks
-    } else if (meta) {
-      $folks[pubKeyStr].meta = meta
-      $folks = $folks
-    }
+    $connection.syn.updateParticipant(pubKey, meta)
   }
 
   function updateFolkLastSeen(pubKey, gone) {
     const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (pubKeyStr == $connection.me) {
+    if (pubKeyStr == $connection.syn.me) {
       return
     }
-    if (!(pubKeyStr in $folks)) {
-      updateParticipant(pubKey, undefined)
-    }
+    updateParticipant(pubKey, undefined)
     if (gone) {
-      $folks[pubKeyStr].inSession = false
+      $connection.syn.folks.update( f=> {
+        f[pubKeyStr].inSession = false
+        return f
+      })
     } else {
       // see the folk
-      $folks[pubKeyStr].lastSeen = Date.now()
-      $folks[pubKeyStr].inSession = true
+      $connection.syn.folks.update( f=> {
+        f[pubKeyStr].lastSeen = Date.now()
+        f[pubKeyStr].inSession = true
+        return f
+      })
     }
   }
 
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
       updateParticipant(from, request.meta)
       updateFolkLastSeen(from)
       let state = {
@@ -565,8 +546,8 @@
       synSendSyncResp(from, state)
       // and send everybody a folk lore p2p message with new participants
       const p = {...$folks}
-      p[$connection.me] = {
-        pubKey: $connection.agentPubKey
+      p[$connection.syn.me] = {
+        pubKey: $connection.syn.agentPubKey
       }
       const data = {
         participants: p
@@ -591,7 +572,7 @@
   }
 
   async function commitChange() {
-    if ($session.scribeStr == $connection.me) {
+    if ($session.scribeStr == $connection.syn.me) {
       if ($recordedChanges.length == 0) {
         alert('No changes to commit!')
         return
@@ -675,6 +656,9 @@
     {:else}
       Connect
     {/if}
+  </button>
+  <button on:click={bang}>
+    Bang
   </button>
 </div>
 
