@@ -164,6 +164,10 @@
     return callZome('get_sessions')
   }
 
+  async function synGetFolks() {
+    return callZome('get_folks')
+  }
+
   async function synNewSession(content) {
     return callZome('new_session', {content})
   }
@@ -394,6 +398,10 @@
       )
       console.log('connected', appClient)
       await setupConnection(appClient)
+      let folks = await synGetFolks()
+      for (const folk of folks) {
+        updateParticipant(folk)
+      }
       sessions = await synGetSessions()
       console.log('joining session...')
       await joinSession()
