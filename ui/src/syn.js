@@ -41,12 +41,12 @@ export class Syn {
     }
 
   }
-  fish() { debugger; alert(JSON.stringify(this.content.get())) }
+
   clearState(contentDefault) {
     this.folks.set({});
     this.connection.set(undefined);
     this.session.update(s => {
-      console.log("FISH", s)
+      s.scribeStr.set('');
       s.content.set(contentDefault);
       s.requestedChanges.set([]);
       s.recordedChanges.set([]);

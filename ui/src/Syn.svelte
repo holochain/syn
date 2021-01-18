@@ -3,10 +3,9 @@
   import { createEventDispatcher } from 'svelte'
   import {decodeJson, encodeJson} from './json.js'
   import { getFolkColors } from './colors.js'
-  import { Syn, Connection, Session } from './syn.js'
+  import { Syn, Connection, Session, arrayBufferToBase64} from './syn.js'
 
-//  let x = new Syn()
-  let session// = x.session
+  let session
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn
@@ -14,16 +13,6 @@
 
   // this is the list of sessions returned by the DNA
   let sessions
-
-  export const arrayBufferToBase64 = buffer => {
-    var binary = ''
-    var bytes = new Uint8Array(buffer)
-    var len = bytes.byteLength
-    for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i])
-    }
-    return window.btoa(binary)
-  }
 
   // let heartbeatInterval = 15 * 1000 // 15 seconds
   let heartbeatInterval = 2  * 1000 // for testing ;)
@@ -309,55 +298,10 @@
 
   }
 
-  /*
-  async function setupConnection(appClient) {
-    $connection = {appClient}
-    const appInfo = await appClient.appInfo({ installed_app_id: appId })
-    const cellId = appInfo.cell_data[0][0]
-    const agentPubKey = cellId[1]
-    const me = arrayBufferToBase64(agentPubKey)
-    const myColors = getFolkColors(agentPubKey)
-    const myTag = me.slice(-4)
-    const Dna = arrayBufferToBase64(cellId[0])
-    $connection = {
-      appClient,
-      appInfo,
-      cellId,
-      agentPubKey,
-      me,
-      myTag,
-      myColors,
-      Dna
-    }
-    console.log('connection active:', $connection)
-  }*/
-
-  /*
-  function setupSession(sessionInfo) {
-    $session = sessionInfo
-    $session.deltas = $session.deltas.map(d => JSON.parse(d))
-    $session.snapshotHashStr = arrayBufferToBase64($session.snapshot_hash)
-    $session.contentHashStr = arrayBufferToBase64($session.content_hash)
-    $session.scribeStr = arrayBufferToBase64($session.scribe)
-    $scribeStr = $session.scribeStr
-    console.log('session joined:', $session)
-    const newContent = {... $session.snapshot_content} // clone so as not to pass by ref
-    newContent.meta = {}
-    newContent.meta[$connection.syn.myTag] = 0
-
-    $content = newContent
-    $recordedChanges = []
-    // use the _recordDeltas function to get the undable changes loaded into the history
-    // and then move these items into the committed changes
-    _recordDeltas($session.deltas)
-    committedChanges.update(c => c.concat($recordedChanges))
-    $recordedChanges = []
-  }
-  */
-
+  const defaultContent = {title:'', body:''}
   async function joinSession() {
     if (sessions.length == 0) {
-      sessions[0] = await $connection.syn.newSession({title:'', body:''}, applyDeltaFn)
+      sessions[0] = await $connection.syn.newSession(defaultContent, applyDeltaFn)
     } else {
       $connection.syn.setSession(await $connection.syn.getSession(sessions[0]), applyDeltaFn)
       await synSendSyncReq()
@@ -365,16 +309,11 @@
   }
 
   function clearState() {
-    $scribeStr = ''
-    $connection.syn.clearState({title:'', body:''})
   }
 
   let adminPort=1234
   let appPort=8888
   let appId='syn'
-  function bang() {
-    $connection.syn.fish()
-  }
   async function toggle() {
     if (!$connection) {
       $connection = new Connection(appPort, appId, holochainSignalHandler)
@@ -387,8 +326,8 @@
       await joinSession()
     }
     else {
+      $connection.syn.clearState(defaultContent)
       console.log('disconnected')
-      clearState()
     }
   }
 
@@ -623,9 +562,6 @@
     {:else}
       Connect
     {/if}
-  </button>
-  <button on:click={bang}>
-    Bang
   </button>
 </div>
 
