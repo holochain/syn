@@ -3,17 +3,25 @@ import { getFolkColors } from './colors.js'
 
 import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
 
+
+export const arrayBufferToBase64 = buffer => {
+  var binary = ''
+  var bytes = new Uint8Array(buffer)
+  var len = bytes.byteLength
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return window.btoa(binary)
+}
+
+
 export class Syn {
   constructor(appClient, appId) {
     this.appClient = appClient,
     this.appId = appId,
     this.session = session,
-    this.content = content,
     this.folks = folks,
-    this.connection = connection,
-    this.requested = requestedChanges,
-    this.recorded = recordedChanges,
-    this.committed = committedChanges
+    this.connection = connection
   }
 
   async attach(appClient, appId) {
@@ -35,13 +43,16 @@ export class Syn {
   }
   fish() { debugger; alert(JSON.stringify(this.content.get())) }
   clearState(contentDefault) {
-    this.session.set(undefined);
-    this.content.set(contentDefault);
     this.folks.set({});
     this.connection.set(undefined);
-    this.requested.set([]);
-    this.recorded.set([]);
-    this.committed.set([]);
+    this.session.update(s => {
+      console.log("FISH", s)
+      s.content.set(contentDefault);
+      s.requestedChanges.set([]);
+      s.recordedChanges.set([]);
+      s.committedChanges.set([]);
+      return undefined
+    })
   }
 
   attached() {
@@ -96,24 +107,82 @@ export class Syn {
     })
   }
 
+  updateFolkLastSeen(pubKey, gone) {
+    const pubKeyStr = arrayBufferToBase64(pubKey)
+    if (pubKeyStr == this.me) {
+      return
+    }
+    this.updateParticipant(pubKey, undefined)
+    if (gone) {
+      this.folks.update( f=> {
+        f[pubKeyStr].inSession = false
+        return f
+      })
+    } else {
+      // see the folk
+      this.folks.update( f=> {
+        f[pubKeyStr].lastSeen = Date.now()
+        f[pubKeyStr].inSession = true
+        return f
+      })
+    }
+  }
+
   async getSessions() {
     return this.callZome('get_sessions')
   }
 
-  async joinSession() {
-
+  setSession(sessionInfo, applyDeltaFn) {
+    let s = new Session(sessionInfo, applyDeltaFn, this.myTag)
+    this.session.set(s)
+    return s
   }
 
+  async getSession(session_hash) {
+    return this.callZome('get_session', session_hash)
+  }
+
+  async newSession(content, applyDeltaFn) {
+    let rawSessionInfo = await this.callZome('new_session', {content})
+    let s = this.setSession(rawSessionInfo, applyDeltaFn)
+    return s
+  }
 }
 
-export const arrayBufferToBase64 = buffer => {
-  var binary = ''
-  var bytes = new Uint8Array(buffer)
-  var len = bytes.byteLength
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i])
+export class Session {
+  constructor(sessionInfo, applyDeltaFn, myTag) {
+    this.applyDeltaFn = applyDeltaFn
+    this.content = content
+    this.recordedChanges = recordedChanges
+    this.requestedChanges = requestedChanges
+    this.committedChanges = committedChanges
+    this.scribeStr = scribeStr
+
+    this.sessionHash = sessionInfo.session
+    this.scribe = sessionInfo.scribe
+    this.snapshot_content = sessionInfo.snapshot_content
+    this.snapshot_hash = sessionInfo.snapshot_hash
+    this.content_hash = sessionInfo.content_hash
+
+    this.deltas = sessionInfo.deltas.map(d => JSON.parse(d))
+    this.snapshotHashStr = arrayBufferToBase64(sessionInfo.snapshot_hash)
+    this.contentHashStr = arrayBufferToBase64(sessionInfo.content_hash)
+    this.scribeStr.set(arrayBufferToBase64(sessionInfo.scribe))
+
+    console.log('session joined:', sessionInfo)
+    const newContent = {... sessionInfo.snapshot_content} // clone so as not to pass by ref
+    newContent.meta = {}
+    newContent.meta[myTag] = 0
+
+    this.content.set(newContent)
+
+    let changes = []
+    for (const delta of this.deltas) {
+      changes.push(applyDeltaFn(delta))
+    }
+    this.committedChanges.update(c => c.concat(changes))
   }
-  return window.btoa(binary)
+
 }
 
 export class Connection {

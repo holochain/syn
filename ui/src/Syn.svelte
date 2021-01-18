@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte'
   import {decodeJson, encodeJson} from './json.js'
   import { getFolkColors } from './colors.js'
-  import { Syn, Connection } from './syn.js'
+  import { Syn, Connection, Session } from './syn.js'
 
 //  let x = new Syn()
   let session// = x.session
@@ -30,7 +30,7 @@
   // Send heartbeat to scribe every [heartbeat interval]
   let heart = window.setInterval(async () => {
     if ($session) {
-      if ($session.scribeStr == $connection.syn.me) {
+      if ($scribeStr == $connection.syn.me) {
         // examine folks last seen time and see if any have crossed the session out-of-session
         // timeout so we can tell everybody else about them having dropped.
         let gone = updateRecentlyTimedOutFolks()
@@ -70,7 +70,7 @@
         $recordedChanges = []
         // and send a sync request incase something just got out of sequence
         // TODO: prepare for shifting to new scribe if they went offline
-        setupSession(await synGetSession($session.session))
+        $connection.syn.setSession(await $connection.syn.getSession($session.session_hash, applyDeltaFn))
         synSendSyncReq()
       }
     }
@@ -79,9 +79,8 @@
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   export function requestChange(deltas) {
-
     // any requested made by the scribe should be recorded immediately
-    if ($session.scribeStr == $connection.syn.me) {
+    if ($scribeStr == $connection.syn.me) {
       const index = $nextIndex
       _recordDeltas(deltas)
       synSendChange(index,deltas)
@@ -162,14 +161,6 @@
 
   async function synSendSyncReq() {
     return callZome('send_sync_request', {scribe: $session.scribe})
-  }
-
-  async function synNewSession(content) {
-    return callZome('new_session', {content})
-  }
-
-  async function synGetSession(session_hash) {
-    return callZome('get_session', session_hash)
   }
 
   async function synSendSyncResp(to, state) {
@@ -341,6 +332,7 @@
     console.log('connection active:', $connection)
   }*/
 
+  /*
   function setupSession(sessionInfo) {
     $session = sessionInfo
     $session.deltas = $session.deltas.map(d => JSON.parse(d))
@@ -361,13 +353,13 @@
     committedChanges.update(c => c.concat($recordedChanges))
     $recordedChanges = []
   }
+  */
 
   async function joinSession() {
     if (sessions.length == 0) {
-      sessions[0] = await synNewSession({title:'', body:''})
-      setupSession(sessions[0])
+      sessions[0] = await $connection.syn.newSession({title:'', body:''}, applyDeltaFn)
     } else {
-      setupSession(await synGetSession(sessions[0]))
+      $connection.syn.setSession(await $connection.syn.getSession(sessions[0]), applyDeltaFn)
       await synSendSyncReq()
     }
   }
@@ -403,25 +395,25 @@
   // handler for the heartbeat event
   function heartbeat(from, data) {
     console.log('got heartbeat', data, 'from:', from)
-    if ($session.scribeStr != $connection.syn.me) {
+    if ($scribeStr != $connection.syn.me) {
       console.log("heartbeat received but I'm not the scribe.")
     }
     else {
       // I am the scribe and I've recieved a heartbeat from a concerned Folk
-      updateFolkLastSeen(from)
+      $connection.syn.updateFolkLastSeen(from)
     }
   }
 
   function folklore(data) {
     console.log('got folklore', data)
-    if ($session.scribeStr == $connection.syn.me) {
+    if ($scribeStr == $connection.syn.me) {
       console.log("folklore received but I'm the scribe!")
     }
     else {
       if (data.gone) {
         Object.values(data.participants).forEach(
           pubKey => {
-            updateFolkLastSeen(pubKey, true)
+            $connection.syn.updateFolkLastSeen(pubKey, true)
           }
         )
       }
@@ -429,7 +421,7 @@
         Object.values(data.participants).forEach(
           p => {
             console.log('p', p)
-            updateParticipant(p.pubKey, p.meta)
+            $connection.syn.updateParticipant(p.pubKey, p.meta)
           }
         )
       }
@@ -438,7 +430,7 @@
 
   // handler for the changeReq event
   function changeReq(change) {
-    if ($session.scribeStr == $connection.syn.me) {
+    if ($scribeStr == $connection.syn.me) {
       addChangeAsScribe(change)
     } else {
       console.log("change requested but I'm not the scribe.")
@@ -490,7 +482,7 @@
 
   // handler for the change event
   function change(index, deltas) {
-    if ($session.scribeStr == $connection.syn.me) {
+    if ($scribeStr == $connection.syn.me) {
         console.log("change received but I'm the scribe, so I'm ignoring this!")
     } else {
       console.log(`change arrived for ${index}:`, deltas)
@@ -503,37 +495,12 @@
     }
   }
 
-  function updateParticipant(pubKey, meta) {
-    $connection.syn.updateParticipant(pubKey, meta)
-  }
-
-  function updateFolkLastSeen(pubKey, gone) {
-    const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (pubKeyStr == $connection.syn.me) {
-      return
-    }
-    updateParticipant(pubKey, undefined)
-    if (gone) {
-      $connection.syn.folks.update( f=> {
-        f[pubKeyStr].inSession = false
-        return f
-      })
-    } else {
-      // see the folk
-      $connection.syn.folks.update( f=> {
-        f[pubKeyStr].lastSeen = Date.now()
-        f[pubKeyStr].inSession = true
-        return f
-      })
-    }
-  }
-
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
-    if ($session.scribeStr == $connection.syn.me) {
-      updateParticipant(from, request.meta)
-      updateFolkLastSeen(from)
+    if ($scribeStr == $connection.syn.me) {
+      $connection.syn.updateParticipant(from, request.meta)
+      $connection.syn.updateFolkLastSeen(from)
       let state = {
         snapshot: $session.snapshot_hash,
         commit_content_hash: $session.content_hash,
@@ -572,7 +539,7 @@
   }
 
   async function commitChange() {
-    if ($session.scribeStr == $connection.syn.me) {
+    if ($scribeStr == $connection.syn.me) {
       if ($recordedChanges.length == 0) {
         alert('No changes to commit!')
         return
