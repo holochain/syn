@@ -1,5 +1,6 @@
 import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
 import { getFolkColors } from './colors.js'
+import {decodeJson, encodeJson} from './json.js'
 
 import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
 
@@ -154,6 +155,36 @@ export class Syn {
   async sendSyncReq() {
     return this.callZome('send_sync_request', {scribe: this._session.scribe})
   }
+
+  async sendChangeReq(index, deltas) {
+    deltas = deltas.map(d=>JSON.stringify(d))
+    return this.callZome('send_change_request', {scribe: this._session.scribe, change: [index, deltas]})
+  }
+
+  async sendHeartbeat(data) {
+    data = encodeJson(data)
+    return this.callZome('send_heartbeat', {scribe: this._session.scribe, data})
+  }
+
+  async sendFolkLore(participants, data) {
+    if (participants.length > 0) {
+      data = encodeJson(data)
+      return this.callZome('send_folk_lore', {participants, data})
+    }
+  }
+
+  async sendSyncResp(to, state) {
+    state.deltas = state.deltas.map(d=>JSON.stringify(d))
+    return this.callZome('send_sync_response', {
+      participant: to,
+      state
+    })
+  }
+
+  async hashContent(content) {
+    return this.callZome('hash_content', content)
+  }
+
 }
 
 export class Session {

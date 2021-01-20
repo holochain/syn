@@ -24,13 +24,13 @@
         // timeout so we can tell everybody else about them having dropped.
         let gone = updateRecentlyTimedOutFolks()
         if (gone.length > 0) {
-          synSendFolkLore(folksForScribeSignals(), {gone})
+          $connection.syn.sendFolkLore(folksForScribeSignals(), {gone})
           // Scribe's heartbeat nudges the folks store so svelte detects an update
           $folks = $folks
         }
       } else {
         // I'm not the scribe so send them a heartbeat
-        await synSendHeartbeat('Hello')
+        await $connection.syn.sendHeartbeat('Hello')
       }
     }
   }, heartbeatInterval)
@@ -94,7 +94,7 @@
         requestedChanges.update(h=>[...h, undoableChange])
       }
 
-      synSendChangeReq(index, deltas)
+      $connection.syn.sendChangeReq(index, deltas)
       reqCounter+= 1
     }
   }
@@ -103,22 +103,6 @@
   // Syn functions are wrappers of the zome calls
   // TODO: refactor to separate library file, requires thinking through if state info should be
   //       passed in as parameters, or if it should actually be a class that holds this state
-  async function synSendChangeReq(index, deltas) {
-    deltas = deltas.map(d=>JSON.stringify(d))
-    return callZome('send_change_request', {scribe: $session.scribe, change: [index, deltas]})
-  }
-
-  async function synSendHeartbeat(data) {
-    data = encodeJson(data)
-    return callZome('send_heartbeat', {scribe: $session.scribe, data})
-  }
-
-  async function synSendFolkLore(participants, data) {
-    if (participants.length > 0) {
-      data = encodeJson(data)
-      return callZome('send_folk_lore', {participants, data})
-    }
-  }
 
   function folksForScribeSignals() {
     return Object.values($folks).filter(v=>v.inSession).map(v=>v.pubKey)
@@ -146,18 +130,6 @@
       deltas = deltas.map(d=>JSON.stringify(d))
       return callZome('send_change', {participants, change: [index, deltas]})
     }
-  }
-
-  async function synSendSyncResp(to, state) {
-    state.deltas = state.deltas.map(d=>JSON.stringify(d))
-    return callZome('send_sync_response', {
-      participant: to,
-      state
-    })
-  }
-
-  async function synHashContent(content) {
-    return callZome('hash_content', content)
   }
 
   async function callZome(fn_name, payload, timeout) {
@@ -442,7 +414,7 @@
         state['commit'] = currentCommitHeaderHash
       }
       // send a sync response to the sender
-      synSendSyncResp(from, state)
+      $connection.syn.sendSyncResp(from, state)
       // and send everybody a folk lore p2p message with new participants
       const p = {...$folks}
       p[$connection.syn.me] = {
@@ -451,7 +423,7 @@
       const data = {
         participants: p
       }
-      synSendFolkLore(folksForScribeSignals(), data)
+      $connection.syn.sendFolkLore(folksForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -477,7 +449,7 @@
         return
       }
       commitInProgress = true
-      const newContentHash = await synHashContent($content)
+      const newContentHash = await $connection.syn.hashContent($content)
       console.log('commiting from snapshot', $session.snapshotHashStr)
       console.log('  prev_hash:', $session.contentHashStr)
       console.log('   new_hash:', arrayBufferToBase64(newContentHash))
