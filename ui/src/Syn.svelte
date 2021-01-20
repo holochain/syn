@@ -60,7 +60,7 @@
         // and send a sync request incase something just got out of sequence
         // TODO: prepare for shifting to new scribe if they went offline
         $connection.syn.setSession(await $connection.syn.getSession($session.session_hash, applyDeltaFn))
-        synSendSyncReq()
+        $connection.syn.sendSyncReq()
       }
     }
   }, reqTimeout/2)
@@ -146,10 +146,6 @@
       deltas = deltas.map(d=>JSON.stringify(d))
       return callZome('send_change', {participants, change: [index, deltas]})
     }
-  }
-
-  async function synSendSyncReq() {
-    return callZome('send_sync_request', {scribe: $session.scribe})
   }
 
   async function synSendSyncResp(to, state) {
@@ -298,26 +294,23 @@
 
   }
 
-  const defaultContent = {title:'', body:''}
   async function joinSession() {
     if (sessions.length == 0) {
-      sessions[0] = await $connection.syn.newSession(defaultContent, applyDeltaFn)
+      sessions[0] = await $connection.syn.newSession()
     } else {
       $connection.syn.setSession(await $connection.syn.getSession(sessions[0]), applyDeltaFn)
-      await synSendSyncReq()
+      await $connection.syn.sendSyncReq()
     }
-  }
-
-  function clearState() {
   }
 
   let adminPort=1234
   let appPort=8888
   let appId='syn'
+  const defaultContent = {title:'', body:''}
   async function toggle() {
     if (!$connection) {
       $connection = new Connection(appPort, appId, holochainSignalHandler)
-      await $connection.open()
+      await $connection.open(defaultContent, applyDeltaFn)
 
       sessions = await $connection.syn.getSessions()
       session = $connection.syn.session

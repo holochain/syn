@@ -16,7 +16,9 @@ export const arrayBufferToBase64 = buffer => {
 
 
 export class Syn {
-  constructor(appClient, appId) {
+  constructor(defaultContent, applyDeltaFn, appClient, appId) {
+    this.defaultContent = defaultContent,
+    this.applyDeltaFn = applyDeltaFn,
     this.appClient = appClient,
     this.appId = appId,
     this.session = session,
@@ -132,8 +134,9 @@ export class Syn {
     return this.callZome('get_sessions')
   }
 
-  setSession(sessionInfo, applyDeltaFn) {
-    let s = new Session(sessionInfo, applyDeltaFn, this.myTag)
+  setSession(sessionInfo) {
+    let s = new Session(sessionInfo, this.applyDeltaFn, this.myTag)
+    this._session = s
     this.session.set(s)
     return s
   }
@@ -142,10 +145,14 @@ export class Syn {
     return this.callZome('get_session', session_hash)
   }
 
-  async newSession(content, applyDeltaFn) {
-    let rawSessionInfo = await this.callZome('new_session', {content})
-    let s = this.setSession(rawSessionInfo, applyDeltaFn)
+  async newSession() {
+    let rawSessionInfo = await this.callZome('new_session', {content: this.defaultContent})
+    let s = this.setSession(rawSessionInfo, this.applyDeltaFn)
     return s
+  }
+
+  async sendSyncReq() {
+    return this.callZome('send_sync_request', {scribe: this._session.scribe})
   }
 }
 
@@ -192,7 +199,7 @@ export class Connection {
     this.signalHandler = signalHandler;
   }
 
-  async open() {
+  async open(defaultContent, applyDeltaFn) {
     this.appClient = await AppWebsocket.connect(
       `ws://localhost:${this.appPort}`,
       this.signalHandler
@@ -200,7 +207,7 @@ export class Connection {
     console.log('connection established:', this)
 
     // TODO: in the future we should be able manage and to attach to multiple syn happs
-    this.syn = new Syn(this.appClient, this.appId)
+    this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
     await this.syn.attach(this.appId)
 
   }
