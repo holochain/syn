@@ -1,5 +1,5 @@
 import { writable, readable, derived } from 'svelte/store'
-import { emptySession } from './config'
+import { emptySession } from './utils'
 
 export const session = writable()
 

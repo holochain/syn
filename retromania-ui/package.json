@@ -20,6 +20,7 @@
   "dependencies": {
     "@holochain/conductor-api": "0.0.1-dev.14",
     "sirv-cli": "^1.0.0",
-    "svelte-fa": "^2.2.0"
+    "svelte-fa": "^2.2.0",
+    "uuid": "^8.3.2"
   }
 }

@@ -1,8 +1,10 @@
 <script>
-  export let addSticky
-  export let cancelSticky  
+  export let handleSave
+  export let handleDelete = undefined
+  export let cancelEdit
+  export let text = ''
 
-  let text
+  // let text = textA
 </script>
 
 <style>
@@ -36,7 +38,10 @@
 <div class='sticky-editor'>
   <textarea class='textarea' bind:value={text} />
   <div class='controls'>
-    <button on:click={() => addSticky(text)}>Save</button>
-    <button on:click={cancelSticky}>Cancel</button>
+    <button on:click={() => handleSave(text)}>Save</button>
+    <button on:click={cancelEdit}>Cancel</button>
+    {#if handleDelete}
+      <button on:click={handleDelete}>Delete</button>
+    {/if}
   </div>
 </div>

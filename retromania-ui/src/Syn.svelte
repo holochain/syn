@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte'
   import { decodeJson, encodeJson } from './json.js'
   import { getFolkColors } from './colors.js'
-  import { emptySession } from './config'
+  import { emptySession } from './utils'
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn

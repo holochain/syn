@@ -6,8 +6,6 @@
   import History from './History.svelte'
   import { content, scribeStr } from './stores.js'
 
-  $: disconnected = false
-
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
@@ -20,9 +18,35 @@
           ? [] 
           : JSON.parse($content.body)
 
-        $content.body = JSON.stringify([...stickies, delta.value.text])
+        $content.body = JSON.stringify([...stickies, delta.value])
         return {delta}
       }
+    case 'update-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        const updatedStickies = stickies.map(sticky => {
+          if (sticky.id === delta.value.id) {
+            return delta.value
+          } else {
+            return sticky
+          }
+        })
+
+        $content.body = JSON.stringify(updatedStickies)
+        return {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}
+      }
+    case 'delete-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        $content.body = JSON.stringify(stickies.filter(sticky => sticky.id !== delta.value.id))
+        return {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}
+      }      
     // TODO: remove all the cases below
     case 'Title':
       {
@@ -57,6 +81,7 @@
   function undo(change) {
     const delta = change.delta
     switch(delta.type) {
+    // TODO: add cases for sticky actions
     case 'Title':
       return {type:'Title', value:change.deleted}
       break

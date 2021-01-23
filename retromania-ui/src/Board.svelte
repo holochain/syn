@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import { content } from './stores.js'
   import StickyEditor from './StickyEditor.svelte'
+  import { v1 as uuidv1 } from 'uuid';
 
   const dispatch = createEventDispatcher()
 
@@ -13,15 +14,36 @@
     creating = true
   }
 
+  let editingStickyId
+
+  const editSticky = id => () => {
+    editingStickyId = id
+  }
+
   const addSticky = text => {
     dispatch('requestChange', [
-      {type: 'add-sticky', value: {text}}
+      {type: 'add-sticky', value: {id: uuidv1(), text}}
     ])
     creating = false
   }
 
-  const cancelSticky = () => {
+  const deleteSticky = id => () => {
+    dispatch('requestChange', [
+      {type: 'delete-sticky', value: {id}}
+    ])
+    editingStickyId = null
+  }
+
+  const updateSticky = id => text => {
+    dispatch('requestChange', [
+      {type: 'update-sticky', value: {id, text}}
+    ])
+    editingStickyId = null
+  }
+
+  const cancelEdit = () => {
     creating = false
+    editingStickyId = null
   }
 
 </script>
@@ -56,11 +78,15 @@
 </style>
 
 <div class='board'>
-  {#each stickies as sticky}
-    <div class='sticky'>{sticky}</div>
+  {#each stickies as { id, text} (id)}
+    {#if editingStickyId === id}
+      <StickyEditor handleSave={updateSticky(id)} handleDelete={deleteSticky(id)} {cancelEdit} {text} />
+    {:else}
+      <div class='sticky' on:click={editSticky(id)}>{text}</div>
+    {/if}
   {/each}
   {#if creating}
-    <StickyEditor {addSticky} {cancelSticky} />
+    <StickyEditor handleSave={addSticky} {cancelEdit} />
   {:else}
     <button class="add" on:click={newSticky}>+ Add</button>
   {/if}
