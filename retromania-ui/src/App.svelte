@@ -11,7 +11,7 @@
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
-  
+
   function applyDelta(delta) {
     switch(delta.type) {
     case 'Title':
@@ -84,7 +84,7 @@
   }
 
 
-  $: noscribe = $scribeStr === ''
+  $: noscribe = false // $scribeStr === ''
   let syn
 
 
