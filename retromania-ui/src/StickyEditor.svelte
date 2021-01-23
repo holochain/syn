@@ -1,5 +1,5 @@
 <script>
-  export let saveSticky
+  export let addSticky
   export let cancelSticky  
 
   let text
@@ -36,7 +36,7 @@
 <div class='sticky-editor'>
   <textarea class='textarea' bind:value={text} />
   <div class='controls'>
-    <button on:click={() => saveSticky(text)}>Save</button>
+    <button on:click={() => addSticky(text)}>Save</button>
     <button on:click={cancelSticky}>Cancel</button>
   </div>
 </div>

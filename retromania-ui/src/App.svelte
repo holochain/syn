@@ -14,6 +14,16 @@
 
   function applyDelta(delta) {
     switch(delta.type) {
+    case 'add-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        $content.body = JSON.stringify([...stickies, delta.value.text])
+        return {delta}
+      }
+    // TODO: remove all the cases below
     case 'Title':
       {
         const deleted = $content.title
@@ -84,7 +94,7 @@
   }
 
 
-  $: noscribe = false // $scribeStr === ''
+  $: noscribe = $scribeStr === ''
   let syn
 
 
@@ -126,7 +136,7 @@
     const remove = window.addEventListener('pointermove', mouseDragHandler)
   }
 
-  let drawerHidden = false
+  let drawerHidden = true
   const hideDrawer = () => {
     drawerHidden = true
   }

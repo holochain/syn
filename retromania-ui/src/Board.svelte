@@ -1,22 +1,22 @@
 <script>
   import { createEventDispatcher } from 'svelte'
-  import { content, connection } from './stores.js'
+  import { content } from './stores.js'
   import StickyEditor from './StickyEditor.svelte'
 
-  let stickies = [
-    "One sticky",
-    "Two sticky",
-    "Three sticky"
-  ]
+  const dispatch = createEventDispatcher()
 
-  let creating = true
+  $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
 
-  const addSticky = () => {
+  let creating = false
+
+  const newSticky = () => {
     creating = true
   }
 
-  const saveSticky = text => {
-    stickies = [...stickies, text]
+  const addSticky = text => {
+    dispatch('requestChange', [
+      {type: 'add-sticky', value: {text}}
+    ])
     creating = false
   }
 
@@ -60,8 +60,8 @@
     <div class='sticky'>{sticky}</div>
   {/each}
   {#if creating}
-    <StickyEditor { saveSticky } {cancelSticky} />
+    <StickyEditor {addSticky} {cancelSticky} />
   {:else}
-    <button class="add" on:click={addSticky}>+ Add</button>
+    <button class="add" on:click={newSticky}>+ Add</button>
   {/if}
 </div>
