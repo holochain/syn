@@ -3,7 +3,7 @@
   import { createEventDispatcher } from 'svelte'
   import {decodeJson, encodeJson} from './json.js'
   import { getFolkColors } from './colors.js'
-  import { Syn, Connection, Session, arrayBufferToBase64} from './syn.js'
+  import { Syn, Connection, Session, arrayBufferToBase64, FOLK_SEEN} from './syn.js'
 
   let session
 
@@ -22,11 +22,9 @@
       if ($scribeStr == $connection.syn.me) {
         // examine folks last seen time and see if any have crossed the session out-of-session
         // timeout so we can tell everybody else about them having dropped.
-        let gone = updateRecentlyTimedOutFolks()
+        let gone = $session.updateRecentlyTimedOutFolks()
         if (gone.length > 0) {
-          $connection.syn.sendFolkLore($session.folksForScribeSignals(), {gone})
-          // Scribe's heartbeat nudges the folks store so svelte detects an update
-          $folks = $folks
+          $session.sendFolkLore($session.folksForScribeSignals(), {gone})
         }
       } else {
         // I'm not the scribe so send them a heartbeat
@@ -103,21 +101,6 @@
   // Syn functions are wrappers of the zome calls
   // TODO: refactor to separate library file, requires thinking through if state info should be
   //       passed in as parameters, or if it should actually be a class that holds this state
-
-  // const outOfSessionTimout = 30 * 1000
-  const outOfSessionTimout = 8 * 1000 // testing code :)
-
-  // updates folks in-session status by checking their last-seen time
-  function updateRecentlyTimedOutFolks() {
-    let result = []
-    for (const [pubKeyStr, folk] of Object.entries($folks)) {
-      if (folk.inSession && (Date.now() - $folks[pubKeyStr].lastSeen > outOfSessionTimout)) {
-        folk.inSession = false
-        result.push($folks[pubKeyStr].pubKey)
-      }
-    }
-    return result
-  }
 
   async function callZome(fn_name, payload, timeout) {
     if (!$connection || !$connection.syn) {
@@ -200,7 +183,7 @@
       const state = signal.data.payload.signal_payload
       state.deltas = state.deltas.map(d=>JSON.parse(d))
       console.log('post',state)
-      syncResp(state)
+      $session.syncResp(state)
       break
     case 'ChangeReq':
       {
@@ -219,14 +202,14 @@
     case 'FolkLore':
       {
         let data = decodeJson(signal.data.payload.signal_payload)
-        folklore(data)
+        $session.folklore(data)
         break
       }
     case 'Heartbeat':
       {
         let [from, jsonData] = signal.data.payload.signal_payload
         const data = decodeJson(jsonData)
-        heartbeat(from, data)
+        $session.heartbeat(from, data)
         break
       }
     case 'CommitNotice':
@@ -280,42 +263,6 @@
     else {
       $connection.syn.clearState(defaultContent)
       console.log('disconnected')
-    }
-  }
-
-  // handler for the heartbeat event
-  function heartbeat(from, data) {
-    console.log('got heartbeat', data, 'from:', from)
-    if ($scribeStr != $connection.syn.me) {
-      console.log("heartbeat received but I'm not the scribe.")
-    }
-    else {
-      // I am the scribe and I've recieved a heartbeat from a concerned Folk
-      $connection.syn.updateFolkLastSeen(from)
-    }
-  }
-
-  function folklore(data) {
-    console.log('got folklore', data)
-    if ($scribeStr == $connection.syn.me) {
-      console.log("folklore received but I'm the scribe!")
-    }
-    else {
-      if (data.gone) {
-        Object.values(data.participants).forEach(
-          pubKey => {
-            $connection.syn.updateFolkLastSeen(pubKey, true)
-          }
-        )
-      }
-      if (data.participants) {
-        Object.values(data.participants).forEach(
-          p => {
-            console.log('p', p)
-            $connection.syn.updateParticipant(p.pubKey, p.meta)
-          }
-        )
-      }
     }
   }
 
@@ -376,8 +323,7 @@
   function syncReq(request) {
     const from = request.from
     if ($scribeStr == $connection.syn.me) {
-      $connection.syn.updateParticipant(from, request.meta)
-      $connection.syn.updateFolkLastSeen(from)
+      $session.updateOthers(from, FOLK_SEEN, request.meta)
       let state = {
         snapshot: $session.snapshot_hash,
         commit_content_hash: $session.content_hash,
@@ -387,7 +333,7 @@
         state['commit'] = currentCommitHeaderHash
       }
       // send a sync response to the sender
-      $connection.syn.sendSyncResp(from, state)
+      $session.sendSyncResp(from, state)
       // and send everybody a folk lore p2p message with new participants
       const p = {...$folks}
       p[$connection.syn.me] = {
@@ -396,22 +342,10 @@
       const data = {
         participants: p
       }
-      $connection.syn.sendFolkLore(Ssession.folksForScribeSignals(), data)
+      $session.sendFolkLore($session.folksForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
-    }
-  }
-
-  // handler for the syncResp event
-  function syncResp(stateForSync) {
-    // Make sure that we are working off the same snapshot and commit
-    const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
-    if (commitContentHashStr == $session.contentHashStr) {
-      $session._recordDeltas(stateForSync.deltas)
-    } else {
-      console.log('WHOA, sync response has different current state assumptions')
-      // TODO: resync somehow
     }
   }
 

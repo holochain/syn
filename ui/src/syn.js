@@ -84,11 +84,12 @@ export class Syn {
     this.myTag = this.me.slice(-4)
     this.Dna = this.zome.dnaStr
 
+    // TODO: others moved into session so we can do it here.
     // load up the other folk in this syn instance
-    let allFolks = await this.getFolks()
-    for (const folk of allFolks) {
-      this.updateParticipant(folk)
-    }
+//    let allFolks = await this.getFolks()
+//    for (const folk of allFolks) {
+//      this.updateOthers(folk)
+//    }
 
   }
 
@@ -111,49 +112,6 @@ export class Syn {
 
   async getFolks() {
     return this.callZome('get_folks')
-  }
-
-  updateParticipant(pubKey, meta) {
-    const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (pubKeyStr == this.me) {
-      return
-    }
-    this.folks.update( folks => {
-      if (!(pubKeyStr in folks)) {
-        const colors = getFolkColors(pubKey)
-        folks[pubKeyStr] = {pubKey, meta, colors}
-      } else if (meta) {
-        folks[pubKeyStr].meta = meta
-      }
-      return folks
-    })
-    if (this._session) {
-      this._session.updateOthers(pubKeyStr, pubKey, false)
-    }
-  }
-
-  updateFolkLastSeen(pubKey, gone) {
-    const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (pubKeyStr == this.me) {
-      return
-    }
-    this.updateParticipant(pubKey, undefined)
-    if (gone) {
-      this.folks.update( f=> {
-        f[pubKeyStr].inSession = false
-        return f
-      })
-    } else {
-      // see the folk
-      this.folks.update( f=> {
-        f[pubKeyStr].lastSeen = Date.now()
-        f[pubKeyStr].inSession = true
-        return f
-      })
-    }
-    if (this._session) {
-      this._session.updateOthers(pubKeyStr, pubKey, gone)
-    }
   }
 
   async getSessions() {
@@ -191,25 +149,17 @@ export class Syn {
     return this.callZome('send_heartbeat', {scribe: this._session.scribe, data})
   }
 
-  async sendFolkLore(participants, data) {
-    if (participants.length > 0) {
-      data = encodeJson(data)
-      return this.callZome('send_folk_lore', {participants, data})
-    }
-  }
-
-  async sendSyncResp(to, state) {
-    state.deltas = state.deltas.map(d=>JSON.stringify(d))
-    return this.callZome('send_sync_response', {
-      participant: to,
-      state
-    })
-  }
-
   async hashContent(content) {
     return this.callZome('hash_content', content)
   }
 }
+
+export const FOLK_SEEN = 1
+export const FOLK_GONE = 2
+export const FOLK_UNKNOWN = 3
+// const outOfSessionTimout = 30 * 1000
+const outOfSessionTimout = 8 * 1000 // testing code :)
+
 
 export class Session {
   constructor(zome, sessionInfo, applyDeltaFn) {
@@ -219,6 +169,7 @@ export class Session {
     this.myTag = zome.me.slice(-4)
 
     this.content = content
+    this.folks = folks
     this.recordedChanges = recordedChanges
     this.requestedChanges = requestedChanges
     this.committedChanges = committedChanges
@@ -237,6 +188,7 @@ export class Session {
     this.scribeStr.set(this._scribeStr)
 
     this.others = {}
+    this.folks.update(_ => {return this.others})
 
     console.log('session joined:', sessionInfo)
     const newContent = {... sessionInfo.snapshot_content} // clone so as not to pass by ref
@@ -266,23 +218,141 @@ export class Session {
     }
   }
 
-  updateOthers(pubKeyStr, pubKey, remove) {
-    if (remove) {
-      this.others.delete(pubKeyStr)
-    } else {
-      this.others[pubKeyStr] = pubKey
+
+  // Folks --------------------------------------------------------
+
+  _newOther(pubKeyStr, pubKey) {
+    if (!(pubKeyStr in this.others)) {
+      const colors = getFolkColors(pubKey)
+      this.others[pubKeyStr] = {pubKey, colors}
     }
   }
 
-  folksForScribeSignals() {
-    return Object.values(this.others)
+  updateOthers(pubKey, status, meta) {
+    const pubKeyStr = arrayBufferToBase64(pubKey)
+    if (pubKeyStr == this.me) {
+      return
+    }
+
+    // if we don't have this key, create a record for it
+    // including the default color
+    this._newOther(pubKeyStr, pubKey)
+
+
+    if (meta) {
+      this.others[pubKeyStr]["meta"] = meta
+    }
+
+    switch(status) {
+    case FOLK_SEEN:
+      this.others[pubKeyStr]["inSession"] = true
+      this.others[pubKeyStr]["lastSeen"] = Date.now()
+      break;
+    case FOLK_GONE:
+    case FOLK_UNKNOWN:
+      this.others[pubKeyStr]["inSession"] = false
+    }
+
+    this.folks.update(f => {return this.others})
   }
+
+  folksForScribeSignals() {
+    return Object.values(this.others).filter(v=>v.inSession).map(v=>v.pubKey)
+  }
+
+  // updates folks in-session status by checking their last-seen time
+  updateRecentlyTimedOutFolks() {
+    let result = []
+    for (const [pubKeyStr, folk] of Object.entries(this.others)) {
+      if (folk.inSession && (Date.now() - this.others[pubKeyStr].lastSeen > outOfSessionTimout)) {
+        folk.inSession = false
+        result.push(this.others[pubKeyStr].pubKey)
+      }
+    }
+    if (result.length > 0) {
+      this.folks.update(f => {return this.others})
+    }
+    return result
+  }
+
+
+  // senders ---------------------------------------------------------------------
+  // These are the functions that send signals in the context of a session
 
   async sendChange(index, deltas) {
     const participants = this.folksForScribeSignals()
     if (participants.length > 0) {
       deltas = deltas.map(d=>JSON.stringify(d))
       return this.zome.call('send_change', {participants, change: [index, deltas]})
+    }
+  }
+
+  async sendFolkLore(participants, data) {
+    if (participants.length > 0) {
+      data = encodeJson(data)
+      return this.zome.call('send_folk_lore', {participants, data})
+    }
+  }
+
+  async sendSyncResp(to, state) {
+    state.deltas = state.deltas.map(d=>JSON.stringify(d))
+    return this.zome.call('send_sync_response', {
+      participant: to,
+      state
+    })
+  }
+
+
+  // signal handlers ------------------------------------------
+
+  // handler for the syncResp event
+  syncResp(stateForSync) {
+    // Make sure that we are working off the same snapshot and commit
+    const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
+    if (commitContentHashStr == this.contentHashStr) {
+      this._recordDeltas(stateForSync.deltas)
+    } else {
+      console.log('WHOA, sync response has different current state assumptions')
+      // TODO: resync somehow
+    }
+  }
+
+  // handler for the heartbeat event
+  heartbeat(from, data) {
+    console.log('got heartbeat', data, 'from:', from)
+    if (this._scribeStr != this.me) {
+      console.log("heartbeat received but I'm not the scribe.")
+    }
+    else {
+      // I am the scribe and I've recieved a heartbeat from a concerned Folk
+      this.updateOthers(from, FOLK_SEEN)
+    }
+  }
+
+  // handler for the folklore event
+  folklore(data) {
+    console.log('got folklore', data)
+    if (this._scribeStr == this.me) {
+      console.log("folklore received but I'm the scribe!")
+    }
+    else {
+      if (data.gone) {
+        Object.values(data.participants).forEach(
+          pubKey => {
+            this.updateOthers(pubKey, FOLK_GONE)
+          }
+        )
+      }
+      // TODO move last seen into p.meta so that we can update that value
+      // as hearsay.
+      if (data.participants) {
+        Object.values(data.participants).forEach(
+          p => {
+            console.log('p', p)
+            this.updateOthers(p.pubKey, FOLK_UNKNOWN, p.meta)
+          }
+        )
+      }
     }
   }
 
