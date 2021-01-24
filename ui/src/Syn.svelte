@@ -24,7 +24,7 @@
         // timeout so we can tell everybody else about them having dropped.
         let gone = updateRecentlyTimedOutFolks()
         if (gone.length > 0) {
-          $connection.syn.sendFolkLore(folksForScribeSignals(), {gone})
+          $connection.syn.sendFolkLore($session.folksForScribeSignals(), {gone})
           // Scribe's heartbeat nudges the folks store so svelte detects an update
           $folks = $folks
         }
@@ -71,8 +71,8 @@
     // any requested made by the scribe should be recorded immediately
     if ($scribeStr == $connection.syn.me) {
       const index = $nextIndex
-      _recordDeltas(deltas)
-      synSendChange(index,deltas)
+      $session._recordDeltas(deltas)
+      $session.sendChange(index,deltas)
     } else {
       // otherwise apply the change and queue it to requested changes for
       // confirmation later and send request change to scribe
@@ -104,10 +104,6 @@
   // TODO: refactor to separate library file, requires thinking through if state info should be
   //       passed in as parameters, or if it should actually be a class that holds this state
 
-  function folksForScribeSignals() {
-    return Object.values($folks).filter(v=>v.inSession).map(v=>v.pubKey)
-  }
-
   // const outOfSessionTimout = 30 * 1000
   const outOfSessionTimout = 8 * 1000 // testing code :)
 
@@ -121,15 +117,6 @@
       }
     }
     return result
-  }
-
-  async function synSendChange(index, deltas) {
-    const participants = folksForScribeSignals()
-    if (participants.length > 0) {
-      console.log(`Sending change for ${index} to ${folksPretty}:`, deltas)
-      deltas = deltas.map(d=>JSON.stringify(d))
-      return callZome('send_change', {participants, change: [index, deltas]})
-    }
   }
 
   async function callZome(fn_name, payload, timeout) {
@@ -196,7 +183,7 @@
     recordDeltas(index, deltas)
 
     // notify all participants of the change
-    synSendChange(index, deltas)
+    $session.sendChange(index, deltas)
   }
 
   function holochainSignalHandler(signal) {
@@ -341,20 +328,6 @@
     }
   }
 
-  function _recordDelta(delta) {
-    // apply the deltas to the content which returns the undoable change
-    const undoableChange = applyDeltaFn(delta)
-    // append changes to the recorded history
-    recordedChanges.update(h=>[...h, undoableChange])
-  }
-
-  function _recordDeltas(deltas) {
-    // apply the deltas to the content which returns the undoable change
-    for (const delta of deltas) {
-      _recordDelta(delta)
-    }
-  }
-
   // apply changes confirmed as recorded by the scribe while reconciling
   // and possibly rebasing our requested changes
   function recordDeltas(index, deltas) {
@@ -369,7 +342,7 @@
             return h
           })
         } else {
-          // TODO rebaise?
+          // TODO rebase?
           console.log('REBASE NEEDED?')
           console.log('requeted ', $requestedChanges[0].delta)
           console.log('to be recorded ', delta)
@@ -379,7 +352,7 @@
         // to check our requested changes
         // TODO: do we need to check if this is a change that we did send and have already
         // integrated somehow and ignore if so.  (Seems unlikely?)
-        _recordDelta(delta)
+        $session._recordDelta(delta)
       }
     }
   }
@@ -423,7 +396,7 @@
       const data = {
         participants: p
       }
-      $connection.syn.sendFolkLore(folksForScribeSignals(), data)
+      $connection.syn.sendFolkLore(Ssession.folksForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -435,7 +408,7 @@
     // Make sure that we are working off the same snapshot and commit
     const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
     if (commitContentHashStr == $session.contentHashStr) {
-      _recordDeltas(stateForSync.deltas)
+      $session._recordDeltas(stateForSync.deltas)
     } else {
       console.log('WHOA, sync response has different current state assumptions')
       // TODO: resync somehow
@@ -465,7 +438,7 @@
             app_specific: null
           }
         },
-        participants: folksForScribeSignals()
+        participants: $session.folksForScribeSignals()
       }
       try {
         currentCommitHeaderHash = await callZome('commit', commit)

@@ -15,54 +15,27 @@ export const arrayBufferToBase64 = buffer => {
   return window.btoa(binary)
 }
 
-
-export class Syn {
-  constructor(defaultContent, applyDeltaFn, appClient, appId) {
-    this.defaultContent = defaultContent,
-    this.applyDeltaFn = applyDeltaFn,
-    this.appClient = appClient,
-    this.appId = appId,
-    this.session = session,
-    this.folks = folks,
-    this.connection = connection
+export class Zome {
+  constructor(appClient, appId) {
+    this.appClient = appClient
+    this.appId = appId
   }
 
-  async attach(appClient, appId) {
+  async attach() {
     // setup the syn instance data
     this.appInfo = await this.appClient.appInfo({ installed_app_id: this.appId })
     this.cellId = this.appInfo.cell_data[0][0]
     this.agentPubKey = this.cellId[1]
+    this.dna = this.cellId[0]
+    this.dnaStr = arrayBufferToBase64(this.dna)
     this.me = arrayBufferToBase64(this.agentPubKey)
-    this.myColors = getFolkColors(this.agentPubKey)
-    this.myTag = this.me.slice(-4)
-    this.Dna = arrayBufferToBase64(this.cellId[0])
-
-    // load up the other folk in this syn instance
-    let allFolks = await this.getFolks()
-    for (const folk of allFolks) {
-      this.updateParticipant(folk)
-    }
-
-  }
-
-  clearState(contentDefault) {
-    this.folks.set({});
-    this.connection.set(undefined);
-    this.session.update(s => {
-      s.scribeStr.set('');
-      s.content.set(contentDefault);
-      s.requestedChanges.set([]);
-      s.recordedChanges.set([]);
-      s.committedChanges.set([]);
-      return undefined
-    })
   }
 
   attached() {
     return this.appInfo != undefined
   }
 
-  async callZome(fn_name, payload, timeout) {
+  async call(fn_name, payload, timeout) {
     if (!this.attached()) {
       console.log('callZome called when disconnected from conductor')
       return
@@ -90,6 +63,52 @@ export class Syn {
       // }
     }
   }
+
+}
+
+export class Syn {
+  constructor(defaultContent, applyDeltaFn, appClient, appId) {
+    this.defaultContent = defaultContent,
+    this.applyDeltaFn = applyDeltaFn,
+    this.zome = new Zome(appClient, appId)
+    this.session = session,
+    this.folks = folks,
+    this.connection = connection
+  }
+
+  async attach() {
+    await this.zome.attach()
+    this.agentPubKey = this.zome.agentPubKey
+    this.me = this.zome.me
+    this.myColors = getFolkColors(this.agentPubKey)
+    this.myTag = this.me.slice(-4)
+    this.Dna = this.zome.dnaStr
+
+    // load up the other folk in this syn instance
+    let allFolks = await this.getFolks()
+    for (const folk of allFolks) {
+      this.updateParticipant(folk)
+    }
+
+  }
+
+  clearState(contentDefault) {
+    this.folks.set({});
+    this.connection.set(undefined);
+    this.session.update(s => {
+      s.scribeStr.set('');
+      s.content.set(contentDefault);
+      s.requestedChanges.set([]);
+      s.recordedChanges.set([]);
+      s.committedChanges.set([]);
+      return undefined
+    })
+  }
+
+  async callZome(fn_name, payload, timeout) {
+    return this.zome.call(fn_name, payload, timeout)
+  }
+
   async getFolks() {
     return this.callZome('get_folks')
   }
@@ -108,6 +127,9 @@ export class Syn {
       }
       return folks
     })
+    if (this._session) {
+      this._session.updateOthers(pubKeyStr, pubKey, false)
+    }
   }
 
   updateFolkLastSeen(pubKey, gone) {
@@ -129,6 +151,9 @@ export class Syn {
         return f
       })
     }
+    if (this._session) {
+      this._session.updateOthers(pubKeyStr, pubKey, gone)
+    }
   }
 
   async getSessions() {
@@ -136,7 +161,7 @@ export class Syn {
   }
 
   setSession(sessionInfo) {
-    let s = new Session(sessionInfo, this.applyDeltaFn, this.myTag)
+    let s = new Session(this.zome, sessionInfo, this.applyDeltaFn)
     this._session = s
     this.session.set(s)
     return s
@@ -184,12 +209,15 @@ export class Syn {
   async hashContent(content) {
     return this.callZome('hash_content', content)
   }
-
 }
 
 export class Session {
-  constructor(sessionInfo, applyDeltaFn, myTag) {
+  constructor(zome, sessionInfo, applyDeltaFn) {
+    this.zome = zome
     this.applyDeltaFn = applyDeltaFn
+    this.me = zome.me
+    this.myTag = zome.me.slice(-4)
+
     this.content = content
     this.recordedChanges = recordedChanges
     this.requestedChanges = requestedChanges
@@ -205,12 +233,15 @@ export class Session {
     this.deltas = sessionInfo.deltas.map(d => JSON.parse(d))
     this.snapshotHashStr = arrayBufferToBase64(sessionInfo.snapshot_hash)
     this.contentHashStr = arrayBufferToBase64(sessionInfo.content_hash)
-    this.scribeStr.set(arrayBufferToBase64(sessionInfo.scribe))
+    this._scribeStr = arrayBufferToBase64(sessionInfo.scribe)
+    this.scribeStr.set(this._scribeStr)
+
+    this.others = {}
 
     console.log('session joined:', sessionInfo)
     const newContent = {... sessionInfo.snapshot_content} // clone so as not to pass by ref
     newContent.meta = {}
-    newContent.meta[myTag] = 0
+    newContent.meta[this.myTag] = 0
 
     this.content.set(newContent)
 
@@ -219,6 +250,40 @@ export class Session {
       changes.push(applyDeltaFn(delta))
     }
     this.committedChanges.update(c => c.concat(changes))
+  }
+
+  _recordDelta(delta) {
+    // apply the deltas to the content which returns the undoable change
+    const undoableChange = this.applyDeltaFn(delta)
+    // append changes to the recorded history
+    this.recordedChanges.update(h=>[...h, undoableChange])
+  }
+
+  _recordDeltas(deltas) {
+    // apply the deltas to the content which returns the undoable change
+    for (const delta of deltas) {
+      this._recordDelta(delta)
+    }
+  }
+
+  updateOthers(pubKeyStr, pubKey, remove) {
+    if (remove) {
+      this.others.delete(pubKeyStr)
+    } else {
+      this.others[pubKeyStr] = pubKey
+    }
+  }
+
+  folksForScribeSignals() {
+    return Object.values(this.others)
+  }
+
+  async sendChange(index, deltas) {
+    const participants = this.folksForScribeSignals()
+    if (participants.length > 0) {
+      deltas = deltas.map(d=>JSON.stringify(d))
+      return this.zome.call('send_change', {participants, change: [index, deltas]})
+    }
   }
 
 }
