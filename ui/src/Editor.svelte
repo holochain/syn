@@ -1,20 +1,21 @@
 <script>
-  import { content, connection } from './stores.js'
+  import { content, connection, session } from './stores.js'
   import { createEventDispatcher } from 'svelte'
   import { CSSifyHSL } from './colors.js'
 
   const dispatch = createEventDispatcher()
 
   function getLoc(tag) {
-    return $content.meta ? ($content.meta[myTag] ? $content.meta[myTag] : 0) : 0
+    return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0
   }
 
   let editor
-  $: myTag = ($connection && $connection.syn) ? $connection.syn.myTag : ''
+  $: myTag = $session ? $session.myTag : ''
   $: editor_content1 = $content.body.slice(0, getLoc(myTag))
   $: editor_content2 = $content.body.slice(getLoc(myTag))
 
   function addText(text) {
+    console.log("MYTAG", myTag)
     const loc = getLoc(myTag)
     const deltas = [{type:'Add', value:[loc, text]}]
     for (const [tag, tagLoc] of Object.entries($content.meta)) {
