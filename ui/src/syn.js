@@ -227,19 +227,13 @@ export class Session {
       if (this.requested.length > 0) {
         // if this change is our next requested change then remove it
         if (JSON.stringify(delta) == JSON.stringify(this.requested[0].delta)) {
-          requestedChanges.update(h=>{
-            const change = h.shift()
-            //delete(change.id) // clean out the id for the history
-
-            this.recorded.push(change)
-            //            recordedChanges.update(c => [...c, change])
-            this.recordedChanges.set(this.recorded)
-            return h
-          })
+          this.recorded.push(this.requested.shift())
+          this.recordedChanges.set(this.recorded)
+          this.requestedChanges.set(this.requested)
         } else {
           // TODO rebase?
           console.log('REBASE NEEDED?')
-          console.log('requeted ', this.requested[0].delta)
+          console.log('requested ', this.requested[0].delta)
           console.log('to be recorded ', delta)
         }
       } else {
