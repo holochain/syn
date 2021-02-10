@@ -35,7 +35,6 @@
       }
     case 'Meta':
       {
-        console.log("xxx",delta)
         const [tag, loc] = delta.value.setLoc
         const deleted = [tag, content.meta[tag]]
         content.meta[tag] = loc

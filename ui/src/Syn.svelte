@@ -15,7 +15,7 @@
   let sessions
 
   // let heartbeatInterval = 15 * 1000 // 15 seconds
-  let heartbeatInterval = 2  * 1000 // for testing ;)
+  let heartbeatInterval = 30  * 1000 // for testing ;)
   // Send heartbeat to scribe every [heartbeat interval]
   let heart = window.setInterval(async () => {
     if ($session) {
@@ -128,7 +128,7 @@
     if (sessions.length == 0) {
       sessions[0] = await $connection.syn.newSession()
     } else {
-      $connection.syn.setSession(await $connection.syn.getSession(sessions[0]), applyDeltaFn)
+      $connection.syn.setSession(await $connection.syn.getSession(sessions[0]))
       if ($scribeStr != $connection.syn.me) {
         await $connection.syn.sendSyncReq()
      }

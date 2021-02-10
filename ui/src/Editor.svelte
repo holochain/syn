@@ -15,7 +15,6 @@
   $: editor_content2 = $content.body.slice(getLoc(myTag))
 
   function addText(text) {
-    console.log("MYTAG", myTag)
     const loc = getLoc(myTag)
     const deltas = [{type:'Add', value:[loc, text]}]
     for (const [tag, tagLoc] of Object.entries($content.meta)) {
