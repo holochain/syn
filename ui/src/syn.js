@@ -5,6 +5,7 @@ import {decodeJson, encodeJson} from './json.js'
 import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
 
 
+
 export const arrayBufferToBase64 = buffer => {
   var binary = ''
   var bytes = new Uint8Array(buffer)
@@ -190,13 +191,12 @@ export class Session {
     newContent.meta[this.myTag] = 0
 
 
-    let changes = []
     for (const delta of this.deltas) {
       const [c, change] = applyDeltaFn(newContent, delta)
       newContent = c
-      changes.push(change)
+      this.committed.push(change)
     }
-    this.committedChanges.update(c => c.concat(changes))
+    this.committedChanges.set(this.committed)
 
     this._content = newContent
     this.content.set(this._content)
@@ -350,14 +350,15 @@ export class Session {
         // if commit successfull we need to update the content hash and its string in the session
         this.content_hash = newContentHash
         this.contentHashStr = arrayBufferToBase64(this.content_hash)
-        this.committed.push(...this.recorded)
+        this.committed = this.committed.concat(this.recorded)
         this.recorded = []
+        this.recordedChanges.set(this.recorded)
         this.committedChanges.set(this.committed)
-        this.recordedChanged.set(this.recorded)
         //committedChanges.update(c => c.concat($recordedChanges))
         //$recordedChanges = []
       }
       catch (e) {
+        console.log("Error:", e)
       }
       this.commitInProgress = false
     } else {
@@ -578,7 +579,7 @@ export class Session {
     if (this.contentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
         this.nextIndex() == commitInfo.deltas_committed) {
       this.contentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
-      this.committed.push(...this.recorded)
+      this.committed = this.committed.concat(this.recorded)
       this.recorded = []
       this.committedChanges.set(this.committed)
       this.recordedChanges.set(this.recorded)
@@ -599,6 +600,7 @@ export class Connection {
     this.appPort = appPort;
     this.appId = appId;
     this.signalHandler = signalHandler;
+    this.sessions = []
   }
 
   async open(defaultContent, applyDeltaFn) {
@@ -611,7 +613,24 @@ export class Connection {
     // TODO: in the future we should be able manage and to attach to multiple syn happs
     this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
     await this.syn.attach(this.appId)
+    this.sessions = await this.syn.getSessions()
 
+  }
+
+  async joinSession() {
+    if (!this.syn ) {
+      console.log("join session called without syn app opened")
+      return
+    }
+    if (this.sessions.length == 0) {
+      this.sessions[0] = await this.syn.newSession()
+    } else {
+      const s = await this.syn.getSession(this.sessions[0])
+      this.syn.setSession(s)
+      if (s._scribeStr != this.syn.me) {
+        await this.syn.sendSyncReq()
+      }
+    }
   }
 
   /* maybe have a create function?

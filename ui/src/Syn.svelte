@@ -125,14 +125,7 @@
   }
 
   async function joinSession() {
-    if (sessions.length == 0) {
-      sessions[0] = await $connection.syn.newSession()
-    } else {
-      $connection.syn.setSession(await $connection.syn.getSession(sessions[0]))
-      if ($scribeStr != $connection.syn.me) {
-        await $connection.syn.sendSyncReq()
-     }
-    }
+    $connection.joinSession()
   }
 
   let adminPort=1234
@@ -143,7 +136,6 @@
       $connection = new Connection(appPort, appId, holochainSignalHandler)
       await $connection.open({title:'', body:''}, applyDeltaFn)
 
-      sessions = await $connection.syn.getSessions()
       session = $connection.syn.session
 
       console.log('joining session...')
