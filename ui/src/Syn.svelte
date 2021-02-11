@@ -20,12 +20,6 @@
 
   const dispatch = createEventDispatcher()
 
-  let commitInProgress = false
-  let currentCommitHeaderHash
-  $: currentCommitHeaderHashStr = arrayBufferToBase64(currentCommitHeaderHash)
-
-  $: folksPretty =  JSON.stringify(Object.keys($folks).map(f => f.slice(-4)))
-
   let adminPort=1234
   let appPort=8888
   let appId='syn'
