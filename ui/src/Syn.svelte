@@ -124,10 +124,6 @@
     }
   }
 
-  async function joinSession() {
-    $connection.joinSession()
-  }
-
   let adminPort=1234
   let appPort=8888
   let appId='syn'
@@ -139,10 +135,12 @@
       session = $connection.syn.session
 
       console.log('joining session...')
-      await joinSession()
+      await $connection.joinSession()
+      sessions = $connection.sessions
     }
     else {
       $connection.syn.clearState()
+      sessions = undefined
       console.log('disconnected')
     }
   }
