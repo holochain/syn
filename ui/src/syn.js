@@ -258,7 +258,6 @@ export class Session {
     // append changes to the recorded history
     this.recorded.push(undoableChange)
     this.recordedChanges.set(this.recorded)
-    //    this.recordedChanges.update(h=>[...h, undoableChange])
   }
 
   _recordDeltas(deltas) {
@@ -336,7 +335,6 @@ export class Session {
         // append changes to the requested queue
         this.requested.push(undoableChange)
         this.requestedChanges.set(this.requested)
-//        requestedChanges.update(h=>[...h, undoableChange])
       }
       console.log("REQUESTED", this.requested)
       this.sendChangeReq(index, deltas)
@@ -403,8 +401,6 @@ export class Session {
         this.recorded = []
         this.recordedChanges.set(this.recorded)
         this.committedChanges.set(this.committed)
-        //committedChanges.update(c => c.concat($recordedChanges))
-        //$recordedChanges = []
       }
       catch (e) {
         console.log("Error:", e)
