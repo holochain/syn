@@ -1,9 +1,7 @@
 <script>
-  import { nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
+  import { connection, scribeStr, content, folks } from './stores.js'
   import { createEventDispatcher } from 'svelte'
-  import {decodeJson, encodeJson} from './json.js'
-  import { getFolkColors } from './colors.js'
-  import { Syn, Connection, Session, arrayBufferToBase64, FOLK_SEEN} from './syn.js'
+  import { Connection, arrayBufferToBase64} from './syn.js'
 
   let session
 
@@ -13,55 +11,6 @@
 
   // this is the list of sessions returned by the DNA
   let sessions
-
-  // let heartbeatInterval = 15 * 1000 // 15 seconds
-  let heartbeatInterval = 30  * 1000 // for testing ;)
-  // Send heartbeat to scribe every [heartbeat interval]
-  let heart = window.setInterval(async () => {
-    if ($session) {
-      if ($scribeStr == $connection.syn.me) {
-        // examine folks last seen time and see if any have crossed the session out-of-session
-        // timeout so we can tell everybody else about them having dropped.
-        let gone = $session.updateRecentlyTimedOutFolks()
-        if (gone.length > 0) {
-          $session.sendFolkLore($session.folksForScribeSignals(), {gone})
-        }
-      } else {
-        // I'm not the scribe so send them a heartbeat
-        await $session.sendHeartbeat('Hello')
-      }
-    }
-  }, heartbeatInterval)
-
-  let reqTimeout = 1000
-
-  let requestChecker = window.setInterval(async () => {
-    if ($requestedChanges.length > 0) {
-      if ((Date.now() - $requestedChanges[0].at) > reqTimeout) {
-        // for now let's just do the most drastic thing!
-        /*
-        console.log('requested change timed out! Undoing all changes', $requestedChanges[0])
-        // TODO: make sure this is transactional and no requestChanges squeak in !
-        while ($requestedChanges.length > 0) {
-          requestedChanges.update(changes => {
-            const change = changes.pop()
-            console.log('undoing ', change)
-            const undoDelta = undoFn(change)
-            console.log('undoDelta: ', undoDelta)
-            applyDeltaFn(undoDelta)
-            return changes
-          })
-          }*/
-        $requestedChanges = []
-        $recordedChanges = []
-        // and send a sync request incase something just got out of sequence
-        // TODO: prepare for shifting to new scribe if they went offline
-        $connection.syn.setSession(await $connection.syn.getSession($session.session_hash, applyDeltaFn))
-        console.log("HERE")
-        $connection.syn.sendSyncReq()
-      }
-    }
-  }, reqTimeout/2)
 
   export function requestChange(deltas) {
     $session.requestChange(deltas)

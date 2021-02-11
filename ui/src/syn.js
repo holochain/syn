@@ -121,7 +121,7 @@ export class Syn {
   }
 
   setSession(sessionInfo) {
-    let s = new Session(this.zome, sessionInfo, this.applyDeltaFn)
+    let s = new Session(this, sessionInfo)
     this._session = s
     this.session.set(s)
     return s
@@ -149,15 +149,18 @@ export const FOLK_UNKNOWN = 3
 // const outOfSessionTimout = 30 * 1000
 const outOfSessionTimout = 8 * 1000 // testing code :)
 
+// const heartbeatInterval = 15 * 1000 // 15 seconds
+const heartbeatInterval = 30  * 1000 // for testing ;)
+let reqTimeout = 1000
 
 export class Session {
-  constructor(zome, sessionInfo, applyDeltaFn, defaultContent) {
-    this.zome = zome
-    this.applyDeltaFn = applyDeltaFn
-    this.me = zome.me
-    this.myTag = zome.me.slice(-4)
+  constructor(syn, sessionInfo) {
+    this.zome = syn.zome
+    this.applyDeltaFn = syn.applyDeltaFn
+    this.me = syn.zome.me
+    this.myTag = syn.zome.me.slice(-4)
 
-    this._content = defaultContent
+    this._content = syn.defaultContent
     this.content = content
     this.content.set(this._content)
     this.folks = folks
@@ -185,6 +188,52 @@ export class Session {
     this.committed = []
     this.reqCounter = 0
 
+    var self = this
+    // Send heartbeat to scribe every [heartbeat interval]
+    this.heart = window.setInterval(async () => {
+      if (self._scribeStr == self.me) {
+        // examine folks last seen time and see if any have crossed the session out-of-session
+        // timeout so we can tell everybody else about them having dropped.
+        let gone = self.updateRecentlyTimedOutFolks()
+        if (gone.length > 0) {
+          self.sendFolkLore(self.folksForScribeSignals(), {gone})
+        }
+      } else {
+          // I'm not the scribe so send them a heartbeat
+        await self.sendHeartbeat('Hello')
+      }
+    }, heartbeatInterval)
+
+    this.requestChecker = window.setInterval(async () => {
+      if (self.requested.length > 0) {
+        if ((Date.now() - self.requested[0].at) > reqTimeout) {
+          // for now let's just do the most drastic thing!
+          /*
+            console.log('requested change timed out! Undoing all changes', $requestedChanges[0])
+            // TODO: make sure this is transactional and no requestChanges squeak in !
+            while ($requestedChanges.length > 0) {
+            requestedChanges.update(changes => {
+            const change = changes.pop()
+            console.log('undoing ', change)
+            const undoDelta = undoFn(change)
+            console.log('undoDelta: ', undoDelta)
+            applyDeltaFn(undoDelta)
+            return changes
+            })
+            }*/
+          self.requested = []
+          self.recorded = []
+          self.requestedChanges.set(self.requested)
+          self.recordedChanges.set(self.recorded)
+          // and send a sync request incase something just got out of sequence
+          // TODO: prepare for shifting to new scribe if they went offline
+          syn.setSession(await syn.getSession(self.sessionHash))
+          console.log("HERE")
+          syn.sendSyncReq()
+        }
+      }
+    }, reqTimeout/2)
+
     console.log('session joined:', sessionInfo)
     let newContent = {... sessionInfo.snapshot_content} // clone so as not to pass by ref
     newContent.meta = {}
@@ -192,7 +241,7 @@ export class Session {
 
 
     for (const delta of this.deltas) {
-      const [c, change] = applyDeltaFn(newContent, delta)
+      const [c, change] = this.applyDeltaFn(newContent, delta)
       newContent = c
       this.committed.push(change)
     }
