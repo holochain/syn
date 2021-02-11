@@ -77,59 +77,12 @@
 
   $: folksPretty =  JSON.stringify(Object.keys($folks).map(f => f.slice(-4)))
 
-  function holochainSignalHandler(signal) {
-    // ignore signals not meant for me
-    if (!$connection || arrayBufferToBase64(signal.data.cellId[1]) != $connection.syn.me) {
-      return
-    }
-    console.log('Got Signal', signal.data.payload.signal_name, signal)
-    switch (signal.data.payload.signal_name) {
-    case 'SyncReq':
-      $session.syncReq({from: signal.data.payload.signal_payload})
-      break
-    case 'SyncResp':
-      const state = signal.data.payload.signal_payload
-      state.deltas = state.deltas.map(d=>JSON.parse(d))
-      $session.syncResp(state)
-      break
-    case 'ChangeReq':
-      {
-        let [index, deltas] = signal.data.payload.signal_payload
-        deltas = deltas.map(d=>JSON.parse(d))
-        $session.changeReq([index, deltas])
-        break
-      }
-    case 'Change':
-      {
-        let [index, deltas] = signal.data.payload.signal_payload
-        deltas = deltas.map(d=>JSON.parse(d))
-        $session.change(index, deltas)
-        break
-      }
-    case 'FolkLore':
-      {
-        let data = decodeJson(signal.data.payload.signal_payload)
-        $session.folklore(data)
-        break
-      }
-    case 'Heartbeat':
-      {
-        let [from, jsonData] = signal.data.payload.signal_payload
-        const data = decodeJson(jsonData)
-        $session.heartbeat(from, data)
-        break
-      }
-    case 'CommitNotice':
-      $session.commitNotice(signal.data.payload.signal_payload)
-    }
-  }
-
   let adminPort=1234
   let appPort=8888
   let appId='syn'
   async function toggle() {
     if (!$connection) {
-      $connection = new Connection(appPort, appId, holochainSignalHandler)
+      $connection = new Connection(appPort, appId)
       await $connection.open({title:'', body:''}, applyDeltaFn)
 
       session = $connection.syn.session

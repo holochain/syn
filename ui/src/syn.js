@@ -596,25 +596,24 @@ export class Session {
 }
 
 export class Connection {
-  constructor(appPort, appId, signalHandler) {
+  constructor(appPort, appId) {
     this.appPort = appPort;
     this.appId = appId;
-    this.signalHandler = signalHandler;
     this.sessions = []
   }
 
   async open(defaultContent, applyDeltaFn) {
+    var self = this;
     this.appClient = await AppWebsocket.connect(
       `ws://localhost:${this.appPort}`,
-      this.signalHandler
-    )
+      (signal) => signalHandler(self, signal))
+
     console.log('connection established:', this)
 
     // TODO: in the future we should be able manage and to attach to multiple syn happs
     this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
     await this.syn.attach(this.appId)
     this.sessions = await this.syn.getSessions()
-
   }
 
   async joinSession() {
@@ -625,70 +624,58 @@ export class Connection {
     if (this.sessions.length == 0) {
       this.sessions[0] = await this.syn.newSession()
     } else {
-      const s = await this.syn.getSession(this.sessions[0])
-      this.syn.setSession(s)
-      if (s._scribeStr != this.syn.me) {
+      const sessionInfo = await this.syn.getSession(this.sessions[0])
+      this.session = this.syn.setSession(sessionInfo)
+      if (this.session._scribeStr != this.syn.me) {
         await this.syn.sendSyncReq()
       }
     }
   }
+}
 
-  /* maybe have a create function?
-  static async create() {
-    const o = new Connection();
-    await o.open();
-    return o;
-  }*/
-
-  /*
-  holochainSignalHandler(signal) {
-    // ignore signals not meant for me.  This can only happen if there are multiple happs
-    // with different agent Ids installed on the same conductor, and will probably be
-    // fixed later in holochain in any case
-    if (arrayBufferToBase64(signal.data.cellId[1]) != this.me) {
-      return
-    }
-    console.log('Got Signal', signal.data.payload.signal_name, signal)
-    switch (signal.data.payload.signal_name) {
-    case 'SyncReq':
-      syncReq({from: signal.data.payload.signal_payload})
-      break
-    case 'SyncResp':
-      const state = signal.data.payload.signal_payload
-      state.deltas = state.deltas.map(d=>JSON.parse(d))
-      console.log('post',state)
-      syncResp(state)
-      break
-    case 'ChangeReq':
-      {
-        let [index, deltas] = signal.data.payload.signal_payload
-        deltas = deltas.map(d=>JSON.parse(d))
-        changeReq([index, deltas])
-        break
-      }
-    case 'Change':
-      {
-        let [index, deltas] = signal.data.payload.signal_payload
-        deltas = deltas.map(d=>JSON.parse(d))
-        change(index, deltas)
-        break
-      }
-    case 'FolkLore':
-      {
-        let data = decodeJson(signal.data.payload.signal_payload)
-        folklore(data)
-        break
-      }
-    case 'Heartbeat':
-      {
-        let [from, jsonData] = signal.data.payload.signal_payload
-        const data = decodeJson(jsonData)
-        heartbeat(from, data)
-        break
-      }
-    case 'CommitNotice':
-      commitNotice(signal.data.payload.signal_payload)
-    }
+function signalHandler(connection, signal) {
+  // ignore signals not meant for me
+  if (!connection.syn || arrayBufferToBase64(signal.data.cellId[1]) != connection.syn.me) {
+    return
   }
-*/
+  console.log('Got Signal', signal.data.payload.signal_name, signal)
+  switch (signal.data.payload.signal_name) {
+  case 'SyncReq':
+    connection.session.syncReq({from: signal.data.payload.signal_payload})
+    break
+  case 'SyncResp':
+    const state = signal.data.payload.signal_payload
+    state.deltas = state.deltas.map(d=>JSON.parse(d))
+    connection.session.syncResp(state)
+    break
+  case 'ChangeReq':
+    {
+      let [index, deltas] = signal.data.payload.signal_payload
+      deltas = deltas.map(d=>JSON.parse(d))
+      connection.session.changeReq([index, deltas])
+      break
+    }
+  case 'Change':
+    {
+      let [index, deltas] = signal.data.payload.signal_payload
+      deltas = deltas.map(d=>JSON.parse(d))
+      connection.session.change(index, deltas)
+      break
+    }
+  case 'FolkLore':
+    {
+      let data = decodeJson(signal.data.payload.signal_payload)
+      connection.session.folklore(data)
+      break
+    }
+  case 'Heartbeat':
+    {
+      let [from, jsonData] = signal.data.payload.signal_payload
+      const data = decodeJson(jsonData)
+      connection.session.heartbeat(from, data)
+      break
+    }
+  case 'CommitNotice':
+    connection.session.commitNotice(signal.data.payload.signal_payload)
+  }
 }
