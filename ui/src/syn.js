@@ -223,6 +223,7 @@ export class Session {
   // apply changes confirmed as recorded by the scribe while reconciling
   // and possibly rebasing our requested changes
   recordDeltas(index, deltas) {
+    console.log("recordDeltas REQUESTED", this.requested)
     for (const delta of deltas) {
       if (this.requested.length > 0) {
         // if this change is our next requested change then remove it
@@ -284,11 +285,11 @@ export class Session {
         undoableChange.id = changeId
         undoableChange.at = changeAt
         // append changes to the requested queue
-        this.requested.concat(undoableChange)
+        this.requested.push(undoableChange)
         this.requestedChanges.set(this.requested)
 //        requestedChanges.update(h=>[...h, undoableChange])
       }
-
+      console.log("REQUESTED", this.requested)
       this.sendChangeReq(index, deltas)
       this.reqCounter+= 1
     }
@@ -349,7 +350,7 @@ export class Session {
         // if commit successfull we need to update the content hash and its string in the session
         this.content_hash = newContentHash
         this.contentHashStr = arrayBufferToBase64(this.content_hash)
-        this.committed.concat(this.recorded)
+        this.committed.push(...this.recorded)
         this.recorded = []
         this.committedChanges.set(this.committed)
         this.recordedChanged.set(this.recorded)
@@ -577,7 +578,7 @@ export class Session {
     if (this.contentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
         this.nextIndex() == commitInfo.deltas_committed) {
       this.contentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
-      this.committed.concat(this.recorded)
+      this.committed.push(...this.recorded)
       this.recorded = []
       this.committedChanges.set(this.committed)
       this.recordedChanges.set(this.recorded)
