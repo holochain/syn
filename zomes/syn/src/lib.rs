@@ -11,7 +11,6 @@ entry_defs![
     Session::entry_def()
 ];
 
-
 /// Content
 // This is structure holds the shared content that is being collaboratively
 // edited by participants in the happ
@@ -29,8 +28,8 @@ pub struct Content {
 #[hdk_entry(id = "session")]
 #[derive(Debug)]
 struct Session {
-    pub snapshot: HeaderHash,  // hash of the starting state for this session
-    // scribe:  // scribe will always be the author of the session, look in the header
+    pub snapshot: HeaderHash, // hash of the starting state for this session
+                              // scribe:  // scribe will always be the author of the session, look in the header
 }
 
 fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
@@ -42,11 +41,7 @@ fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
 
     // snapshot anchor base
     let snapshots_anchor_hash = path.hash()?;
-    create_link(
-        snapshots_anchor_hash,
-        content_hash.clone(),
-        (),
-    )?;
+    create_link(snapshots_anchor_hash, content_hash.clone(), ())?;
     Ok((header_hash, content_hash))
 }
 
@@ -64,7 +59,7 @@ pub struct OptionContent(Option<Content>);
 
 #[hdk_extern]
 fn get_content(input: EntryHash) -> SynResult<OptionContent> {
-    if let Some(element) = get(input,  GetOptions::content())? {
+    if let Some(element) = get(input, GetOptions::content())? {
         Ok(OptionContent(element.into_inner().1.to_app_option()?))
     } else {
         Ok(OptionContent(None))
@@ -92,7 +87,7 @@ pub struct ChangeMeta {
 pub struct ContentChange {
     pub deltas: Vec<Delta>,
     pub previous_change: EntryHash, // hash of Content on which these deltas are to be applied
-    pub content_hash: EntryHash, // hash of Content with these deltas applied
+    pub content_hash: EntryHash,    // hash of Content with these deltas applied
     pub meta: ChangeMeta,
 }
 
@@ -111,11 +106,7 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
     let previous_content_hash = input.change.previous_change.clone();
     let bytes: SerializedBytes = input.change.previous_change.try_into()?;
     let tag = LinkTag::from(bytes.bytes().to_vec());
-    create_link(
-        input.snapshot,
-        change_hash.clone(),
-        tag,
-    )?;
+    create_link(input.snapshot, change_hash.clone(), tag)?;
     if input.participants.len() > 0 {
         let commit_info = CommitInfo {
             deltas_committed: input.change.deltas.len(),
@@ -123,7 +114,10 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
             previous_content_hash,
             commit: header_hash.clone(),
         };
-        remote_signal(&SignalPayload::CommitNotice(commit_info), input.participants)?;
+        remote_signal(
+            &SignalPayload::CommitNotice(commit_info),
+            input.participants,
+        )?;
     }
     Ok(header_hash)
 }
@@ -145,6 +139,10 @@ pub struct SessionInfo {
     pub content_hash: EntryHash,   // content hash at last commit
 }
 
+fn get_folks_path() -> Path {
+    Path::from("folks")
+}
+
 fn get_sessions_path() -> Path {
     Path::from("sessions")
 }
@@ -160,11 +158,7 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     let session_hash = hash_entry(&session)?;
 
     let session_anchor_hash = path.hash()?;
-    create_link(
-        session_anchor_hash,
-        session_hash,
-        (),
-    )?;
+    create_link(session_anchor_hash, session_hash, ())?;
 
     Ok(header_hash)
 }
@@ -175,7 +169,9 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
 ///   - content hash that would result from their application
 /// return error if hash not found rather than option because we
 /// shouldn't be calling this function on a hash that doesn't exist
-fn get_snapshot_info_for_session(header_hash: HeaderHash) -> SynResult<(Content, Vec<Delta>, EntryHash)> {
+fn get_snapshot_info_for_session(
+    header_hash: HeaderHash,
+) -> SynResult<(Content, Vec<Delta>, EntryHash)> {
     if let Some(element) = get(header_hash, GetOptions::content())? {
         let maybe_content: Option<Content> = element.entry().to_app_option()?;
         if let Some(content) = maybe_content {
@@ -183,10 +179,12 @@ fn get_snapshot_info_for_session(header_hash: HeaderHash) -> SynResult<(Content,
 
             let (snapshot_hash, _) = element.header().entry_data().unwrap(); // should always have entry data
 
-           let commits = get_links_and_load_type::<ContentChange>(snapshot_hash.clone(), None)?;
+            let commits = get_links_and_load_type::<ContentChange>(snapshot_hash.clone(), None)?;
             // build hash map from commits vec, with keys as previous_change
-            let tuples = commits.into_iter().map(|c| (c.previous_change , (c.content_hash, c.deltas)));
-            let mut commits_map:HashMap<_,_> = tuples.into_iter().collect();
+            let tuples = commits
+                .into_iter()
+                .map(|c| (c.previous_change, (c.content_hash, c.deltas)));
+            let mut commits_map: HashMap<_, _> = tuples.into_iter().collect();
             // start with the content hash of the snapshot as previous_change
             let mut current_hash = snapshot_hash.clone();
             let mut ordered_deltas = Vec::new();
@@ -197,12 +195,10 @@ fn get_snapshot_info_for_session(header_hash: HeaderHash) -> SynResult<(Content,
                     ordered_deltas.append(deltas);
                     // repeat with that commit's contentHash as next previous_change
                     current_hash = content_hash.clone();
-                }
-                else {
+                } else {
                     // None case (hash-map didn't find anything)
                     break;
                 }
-
             }
             // content_hash of last Commit (current_hash) is the hash that would result from
             // the application of the deltas
@@ -216,11 +212,11 @@ fn get_snapshot_info_for_session(header_hash: HeaderHash) -> SynResult<(Content,
 /// return error if hash not found rather than option because we
 /// shouldn't be calling this function on a hash that doesn't exist
 fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
-    if let Some(element) = get(session_hash,  GetOptions::content())? {
+    if let Some(element) = get(session_hash, GetOptions::content())? {
         let maybe_session: Option<Session> = element.entry().to_app_option()?;
         if let Some(session) = maybe_session {
-
-            let (snapshot_content, deltas, content_hash) = get_snapshot_info_for_session(session.snapshot)?;
+            let (snapshot_content, deltas, content_hash) =
+                get_snapshot_info_for_session(session.snapshot)?;
             let (session_hash, _) = element.header().entry_data().unwrap(); // should always have entry data
             let snapshot_hash = hash_entry(&snapshot_content)?;
             return Ok(SessionInfo {
@@ -262,13 +258,13 @@ fn new_session(input: NewSessionInput) -> SynResult<SessionInfo> {
     let _session_header_hash = create_session(session)?;
 
     let snapshot_hash = hash_entry(&input.content)?;
-    Ok(SessionInfo{
+    Ok(SessionInfo {
         scribe,
         session: session_hash,
         snapshot_content: input.content,
         snapshot_hash,
         content_hash,
-        deltas: Vec::new()
+        deltas: Vec::new(),
     })
 }
 
@@ -289,25 +285,27 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
     let links = get_links(base.into(), tag)?.into_inner();
 
     Ok(links
-       .iter()
-       .map(
-           |link|  {
-               if let Some(element) = get(link.target.clone(), Default::default())? {
-                   let e: Entry = element.entry().clone().into_option().ok_or(SynError::HashNotFound)?;
-                   let entry: R = R::try_from(e).map_err(|_e| SynError::HashNotFound)?;
-                   return Ok(entry);
-               };
-               Err(SynError::HashNotFound)
-           },
-       )
-       .filter_map(Result::ok)
-       .collect())
+        .iter()
+        .map(|link| {
+            if let Some(element) = get(link.target.clone(), Default::default())? {
+                let e: Entry = element
+                    .entry()
+                    .clone()
+                    .into_option()
+                    .ok_or(SynError::HashNotFound)?;
+                let entry: R = R::try_from(e).map_err(|_e| SynError::HashNotFound)?;
+                return Ok(entry);
+            };
+            Err(SynError::HashNotFound)
+        })
+        .filter_map(Result::ok)
+        .collect())
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct StateForSync {
     pub snapshot: EntryHash,
-    pub commit: Option<HeaderHash>,  // latest commit if there has been one since the snapshot
+    pub commit: Option<HeaderHash>, // latest commit if there has been one since the snapshot
     pub commit_content_hash: EntryHash,
     pub deltas: Vec<Delta>, // all deltas since snapshot or that commit
 }
@@ -327,9 +325,9 @@ enum SignalPayload {
     SyncResp(StateForSync),
     ChangeReq(Change),
     Change(Change),
-    Heartbeat((AgentPubKey, String)),   // signal to scribe for maintaining participant info
-    FolkLore(String),     // signal to participants to update other participants info
-    CommitNotice(CommitInfo) // signal for sennding commit and content hash after commit
+    Heartbeat((AgentPubKey, String)), // signal to scribe for maintaining participant info
+    FolkLore(String),                 // signal to participants to update other participants info
+    CommitNotice(CommitInfo),         // signal for sennding commit and content hash after commit
 }
 
 #[hdk_extern]
@@ -340,16 +338,37 @@ fn recv_remote_signal(signal: SerializedBytes) -> SynResult<()> {
     Ok(())
 }
 
-#[hdk_extern] fn init(_: ()) -> ExternResult<InitCallbackResult> {
+#[hdk_extern]
+fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions: GrantedFunctions = HashSet::new();
     functions.insert((zome_info()?.zome_name, "recv_remote_signal".into()));
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
         // empty access converts to unrestricted
-        access: ().into(), functions,
+        access: ().into(),
+        functions,
     })?;
+
+    // ensure folks path and link self to it
+    let me = agent_info()?.agent_latest_pubkey;
+    let path = get_folks_path();
+    path.ensure()?;
+    let folks_anchor_hash = path.hash()?;
+    create_link(folks_anchor_hash, me.into(), ())?;
+
     Ok(InitCallbackResult::Pass)
+}
+
+#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct FolksList(Vec<AgentPubKey>);
+
+#[hdk_extern]
+fn get_folks(_: ()) -> SynResult<FolksList> {
+    let folks_anchor_hash = get_folks_path().hash()?;
+    let links = get_links(folks_anchor_hash, None)?.into_inner();
+    let folks = links.into_iter().map(|l| l.target.into()).collect();
+    Ok(FolksList(folks))
 }
 
 /// Input to the send sync response call
@@ -360,9 +379,12 @@ pub struct SendSyncResponseInput {
 }
 
 #[hdk_extern]
-fn send_sync_response(input:SendSyncResponseInput) -> SynResult<()> {
+fn send_sync_response(input: SendSyncResponseInput) -> SynResult<()> {
     // send response signal to the participant
-    remote_signal(&SignalPayload::SyncResp(input.state), vec![input.participant])?;
+    remote_signal(
+        &SignalPayload::SyncResp(input.state),
+        vec![input.participant],
+    )?;
     Ok(())
 }
 
@@ -373,7 +395,7 @@ pub struct SendSyncRequestInput {
 }
 
 #[hdk_extern]
-fn send_sync_request(input:SendSyncRequestInput) -> SynResult<()> {
+fn send_sync_request(input: SendSyncRequestInput) -> SynResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
     remote_signal(&SignalPayload::SyncReq(me), vec![input.scribe])?;
     Ok(())
@@ -396,7 +418,7 @@ pub struct SendChangeRequestInput {
 }
 
 #[hdk_extern]
-fn send_change_request(input:SendChangeRequestInput) -> SynResult<()> {
+fn send_change_request(input: SendChangeRequestInput) -> SynResult<()> {
     // send response signal to the participant
     remote_signal(&SignalPayload::ChangeReq(input.change), vec![input.scribe])?;
     Ok(())
@@ -410,7 +432,7 @@ pub struct SendChangeInput {
 }
 
 #[hdk_extern]
-fn send_change(input:SendChangeInput) -> SynResult<()> {
+fn send_change(input: SendChangeInput) -> SynResult<()> {
     // send response signal to the participant
     remote_signal(&SignalPayload::Change(input.change), input.participants)?;
     Ok(())
@@ -424,12 +446,14 @@ pub struct SendHeartbeatInput {
 }
 
 #[hdk_extern]
-fn send_heartbeat(input:SendHeartbeatInput) -> SynResult<()> {
+fn send_heartbeat(input: SendHeartbeatInput) -> SynResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
-    remote_signal(&SignalPayload::Heartbeat((me, input.data)), vec![input.scribe])?;
+    remote_signal(
+        &SignalPayload::Heartbeat((me, input.data)),
+        vec![input.scribe],
+    )?;
     Ok(())
 }
-
 
 /// Input to the send folklore call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -439,7 +463,7 @@ pub struct SendFolkLoreInput {
 }
 
 #[hdk_extern]
-fn send_folk_lore(input:SendFolkLoreInput) -> SynResult<()> {
+fn send_folk_lore(input: SendFolkLoreInput) -> SynResult<()> {
     remote_signal(&SignalPayload::FolkLore(input.data), input.participants)?;
     Ok(())
 }
