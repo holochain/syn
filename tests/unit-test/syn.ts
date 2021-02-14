@@ -1,9 +1,7 @@
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { HoloHash } from '@holochain/conductor-api'
 import * as _ from 'lodash'
 import path from 'path'
-
-const delay = ms => new Promise(r => setTimeout(r, ms));
+import {delay, Delta, Signal, StateForSync} from '../common'
 
 const config = Config.gen();
 
@@ -21,27 +19,6 @@ process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
 
-
-type Add = [number, string]
-type Delete = [number, number]
-type Title = string
-
-// Signal type definitions
-type Delta = {
-  type: string,
-  value: Add | Delete | Title,
-}
-
-type StateForSync = {
-  snapshot: HoloHash,
-  commit: HoloHash,
-  deltas: Delta[],
-}
-
-type Signal = {
-  signal_name: string,
-  signal_payload?
-}
 
 module.exports = (orchestrator) => {
     orchestrator.registerScenario('syn basic zome calls', async (s, t) => {
