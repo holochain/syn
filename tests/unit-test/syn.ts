@@ -259,7 +259,8 @@ module.exports = (orchestrator) => {
         await delay(500) // make time for signal to arrive
         let me_sig = me_signals[3]
         t.equal(me_sig.signal_name, "Heartbeat")
-        t.deepEqual(me_sig.signal_payload, "Hello")
+        t.deepEqual(me_sig.signal_payload[1], "Hello")
+        t.deepEqual(me_sig.signal_payload[0], alice_pubkey)
 
         await me.call('syn', 'send_folk_lore', {
             participants: [alice_pubkey, bob_pubkey],

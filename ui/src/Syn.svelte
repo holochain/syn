@@ -21,6 +21,27 @@
     return window.btoa(binary)
   }
 
+  // let heartbeatInterval = 15 * 1000 // 15 seconds
+  let heartbeatInterval = 2  * 1000 // for testing ;)
+  // Send heartbeat to scribe every [heartbeat interval]
+  let heart = window.setInterval(async () => {
+    if ($session) {
+      if ($session.scribeStr == $connection.me) {
+        // examine folks last seen time and see if any have crossed the session out-of-session
+        // timeout so we can tell everybody else about them having dropped.
+        let gone = updateRecentlyTimedOutFolks()
+        if (gone.length > 0) {
+          synSendFolkLore(folksForScribeSignals(), {gone})
+          // Scribe's heartbeat nudges the folks store so svelte detects an update
+          $folks = $folks
+        }
+      } else {
+        // I'm not the scribe so send them a heartbeat
+        await synSendHeartbeat('Hello')
+      }
+    }
+  }, heartbeatInterval)
+
   let reqCounter = 0
   let reqTimeout = 1000
 
@@ -50,6 +71,7 @@
       }
     }
   }, reqTimeout/2)
+
   // called when requesting a change to the content as a result of user action
   // If we are the scribe, no need to go into the zome
   export function requestChange(deltas) {
@@ -100,16 +122,33 @@
   }
 
   async function synSendFolkLore(participants, data) {
-    data = encodeJson(data)
-    return callZome('send_folk_lore', {participants, data})
+    if (participants.length > 0) {
+      data = encodeJson(data)
+      return callZome('send_folk_lore', {participants, data})
+    }
   }
 
-  function particpantsForScribeSignals() {
-    return Object.values($folks).map(v=>v.pubKey)
+  function folksForScribeSignals() {
+    return Object.values($folks).filter(v=>v.inSession).map(v=>v.pubKey)
+  }
+
+  // const outOfSessionTimout = 30 * 1000
+  const outOfSessionTimout = 8 * 1000 // testing code :)
+
+  // updates folks in-session status by checking their last-seen time
+  function updateRecentlyTimedOutFolks() {
+    let result = []
+    for (const [pubKeyStr, folk] of Object.entries($folks)) {
+      if (folk.inSession && (Date.now() - $folks[pubKeyStr].lastSeen > outOfSessionTimout)) {
+        folk.inSession = false
+        result.push($folks[pubKeyStr].pubKey)
+      }
+    }
+    return result
   }
 
   async function synSendChange(index, deltas) {
-    const participants = particpantsForScribeSignals()
+    const participants = folksForScribeSignals()
     if (participants.length > 0) {
       console.log(`Sending change for ${index} to ${folksPretty}:`, deltas)
       deltas = deltas.map(d=>JSON.stringify(d))
@@ -214,7 +253,7 @@
 
   function holochainSignalHandler(signal) {
     // ignore signals not meant for me
-    if (arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
+    if (!$connection || arrayBufferToBase64(signal.data.cellId[1]) != $connection.me) {
       return
     }
     console.log('Got Signal', signal.data.payload.signal_name, signal)
@@ -250,8 +289,9 @@
       }
     case 'Heartbeat':
       {
-        let data = decodeJson(signal.data.payload.signal_payload)
-        heartbeat(data)
+        let [from, jsonData] = signal.data.payload.signal_payload
+        const data = decodeJson(jsonData)
+        heartbeat(from, data)
         break
       }
     case 'CommitNotice':
@@ -365,21 +405,14 @@
   }
 
   // handler for the heartbeat event
-  function heartbeat(data) {
-    console.log('got heartbeat', data)
-    if ($session.scribeStr == $connection.me) {
+  function heartbeat(from, data) {
+    console.log('got heartbeat', data, 'from:', from)
+    if ($session.scribeStr != $connection.me) {
       console.log("heartbeat received but I'm not the scribe.")
     }
     else {
-      // TODO: examine participant's data and see if we need to send out a folk-lore update
-      if (data.participants) {
-        Object.values(data.participants).forEach(
-          p => {
-            console.log('p', p)
-            updateParticipant(p.pubKey, p.meta)
-          }
-        )
-      }
+      // I am the scribe and I've recieved a heartbeat from a concerned Folk
+      updateFolkLastSeen(from)
     }
   }
 
@@ -389,6 +422,13 @@
       console.log("folklore received but I'm the scribe!")
     }
     else {
+      if (data.gone) {
+        Object.values(data.participants).forEach(
+          pubKey => {
+            updateFolkLastSeen(pubKey, true)
+          }
+        )
+      }
       if (data.participants) {
         Object.values(data.participants).forEach(
           p => {
@@ -469,7 +509,10 @@
 
   function updateParticipant(pubKey, meta) {
     const pubKeyStr = arrayBufferToBase64(pubKey)
-    if (!(pubKeyStr in $folks) && (pubKeyStr != $connection.me)) {
+    if (pubKeyStr == $connection.me) {
+      return
+    }
+    if (!(pubKeyStr in $folks)) {
       const colors = getFolkColors(pubKey)
       $folks[pubKeyStr] = {pubKey, meta, colors}
       $folks = $folks
@@ -479,11 +522,29 @@
     }
   }
 
+  function updateFolkLastSeen(pubKey, gone) {
+    const pubKeyStr = arrayBufferToBase64(pubKey)
+    if (pubKeyStr == $connection.me) {
+      return
+    }
+    if (!(pubKeyStr in $folks)) {
+      updateParticipant(pubKey, undefined)
+    }
+    if (gone) {
+      $folks[pubKeyStr].inSession = false
+    } else {
+      // see the folk
+      $folks[pubKeyStr].lastSeen = Date.now()
+      $folks[pubKeyStr].inSession = true
+    }
+  }
+
   // handler for the syncReq event
   function syncReq(request) {
     const from = request.from
     if ($session.scribeStr == $connection.me) {
       updateParticipant(from, request.meta)
+      updateFolkLastSeen(from)
       let state = {
         snapshot: $session.snapshot_hash,
         commit_content_hash: $session.content_hash,
@@ -494,7 +555,7 @@
       }
       // send a sync response to the sender
       synSendSyncResp(from, state)
-      // and send everybody a heartbeat with new participants
+      // and send everybody a folk lore p2p message with new participants
       const p = {...$folks}
       p[$connection.me] = {
         pubKey: $connection.agentPubKey
@@ -502,7 +563,7 @@
       const data = {
         participants: p
       }
-      synSendFolkLore(particpantsForScribeSignals(), data)
+      synSendFolkLore(folksForScribeSignals(), data)
     }
     else {
       console.log("syncReq received but I'm not the scribe!")
@@ -544,7 +605,7 @@
             app_specific: null
           }
         },
-        participants: particpantsForScribeSignals()
+        participants: folksForScribeSignals()
       }
       try {
         currentCommitHeaderHash = await callZome('commit', commit)

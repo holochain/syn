@@ -2,3 +2,5 @@ node_modules/
 *.log
 *.gz
 target/
+ui/public/build/
+ui/node

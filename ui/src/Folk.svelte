@@ -8,6 +8,7 @@
 
   $: scribe = pubKeyStr == $scribeStr
 
+  $: outOfSession = (!$folks[pubKeyStr] ||  !$folks[pubKeyStr].inSession) && !me
   function setUpHex(hexEl) {
     let colors
     if (me) {
@@ -68,18 +69,27 @@
   }
   .me {
   }
+
+  .out-of-session { /* folk hex outline */
+    background-color: goldenrod !important;
+  }
+  .out-of-session div { /* folk-color */
+    background-color: goldenrodyellow !important;
+    /* FIXME: this should grey out the hex instead of make it yellow :)*/
+  }
+
 </style>
 {#if $connection}
   {#if scribe}
     <div class='scribe-wrapper'>
-      <div use:setUpHex class='folk scribe' class:me>
+      <div use:setUpHex class='folk scribe' class:me class:out-of-session={outOfSession}>
         <div class='folk-color'></div>
         {pubKeyStr.slice(-4)}
       </div>
       <div class='scribe-halo'></div>
     </div>
   {:else}
-    <div use:setUpHex class='folk' class:me>
+    <div use:setUpHex class='folk' class:me class:out-of-session={outOfSession}>
       <div class='folk-color'></div>
       {pubKeyStr.slice(-4)}
     </div>
