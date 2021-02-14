@@ -7,13 +7,19 @@ import { session, nextIndex, requestedChanges, recordedChanges, committedChanges
 
 
 export const arrayBufferToBase64 = buffer => {
-  var binary = ''
-  var bytes = new Uint8Array(buffer)
-  var len = bytes.byteLength
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i])
+  if (typeof window !== "undefined") {
+    // browser
+    var binary = ''
+    var bytes = new Uint8Array(buffer)
+    var len = bytes.byteLength
+    for (var i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+     return window.btoa(binary)
+  } else {
+    // nodejs
+    return buffer.toString('base64')
   }
-  return window.btoa(binary)
 }
 
 export class Zome {
@@ -190,7 +196,7 @@ export class Session {
 
     var self = this
     // Send heartbeat to scribe every [heartbeat interval]
-    this.heart = window.setInterval(async () => {
+    this.heart = setInterval(async () => {
       if (self._scribeStr == self.me) {
         // examine folks last seen time and see if any have crossed the session out-of-session
         // timeout so we can tell everybody else about them having dropped.
@@ -204,7 +210,7 @@ export class Session {
       }
     }, heartbeatInterval)
 
-    this.requestChecker = window.setInterval(async () => {
+    this.requestChecker = setInterval(async () => {
       if (self.requested.length > 0) {
         if ((Date.now() - self.requested[0].at) > reqTimeout) {
           // for now let's just do the most drastic thing!
