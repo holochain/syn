@@ -15,7 +15,7 @@ export const arrayBufferToBase64 = buffer => {
     for (var i = 0; i < len; i++) {
       binary += String.fromCharCode(bytes[i])
     }
-     return window.btoa(binary)
+    return window.btoa(binary)
   } else {
     // nodejs
     return buffer.toString('base64')
@@ -139,7 +139,7 @@ export class Syn {
 
   async newSession() {
     let rawSessionInfo = await this.callZome('new_session', {content: this.defaultContent})
-    let s = this.setSession(rawSessionInfo, this.applyDeltaFn)
+    let s = this.setSession(rawSessionInfo)
     return s
   }
 
@@ -673,7 +673,8 @@ export class Connection {
       return
     }
     if (this.sessions.length == 0) {
-      this.sessions[0] = await this.syn.newSession()
+      this.session = await this.syn.newSession()
+      this.sessions[0] = this.session.sessionHash
     } else {
       const sessionInfo = await this.syn.getSession(this.sessions[0])
       this.session = this.syn.setSession(sessionInfo)
