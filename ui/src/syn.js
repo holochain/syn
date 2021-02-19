@@ -142,40 +142,7 @@ const heartbeatInterval = 30  * 1000 // for testing ;)
 let reqTimeout = 1000
 
 export class Session {
-  constructor(syn, sessionInfo) {
-    this.zome = syn.zome
-    this.applyDeltaFn = syn.applyDeltaFn
-    this.me = syn.zome.me
-    this.myTag = syn.zome.me.slice(-4)
-
-    this._content = syn.defaultContent
-    this.content = content
-    this.content.set(this._content)
-    this.folks = folks
-    this.recordedChanges = recordedChanges
-    this.requestedChanges = requestedChanges
-    this.committedChanges = committedChanges
-    this.scribeStr = scribeStr
-
-    this.sessionHash = sessionInfo.session
-    this.scribe = sessionInfo.scribe
-    this.snapshot_content = sessionInfo.snapshot_content
-    this.snapshot_hash = sessionInfo.snapshot_hash
-    this.content_hash = sessionInfo.content_hash
-
-    this.deltas = sessionInfo.deltas.map(d => JSON.parse(d))
-    this.snapshotHashStr = bufferToBase64(sessionInfo.snapshot_hash)
-    this.contentHashStr = bufferToBase64(sessionInfo.content_hash)
-    this._scribeStr = bufferToBase64(sessionInfo.scribe)
-    this.scribeStr.set(this._scribeStr)
-
-    this.others = {}
-    this.folks.set(this.others)
-    this.recorded = []
-    this.requested = []
-    this.committed = []
-    this.reqCounter = 0
-
+  initTimers(syn) {
     var self = this
     // Send heartbeat to scribe every [heartbeat interval]
     this.heart = setInterval(async () => {
@@ -209,24 +176,43 @@ export class Session {
             return changes
             })
             }*/
-          self.requested = []
-          self.recorded = []
-          self.requestedChanges.set(self.requested)
-          self.recordedChanges.set(self.recorded)
+
           // and send a sync request incase something just got out of sequence
           // TODO: prepare for shifting to new scribe if they went offline
-          syn.setSession(await syn.getSession(self.sessionHash))
+
+          this.initState(await syn.getSession(self.sessionHash))
           console.log("HERE")
           syn.sendSyncReq()
         }
       }
     }, reqTimeout/2)
 
-    console.log('session joined:', sessionInfo)
+  }
+
+  initState(sessionInfo) {
+    this.sessionHash = sessionInfo.session
+    this.scribe = sessionInfo.scribe
+    this.snapshot_content = sessionInfo.snapshot_content
+    this.snapshot_hash = sessionInfo.snapshot_hash
+    this.content_hash = sessionInfo.content_hash
+
+    this.deltas = sessionInfo.deltas.map(d => JSON.parse(d))
+    this.snapshotHashStr = bufferToBase64(sessionInfo.snapshot_hash)
+    this.contentHashStr = bufferToBase64(sessionInfo.content_hash)
+    this._scribeStr = bufferToBase64(sessionInfo.scribe)
+    this.scribeStr.set(this._scribeStr)
+
+    this.recorded = []
+    this.requested = []
+    this.requestedChanges.set(this.requested)
+    this.recordedChanges.set(this.recorded)
+    this.committedChanges.set([])
+    this.reqCounter = 0
+
+    this.committed = []
     let newContent = {... sessionInfo.snapshot_content} // clone so as not to pass by ref
     newContent.meta = {}
     newContent.meta[this.myTag] = 0
-
 
     for (const delta of this.deltas) {
       const [c, change] = this.applyDeltaFn(newContent, delta)
@@ -237,6 +223,28 @@ export class Session {
 
     this._content = newContent
     this.content.set(this._content)
+  }
+
+  constructor(syn, sessionInfo) {
+    this.zome = syn.zome
+    this.applyDeltaFn = syn.applyDeltaFn
+    this.me = syn.zome.me
+    this.myTag = syn.zome.me.slice(-4)
+
+    // set up the svelte based state vars
+    this.content = content
+    this.folks = folks
+    this.recordedChanges = recordedChanges
+    this.requestedChanges = requestedChanges
+    this.committedChanges = committedChanges
+    this.scribeStr = scribeStr
+
+    this.others = {}
+    this.folks.set(this.others)
+
+    this.initState(sessionInfo)
+    this.initTimers(syn)
+    console.log('session joined:', sessionInfo)
 
   }
 
