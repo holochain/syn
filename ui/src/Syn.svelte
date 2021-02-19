@@ -1,7 +1,8 @@
 <script>
   import { connection, scribeStr, content, folks } from './stores.js'
   import { createEventDispatcher } from 'svelte'
-  import { Connection, arrayBufferToBase64} from './syn.js'
+  import { Connection} from './syn.js'
+  import { bufferToBase64 } from './utils.js'
 
   let session
 
@@ -97,7 +98,7 @@
   {#if sessions}
   {#each sessions as session}
     <span class='session'>
-      Id: {arrayBufferToBase64(session).slice(-4)}
+      Id: {bufferToBase64(session).slice(-4)}
     </span>
   {/each}
   {/if}

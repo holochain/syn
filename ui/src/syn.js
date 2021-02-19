@@ -1,26 +1,8 @@
 import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
 import { getFolkColors } from './colors.js'
-import {decodeJson, encodeJson} from './json.js'
+import {bufferToBase64, decodeJson, encodeJson} from './utils.js'
 
 import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
-
-
-
-export const arrayBufferToBase64 = buffer => {
-  if (typeof window !== "undefined") {
-    // browser
-    var binary = ''
-    var bytes = new Uint8Array(buffer)
-    var len = bytes.byteLength
-    for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i])
-    }
-    return window.btoa(binary)
-  } else {
-    // nodejs
-    return buffer.toString('base64')
-  }
-}
 
 export class Zome {
   constructor(appClient, appId) {
@@ -34,8 +16,8 @@ export class Zome {
     this.cellId = this.appInfo.cell_data[0][0]
     this.agentPubKey = this.cellId[1]
     this.dna = this.cellId[0]
-    this.dnaStr = arrayBufferToBase64(this.dna)
-    this.me = arrayBufferToBase64(this.agentPubKey)
+    this.dnaStr = bufferToBase64(this.dna)
+    this.me = bufferToBase64(this.agentPubKey)
   }
 
   attached() {
@@ -182,9 +164,9 @@ export class Session {
     this.content_hash = sessionInfo.content_hash
 
     this.deltas = sessionInfo.deltas.map(d => JSON.parse(d))
-    this.snapshotHashStr = arrayBufferToBase64(sessionInfo.snapshot_hash)
-    this.contentHashStr = arrayBufferToBase64(sessionInfo.content_hash)
-    this._scribeStr = arrayBufferToBase64(sessionInfo.scribe)
+    this.snapshotHashStr = bufferToBase64(sessionInfo.snapshot_hash)
+    this.contentHashStr = bufferToBase64(sessionInfo.content_hash)
+    this._scribeStr = bufferToBase64(sessionInfo.scribe)
     this.scribeStr.set(this._scribeStr)
 
     this.others = {}
@@ -383,7 +365,7 @@ export class Session {
       const newContentHash = await this.hashContent(this._content)
       console.log('commiting from snapshot', this.snapshotHashStr)
       console.log('  prev_hash:', this.contentHashStr)
-      console.log('   new_hash:', arrayBufferToBase64(newContentHash))
+      console.log('   new_hash:', bufferToBase64(newContentHash))
       const commit = {
         snapshot: this.snapshot_hash,
         change: {
@@ -402,7 +384,7 @@ export class Session {
         this.currentCommitHeaderHash = await this.zome.call('commit', commit)
         // if commit successfull we need to update the content hash and its string in the session
         this.content_hash = newContentHash
-        this.contentHashStr = arrayBufferToBase64(this.content_hash)
+        this.contentHashStr = bufferToBase64(this.content_hash)
         this.committed = this.committed.concat(this.recorded)
         this.recorded = []
         this.recordedChanges.set(this.recorded)
@@ -429,7 +411,7 @@ export class Session {
   }
 
   updateOthers(pubKey, status, meta) {
-    const pubKeyStr = arrayBufferToBase64(pubKey)
+    const pubKeyStr = bufferToBase64(pubKey)
     if (pubKeyStr == this.me) {
       return
     }
@@ -577,7 +559,7 @@ export class Session {
   // handler for the syncResp event
   syncResp(stateForSync) {
     // Make sure that we are working off the same snapshot and commit
-    const commitContentHashStr = arrayBufferToBase64(stateForSync.commit_content_hash)
+    const commitContentHashStr = bufferToBase64(stateForSync.commit_content_hash)
     if (commitContentHashStr == this.contentHashStr) {
       this._recordDeltas(stateForSync.deltas)
     } else {
@@ -627,17 +609,17 @@ export class Session {
   // handler for the commit notice event
   commitNotice(commitInfo) {
     // make sure we are at the right place to be able to just move forward with the commit
-    if (this.contentHashStr == arrayBufferToBase64(commitInfo.previous_content_hash) &&
+    if (this.contentHashStr == bufferToBase64(commitInfo.previous_content_hash) &&
         this.nextIndex() == commitInfo.deltas_committed) {
-      this.contentHashStr = arrayBufferToBase64(commitInfo.commit_content_hash)
+      this.contentHashStr = bufferToBase64(commitInfo.commit_content_hash)
       this.committed = this.committed.concat(this.recorded)
       this.recorded = []
       this.committedChanges.set(this.committed)
       this.recordedChanges.set(this.recorded)
     } else {
       console.log('received commit notice for beyond our last commit, gotta resync')
-      console.log('commit.commit_content_hash:', arrayBufferToBase64(commitInfo.commit_content_hash))
-      console.log('commit.previous_content_hash:', arrayBufferToBase64(commitInfo.previous_content_hash))
+      console.log('commit.commit_content_hash:', bufferToBase64(commitInfo.commit_content_hash))
+      console.log('commit.previous_content_hash:', bufferToBase64(commitInfo.previous_content_hash))
       console.log('commit.deltas_committed:', commitInfo.deltas_committed)
       console.log('my $session.contentHashStr', this.contentHashStr)
       console.log('my nextIndex', this.nextIndex())
@@ -687,7 +669,7 @@ export class Connection {
 
 function signalHandler(connection, signal) {
   // ignore signals not meant for me
-  if (!connection.syn || arrayBufferToBase64(signal.data.cellId[1]) != connection.syn.me) {
+  if (!connection.syn || bufferToBase64(signal.data.cellId[1]) != connection.syn.me) {
     return
   }
   console.log('Got Signal', signal.data.payload.signal_name, signal)

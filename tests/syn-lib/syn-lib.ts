@@ -56,6 +56,15 @@ export const oFn = (orchestrator) => {
         await c2.open(defaultContent, applyDeltas)
         await c2.joinSession()
         t.equal(c1.syn.me, c2.session._scribeStr)
+        while (true) {
+            const others = Object.keys(c2.session.others)
+            if (others.length > 0) {
+                t.equal(c2.session.others[others[0]].pubKey.toString('base64'), c1.syn.me)
+                break
+            } else {
+                await delay(1000)
+            }
+        }
     })
 }
 
