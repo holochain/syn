@@ -1,25 +1,21 @@
----
+# SynText
 
-# syntext
+A [syn](https://github.com/holochain/syn) sample app for collaborative text editing.
 
-A syn sample app for collaborative text editing.
-
-This is UI is built using svelte from the standard svelte template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
-
+This is UI is built using [Svelte](https://svelte.dev) from the [standard template for Svelte apps](https://github.com/sveltejs/template).
 
 ## Get started
 
-Install the dependencies...
+1. Install the dependencies...
 
-```bash
-cd ui
-npm install
-```
+  ```bash
+  cd ui
+  npm install
+  ```
 
-...then start [Rollup](https://rollupjs.org):
+2. Run the app
+  ```bash
+  npm run dev
+  ```
 
-```bash
-npm run dev
-```
-
-Navigate to [localhost:5000](http://localhost:5000). You should see the UI running.
+3. Navigate to [localhost:5000](http://localhost:5000) in your browser. You should see the UI running.
