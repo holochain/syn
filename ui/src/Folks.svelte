@@ -15,8 +15,8 @@
   }
 </style>
 <div class='folks'>
-  {#if $connection && $connection.me}
-    <Folk me={true} pubKeyStr={$connection.me} pubKey={$connection.agentPubKey}/>
+  {#if $connection && $connection.syn && $connection.syn.me}
+    <Folk me={true} pubKeyStr={$connection.syn.me} pubKey={$connection.syn.agentPubKey}/>
   {/if}
   {#each Object.keys($folks) as p}
     <Folk pubKeyStr={p} pubKey={$folks[p].pubKey}/>

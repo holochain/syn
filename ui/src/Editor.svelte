@@ -1,16 +1,16 @@
 <script>
-  import { content, connection } from './stores.js'
+  import { content, connection, session } from './stores.js'
   import { createEventDispatcher } from 'svelte'
   import { CSSifyHSL } from './colors.js'
 
   const dispatch = createEventDispatcher()
 
   function getLoc(tag) {
-    return $content.meta ? ($content.meta[myTag] ? $content.meta[myTag] : 0) : 0
+    return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0
   }
 
   let editor
-  $: myTag = $connection ? $connection.myTag : ''
+  $: myTag = $session ? $session.myTag : ''
   $: editor_content1 = $content.body.slice(0, getLoc(myTag))
   $: editor_content2 = $content.body.slice(getLoc(myTag))
 
@@ -80,8 +80,8 @@
   $: {
     // wait for cursor and connection and color inside connection to exist
     // before updating the cursor color
-    if (cursor && $connection && $connection.myColors) {
-      cursor.style['border-color'] = CSSifyHSL($connection.myColors.primary)
+    if (cursor && $connection && $connection.syn && $connection.syn.myColors) {
+      cursor.style['border-color'] = CSSifyHSL($connection.syn.myColors.primary)
     }
   }
 

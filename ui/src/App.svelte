@@ -12,33 +12,33 @@
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
-  function applyDelta(delta) {
+  function applyDelta(content, delta) {
     switch(delta.type) {
     case 'Title':
       {
-        const deleted = $content.title
-        $content.title = delta.value
-        return {delta, deleted}
+        const deleted = content.title
+        content.title = delta.value
+        return [content, {delta, deleted}]
       }
     case 'Add':
       {
         const [loc, text] = delta.value
-        $content.body = $content.body.slice(0, loc) + text + $content.body.slice(loc)
-        return {delta}
+        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
+        return [content, {delta}]
       }
     case 'Delete':
       {
         const [start, end] = delta.value
-        const deleted = $content.body.slice(start,end)
-        $content.body = $content.body.slice(0, start) + $content.body.slice(end)
-        return {delta, deleted}
+        const deleted = content.body.slice(start,end)
+        content.body = content.body.slice(0, start) + content.body.slice(end)
+        return [content, {delta, deleted}]
       }
     case 'Meta':
       {
         const [tag, loc] = delta.value.setLoc
-        const deleted = [tag, $content.meta[tag]]
-        $content.meta[tag] = loc
-        return {delta, deleted}
+        const deleted = [tag, content.meta[tag]]
+        content.meta[tag] = loc
+        return [content, {delta, deleted}]
       }
     }
   }

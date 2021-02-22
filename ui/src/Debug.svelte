@@ -9,8 +9,8 @@ ul {
 <div>
   <ul>
     <li>
-      {#if $connection}
-        Connected to Dna: {$connection.Dna}
+      {#if $connection && $connection.syn}
+        Connected to Dna: {$connection.syn.Dna}
       {:else}
         No connection
       {/if}
