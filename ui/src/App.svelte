@@ -1,19 +1,53 @@
 <script>
-  import Editor from './Editor.svelte'
-  import Title from './Title.svelte'
+  import Board from './Board.svelte'  
   import Folks from './Folks.svelte'
   import Syn from './Syn.svelte'
   import Debug from './Debug.svelte'
   import History from './History.svelte'
   import { content, scribeStr } from './stores.js'
 
-  $: disconnected = false
-
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
+
   function applyDelta(delta) {
     switch(delta.type) {
+    case 'add-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        $content.body = JSON.stringify([...stickies, delta.value])
+        return {delta}
+      }
+    case 'update-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        const updatedStickies = stickies.map(sticky => {
+          if (sticky.id === delta.value.id) {
+            return delta.value
+          } else {
+            return sticky
+          }
+        })
+
+        $content.body = JSON.stringify(updatedStickies)
+        return {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}
+      }
+    case 'delete-sticky': 
+      {
+        const stickies = $content.body.length === 0 
+          ? [] 
+          : JSON.parse($content.body)
+
+        $content.body = JSON.stringify(stickies.filter(sticky => sticky.id !== delta.value.id))
+        return {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}
+      }      
+    // TODO: remove all the cases below
     case 'Title':
       {
         const deleted = $content.title
@@ -47,6 +81,7 @@
   function undo(change) {
     const delta = change.delta
     switch(delta.type) {
+    // TODO: add cases for sticky actions
     case 'Title':
       return {type:'Title', value:change.deleted}
       break
@@ -126,7 +161,7 @@
     const remove = window.addEventListener('pointermove', mouseDragHandler)
   }
 
-  let drawerHidden = false
+  let drawerHidden = true
   const hideDrawer = () => {
     drawerHidden = true
   }
@@ -293,18 +328,16 @@
 </svelte:head>
 
 <div class='toolbar'>
-  <h1>SynText</h1>
-<div class:noscribe>
-    <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
+  <h1>Retromania</h1>
 </div>
 <main>
-<div class:noscribe>
-  <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
+
+  <div class:noscribe>
+    <Board on:requestChange={(event) => syn.requestChange(event.detail)} />
+  </div>
 
 
-<Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
+  <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>
 
 <div class='folks-tray'>

@@ -1,8 +1,9 @@
 <script>
   import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
   import { createEventDispatcher } from 'svelte'
-  import {decodeJson, encodeJson} from './json.js'
+  import { decodeJson, encodeJson } from './json.js'
   import { getFolkColors } from './colors.js'
+  import { emptySession } from './utils'
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn
@@ -323,7 +324,7 @@
 
   async function joinSession() {
     if (sessions.length == 0) {
-      sessions[0] = await synNewSession({title:'', body:''})
+      sessions[0] = await synNewSession(emptySession)
       setupSession(sessions[0])
     } else {
       setupSession(await synGetSession(sessions[0]))
@@ -335,7 +336,7 @@
     $scribeStr = ''
     $connection = undefined
     $folks = {}
-    $content = {title:'', body:''}
+    $content = emptySession
     $requestedChanges = []
     $recordedChanges = []
     $committedChanges = []

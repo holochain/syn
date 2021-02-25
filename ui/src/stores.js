@@ -1,8 +1,9 @@
 import { writable, readable, derived } from 'svelte/store'
+import { emptySession } from './utils'
 
 export const session = writable()
 
-export const content = writable({ title: '', body: '' })
+export const content = writable(emptySession)
 
 export const folks = writable({})
 

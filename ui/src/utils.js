@@ -1,0 +1,1 @@
+export const emptySession = { title: '', body: '' }
