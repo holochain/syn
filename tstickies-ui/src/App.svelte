@@ -1,45 +1,47 @@
 <script>
-  import Editor from './Editor.svelte'
-  import Title from './Title.svelte'
+  import Board from './Board.svelte'
   import Folks from './Folks.svelte'
   import Syn from './Syn.svelte'
   import Debug from './Debug.svelte'
   import History from './History.svelte'
-  import { content, scribeStr } from './stores.js'
-
-  $: disconnected = false
+  import { scribeStr } from './stores.js'
 
   // definition of how to apply a delta to the content
   // if the delta is destructive also returns what was
   // destroyed for use by undo
   function applyDelta(content, delta) {
     switch(delta.type) {
-    case 'Title':
+    case 'add-sticky': 
       {
-        const deleted = content.title
-        content.title = delta.value
-        return [content, {delta, deleted}]
-      }
-    case 'Add':
-      {
-        const [loc, text] = delta.value
-        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
+        const stickies = content.body.length === 0 
+          ? [] 
+          : JSON.parse(content.body)
+        content.body = JSON.stringify([...stickies, delta.value])
         return [content, {delta}]
       }
-    case 'Delete':
+    case 'update-sticky': 
       {
-        const [start, end] = delta.value
-        const deleted = content.body.slice(start,end)
-        content.body = content.body.slice(0, start) + content.body.slice(end)
-        return [content, {delta, deleted}]
+        const stickies = content.body.length === 0 
+          ? [] 
+          : JSON.parse(content.body)
+        const updatedStickies = stickies.map(sticky => {
+          if (sticky.id === delta.value.id) {
+            return delta.value
+          } else {
+            return sticky
+          }
+        })
+        content.body = JSON.stringify(updatedStickies)
+        return [content, {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}]
       }
-    case 'Meta':
+    case 'delete-sticky': 
       {
-        const [tag, loc] = delta.value.setLoc
-        const deleted = [tag, content.meta[tag]]
-        content.meta[tag] = loc
-        return [content, {delta, deleted}]
-      }
+        const stickies = content.body.length === 0 
+          ? [] 
+          : JSON.parse(content.body)
+        content.body = JSON.stringify(stickies.filter(sticky => sticky.id !== delta.value.id))
+        return [content, {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}]
+      }      
     }
   }
 
@@ -126,7 +128,7 @@
     const remove = window.addEventListener('pointermove', mouseDragHandler)
   }
 
-  let drawerHidden = false
+  let drawerHidden = true
   const hideDrawer = () => {
     drawerHidden = true
   }
@@ -293,18 +295,13 @@
 </svelte:head>
 
 <div class='toolbar'>
-  <h1>SynText</h1>
-<div class:noscribe>
-    <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
+  <h1>Talking Stickies</h1>
 </div>
 <main>
-<div class:noscribe>
-  <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
-
-
-<Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
+  <div class:noscribe>
+    <Board on:requestChange={(event) => syn.requestChange(event.detail)} />
+  </div>
+  <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
 </main>
 
 <div class='folks-tray'>

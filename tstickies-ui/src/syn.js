@@ -1,4 +1,4 @@
-import {AdminWebsocket, AppWebsocket} from '@holochain/conductor-api'
+import { AppWebsocket } from '@holochain/conductor-api'
 import { getFolkColors } from './colors.js'
 import {bufferToBase64, decodeJson, encodeJson} from './utils.js'
 
@@ -57,6 +57,9 @@ export class Zome {
 
 export class Syn {
   constructor(defaultContent, applyDeltaFn, appClient, appId) {
+
+    console.log('Syn constructor', applyDeltaFn)
+
     this.defaultContent = defaultContent,
     this.applyDeltaFn = applyDeltaFn,
     this.zome = new Zome(appClient, appId)
@@ -295,7 +298,7 @@ export class Session {
     return this.recorded.length
   }
 
-  _runApplyDelta(delta) {
+  _runApplyDelta(delta) { 
     const [newContent, undoableChange] = this.applyDeltaFn(this._content, delta)
     this._content = newContent
     this.content.set(this._content)
@@ -644,6 +647,9 @@ export class Connection {
   }
 
   async open(defaultContent, applyDeltaFn) {
+
+    console.log('connection', applyDeltaFn)
+
     var self = this;
     this.appClient = await AppWebsocket.connect(
       `ws://localhost:${this.appPort}`,

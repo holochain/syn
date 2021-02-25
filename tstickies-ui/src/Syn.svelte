@@ -2,7 +2,7 @@
   import { connection, scribeStr, content, folks } from './stores.js'
   import { createEventDispatcher } from 'svelte'
   import { Connection} from './syn.js'
-  import { bufferToBase64 } from './utils.js'
+  import { bufferToBase64, emptySession } from './utils.js'
 
   let session
 
@@ -27,7 +27,7 @@
   async function toggle() {
     if (!$connection) {
       $connection = new Connection(appPort, appId)
-      await $connection.open({title:'', body:''}, applyDeltaFn)
+      await $connection.open({ ...emptySession }, applyDeltaFn)
 
       session = $connection.syn.session
 
