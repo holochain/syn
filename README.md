@@ -11,7 +11,7 @@ This project makes it easy to build collaborative apps in the distributed peer-t
 3. A function to apply deltas to the content state
 4. Any user interaction that should generate those deltas in the given grammar
 
-For more details read the [design documents](DESIGN.md) and check out the example app, SynText, in the [/ui](ui/) directory.
+For more details read the [design documents](DESIGN.md), read the [article](https://blog.holochain.org/decentralized-next-level-collaboration-apps-with-syn/), and check out the example app, SynText, in the [/ui](ui/) directory.
 
 ## Prerequisites
 
