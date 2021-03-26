@@ -9,9 +9,10 @@ name = "syn"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-serde = "=1.0.104"
+serde = "=1.0.123"
 #chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99.9"
 thiserror = "1.0.20"
-hdk3 = "0"
+#hdk = "0"
+hdk = {  git = "https://github.com/holochain/holochain.git", rev = "78e2591449f1467f32b24219b4ffac75b6b840ee" }
 #hc_utils = "0"

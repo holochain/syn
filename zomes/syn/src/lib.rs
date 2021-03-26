@@ -1,5 +1,5 @@
 use error::{SynError, SynResult};
-use hdk3::prelude::*;
+use hdk::prelude::*;
 use link::LinkTag;
 mod error;
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ entry_defs![
 // This is structure holds the shared content that is being collaboratively
 // edited by participants in the happ
 #[hdk_entry(id = "content")]
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct Content {
     pub title: String,
     pub body: String,
@@ -26,7 +26,6 @@ pub struct Content {
 /// of the content at the start of the session
 /// the scribe will always be the author of the session
 #[hdk_entry(id = "session")]
-#[derive(Debug)]
 struct Session {
     pub snapshot: HeaderHash, // hash of the starting state for this session
                               // scribe:  // scribe will always be the author of the session, look in the header
@@ -48,17 +47,17 @@ fn put_content_inner(content: Content) -> SynResult<(HeaderHash, EntryHash)> {
 // Used by the clerk to commit a snapshot of the content and link it to
 // the snapshot anchor.
 #[hdk_extern]
-pub fn put_content(content: Content) -> SynResult<EntryHash> {
+pub fn put_content(content: Content) -> ExternResult<EntryHash> {
     let (_, content_hash) = put_content_inner(content)?;
     Ok(content_hash)
 }
 
 /// The optional content
-#[derive(Serialize, Deserialize, SerializedBytes)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct OptionContent(Option<Content>);
 
 #[hdk_extern]
-fn get_content(input: EntryHash) -> SynResult<OptionContent> {
+fn get_content(input: EntryHash) -> ExternResult<OptionContent> {
     if let Some(element) = get(input, GetOptions::content())? {
         Ok(OptionContent(element.into_inner().1.to_app_option()?))
     } else {
@@ -83,7 +82,6 @@ pub struct ChangeMeta {
 
 /// Entry type for committing changes to the content, called by the clerk.
 #[hdk_entry(id = "content_change")]
-#[derive(Clone, Debug)]
 pub struct ContentChange {
     pub deltas: Vec<Delta>,
     pub previous_change: EntryHash, // hash of Content on which these deltas are to be applied
@@ -100,7 +98,7 @@ pub struct CommitInput {
 }
 
 #[hdk_extern]
-fn commit(input: CommitInput) -> SynResult<HeaderHash> {
+fn commit(input: CommitInput) -> ExternResult<HeaderHash> {
     let header_hash = create_entry(&input.change)?;
     let change_hash = hash_entry(&input.change)?;
     let previous_content_hash = input.change.previous_change.clone();
@@ -114,8 +112,9 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
             previous_content_hash,
             commit: header_hash.clone(),
         };
+        let payload = ExternIO::encode(SignalPayload::CommitNotice(commit_info))?;
         remote_signal(
-            &SignalPayload::CommitNotice(commit_info),
+            payload,
             input.participants,
         )?;
     }
@@ -123,7 +122,7 @@ fn commit(input: CommitInput) -> SynResult<HeaderHash> {
 }
 
 #[hdk_extern]
-fn hash_content(content: Content) -> SynResult<EntryHash> {
+fn hash_content(content: Content) -> ExternResult<EntryHash> {
     let hash = hash_entry(&content)?;
     Ok(hash)
 }
@@ -233,8 +232,8 @@ fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
 }
 
 #[hdk_extern]
-fn get_session(session: EntryHash) -> SynResult<SessionInfo> {
-    build_session_info(session)
+fn get_session(session: EntryHash) -> ExternResult<SessionInfo> {
+    Ok(build_session_info(session)?)
 }
 
 /// Input to the new_session call
@@ -244,7 +243,7 @@ pub struct NewSessionInput {
 }
 
 #[hdk_extern]
-fn new_session(input: NewSessionInput) -> SynResult<SessionInfo> {
+fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
     // get my pubkey
     let me = agent_info()?.agent_latest_pubkey;
     let (header_hash, content_hash) = put_content_inner(input.content.clone())?;
@@ -271,7 +270,7 @@ fn new_session(input: NewSessionInput) -> SynResult<SessionInfo> {
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SessionList(Vec<EntryHash>);
 #[hdk_extern]
-pub fn get_sessions(_: ()) -> SynResult<SessionList> {
+pub fn get_sessions(_: ()) -> ExternResult<SessionList> {
     let path = get_sessions_path();
     let links = get_links(path.hash()?, None)?.into_inner();
     let sessions = links.into_iter().map(|l| l.target).collect();
@@ -331,11 +330,10 @@ enum SignalPayload {
 }
 
 #[hdk_extern]
-fn recv_remote_signal(signal: SerializedBytes) -> SynResult<()> {
-    let sig: SignalPayload = SignalPayload::try_from(signal.clone())?;
-    debug!(format!("Received remote signal {:?}", sig));
-    emit_signal(&signal)?;
-    Ok(())
+fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
+    let sig: SignalPayload = signal.decode()?;
+    debug!("Received remote signal {:?}", sig);
+    Ok(emit_signal(&sig)?)
 }
 
 #[hdk_extern]
@@ -364,7 +362,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 pub struct FolksList(Vec<AgentPubKey>);
 
 #[hdk_extern]
-fn get_folks(_: ()) -> SynResult<FolksList> {
+fn get_folks(_: ()) -> ExternResult<FolksList> {
     let folks_anchor_hash = get_folks_path().hash()?;
     let links = get_links(folks_anchor_hash, None)?.into_inner();
     let folks = links.into_iter().map(|l| l.target.into()).collect();
@@ -379,10 +377,10 @@ pub struct SendSyncResponseInput {
 }
 
 #[hdk_extern]
-fn send_sync_response(input: SendSyncResponseInput) -> SynResult<()> {
+fn send_sync_response(input: SendSyncResponseInput) -> ExternResult<()> {
     // send response signal to the participant
     remote_signal(
-        &SignalPayload::SyncResp(input.state),
+        ExternIO::encode(SignalPayload::SyncResp(input.state))?,
         vec![input.participant],
     )?;
     Ok(())
@@ -395,9 +393,9 @@ pub struct SendSyncRequestInput {
 }
 
 #[hdk_extern]
-fn send_sync_request(input: SendSyncRequestInput) -> SynResult<()> {
+fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
-    remote_signal(&SignalPayload::SyncReq(me), vec![input.scribe])?;
+    remote_signal(ExternIO::encode(SignalPayload::SyncReq(me))?, vec![input.scribe])?;
     Ok(())
 }
 
@@ -418,9 +416,9 @@ pub struct SendChangeRequestInput {
 }
 
 #[hdk_extern]
-fn send_change_request(input: SendChangeRequestInput) -> SynResult<()> {
+fn send_change_request(input: SendChangeRequestInput) -> ExternResult<()> {
     // send response signal to the participant
-    remote_signal(&SignalPayload::ChangeReq(input.change), vec![input.scribe])?;
+    remote_signal(ExternIO::encode(SignalPayload::ChangeReq(input.change))?, vec![input.scribe])?;
     Ok(())
 }
 
@@ -432,9 +430,9 @@ pub struct SendChangeInput {
 }
 
 #[hdk_extern]
-fn send_change(input: SendChangeInput) -> SynResult<()> {
+fn send_change(input: SendChangeInput) -> ExternResult<()> {
     // send response signal to the participant
-    remote_signal(&SignalPayload::Change(input.change), input.participants)?;
+    remote_signal(ExternIO::encode(SignalPayload::Change(input.change))?, input.participants)?;
     Ok(())
 }
 
@@ -446,10 +444,10 @@ pub struct SendHeartbeatInput {
 }
 
 #[hdk_extern]
-fn send_heartbeat(input: SendHeartbeatInput) -> SynResult<()> {
+fn send_heartbeat(input: SendHeartbeatInput) -> ExternResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
     remote_signal(
-        &SignalPayload::Heartbeat((me, input.data)),
+        ExternIO::encode(SignalPayload::Heartbeat((me, input.data)))?,
         vec![input.scribe],
     )?;
     Ok(())
@@ -463,7 +461,7 @@ pub struct SendFolkLoreInput {
 }
 
 #[hdk_extern]
-fn send_folk_lore(input: SendFolkLoreInput) -> SynResult<()> {
-    remote_signal(&SignalPayload::FolkLore(input.data), input.participants)?;
+fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
+    remote_signal(ExternIO::encode(SignalPayload::FolkLore(input.data))?, input.participants)?;
     Ok(())
 }
