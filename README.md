@@ -15,9 +15,9 @@ For more details read the [design documents](DESIGN.md), read the [article](http
 
 ## Installation
 
-- Install the holochain dev environment: https://developer.holochain.org/docs/install/
-- `git clone https://github.com/holochain/syn && cd ./syn`
-- `nix-shell`
+1. Install the holochain dev environment: https://developer.holochain.org/docs/install/
+2. Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn`
+3. Enter the nix shell: `nix-shell`
 
 ## Building the DNA
 
