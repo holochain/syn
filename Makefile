@@ -20,7 +20,7 @@ nix-%:
 	nix-shell --pure --run "make $*"
 
 # Internal targets; require a Nix environment in order to be deterministic.
-# - Uses the version of `dna-util`, `holochain` on the system PATH.
+# - Uses the version of `hc`, `holochain` on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
 .PHONY:		rebuild install build build-cargo build-dna
 rebuild:	clean build
