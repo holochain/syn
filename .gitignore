@@ -1,6 +1,8 @@
 node_modules/
 *.log
 *.gz
+.idea
+.cargo
 target/
 ui/public/build/
 ui/node

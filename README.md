@@ -21,7 +21,7 @@ For more details read the [design documents](DESIGN.md), read the [article](http
   - Install conductor binary & dna-util binary:
 ```bash
 cargo install --path crates/holochain
-cargo install --path crates/dna_util
+cargo install --path crates/hc_bundle
 ```
   - Make sure the `path/to/holochain/.cargo/bin` is in your `PATH`
 
