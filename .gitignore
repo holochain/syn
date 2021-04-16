@@ -4,3 +4,7 @@ node_modules/
 target/
 ui/public/build/
 ui/node
+*.dna
+.hc*
+*.happ
+.cargo

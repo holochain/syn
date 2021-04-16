@@ -7,7 +7,7 @@ import {delay, Delta, Signal, StateForSync} from '../common'
 
 const config = Config.gen();
 
-const dna = path.join(__dirname, '../../syn.dna.gz')
+const dna = path.join(__dirname, '../../syn.dna')
 
 console.log(dna)
 

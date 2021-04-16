@@ -13,7 +13,7 @@ export class Zome {
   async attach() {
     // setup the syn instance data
     this.appInfo = await this.appClient.appInfo({ installed_app_id: this.appId })
-    this.cellId = this.appInfo.cell_data[0][0]
+    this.cellId = this.appInfo.cell_data[0].cell_id
     this.agentPubKey = this.cellId[1]
     this.dna = this.cellId[0]
     this.dnaStr = bufferToBase64(this.dna)
@@ -647,6 +647,7 @@ export class Connection {
     var self = this;
     this.appClient = await AppWebsocket.connect(
       `ws://localhost:${this.appPort}`,
+      30000,
       (signal) => signalHandler(self, signal))
 
     console.log('connection established:', this)

@@ -2,13 +2,14 @@
 # Test and build syn DNA
 #
 # This Makefile is primarily instructional; you can simply enter the Nix environment for
-# holochain development (supplied by holonix; see pkgs.nix) via `nix-shell` and run `cargo
-# test` directly, or build a target directly by running the following two commands:
-#   1. `RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \ --release --target wasm32-unknown-unknown`
-#   2. `dna-util -c syn.dna.workdir`.
+# holochain development (supplied by holonix; see pkgs.nix) via `nix-shell` and run
+# `make test` directly, or build a target directly eg. `nix-build -A syn`
 
 SHELL		= bash
 DNANAME		= syn
+DNA		= $(DNANAME).dna
+HAPP		= $(DNANAME).happ
+WASM		= target/wasm32-unknown-unknown/release/syn.wasm
 
 # External targets; Uses a nix-shell environment to obtain Holochain runtimes, run tests, etc.
 .PHONY: all FORCE
@@ -19,7 +20,7 @@ nix-%:
 	nix-shell --pure --run "make $*"
 
 # Internal targets; require a Nix environment in order to be deterministic.
-# - Uses the version of `dna-util`, `holochain` on the system PATH.
+# - Uses the version of `hc`, `holochain` on the system PATH.
 # - Normally called from within a Nix environment, eg. run `nix-shell`
 .PHONY:		rebuild install build build-cargo build-dna
 rebuild:	clean build
@@ -28,12 +29,20 @@ install:	build
 
 build:	build-cargo build-dna
 
-build-cargo:
-	RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
-	--release --target wasm32-unknown-unknown
+build:		$(DNA)
 
-build-dna:
-	dna-util -c syn.dna.workdir
+# Package the DNA from the built target release WASM
+$(DNA):		$(WASM) FORCE
+	@echo "Packaging DNA:"
+	@hc dna pack . -o $(DNA)
+	@hc app pack . -o $(HAPP)
+	@ls -l $@
+
+# Recompile the target release WASM
+$(WASM): FORCE
+	@echo "Building  DNA WASM:"
+	@RUST_BACKTRACE=1 CARGO_TARGET_DIR=target cargo build \
+	    --release --target wasm32-unknown-unknown
 
 .PHONY: test test-all test-unit test-debug test-dna test-dna-debug test-stress test-node
 test-all:	test
@@ -66,3 +75,4 @@ clean:
 	    .cargo \
 			Cargo.lock \
 	    target \
+	    $(DNA)
