@@ -1,5 +1,5 @@
-<script>
-  import { requestedChanges, recordedChanges, committedChanges } from './stores.js'
+<script lang="ts">
+  import { requestedChanges, recordedChanges, committedChanges } from './stores'
   import { afterUpdate } from 'svelte'
   import HistoryEntry from './HistoryEntry.svelte'
   

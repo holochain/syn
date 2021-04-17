@@ -8,3 +8,5 @@ ui/node
 .hc*
 *.happ
 .cargo
+.idea
+.rollup.cache

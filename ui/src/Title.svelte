@@ -1,5 +1,5 @@
-<script>
-  import { content } from './stores.js'
+<script lang="ts">
+  import { content } from './stores'
   import { createEventDispatcher, tick } from 'svelte'
   const dispatch = createEventDispatcher()
 

@@ -5,6 +5,8 @@ import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
+import typescript from '@rollup/plugin-typescript';
+import preprocess from 'svelte-preprocess';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -35,17 +37,25 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'public/build/bundle.js'
+		dir: 'public/build'
 	},
 	plugins: [
 	  replace({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE)
           }),
+		typescript(),
 	  svelte({
 			compilerOptions: {
 				// enable run-time checks when not in production
 				dev: !production
-			}
+			},
+			preprocess: preprocess({
+				sourcemap: !production,
+				defaults: {
+					script: 'typescript',
+					style: 'scss'
+				}
+			})
 		}),
 		// we'll extract any component CSS out into
 		// a separate file - better for performance

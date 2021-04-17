@@ -1,13 +1,14 @@
-<script>
-  import { scribeStr, folks, connection } from './stores.js'
-  import { CSSifyHSL } from './colors.js'
+<script lang="ts">
+  import { scribeStr, folks, connection } from './stores'
+  import { CSSifyHSL } from './colors'
 
   export let pubKeyStr = ''
-  export let pubKey
   export let me = false
 
+  let scribe
   $: scribe = pubKeyStr == $scribeStr
 
+  let outOfSession
   $: outOfSession = (!$folks[pubKeyStr] ||  !$folks[pubKeyStr].inSession) && !me
   function setUpHex(hexEl) {
     let colors

@@ -1,14 +1,13 @@
-<script>
-  import { connection, scribeStr, content, folks } from './stores.js'
+<script lang="ts">
   import { createEventDispatcher } from 'svelte'
-  import { Connection} from './syn.js'
-  import { bufferToBase64 } from './utils.js'
+  import { connection, scribeStr } from './stores'
+  import { Connection} from './syn'
+  import { bufferToBase64 } from './utils'
 
   let session
 
   // this properties are the app-defined functions to apply and undo changes
   export let applyDeltaFn
-  export let undoFn
 
   // this is the list of sessions returned by the DNA
   let sessions

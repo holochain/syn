@@ -1,5 +1,5 @@
-<script>
-  import { folks, connection, scribeStr  } from './stores.js'
+<script lang="ts">
+  import { folks, connection, scribeStr  } from './stores'
   import Folk from './Folk.svelte'
 </script>
 <style>

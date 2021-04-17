@@ -1,5 +1,5 @@
-<script>
-  import { session, connection, scribeStr, nextIndex } from './stores.js'
+<script lang="ts">
+  import { session, connection, scribeStr, nextIndex } from './stores'
 </script>
 <style>
 ul {

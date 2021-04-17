@@ -1,7 +1,8 @@
-<script>
-  import { content, connection, session } from './stores.js'
+<script lang="ts">
+  import { content, connection, session } from './stores'
   import { createEventDispatcher } from 'svelte'
-  import { CSSifyHSL } from './colors.js'
+  import { CSSifyHSL } from './colors'
+  import type { Delta } from './Delta'
 
   const dispatch = createEventDispatcher()
 
@@ -16,9 +17,9 @@
 
   function addText(text) {
     const loc = getLoc(myTag)
-    const deltas = [{type:'Add', value:[loc, text]}]
+    const deltas:Delta[] = [{type:'Add', value:[loc, text]}]
     for (const [tag, tagLoc] of Object.entries($content.meta)) {
-      if (tagLoc >=  loc) {
+      if (tagLoc >= loc) {
         deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc+text.length] }})
       }
     }
@@ -51,7 +52,7 @@
         break
       case 'Backspace':
         if (loc>0) {
-          const deltas = [{type:'Delete', value:[loc-1, loc]}]
+          const deltas:Delta[] = [{type:'Delete', value:[loc-1, loc]}]
           for (const [tag, tagLoc] of Object.entries($content.meta)) {
             if (tagLoc >=  loc) {
               deltas.push({type:'Meta', value: {setLoc: [tag,tagLoc-1] }})
