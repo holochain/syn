@@ -7,7 +7,8 @@
   import History from './History.svelte'
   import { scribeStr } from './stores'
   import type { AddDelta, DeleteDelta, Delta, MetaDelta, TitleDelta } from './Delta'
-  import type { applyDelta_ret_T, Content } from './syn'
+  import type { Content } from './Content'
+  import type { applyDelta_ret_T } from './ApplyDelta'
 
   $: disconnected = false
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { content } from './stores'
   import { createEventDispatcher, tick } from 'svelte'
+  import { content } from './stores'
   const dispatch = createEventDispatcher()
 
   let titleBeingTyped = ''

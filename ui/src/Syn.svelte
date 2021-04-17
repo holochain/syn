@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte'
   import { connection, scribeStr } from './stores'
-  import { Connection} from './syn'
   import { bufferToBase64 } from './utils'
+  import { Connection } from './Connection'
 
   let session
 

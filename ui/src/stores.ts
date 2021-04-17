@@ -1,5 +1,8 @@
 import { writable, derived, Writable } from 'svelte/store'
-import type { ApplyDelta, Connection, Session } from './syn'
+import type { Session } from './Session'
+import type { Connection } from './Connection'
+import type { ApplyDelta } from './ApplyDelta'
+import type { PubKeyToFolkRecord } from './Folk'
 
 export const session:Writable<Session> = writable(null)
 
@@ -11,6 +14,7 @@ export interface $content_T {
 export interface content_T extends Writable<$content_T> {}
 export const content:content_T = writable({ title: '', body: '' })
 
+export interface folks_T extends Writable<PubKeyToFolkRecord> {}
 export const folks = writable({})
 
 export const connection:Writable<Connection> = writable(null)

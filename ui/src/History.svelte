@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { requestedChanges, recordedChanges, committedChanges } from './stores'
   import { afterUpdate } from 'svelte'
+  import { requestedChanges, recordedChanges, committedChanges } from './stores'
   import HistoryEntry from './HistoryEntry.svelte'
   
   export let changeToTextFn

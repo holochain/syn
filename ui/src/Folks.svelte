@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { folks, connection, scribeStr  } from './stores'
+  import { folks, connection } from './stores'
   import Folk from './Folk.svelte'
 </script>
 <style>
@@ -16,9 +16,9 @@
 </style>
 <div class='folks'>
   {#if $connection && $connection.syn && $connection.syn.me}
-    <Folk me={true} pubKeyStr={$connection.syn.me} pubKey={$connection.syn.agentPubKey}/>
+    <Folk me={true} pubKeyStr={$connection.syn.me}/>
   {/if}
   {#each Object.keys($folks) as p}
-    <Folk pubKeyStr={p} pubKey={$folks[p].pubKey}/>
+    <Folk pubKeyStr={p}/>
   {/each}
 </div>

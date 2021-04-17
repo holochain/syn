@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { content, connection, session } from './stores'
   import { createEventDispatcher } from 'svelte'
+  import { content, connection, session } from './stores'
   import { CSSifyHSL } from './colors'
   import type { Delta } from './Delta'
 

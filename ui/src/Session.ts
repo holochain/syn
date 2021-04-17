@@ -1,184 +1,18 @@
-import { AppSignal, AppWebsocket, InstalledAppInfo } from '@holochain/conductor-api'
-import { FolkColors, getFolkColors } from './colors'
-import { ApiResponse, bufferToBase64, decodeJson, encodeJson } from './utils'
-
-import {
-  session, requestedChanges, recordedChanges, committedChanges, connection,
-  scribeStr, content, folks
-} from './stores'
+import type { SessionInfo } from './SessionInfo'
+import type { Content } from './Content'
 import type { Delta } from './Delta'
+import type { ApplyDelta } from './ApplyDelta'
+import { ApiResponse, bufferToBase64, encodeJson } from './utils'
+import { getFolkColors } from './colors'
+import { FOLK_GONE, FOLK_SEEN, FOLK_UNKNOWN, PubKeyToFolkRecord, FolkStatus, Folk } from './Folk'
+import type { Syn } from './Syn'
+import {
+  requestedChanges, recordedChanges, committedChanges, scribeStr, content, folks, folks_T
+} from './stores'
+import type { Commit } from './Commit'
+import type { Zome } from './Zome'
+import type { applyDelta_T } from './ApplyDelta'
 
-export type applyDelta_ret_deleted_T = string|[string, number]
-export interface ApplyDelta {
-  delta:Delta
-  deleted?:applyDelta_ret_deleted_T
-  id?:string
-  at?:number
-}
-export type applyDelta_ret_T = [Content, ApplyDelta]
-export type applyDelta_T = (content:Content, delta:Delta)=>applyDelta_ret_T
-export class Zome {
-  constructor(public appClient:AppWebsocket, public appId:string) {
-  }
-  agentPubKey:Buffer
-  appInfo:InstalledAppInfo
-  cellId:[Buffer, Buffer]
-  dna:Buffer
-  dnaStr:string
-  me:string
-
-  async attach() {
-    // setup the syn instance data
-    this.appInfo = await this.appClient.appInfo({ installed_app_id: this.appId })
-    this.cellId = this.appInfo.cell_data[0].cell_id
-    this.agentPubKey = this.cellId[1]
-    this.dna = this.cellId[0]
-    this.dnaStr = bufferToBase64(this.dna)
-    this.me = bufferToBase64(this.agentPubKey)
-  }
-
-  attached() {
-    return this.appInfo != undefined
-  }
-
-  async call(fn_name:string, payload:any, timeout?:number) {
-    if (!this.attached()) {
-      console.log('Can\'t call zome when disconnected from conductor')
-      return
-    }
-    try {
-      const zome_name = 'syn'
-      console.log(`Making zome call ${fn_name} with:`, payload)
-      const result = await this.appClient.callZome(
-        {
-          cap: null,
-          cell_id: this.cellId,
-          zome_name,
-          fn_name,
-          provenance: this.agentPubKey,
-          payload
-        },
-        timeout
-      )
-      return result
-    } catch (error) {
-      console.log('ERROR: callZome threw error', error)
-      throw(error)
-      //  if (error == 'Error: Socket is not open') {
-      // TODO        return doResetConnection(dispatch)
-      // }
-    }
-  }
-
-}
-
-export interface SessionInfo {
-  scribe:Buffer
-  session:Buffer
-  snapshot_content:Content
-  snapshot_hash:Buffer
-  deltas:string[]
-  content_hash:Buffer
-}
-export interface Content {
-  title:string
-  body:string
-  meta?:Record<string, number>
-}
-
-export class Syn {
-  constructor(
-    public defaultContent:Content,
-    public applyDeltaFn:applyDelta_T,
-    public appClient:AppWebsocket,
-    public appId:string
-  ) {
-  }
-  zome = new Zome(this.appClient, this.appId)
-  session = session
-  folks = folks
-  connection = connection
-  agentPubKey:Buffer
-  me:string
-  myColors:FolkColors
-  myTag:string
-  Dna:string
-  _session:Session
-
-  async attach() {
-    await this.zome.attach()
-    this.agentPubKey = this.zome.agentPubKey
-    this.me = this.zome.me
-    this.myColors = getFolkColors(this.agentPubKey)
-    this.myTag = this.me.slice(-4)
-    this.Dna = this.zome.dnaStr
-
-    // TODO: others moved into session so we can do it here.
-    // load up the other folk in this syn instance
-//    let allFolks = await this.getFolks()
-//    for (const folk of allFolks) {
-//      this.updateOthers(folk)
-//    }
-
-  }
-
-  clearState() {
-    this.folks.set({})
-    this.connection.set(undefined)
-    this.session.update(s=>{
-      s.scribeStr.set('')
-      s._content = this.defaultContent
-      s.content.set(s._content)
-      s.requestedChanges.set([])
-      s.recordedChanges.set([])
-      s.committedChanges.set([])
-      return undefined
-    })
-  }
-
-  async callZome(fn_name, payload?, timeout?) {
-    return this.zome.call(fn_name, payload, timeout)
-  }
-
-  async getFolks() {
-    return this.callZome('get_folks')
-  }
-
-  async getSessions() {
-    return this.callZome('get_sessions')
-  }
-
-  setSession(sessionInfo:SessionInfo) {
-    let s = new Session(this, sessionInfo)
-    this._session = s
-    this.session.set(s)
-    return s
-  }
-
-  async getSession(session_hash):Promise<SessionInfo> {
-    return this.callZome('get_session', session_hash)
-  }
-
-  async newSession():Promise<Session> {
-    let rawSessionInfo:SessionInfo = await this.callZome('new_session', { content: this.defaultContent })
-    let s = this.setSession(rawSessionInfo)
-    return s
-  }
-
-  async sendSyncReq() {
-    return this.callZome('send_sync_request', { scribe: this._session.scribe })
-  }
-
-}
-
-export enum FolkStatus {
-  FOLK_SEEN = 1,
-  FOLK_GONE = 2,
-  FOLK_UNKNOWN = 3,
-}
-export const FOLK_SEEN = FolkStatus.FOLK_SEEN
-export const FOLK_GONE = FolkStatus.FOLK_GONE
-export const FOLK_UNKNOWN = FolkStatus.FOLK_UNKNOWN
 // const outOfSessionTimout = 30 * 1000
 const outOfSessionTimout = 8 * 1000 // testing code :)
 
@@ -186,25 +20,27 @@ const outOfSessionTimout = 8 * 1000 // testing code :)
 const heartbeatInterval = 30 * 1000 // for testing ;)
 let reqTimeout = 1000
 
-export interface Commit {
-  snapshot:Buffer
-  change:{
-    deltas:string[]
-    content_hash:Buffer
-    previous_change:Buffer
-    meta:{
-      contributors:string[]
-      witnesses:string[]
-      app_specific:null
-    }
-  },
-  participants:Buffer[]
-}
-export interface Others {
-  inSession:boolean
-}
 export class Session {
-  constructor(public syn:Syn, public sessionInfo:SessionInfo) {
+  zome:Zome
+  applyDeltaFn:applyDelta_T
+  _content:Content
+  me:string
+  myTag:string
+  others:PubKeyToFolkRecord
+  folks:folks_T
+
+  constructor(syn:Syn, public sessionInfo:SessionInfo) {
+    this.zome = syn.zome
+    this.applyDeltaFn = syn.applyDeltaFn
+    this.me = syn.zome.me
+    this.myTag = syn.zome.me.slice(-4)
+    const others = {} as PubKeyToFolkRecord
+    this.others = others
+    this.folks = folks
+    this.folks.set(others)
+    this.initState(this.sessionInfo)
+    this.initTimers(syn)
+    console.log('session joined:', this.sessionInfo)
   }
   heart:ReturnType<typeof setInterval>
   requestChecker:ReturnType<typeof setInterval>
@@ -224,28 +60,12 @@ export class Session {
   recorded:ApplyDelta[]
   commitInProgress:boolean
 
-  zome = this.syn.zome
-  applyDeltaFn = this.syn.applyDeltaFn
-  _content:Content
-  me = this.syn.zome.me
-  myTag = this.syn.zome.me.slice(-4)
   // set up the svelte based state vars
   content = content
-  folks = folks
   recordedChanges = recordedChanges
   requestedChanges = requestedChanges
   committedChanges = committedChanges
   scribeStr = scribeStr
-  others:Others = (()=>{
-    const others = {} as Others
-    folks.set(others)
-    return others
-  })()
-  _init_calls = (()=>{
-    this.initState(this.sessionInfo)
-    this.initTimers(this.syn)
-    console.log('session joined:', this.sessionInfo)
-  })()
 
   initTimers(syn) {
     const self = this
@@ -492,7 +312,7 @@ export class Session {
   _newOther(pubKeyStr:string, pubKey:Buffer) {
     if (!(pubKeyStr in this.others)) {
       const colors = getFolkColors(pubKey)
-      this.others[pubKeyStr] = { pubKey, colors }
+      this.others[pubKeyStr] = { pubKey, colors } as Folk
     }
   }
 
@@ -704,89 +524,5 @@ export class Session {
       console.log('my nextIndex', this.nextIndex())
       // TODO resync
     }
-  }
-}
-
-export class Connection {
-  constructor(public appPort:number, public appId:string) {
-  }
-  appClient:AppWebsocket
-  session:Session
-  sessions:Buffer[]
-  syn:Syn
-
-  async open(defaultContent:Content, applyDeltaFn:applyDelta_T) {
-    const self = this
-    this.appClient = await AppWebsocket.connect(
-      `ws://localhost:${this.appPort}`,
-      30000,
-      (signal)=>signalHandler(self, signal))
-
-    console.log('connection established:', this)
-
-    // TODO: in the future we should be able manage and to attach to multiple syn happs
-    this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
-    await this.syn.attach()
-    this.sessions = await this.syn.getSessions()
-  }
-
-  async joinSession() {
-    if (!this.syn) {
-      console.log('join session called without syn app opened')
-      return
-    }
-    if (this.sessions.length == 0) {
-      this.session = await this.syn.newSession()
-      this.sessions[0] = this.session.sessionHash
-    } else {
-      const sessionInfo = await this.syn.getSession(this.sessions[0])
-      this.session = this.syn.setSession(sessionInfo)
-      if (this.session._scribeStr != this.syn.me) {
-        await this.syn.sendSyncReq()
-      }
-    }
-  }
-}
-
-function signalHandler(connection:Connection, signal:AppSignal) {
-  // ignore signals not meant for me
-  if (!connection.syn || bufferToBase64(signal.data.cellId[1]) != connection.syn.me) {
-    return
-  }
-  console.log('Got Signal', signal.data.payload.signal_name, signal)
-  switch (signal.data.payload.signal_name) {
-    case 'SyncReq':
-      connection.session.syncReq({ from: signal.data.payload.signal_payload })
-      break
-    case 'SyncResp':
-      const state = signal.data.payload.signal_payload
-      state.deltas = state.deltas.map(d=>JSON.parse(d))
-      connection.session.syncResp(state)
-      break
-    case 'ChangeReq': {
-      let [index, deltas] = signal.data.payload.signal_payload
-      deltas = deltas.map(d=>JSON.parse(d))
-      connection.session.changeReq([index, deltas])
-      break
-    }
-    case 'Change': {
-      let [index, deltas] = signal.data.payload.signal_payload
-      deltas = deltas.map(d=>JSON.parse(d))
-      connection.session.change(index, deltas)
-      break
-    }
-    case 'FolkLore': {
-      let data = decodeJson(signal.data.payload.signal_payload)
-      connection.session.folklore(data)
-      break
-    }
-    case 'Heartbeat': {
-      let [from, jsonData] = signal.data.payload.signal_payload
-      const data = decodeJson(jsonData)
-      connection.session.heartbeat(from, data)
-      break
-    }
-    case 'CommitNotice':
-      connection.session.commitNotice(signal.data.payload.signal_payload)
   }
 }
