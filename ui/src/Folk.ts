@@ -1,6 +1,7 @@
+import type { HoloHash } from '@holochain/conductor-api'
 import type { FolkColors } from './colors'
 export interface Folk {
-  pubKey:Buffer
+  pubKey:HoloHash
   inSession?:boolean
   colors?:FolkColors
   lastSeen?:number

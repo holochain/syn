@@ -1,4 +1,4 @@
-import { AppSignal, AppWebsocket } from '@holochain/conductor-api'
+import { AppSignal, AppWebsocket, HoloHash } from '@holochain/conductor-api'
 import type { Session } from './Session'
 import type { Content } from './Content'
 import type { applyDelta_T } from './ApplyDelta'
@@ -9,7 +9,7 @@ export class Connection {
   }
   appClient:AppWebsocket
   session:Session
-  sessions:Buffer[]
+  sessions:HoloHash[]
   syn:Syn
 
   async open(defaultContent:Content, applyDeltaFn:applyDelta_T) {

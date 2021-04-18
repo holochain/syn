@@ -1,9 +1,10 @@
+import type { HoloHash } from '@holochain/conductor-api'
 import type { Content } from './Content'
 export interface SessionInfo {
-  scribe:Buffer
-  session:Buffer
+  scribe:HoloHash
+  session:HoloHash
   snapshot_content:Content
-  snapshot_hash:Buffer
+  snapshot_hash:HoloHash
   deltas:string[]
-  content_hash:Buffer
+  content_hash:HoloHash
 }

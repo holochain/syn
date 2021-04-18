@@ -1,12 +1,12 @@
-import type { AppWebsocket, InstalledAppInfo } from '@holochain/conductor-api'
+import type { AppWebsocket, HoloHash, InstalledAppInfo } from '@holochain/conductor-api'
 import { bufferToBase64 } from './utils'
 export class Zome {
   constructor(public appClient:AppWebsocket, public appId:string) {
   }
-  agentPubKey:Buffer
+  agentPubKey:HoloHash
   appInfo:InstalledAppInfo
-  cellId:[Buffer, Buffer]
-  dna:Buffer
+  cellId:[HoloHash, HoloHash]
+  dna:HoloHash
   dnaStr:string
   me:string
 

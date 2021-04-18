@@ -1,5 +1,6 @@
+import type { HoloHash } from '@holochain/conductor-api'
 // retruns binary input as hex number string (e.g. 'a293b8e1a')
-function arrayBufferToHex(buffer:Buffer) {
+function arrayBufferToHex(buffer:HoloHash) {
   let hexString = ''
   for (const byte of buffer) {
     hexString += byte.toString(16)
@@ -46,7 +47,7 @@ function clamp(value, min, max) {
 //           lookingCursor: Color,      // used for cursor when "looking at"
 // where Color is array: [h, s, l]
 // used in `use:setColor` on new Folk components
-export function getFolkColors(pubKey:Buffer):FolkColors {
+export function getFolkColors(pubKey:HoloHash):FolkColors {
   // get a hex color from the folk's public key
   const hexColor = '#' + arrayBufferToHex(pubKey).slice(-6)
   // extract the RGB components from the hex color notation.

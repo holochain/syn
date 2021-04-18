@@ -1,4 +1,4 @@
-import type { AppWebsocket } from '@holochain/conductor-api'
+import type { AppWebsocket, HoloHash } from '@holochain/conductor-api'
 import { FolkColors, getFolkColors } from './colors'
 import { session, connection, folks } from './stores'
 import type { SessionInfo } from './SessionInfo'
@@ -26,7 +26,7 @@ export class Syn {
   session = session
   folks = folks
   connection = connection
-  agentPubKey:Buffer
+  agentPubKey:HoloHash
   me:string
   myColors:FolkColors
   myTag:string
@@ -68,11 +68,11 @@ export class Syn {
     return this.zome.call(fn_name, payload, timeout)
   }
 
-  async getFolks():Promise<Buffer[]> {
+  async getFolks():Promise<HoloHash[]> {
     return this.callZome('get_folks')
   }
 
-  async getSessions():Promise<Buffer[]> {
+  async getSessions():Promise<HoloHash[]> {
     return this.callZome('get_sessions')
   }
 
@@ -83,7 +83,7 @@ export class Syn {
     return s
   }
 
-  async getSession(session_hash:Buffer):Promise<SessionInfo> {
+  async getSession(session_hash:HoloHash):Promise<SessionInfo> {
     return this.callZome('get_session', session_hash)
   }
 

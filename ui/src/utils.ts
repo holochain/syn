@@ -1,3 +1,4 @@
+import type { HoloHash } from '@holochain/conductor-api'
 export const bufferToBase64 = buffer=>{
   if (typeof window !== 'undefined') {
     // browser
@@ -22,12 +23,12 @@ export const base64ToBuffer = base64=>{
     return Buffer.from(base64, 'base64')
   }
 }
-export interface Participant extends Buffer {
-  pubKey:Buffer
+export interface Participant extends HoloHash {
+  pubKey:HoloHash
   meta:number
 }
 export interface ApiResponse extends Record<string, any> {
-  pubKey:Buffer
+  pubKey:HoloHash
   gone?:boolean
   participants:Participant[]
 }

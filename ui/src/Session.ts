@@ -1,3 +1,4 @@
+import type { HoloHash } from '@holochain/conductor-api'
 import type { SessionInfo } from './SessionInfo'
 import type { Content } from './Content'
 import type { Delta } from './Delta'
@@ -44,14 +45,14 @@ export class Session {
   }
   heart:ReturnType<typeof setInterval>
   requestChecker:ReturnType<typeof setInterval>
-  scribe:Buffer
+  scribe:HoloHash
   _scribeStr:string
   requested:any[]
-  sessionHash:Buffer
+  sessionHash:HoloHash
   snapshot_content:Content
-  snapshot_hash:Buffer
-  content_hash:Buffer
-  currentCommitHeaderHash:Buffer
+  snapshot_hash:HoloHash
+  content_hash:HoloHash
+  currentCommitHeaderHash:HoloHash
   deltas:Delta[]
   snapshotHashStr:string
   contentHashStr:string
@@ -309,14 +310,14 @@ export class Session {
 
   // Folks --------------------------------------------------------
 
-  _newOther(pubKeyStr:string, pubKey:Buffer) {
+  _newOther(pubKeyStr:string, pubKey:HoloHash) {
     if (!(pubKeyStr in this.others)) {
       const colors = getFolkColors(pubKey)
       this.others[pubKeyStr] = { pubKey, colors } as Folk
     }
   }
 
-  updateOthers(pubKey:Buffer, status:FolkStatus, meta?:number) {
+  updateOthers(pubKey:HoloHash, status:FolkStatus, meta?:number) {
     const pubKeyStr = bufferToBase64(pubKey)
     if (pubKeyStr == this.me) {
       return
