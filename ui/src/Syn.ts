@@ -7,6 +7,12 @@ import type { applyDelta_T } from './ApplyDelta'
 import { Zome } from './Zome'
 import { Session } from './Session'
 
+declare global {
+  interface Window {
+    syn:Syn
+  }
+}
+
 export class Syn {
   constructor(
     public defaultContent:Content,
@@ -14,6 +20,7 @@ export class Syn {
     public appClient:AppWebsocket,
     public appId:string
   ) {
+    window.syn = this
   }
   zome = new Zome(this.appClient, this.appId)
   session = session
@@ -61,11 +68,11 @@ export class Syn {
     return this.zome.call(fn_name, payload, timeout)
   }
 
-  async getFolks() {
+  async getFolks():Promise<Buffer[]> {
     return this.callZome('get_folks')
   }
 
-  async getSessions() {
+  async getSessions():Promise<Buffer[]> {
     return this.callZome('get_sessions')
   }
 
@@ -76,17 +83,20 @@ export class Syn {
     return s
   }
 
-  async getSession(session_hash):Promise<SessionInfo> {
+  async getSession(session_hash:Buffer):Promise<SessionInfo> {
     return this.callZome('get_session', session_hash)
   }
 
   async newSession():Promise<Session> {
-    let rawSessionInfo:SessionInfo = await this.callZome('new_session', { content: this.defaultContent })
+    const rawSessionInfo:SessionInfo = await this.callZome(
+      'new_session',
+      { content: this.defaultContent }
+    )
     let s = this.setSession(rawSessionInfo)
     return s
   }
 
-  async sendSyncReq() {
+  async sendSyncReq():Promise<{ sessionInfo:SessionInfo }> {
     return this.callZome('send_sync_request', { scribe: this._session.scribe })
   }
 

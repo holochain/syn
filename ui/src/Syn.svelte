@@ -7,7 +7,7 @@
   let session
 
   // this properties are the app-defined functions to apply and undo changes
-  export let applyDeltaFn
+  export let applyDeltaFn, undoFn
 
   // this is the list of sessions returned by the DNA
   let sessions
