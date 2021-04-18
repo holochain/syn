@@ -1,8 +1,8 @@
-import { Connection } from './../../ui/src/Connection'
-import { Content } from './../../ui/src/Content'
+import { Connection } from '../../ui/src/Connection'
+import { Content } from '../../ui/src/Content'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
-import { delay, Delta, Signal, StateForSync } from '../common'
+import { delay } from '../common'
 
 const config = Config.gen()
 

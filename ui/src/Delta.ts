@@ -1,6 +1,7 @@
+export type DeltaValue = TitleDeltaValue|AddDeltaValue|DeleteDeltaValue|MetaDeltaValue
 export interface Delta {
   type:string
-  value:TitleDeltaValue|AddDeltaValue|DeleteDeltaValue|MetaDeltaValue
+  value:DeltaValue
 }
 export type TitleDeltaValue = string
 export interface TitleDelta extends Delta {
