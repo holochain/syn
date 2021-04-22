@@ -29,6 +29,13 @@ function serve() {
 	};
 }
 
+// only allow env variables that start with SVELTE_APP_
+const envKeys = Object.keys(process.env)
+const env = envKeys.filter(key => key.startsWith('SVELTE_APP_')).reduce((acc, key) => {
+  acc[key] = process.env[key]
+  return acc
+}, {})
+
 export default {
 	input: 'src/main.js',
 	output: {
@@ -38,9 +45,12 @@ export default {
 		file: 'public/build/bundle.js'
 	},
 	plugins: [
-	  replace({
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE)
-          }),
+    replace({
+      'process.env': JSON.stringify({
+        NODE_ENV: process.env.NODE,
+        ...env
+      })
+    }),
 	  svelte({
 			compilerOptions: {
 				// enable run-time checks when not in production

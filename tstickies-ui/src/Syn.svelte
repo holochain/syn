@@ -1,6 +1,6 @@
 <script>
   import { connection, scribeStr, content, folks } from './stores.js'
-  import { createEventDispatcher } from 'svelte'
+  import { createEventDispatcher, onMount } from 'svelte'
   import { Connection} from './syn.js'
   import { bufferToBase64, emptySession } from './utils.js'
 
@@ -16,6 +16,24 @@
   export function requestChange(deltas) {
     $session.requestChange(deltas)
   }
+
+  onMount(async () => {
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const appPort = urlParams.has('port') ? urlParams.get('port') : 8888
+    const appId = urlParams.has('id') ? urlParams.get('id') : 'syn'
+
+    console.log('Connecting with', appPort, appId)
+
+    $connection = new Connection(appPort, appId)
+    await $connection.open({ ...emptySession }, applyDeltaFn)
+
+    session = $connection.syn.session
+
+    console.log('joining session...')
+    await $connection.joinSession()
+    sessions = $connection.sessions
+  })
 
   // -----------------------------------------------------------------------
 
