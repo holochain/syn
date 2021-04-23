@@ -1,5 +1,5 @@
 import type { Delta } from './Delta'
-import type { Content } from './Content'
+import type { Content } from '../content'
 export interface ApplyDelta {
   delta:Delta
   deleted?:applyDelta_ret_deleted_T

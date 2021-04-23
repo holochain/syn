@@ -1,8 +1,11 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  import { connection, scribeStr } from './stores'
+  import { createEventDispatcher, getContext } from 'svelte'
   import { bufferToBase64 } from './utils'
-  import { Connection } from './Connection'
+  import { connection_b, Connection } from './connection'
+  import { scribeStr_b } from './scribe'
+  const ctx = getContext('ctx')
+  const connection = connection_b(ctx)
+  const scribeStr = scribeStr_b(ctx)
 
   let session
 
@@ -25,7 +28,7 @@
   let appId='syn'
   async function toggle() {
     if (!$connection) {
-      $connection = new Connection(appPort, appId)
+      $connection = new Connection(ctx, appPort, appId)
       await $connection.open({title:'', body:''}, applyDeltaFn)
 
       session = $connection.syn.session

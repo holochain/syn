@@ -1,14 +1,17 @@
 <script lang="ts">
+  import { setContext } from 'svelte'
   import Editor from './Editor.svelte'
   import Title from './Title.svelte'
-  import Folks from './Folks.svelte'
+  import { Folks } from './folk'
   import Syn from './Syn.svelte'
   import Debug from './Debug.svelte'
   import History from './History.svelte'
-  import { scribeStr } from './stores'
-  import type { AddDelta, DeleteDelta, Delta, MetaDelta, TitleDelta } from './Delta'
-  import type { Content } from './Content'
-  import type { applyDelta_ret_T } from './ApplyDelta'
+  import { scribeStr_b } from './scribe'
+  import type { AddDelta, applyDelta_ret_T, DeleteDelta, Delta, MetaDelta, TitleDelta } from './delta'
+  import type { Content } from './content'
+  let ctx = {}
+  setContext('ctx', ctx)
+  const scribeStr = scribeStr_b(ctx)
 
   $: disconnected = false
 

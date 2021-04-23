@@ -1,5 +1,5 @@
-import { Connection } from '../../ui/src/Connection'
-import { Content } from '../../ui/src/Content'
+import { Connection } from '../../ui/src/connection'
+import { Content } from '../../ui/src/content'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 import { delay } from '../common'
@@ -47,10 +47,10 @@ export const oFn = (orchestrator)=>{
     await s.shareAllNodes([player1, player2])
     const appPort1:number = player1._conductor.appClient.client.socket._url.split(':')[2]
     const appPort2:number = player2._conductor.appClient.client.socket._url.split(':')[2]
-    const c1 = new Connection(appPort1, syn1.hAppId)
+    const c1 = new Connection({}, appPort1, syn1.hAppId)
     await c1.open(defaultContent, applyDeltas)
     await c1.joinSession()
-    const c2 = new Connection(appPort2, syn2.hAppId)
+    const c2 = new Connection({}, appPort2, syn2.hAppId)
     await c2.open(defaultContent, applyDeltas)
     await c2.joinSession()
     t.equal(c1.syn.me, c2.session._scribeStr)

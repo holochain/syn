@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { scribeStr, folks, connection } from './stores'
-  import { CSSifyHSL } from './colors'
+  import { getContext } from 'svelte'
+  import { connection_b } from '../connection'
+  import { folks_b } from './folks_b'
+  import { CSSifyHSL } from '../colors'
+  import { scribeStr_b } from '../scribe'
+  const ctx = getContext('ctx')
+  const connection = connection_b(ctx)
+  const folks = folks_b(ctx)
+  const scribeStr = scribeStr_b(ctx)
 
   export let pubKeyStr = ''
   export let me = false

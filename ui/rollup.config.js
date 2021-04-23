@@ -43,7 +43,6 @@ export default {
 	  replace({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE)
           }),
-		typescript(),
 	  svelte({
 			compilerOptions: {
 				// enable run-time checks when not in production
@@ -70,6 +69,7 @@ export default {
 			browser: true,
 			dedupe: ['svelte']
 		}),
+		typescript(),
 		commonjs(),
 
 		// In dev mode, call `npm run start` once

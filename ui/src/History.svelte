@@ -1,7 +1,11 @@
 <script lang="ts">
-  import { afterUpdate } from 'svelte'
-  import { requestedChanges, recordedChanges, committedChanges } from './stores'
+  import { afterUpdate, getContext } from 'svelte'
+  import { requestedChanges_b, recordedChanges_b, committedChanges_b } from './delta'
   import HistoryEntry from './HistoryEntry.svelte'
+  const ctx = getContext('ctx')
+  const requestedChanges = requestedChanges_b(ctx)
+  const recordedChanges = recordedChanges_b(ctx)
+  const committedChanges = committedChanges_b(ctx)
   
   export let changeToTextFn
 

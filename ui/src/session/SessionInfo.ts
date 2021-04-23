@@ -1,5 +1,5 @@
 import type { HoloHash } from '@holochain/conductor-api'
-import type { Content } from './Content'
+import type { Content } from '../content'
 export interface SessionInfo {
   scribe:HoloHash
   session:HoloHash

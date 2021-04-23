@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher, tick } from 'svelte'
-  import { content } from './stores'
+  import { createEventDispatcher, getContext, tick } from 'svelte'
+  import { content_b } from './content'
+  const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
+  const content = content_b(ctx)
 
   let titleBeingTyped = ''
 

@@ -1,18 +1,18 @@
 import type { HoloHash } from '@holochain/conductor-api'
-import type { SessionInfo } from './SessionInfo'
-import type { Content } from './Content'
-import type { Delta } from './Delta'
-import type { ApplyDelta } from './ApplyDelta'
-import { ApiResponse, bufferToBase64, encodeJson } from './utils'
-import { getFolkColors } from './colors'
-import { FOLK_GONE, FOLK_SEEN, FOLK_UNKNOWN, PubKeyToFolkRecord, FolkStatus, Folk } from './Folk'
-import type { Syn } from './Syn'
+import { content_b, Content } from '../content'
 import {
-  requestedChanges, recordedChanges, committedChanges, scribeStr, content, folks, folks_T
-} from './stores'
-import type { Commit } from './Commit'
-import type { Zome } from './Zome'
-import type { applyDelta_T } from './ApplyDelta'
+  requestedChanges_b, recordedChanges_b, committedChanges_b, ApplyDelta, applyDelta_T, Delta
+} from '../delta'
+import { ApiResponse, bufferToBase64, encodeJson } from '../utils'
+import { getFolkColors } from '../colors'
+import {
+  FOLK_GONE, FOLK_SEEN, FOLK_UNKNOWN, PubKeyToFolkRecord, FolkStatus, folks_b, folks_T, FolkI
+} from '../folk'
+import type { Syn } from '../Syn'
+import type { Commit } from '../Commit'
+import type { Zome } from '../Zome'
+import type { SessionInfo } from './SessionInfo'
+import { scribeStr_b } from '../scribe'
 
 // const outOfSessionTimout = 30 * 1000
 const outOfSessionTimout = 8 * 1000 // testing code :)
@@ -30,14 +30,14 @@ export class Session {
   others:PubKeyToFolkRecord
   folks:folks_T
 
-  constructor(syn:Syn, public sessionInfo:SessionInfo) {
+  constructor(protected ctx, syn:Syn, public sessionInfo:SessionInfo) {
     this.zome = syn.zome
     this.applyDeltaFn = syn.applyDeltaFn
     this.me = syn.zome.me
     this.myTag = syn.zome.me.slice(-4)
     const others = {} as PubKeyToFolkRecord
     this.others = others
-    this.folks = folks
+    this.folks = folks_b(ctx)
     this.folks.set(others)
     this.initState(this.sessionInfo)
     this.initTimers(syn)
@@ -62,11 +62,11 @@ export class Session {
   commitInProgress:boolean
 
   // set up the svelte based state vars
-  content = content
-  recordedChanges = recordedChanges
-  requestedChanges = requestedChanges
-  committedChanges = committedChanges
-  scribeStr = scribeStr
+  content = content_b(this.ctx)
+  recordedChanges = recordedChanges_b(this.ctx)
+  requestedChanges = requestedChanges_b(this.ctx)
+  committedChanges = committedChanges_b(this.ctx)
+  scribeStr = scribeStr_b(this.ctx)
 
   initTimers(syn) {
     const self = this
@@ -313,7 +313,7 @@ export class Session {
   _newOther(pubKeyStr:string, pubKey:HoloHash) {
     if (!(pubKeyStr in this.others)) {
       const colors = getFolkColors(pubKey)
-      this.others[pubKeyStr] = { pubKey, colors } as Folk
+      this.others[pubKeyStr] = { pubKey, colors } as FolkI
     }
   }
 

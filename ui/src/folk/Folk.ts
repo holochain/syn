@@ -1,12 +1,12 @@
 import type { HoloHash } from '@holochain/conductor-api'
-import type { FolkColors } from './colors'
-export interface Folk {
+import type { FolkColors } from '../colors'
+export interface FolkI {
   pubKey:HoloHash
   inSession?:boolean
   colors?:FolkColors
   lastSeen?:number
 }
-export type PubKeyToFolkRecord = Record<string, Folk>
+export type PubKeyToFolkRecord = Record<string, FolkI>
 export enum FolkStatus {
   FOLK_SEEN = 1,
   FOLK_GONE = 2,

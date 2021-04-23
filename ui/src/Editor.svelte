@@ -1,10 +1,16 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
-  import { content, connection, session } from './stores'
+  import { createEventDispatcher, getContext } from 'svelte'
+  import { connection_b } from './connection'
+  import { content_b } from './content'
+  import { session_b } from './session'
   import { CSSifyHSL } from './colors'
   import type { Delta } from './Delta'
 
+  const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
+  const connection = connection_b(ctx)
+  const content = content_b(ctx)
+  const session = session_b(ctx)
 
   function getLoc(tag) {
     return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0

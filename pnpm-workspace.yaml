@@ -1,0 +1,3 @@
+packages:
+  - 'js/apps/*'
+  - 'js/libs/*'

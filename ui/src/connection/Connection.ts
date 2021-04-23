@@ -1,11 +1,11 @@
 import { AppSignal, AppWebsocket, HoloHash } from '@holochain/conductor-api'
-import type { Session } from './Session'
-import type { Content } from './Content'
-import type { applyDelta_T } from './ApplyDelta'
-import { bufferToBase64, decodeJson } from './utils'
-import { Syn } from './Syn'
+import { Session } from '../session'
+import type { Content } from '../content'
+import type { applyDelta_T } from '../delta'
+import { bufferToBase64, decodeJson } from '../utils'
+import { Syn } from '../Syn'
 export class Connection {
-  constructor(public appPort:number, public appId:string) {
+  constructor(public ctx, public appPort:number, public appId:string) {
   }
   appClient:AppWebsocket
   session:Session
@@ -22,7 +22,7 @@ export class Connection {
     console.log('connection established:', this)
 
     // TODO: in the future we should be able manage and to attach to multiple syn happs
-    this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
+    this.syn = new Syn(this.ctx, defaultContent, applyDeltaFn, this.appClient, this.appId)
     await this.syn.attach()
     this.sessions = await this.syn.getSessions()
   }
@@ -37,7 +37,7 @@ export class Connection {
       this.sessions[0] = this.session.sessionHash
     } else {
       const sessionInfo = await this.syn.getSession(this.sessions[0])
-      this.session = this.syn.setSession(sessionInfo)
+      this.session = new Session(this.ctx, this.syn, sessionInfo)
       if (this.session._scribeStr != this.syn.me) {
         await this.syn.sendSyncReq()
       }

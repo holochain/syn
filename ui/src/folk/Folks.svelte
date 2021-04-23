@@ -1,6 +1,11 @@
 <script lang="ts">
-  import { folks, connection } from './stores'
+  import { connection_b } from '../connection'
+  import { folks_b } from './folks_b'
   import Folk from './Folk.svelte'
+  import { getContext } from 'svelte'
+  const ctx = getContext('ctx')
+  const folks = folks_b(ctx)
+  const connection = connection_b(ctx)
 </script>
 <style>
   :global(:root) {

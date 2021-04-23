@@ -1,11 +1,13 @@
 import type { AppWebsocket, HoloHash } from '@holochain/conductor-api'
+import { get } from '@ctx-core/store'
 import { FolkColors, getFolkColors } from './colors'
-import { session, connection, folks } from './stores'
-import type { SessionInfo } from './SessionInfo'
-import type { Content } from './Content'
-import type { applyDelta_T } from './ApplyDelta'
+import { connection_b } from './connection'
+import type { Content } from './content'
+import { folks_b } from './folk'
+import type { applyDelta_T } from './delta'
 import { Zome } from './Zome'
-import { Session } from './Session'
+import { Session, session_b, SessionInfo } from './session'
+import { scribeStr_b } from './scribe'
 
 declare global {
   interface Window {
@@ -15,6 +17,7 @@ declare global {
 
 export class Syn {
   constructor(
+    public ctx,
     public defaultContent:Content,
     public applyDeltaFn:applyDelta_T,
     public appClient:AppWebsocket,
@@ -23,15 +26,15 @@ export class Syn {
     window.syn = this
   }
   zome = new Zome(this.appClient, this.appId)
-  session = session
-  folks = folks
-  connection = connection
+  session = session_b(this.ctx)
+  folks = folks_b(this.ctx)
+  connection = connection_b(this.ctx)
+  scribeStr = scribeStr_b(this.ctx)
   agentPubKey:HoloHash
   me:string
   myColors:FolkColors
   myTag:string
   Dna:string
-  _session:Session
 
   async attach() {
     await this.zome.attach()
@@ -76,13 +79,6 @@ export class Syn {
     return this.callZome('get_sessions')
   }
 
-  setSession(sessionInfo:SessionInfo) {
-    let s = new Session(this, sessionInfo)
-    this._session = s
-    this.session.set(s)
-    return s
-  }
-
   async getSession(session_hash:HoloHash):Promise<SessionInfo> {
     return this.callZome('get_session', session_hash)
   }
@@ -92,12 +88,13 @@ export class Syn {
       'new_session',
       { content: this.defaultContent }
     )
-    let s = this.setSession(rawSessionInfo)
-    return s
+    const $session = new Session(this.ctx, this, rawSessionInfo)
+    this.session.set($session)
+    return $session
   }
 
   async sendSyncReq():Promise<{ sessionInfo:SessionInfo }> {
-    return this.callZome('send_sync_request', { scribe: this._session.scribe })
+    return this.callZome('send_sync_request', { scribe: get(this.session).scribe })
   }
 
 }
