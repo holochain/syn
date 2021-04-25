@@ -38,9 +38,9 @@ module.exports = (orchestrator) => {
         const alice = alice_happ.cells[0]
         const bob = bob_happ.cells[0]
 
-        const me_pubkey = me.cellId[1]
-        const alice_pubkey = alice.cellId[1]
-        const bob_pubkey = bob.cellId[1]
+        const me_pubkey = me.cell_id[1]
+        const alice_pubkey = alice.cell_id[1]
+        const bob_pubkey = bob.cell_id[1]
 
         let sessions = await me.call('syn', 'get_sessions')
         t.equal(sessions.length, 0)

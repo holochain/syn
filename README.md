@@ -42,7 +42,7 @@ cd ui
 npm install
 npm run dev
 ```
-Now open two tabs in your browser pointing at `http://localhost:5000`.  In the second tab, change the `appPort` to `8889`. Then click 'Connect'. Now you should be able to see both agents and start editing text on either tab and see it appear on the other.
+Now open two tabs in your browser pointing at `http://localhost:5000`.  In the second tab, change the `app_port` to `8889`. Then click 'Connect'. Now you should be able to see both agents and start editing text on either tab and see it appear on the other.
 
 ### Testing
 
