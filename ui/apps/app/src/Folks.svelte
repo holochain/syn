@@ -6,6 +6,8 @@
   const ctx = getContext('ctx')
   const me = me_b(ctx)
   const folks = folks_b(ctx)
+  let folks_keys = []
+  $: folks_keys = $folks ? Object.keys($folks) : []
 </script>
 <style>
   :global(:root) {
@@ -23,7 +25,7 @@
   {#if $me}
     <Folk me={true} pubKeyStr={$me}/>
   {/if}
-  {#each Object.keys($folks) as p}
+  {#each folks_keys as p}
     <Folk pubKeyStr={p}/>
   {/each}
 </div>

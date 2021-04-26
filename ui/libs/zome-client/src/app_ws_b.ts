@@ -6,13 +6,17 @@ import { app_ws_cb_b } from './app_ws_cb_b'
 export const app_ws_b = _b('app_ws', (ctx)=>{
   const app_port = app_port_b(ctx)
   const app_ws_cb = app_ws_cb_b(ctx)
+  let $app_ws:AppWebsocket
   return derived$(app_port, ($app_port, set)=>{
+    if (!$app_port) return
     (async ()=>{
-      set(
-        await _app_ws($app_port, (signal:AppSignal)=>{
-          app_ws_cb.$(signal)
-        })
-      )
+      if ($app_ws) {
+        await $app_ws.client.close()
+      }
+      $app_ws = await _app_ws($app_port, (signal:AppSignal)=>{
+        app_ws_cb.$(signal)
+      })
+      set($app_ws)
     })()
   }) as Readable<AppWebsocket>
 })

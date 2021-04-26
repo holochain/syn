@@ -1,7 +1,7 @@
 import { _b } from '@ctx-core/object'
 import type { Delta } from '@syn-ui/zome-client'
-import { next_index_b, send_change_b } from '../delta'
-import { am_i_scribe_b, record_deltas_b } from '../session'
+import { next_index_b, record_deltas_b, send_change_b } from '../delta'
+import { am_i_scribe_b } from '../session'
 import type { SignalOps } from './SignalOps'
 export const ChangeReq_SignalOps_b = _b<SignalOps>('ChangeReq_SignalOps', (ctx)=>{
   const am_i_scribe = am_i_scribe_b(ctx)

@@ -1,16 +1,15 @@
 import { _b, assign } from '@ctx-core/object'
 import { Commit, rpc_commit_b, rpc_hash_content_b } from '@syn-ui/zome-client'
 import { bufferToBase64 } from '@syn-ui/utils'
-import { _scribe_signal_folk_pubKey_a1_b, committed_changes_b, recorded_changes_b } from '../delta'
 import { content_b } from '../content'
-import { commit_in_progress_b } from './commit_in_progress_b'
-import { snapshot_hash_str_b } from './snapshot_hash_str_b'
-import { content_hash_str_b } from './content_hash_str_b'
-import { content_hash_b } from './content_hash_b'
-import { snapshot_hash_b } from './snapshot_hash_b'
-import { current_commit_header_hash_b } from './current_commit_header_hash_b'
-import { session_info_b } from './session_info_b'
-import { am_i_scribe_b } from './am_i_scribe_b'
+import {
+  am_i_scribe_b, commit_in_progress_b, content_hash_b,
+  content_hash_str_b, current_commit_header_hash_b, session_info_b,
+  snapshot_hash_b, snapshot_hash_str_b
+} from '../session'
+import { recorded_changes_b } from './recorded_changes_b'
+import { _scribe_signal_folk_pubKey_a1_b } from './_scribe_signal_folk_pubKey_a1_b'
+import { committed_changes_b } from './committed_changes_b'
 export const commit_change_b = _b('commit_change', (ctx)=>{
   const recorded_changes = recorded_changes_b(ctx)
   const commit_in_progress = commit_in_progress_b(ctx)

@@ -1,9 +1,9 @@
 import { _b } from '@ctx-core/object'
 import { derived$ } from '@ctx-core/store'
 import { Content, my_tag_b } from '@syn-ui/zome-client'
-import { apply_delta_fn_b } from '../delta'
 import { content_b } from '../content'
-import { session_info_b } from './session_info_b'
+import { session_info_b } from '../session'
+import { apply_delta_fn_b } from './apply_delta_fn_b'
 import { deltas_b } from './deltas_b'
 export const snapshot_content_b = _b('snapshot_content', (ctx)=>{
   const session_info = session_info_b(ctx)

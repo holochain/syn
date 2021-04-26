@@ -1,6 +1,8 @@
 import type { Delta } from '@syn-ui/zome-client'
 import { _b } from '@ctx-core/object'
-import { record_delta_b, recorded_changes_b, requested_changes_b } from '../delta'
+import { requested_changes_b } from './requested_changes_b'
+import { recorded_changes_b } from './recorded_changes_b'
+import { record_delta_b } from './record_delta_b'
 export const record_deltas_b = _b('record_deltas', (ctx)=>{
   const requested_changes = requested_changes_b(ctx)
   return function record_deltas(_index:number, deltas:Delta[]) {
