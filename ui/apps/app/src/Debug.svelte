@@ -1,14 +1,13 @@
 <script lang="ts">
   import { getContext } from 'svelte'
-  import { next_index_b } from './delta'
-  import { connection_b } from './zome'
-  import { session_b } from './session'
-  import { scribe_str_b } from './scribe'
+  import { content_hash_str_b, next_index_b, scribe_str_b, session_info_b } from '@syn-ui/model'
+  import { dna_b } from '@syn-ui/zome-client'
   const ctx = getContext('ctx')
+  const dna = dna_b(ctx)
   const scribe_str = scribe_str_b(ctx)
-  const connection = connection_b(ctx)
   const next_index = next_index_b(ctx)
-  const session = session_b(ctx)
+  const session_info = session_info_b(ctx)
+  const content_hash_str = content_hash_str_b(ctx)
 </script>
 <style>
 ul {
@@ -18,13 +17,13 @@ ul {
 <div>
   <ul>
     <li>
-      {#if $connection && $connection.syn}
-        Connected to Dna: {$connection.syn.Dna}
+      {#if $dna}
+        Connected to Dna: {$dna}
       {:else}
         No connection
       {/if}
-    <li>lastCommitedContentHash: {$session ? $session.contentHashStr : ''}
-    <li>session: {JSON.stringify($session)}
+    <li>lastCommitedContentHash: {$content_hash_str ? $content_hash_str : ''}
+    <li>session: {JSON.stringify($session_info)}
     <li>next_index: {$next_index}
     <li>scribe: {$scribe_str}
   </ul>

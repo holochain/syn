@@ -1,14 +1,14 @@
 <script lang="ts">
   import { setContext } from 'svelte'
+  import { scribe_str_b } from '@syn-ui/model'
+  import type { apply_delta_ret_T } from '@syn-ui/model'
+  import type { AddDelta, Content, DeleteDelta, Delta, MetaDelta, TitleDelta } from '@syn-ui/zome-client'
   import Editor from './Editor.svelte'
   import Title from './Title.svelte'
-  import { Folks } from './folk'
+  import Folks from './Folks.svelte'
   import Syn from './Syn.svelte'
   import Debug from './Debug.svelte'
   import History from './History.svelte'
-  import { scribe_str_b } from './scribe'
-  import type { AddDelta, apply_delta_ret_T, DeleteDelta, Delta, MetaDelta, TitleDelta } from './delta'
-  import type { Content } from './content'
   let ctx = {}
   setContext('ctx', ctx)
   const scribe_str = scribe_str_b(ctx)

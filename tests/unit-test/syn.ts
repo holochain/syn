@@ -1,7 +1,8 @@
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import * as _ from 'lodash'
 import path from 'path'
-import {delay, Delta, Signal, StateForSync} from '../common'
+import { Delta, Signal } from '@syn-ui/zome-client'
+import { delay } from '@holochain/tryorama/lib/util'
 
 const config = Config.gen();
 

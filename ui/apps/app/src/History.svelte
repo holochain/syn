@@ -1,6 +1,6 @@
 <script lang="ts">
   import { afterUpdate, getContext } from 'svelte'
-  import { requested_changes_b, recorded_changes_b, committed_changes_b } from './delta'
+  import { committed_changes_b, recorded_changes_b, requested_changes_b } from '@syn-ui/model'
   import HistoryEntry from './HistoryEntry.svelte'
   const ctx = getContext('ctx')
   const requested_changes = requested_changes_b(ctx)

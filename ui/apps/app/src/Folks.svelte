@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { folks_b } from '@syn-ui/model'
-  import { connection_b } from '@syn-ui/zome-client'
-  import Folk from './Folk.svelte'
   import { getContext } from 'svelte'
+  import { folks_b } from '@syn-ui/model'
+  import { me_b } from '@syn-ui/zome-client'
+  import Folk from './Folk.svelte'
   const ctx = getContext('ctx')
+  const me = me_b(ctx)
   const folks = folks_b(ctx)
-  const connection = connection_b(ctx)
 </script>
 <style>
   :global(:root) {
@@ -20,8 +20,8 @@
   }
 </style>
 <div class='folks'>
-  {#if $connection && $connection.syn && $connection.syn.me}
-    <Folk me={true} pubKeyStr={$connection.syn.me}/>
+  {#if $me}
+    <Folk me={true} pubKeyStr={$me}/>
   {/if}
   {#each Object.keys($folks) as p}
     <Folk pubKeyStr={p}/>

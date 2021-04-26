@@ -1,14 +1,15 @@
 {
   "name": "@syn-ui/zome-client",
   "version": "1.0.0",
-  "main": "./src/index.ts",
-  "module": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./src/index.ts",
   "scripts": {},
   "devDependencies": {
     "@ctx-core/function": "^17.4.7",
-    "@ctx-core/object": "^17.5.9",
-    "@ctx-core/store": "^24.5.0",
+    "@ctx-core/object": "^17.5.10",
+    "@ctx-core/store": "^24.5.2",
+    "@holochain/conductor-api": "^0.0.3",
     "@syn-ui/utils": "workspace:^1.0.0",
     "typescript": "^4.2.4"
   }

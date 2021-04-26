@@ -1,28 +1,26 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte'
-  import { connection_b } from './zome'
-  import { content_b } from './content'
-  import { session_b } from './session'
-  import { CSSifyHSL } from './colors'
-  import type { Delta } from './Delta'
+  import { my_tag_b } from '@syn-ui/zome-client'
+  import type { Delta } from '@syn-ui/zome-client'
+  import { content_b, CSSifyHSL, my_colors_b, session_info_b } from '@syn-ui/model'
 
   const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
-  const connection = connection_b(ctx)
   const content = content_b(ctx)
-  const session = session_b(ctx)
+  const session_info = session_info_b(ctx)
+  const my_tag = my_tag_b(ctx)
+  const my_colors = my_colors_b(ctx)
 
   function getLoc(tag) {
     return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0
   }
 
   let editor
-  $: my_tag = $session ? $session.my_tag : ''
-  $: editor_content1 = $content.body.slice(0, getLoc(my_tag))
-  $: editor_content2 = $content.body.slice(getLoc(my_tag))
+  $: editor_content1 = $content.body.slice(0, getLoc($my_tag))
+  $: editor_content2 = $content.body.slice(getLoc($my_tag))
 
   function addText(text) {
-    const loc = getLoc(my_tag)
+    const loc = getLoc($my_tag)
     const deltas:Delta[] = [{type:'Add', value:[loc, text]}]
     for (const [tag, tagLoc] of Object.entries($content.meta)) {
       if (tagLoc >= loc) {
@@ -33,7 +31,7 @@
   }
 
   function handleInput(event) {
-    const loc = getLoc(my_tag)
+    const loc = getLoc($my_tag)
     const key = event.key
     if (key.length == 1) {
       addText(key)
@@ -42,14 +40,14 @@
       case 'ArrowRight':
         if (loc < $content.body.length) {
           dispatch('request_change', [
-            {type:'Meta', value:{setLoc: [my_tag, loc+1]}}
+            {type:'Meta', value:{setLoc: [$my_tag, loc+1]}}
           ])
         }
         break
       case 'ArrowLeft':
         if (loc > 0){
           dispatch('request_change', [
-            {type:'Meta', value:{setLoc: [my_tag, loc-1]}}
+            {type:'Meta', value:{setLoc: [$my_tag, loc-1]}}
           ])
         }
         break
@@ -76,9 +74,9 @@
     if (window.getSelection().focusNode.parentElement == editor.lastChild) {
       loc += editor_content1.length
     }
-    if (loc != getLoc(my_tag)) {
+    if (loc != getLoc($my_tag)) {
       dispatch('request_change', [
-        {type:'Meta', value:{setLoc: [my_tag, loc]}}
+        {type:'Meta', value:{setLoc: [$my_tag, loc]}}
       ])
     }
   }
@@ -87,8 +85,8 @@
   $: {
     // wait for cursor and connection and color inside connection to exist
     // before updating the cursor color
-    if (cursor && $connection && $connection.syn && $connection.syn.my_colors) {
-      cursor.style['border-color'] = CSSifyHSL($connection.syn.my_colors.primary)
+    if ($my_colors) {
+      cursor.style['border-color'] = CSSifyHSL($my_colors.primary)
     }
   }
 

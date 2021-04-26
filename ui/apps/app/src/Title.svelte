@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, getContext, tick } from 'svelte'
-  import { content_b } from './content'
+  import { content_b } from '@syn-ui/model'
   const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
   const content = content_b(ctx)

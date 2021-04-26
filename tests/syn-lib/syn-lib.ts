@@ -1,7 +1,7 @@
-import { Connection } from '../../ui/src/connection'
-import { Content } from '../../ui/src/content'
-import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
+import { Config, InstallAgentsHapps } from '@holochain/tryorama'
+import { Content, me_b } from '@syn-ui/zome-client'
+import { folks_b, join_session, scribe_str_b } from '@syn-ui/model'
 import { delay } from '../common'
 
 const config = Config.gen()
@@ -47,17 +47,23 @@ export const oFn = (orchestrator)=>{
     await s.shareAllNodes([player1, player2])
     const appPort1:number = player1._conductor.app_ws.client.socket._url.split(':')[2]
     const appPort2:number = player2._conductor.app_ws.client.socket._url.split(':')[2]
-    const c1 = new Connection({}, appPort1, syn1.hAppId)
-    await c1.open(default_content, applyDeltas)
-    await c1.joinSession()
-    const c2 = new Connection({}, appPort2, syn2.hAppId)
-    await c2.open(default_content, applyDeltas)
-    await c2.joinSession()
-    t.equal(c1.syn.me, c2.session._scribe_str)
+    const c1 = join_session({
+      app_port: appPort1, app_id: syn1.hAppId, apply_delta_fn: applyDeltas
+    })
+    // const c1 = new Connection({}, appPort1, syn1.hAppId)
+    // await c1.open(default_content, applyDeltas)
+    // await c1.joinSession()
+    const c2 = join_session({
+      app_port: appPort2, app_id: syn2.hAppId, apply_delta_fn: applyDeltas
+    })
+    // const c2 = new Connection({}, appPort2, syn2.hAppId)
+    // await c2.open(default_content, applyDeltas)
+    // await c2.joinSession()
+    t.equal(me_b(c1).$, scribe_str_b(c2).$)
     while (true) {
-      const others = Object.keys(c2.session.others)
+      const others = Object.keys(folks_b(c2).$)
       if (others.length > 0) {
-        t.equal(c2.session.others[others[0]].pubKey.toString('base64'), c1.syn.me)
+        t.equal(folks_b(c2).$[others[0]].pubKey.toString('base64'), me_b(c1).$)
         break
       } else {
         await delay(1000)

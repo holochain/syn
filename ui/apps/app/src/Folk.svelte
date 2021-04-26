@@ -1,11 +1,11 @@
 <script lang="ts">
   import { getContext } from 'svelte'
-  import { connection_b } from '@syn-ui/zome-client'
-  import { folks_b, scribe_str_b } from '@syn-ui/model'
+  import { CSSifyHSL, folks_b, my_colors_b, scribe_str_b, session_info_b } from '@syn-ui/model'
   const ctx = getContext('ctx')
-  const connection = connection_b(ctx)
   const folks = folks_b(ctx)
   const scribe_str = scribe_str_b(ctx)
+  const my_colors = my_colors_b(ctx)
+  const session_info = session_info_b(ctx)
 
   export let pubKeyStr = ''
   export let me = false
@@ -14,11 +14,11 @@
   $: scribe = pubKeyStr == $scribe_str
 
   let outOfSession
-  $: outOfSession = (!$folks[pubKeyStr] ||  !$folks[pubKeyStr].inSession) && !me
+  $: outOfSession = (!$folks[pubKeyStr] || !$folks[pubKeyStr].inSession) && !me
   function setUpHex(hexEl) {
     let colors
     if (me) {
-      colors = $connection.syn.my_colors
+      colors = $my_colors
     } else {
       colors = $folks[pubKeyStr].colors
     }
@@ -65,7 +65,7 @@
     width: var(--folk-hex-width);
     height: var(--folk-hex-height);
     /* https://www.desmos.com/calculator/bgt97otugr */
-    clip-path: polygon(25%0%,75%0%,100%50%,75%100%,25%100%,12.5% 75%,calc(12.5% + 1.732px) calc(75% - 1px),calc(25% + 1.15px) calc(100% - 2px),50% calc(100% - 2px),50% 100%,75% 100%,87.5% 75%,calc(87.5% - 1.732px) calc(75% - 1px),calc(100% - 2.31px) 50%,calc(87.5% - 1.732px) calc(25% + 1px),87.5% 25%,75%0%,50%0%,50% calc(0% + 2px),calc(25% + 1.15px) calc(0% + 2px),calc(12.5% + 1.732px) calc(25% + 1px),12.5% 25%);
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 12.5% 75%, calc(12.5% + 1.732px) calc(75% - 1px), calc(25% + 1.15px) calc(100% - 2px), 50% calc(100% - 2px), 50% 100%, 75% 100%, 87.5% 75%, calc(87.5% - 1.732px) calc(75% - 1px), calc(100% - 2.31px) 50%, calc(87.5% - 1.732px) calc(25% + 1px), 87.5% 25%, 75% 0%, 50% 0%, 50% calc(0% + 2px), calc(25% + 1.15px) calc(0% + 2px), calc(12.5% + 1.732px) calc(25% + 1px), 12.5% 25%);
     background-color: hsl(0, 0%, 10%);
     position: absolute;
   }
@@ -85,7 +85,7 @@
   }
 
 </style>
-{#if $connection && $connection.syn}
+{#if $session_info}
   {#if scribe}
     <div class='scribe-wrapper'>
       <div use:setUpHex class='folk scribe' class:me class:out-of-session={outOfSession}>

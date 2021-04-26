@@ -1,6 +1,0 @@
-{
-	"devDependencies": {
-		"@holochain/conductor-api": "^0.0.3",
-		"@syn-ui/utils": "workspace:^1.0.0"
-	}
-}
