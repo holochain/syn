@@ -1,5 +1,5 @@
 import type { HoloHash } from '@holochain/conductor-api'
-import type { FolkColors } from './FolkColors'
+import type { FolkColors } from '@syn-ui/zome-client'
 import { arrayBufferToHex } from './arrayBufferToHex'
 import { rgbToHsl } from './rgbToHsl'
 import { clamp } from './clamp'

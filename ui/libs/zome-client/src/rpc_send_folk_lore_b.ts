@@ -1,6 +1,6 @@
+import type { AgentPubKey } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
 import { rpc_b } from './rpc_b'
-import type { HoloHash } from '@holochain/conductor-api'
 import { encodeJson } from './encodeJson'
 import type { PubKeyToFolkRecord } from './Folk'
 export const rpc_send_folk_lore_b = _b('rpc_send_folk_lore', (ctx)=>{
@@ -13,8 +13,9 @@ export const rpc_send_folk_lore_b = _b('rpc_send_folk_lore', (ctx)=>{
   }
 })
 export interface SendFolkLoreInput {
-  participants:HoloHash[]
+  participants:AgentPubKey[]
   data:{
-    participants:PubKeyToFolkRecord
+    participants?:PubKeyToFolkRecord,
+    gone?:AgentPubKey[]
   }
 }

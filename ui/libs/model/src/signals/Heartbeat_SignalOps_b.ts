@@ -1,9 +1,8 @@
 import { _b } from '@ctx-core/object'
-import type { Ops } from './Ops'
 import { decodeJson, FOLK_SEEN } from '@syn-ui/zome-client'
-import { am_i_scribe_b } from './am_i_scribe_b'
-import { update_folks_b } from './update_folks_b'
-export const Heartbeat_ops_b = _b<Ops>('Heartbeat_ops', (ctx)=>{
+import { am_i_scribe_b, update_folks_b } from '../session'
+import type { SignalOps } from './SignalOps'
+export const Heartbeat_SignalOps_b = _b<SignalOps>('Heartbeat_SignalOps', (ctx)=>{
   const am_i_scribe = am_i_scribe_b(ctx)
   const update_folks = update_folks_b(ctx)
   return {

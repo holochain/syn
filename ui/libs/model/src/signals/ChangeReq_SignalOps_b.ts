@@ -1,10 +1,9 @@
 import { _b } from '@ctx-core/object'
 import type { Delta } from '@syn-ui/zome-client'
-import { am_i_scribe_b } from './am_i_scribe_b'
 import { next_index_b, send_change_b } from '../delta'
-import { record_deltas_b } from './record_deltas_b'
-import type { Ops } from './Ops'
-export const ChangeReq_ops_b = _b<Ops>('ChangeReq_ops', (ctx)=>{
+import { am_i_scribe_b, record_deltas_b } from '../session'
+import type { SignalOps } from './SignalOps'
+export const ChangeReq_SignalOps_b = _b<SignalOps>('ChangeReq_SignalOps', (ctx)=>{
   const am_i_scribe = am_i_scribe_b(ctx)
   const next_index = next_index_b(ctx)
   const send_change = send_change_b(ctx)
@@ -29,7 +28,8 @@ export const ChangeReq_ops_b = _b<Ops>('ChangeReq_ops', (ctx)=>{
             return
           }
         }
-        record_deltas_b(ctx)(index, deltas)
+        const record_deltas = record_deltas_b(ctx)
+        record_deltas(index, deltas)
         // notify all participants of the change
         await send_change({ index, deltas })
       }

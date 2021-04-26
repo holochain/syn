@@ -13,27 +13,30 @@ export const request_change_b = _b('request_change', (ctx)=>{
   let request_counter = 0
   return async function request_change(deltas:Delta[]) {
     // any requested made by the scribe should be recorded immediately
-    if (am_i_scribe_b(ctx).$ === true) {
-      const $next_index = next_index_b(ctx).$
+    const am_i_scribe = am_i_scribe_b(ctx)
+    const next_index = next_index_b(ctx)
+    if (am_i_scribe.$ === true) {
+      const $next_index = next_index.$
       for (const delta of deltas) {
         record_delta(delta)
       }
-      await send_change_b(ctx)({ index: $next_index, deltas })
+      const send_change = send_change_b(ctx)
+      await send_change({ index: $next_index, deltas })
     } else {
       // otherwise apply the change and queue it to requested changes for
       // confirmation later and send request change to scribe
-
       // create a unique id for each change
       // TODO: this should be part of actual changeReqs
-      const change_id = my_tag_b(ctx).$ + '.' + request_counter
+      const my_tag = my_tag_b(ctx)
+      const change_id = my_tag.$ + '.' + request_counter
       const change_at = Date.now()
-
       const $requested_changes = request_changes.$
       // we want to apply this to current next_index plus any previously
       // requested changes that haven't yet be recorded
-      const index = next_index_b(ctx).$ + $requested_changes.length
+      const index = next_index.$ + $requested_changes.length
       for (const delta of deltas) {
-        const undoable_change = run_apply_delta_b(ctx)(delta)
+        const run_apply_delta = run_apply_delta_b(ctx)
+        const undoable_change = run_apply_delta(delta)
         undoable_change.id = change_id
         undoable_change.at = change_at
         // append changes to the requested queue
@@ -42,8 +45,10 @@ export const request_change_b = _b('request_change', (ctx)=>{
       }
       request_changes.$ = $requested_changes
       console.log('REQUESTED', $requested_changes)
-      await rpc_send_change_request_b(ctx)({
-        index, deltas, scribe: scribe_b(ctx).$
+      const rpc_send_change_request = rpc_send_change_request_b(ctx)
+      const scribe = scribe_b(ctx)
+      await rpc_send_change_request({
+        index, deltas, scribe: scribe.$
       })
       request_counter += 1
     }

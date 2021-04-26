@@ -26,7 +26,8 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
   const committed_changes = committed_changes_b(ctx)
   const session_info = session_info_b(ctx)
   return async function commit_change() {
-    if (am_i_scribe_b(ctx).$) {
+    const am_i_scribe = am_i_scribe_b(ctx)
+    if (am_i_scribe.$ === true) {
       const $recorded_changes = recorded_changes.$
       if ($recorded_changes.length == 0) {
         alert('No changes to commit!')
@@ -61,7 +62,10 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
               content_hash: new_content_hash
             })
           )
-          committed_changes.push(...$recorded_changes)
+          committed_changes.update($committed_changes=>{
+            $committed_changes.push(...$recorded_changes)
+            return $committed_changes
+          })
           recorded_changes.set([])
         } catch (e) {
           console.log('Error:', e)

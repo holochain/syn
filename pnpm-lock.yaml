@@ -26,7 +26,7 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.9
-      '@ctx-core/store': ^24.3.1
+      '@ctx-core/store': ^24.5.0
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -51,7 +51,7 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.9
-      '@ctx-core/store': 24.3.1
+      '@ctx-core/store': 24.5.0
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
@@ -71,7 +71,7 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.9
-      '@ctx-core/store': ^24.3.1
+      '@ctx-core/store': ^24.5.0
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -94,7 +94,7 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.9
-      '@ctx-core/store': 24.3.1
+      '@ctx-core/store': 24.5.0
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
@@ -112,7 +112,7 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.9
-      '@ctx-core/store': ^24.3.1
+      '@ctx-core/store': ^24.5.0
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
@@ -121,7 +121,7 @@ importers:
     devDependencies:
       '@ctx-core/combinators': 6.0.10
       '@ctx-core/object': 17.5.9
-      '@ctx-core/store': 24.3.1
+      '@ctx-core/store': 24.5.0
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
@@ -138,13 +138,13 @@ importers:
     specifiers:
       '@ctx-core/function': ^17.4.7
       '@ctx-core/object': ^17.5.9
-      '@ctx-core/store': ^24.3.1
+      '@ctx-core/store': ^24.5.0
       '@syn-ui/utils': workspace:^1.0.0
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/function': 17.4.7
       '@ctx-core/object': 17.5.9
-      '@ctx-core/store': 24.3.1
+      '@ctx-core/store': 24.5.0
       '@syn-ui/utils': link:../utils
       typescript: 4.2.4
 
@@ -435,8 +435,8 @@ packages:
       '@ctx-core/function': 17.4.7
     dev: true
 
-  /@ctx-core/store/24.3.1:
-    resolution: {integrity: sha512-CGtNBbYHqX9zHC9efp5AWa2PK9tySKLzuSxrFQkY7j8kSxo7eLCHk0P93MzXpAnKbqDV0hp3yv0k0aCtz8s8aQ==}
+  /@ctx-core/store/24.5.0:
+    resolution: {integrity: sha512-ia2oixp/tsWG8nNB7blAsnlOe2aQNwdaUa1GK8XIV3AmvwtP2P72pnJwRID/0lRYbFfas8DN8iOUMYIQN648tQ==}
     dependencies:
       '@ctx-core/array': 20.2.11
       '@ctx-core/combinators': 6.0.10
@@ -1549,8 +1549,8 @@ packages:
       kind-of: 6.0.3
     dev: true
 
-  /mixme/0.5.0:
-    resolution: {integrity: sha512-YyyBIzqe6EEi5xcnN66LXVVvwijMF51liPT9ZqsrHim9s2MgEg4jxI8gsSF6R7pzAotjvBiERC90bbnwAqiDHg==}
+  /mixme/0.5.1:
+    resolution: {integrity: sha512-NaeZIckeBFT7i0XBEpGyFcAE0/bLcQ9MHErTpnU3bLWVE5WZbxG5Y3fDsMxYGifTo5khDA42OquXCC2ngKJB+g==}
     engines: {node: '>= 8.0.0'}
     dev: true
 
@@ -2085,7 +2085,7 @@ packages:
   /stream-transform/2.1.0:
     resolution: {integrity: sha512-bwQO+75rzQbug7e5OOHnOR3FgbJ0fCjHmDIdynkwUaFzleBXugGmv2dx3sX3aIHUQRLjrcisRPgN9BWl63uGgw==}
     dependencies:
-      mixme: 0.5.0
+      mixme: 0.5.1
     dev: true
 
   /string-width/2.1.1:

@@ -2,9 +2,9 @@ import { _b, assign } from '@ctx-core/object'
 import { bufferToBase64 } from '@syn-ui/utils'
 import type { SerializedStateForSync, StateForSync } from '../delta'
 import { record_delta_b } from '../delta'
-import { content_hash_str_b } from './content_hash_str_b'
-import type { Ops } from './Ops'
-export const SyncResp_ops_b = _b<Ops>('SyncResp_ops', (ctx)=>{
+import { content_hash_str_b } from '../session'
+import type { SignalOps } from './SignalOps'
+export const SyncResp_SignalOps_b = _b<SignalOps>('SyncResp_SignalOps', (ctx)=>{
   const content_hash_str = content_hash_str_b(ctx)
   const record_delta = record_delta_b(ctx)
   return {

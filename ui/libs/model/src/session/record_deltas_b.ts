@@ -10,7 +10,8 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
       if ($requested_changes.length > 0) {
         // if this change is our next requested change then remove it
         if (JSON.stringify(delta) == JSON.stringify($requested_changes[0].delta)) {
-          recorded_changes_b(ctx).push($requested_changes.shift())
+          const recorded_changes = recorded_changes_b(ctx)
+          recorded_changes.push($requested_changes.shift())
           requested_changes.set($requested_changes)
         } else {
           // TODO rebase?
@@ -23,7 +24,8 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
         // to check our requested changes
         // TODO: do we need to check if this is a change that we did send and have already
         // integrated somehow and ignore if so.  (Seems unlikely?)
-        record_delta_b(ctx)(delta)
+        const record_delta = record_delta_b(ctx)
+        record_delta(delta)
       }
     }
   }

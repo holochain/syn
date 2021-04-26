@@ -308,7 +308,7 @@
 </div>
 
 
-<Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn}/>
+<Syn apply_delta_fn={applyDelta} undoFn={undo} bind:this={syn}/>
 </main>
 
 <div class='folks-tray'>
