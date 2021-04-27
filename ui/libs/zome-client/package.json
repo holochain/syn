@@ -7,8 +7,8 @@
   "scripts": {},
   "devDependencies": {
     "@ctx-core/function": "^17.4.7",
-    "@ctx-core/object": "^17.5.10",
-    "@ctx-core/store": "^24.5.2",
+    "@ctx-core/object": "^17.5.11",
+    "@ctx-core/store": "^24.5.5",
     "@holochain/conductor-api": "^0.0.3",
     "@syn-ui/utils": "workspace:^1.0.0",
     "typescript": "^4.2.4"
