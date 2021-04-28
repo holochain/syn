@@ -6,9 +6,9 @@
   "types": "./src/index.ts",
   "scripts": {},
   "devDependencies": {
-    "@ctx-core/function": "^17.4.7",
-    "@ctx-core/object": "^17.5.11",
-    "@ctx-core/store": "^24.5.6",
+    "@ctx-core/function": "^17.4.8",
+    "@ctx-core/object": "^17.5.13",
+    "@ctx-core/store": "^24.5.8",
     "@holochain/conductor-api": "^0.0.3",
     "@syn-ui/utils": "workspace:^1.0.0",
     "buffer": "^6.0.3",

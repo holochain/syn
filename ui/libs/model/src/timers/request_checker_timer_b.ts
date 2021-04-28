@@ -11,7 +11,8 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
   return new Timer(async ()=>{
     const $requested_changes = requested_changes.$
     if ($requested_changes.length > 0) {
-      if ((Date.now() - $requested_changes[0].at) > request_timeout) {
+      const at = $requested_changes[0]?.at
+      if (at && (Date.now() - at) > request_timeout) {
         // for now let's just do the most drastic thing!
         /*
           console.log('requested change timed out! Undoing all changes', $requested_changes[0])
@@ -22,7 +23,7 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
           console.log('undoing ', change)
           const undoDelta = undoFn(change)
           console.log('undoDelta: ', undoDelta)
-          apply_delta_fn(undoDelta)
+          run_apply_delta(undoDelta)
           return changes
           })
           }*/
@@ -31,7 +32,10 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
         // TODO: prepare for shifting to new scribe if they went offline
         await session_info.refresh()
         console.log('HERE')
-        await rpc_send_sync_request(session_info.$)
+        const $session_info = session_info.$
+        if ($session_info) {
+          await rpc_send_sync_request($session_info)
+        }
       }
     }
   }, request_timeout / 2)

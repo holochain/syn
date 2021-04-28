@@ -3,6 +3,7 @@ import { _b } from '@ctx-core/object'
 import {
   agent_pub_key_b, FOLK_SEEN, me_b, rpc_send_folk_lore_b, rpc_send_sync_response_b, StateForSync
 } from '@syn-ui/zome-client'
+import type { EntryHash } from '@syn-ui/utils'
 import { _scribe_signal_folk_pubKey_a1_b, recorded_changes_b } from '../delta'
 import {
   am_i_scribe_b, content_hash_b, current_commit_header_hash_b, folks_b,
@@ -28,8 +29,8 @@ export const SyncReq_SignalOps_b = _b<SignalOps>('SyncReq_SignalOps', (ctx)=>{
       if (am_i_scribe.$ === true) {
         update_folks(participant, FOLK_SEEN)
         const state:StateForSync = {
-          snapshot: snapshot_hash.$,
-          commit_content_hash: content_hash.$,
+          snapshot: snapshot_hash.$ as EntryHash,
+          commit_content_hash: content_hash.$ as EntryHash,
           deltas: recorded_changes.$.map(c=>c.delta)
         }
         const $current_commit_header_hash = current_commit_header_hash.$

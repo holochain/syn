@@ -1,6 +1,6 @@
 <script lang="ts">
   import { setContext } from 'svelte'
-  import { scribe_str_b } from '@syn-ui/model'
+  import { request_change_b, scribe_str_b } from '@syn-ui/model'
   import type { apply_delta_ret_T } from '@syn-ui/model'
   import type { AddDelta, Content, DeleteDelta, Delta, MetaDelta, TitleDelta } from '@syn-ui/zome-client'
   import Editor from './Editor.svelte'
@@ -18,43 +18,10 @@
   }
 
   setContext('ctx', ctx)
+  const request_change = request_change_b(ctx)
   const scribe_str = scribe_str_b(ctx)
 
   $: disconnected = false
-
-  // definition of how to apply a delta to the content
-  // if the delta is destructive also returns what was
-  // destroyed for use by undo
-  function applyDelta(content:Content, in_delta:Delta):apply_delta_ret_T {
-    switch (in_delta.type) {
-      case 'Title': {
-        const deleted = content.title
-        const delta = in_delta as TitleDelta
-        content.title = delta.value
-        return [content, { delta, deleted }]
-      }
-      case 'Add': {
-        const delta = in_delta as AddDelta
-        const [loc, text] = delta.value
-        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
-        return [content, { delta }]
-      }
-      case 'Delete': {
-        const delta = in_delta as DeleteDelta
-        const [start, end] = delta.value
-        const deleted = content.body.slice(start, end)
-        content.body = content.body.slice(0, start) + content.body.slice(end)
-        return [content, { delta, deleted }]
-      }
-      case 'Meta': {
-        const delta = in_delta as MetaDelta
-        const [tag, loc] = delta.value.setLoc
-        const deleted = [tag, content.meta[tag]]
-        content.meta[tag] = loc
-        return [content, { delta, deleted }]
-      }
-    }
-  }
 
   // definition of how to undo a change, returns a delta that will undo the change
   function undo(change) {
@@ -154,6 +121,44 @@
   }
 
 </script>
+
+<svelte:head>
+  <script src='https://kit.fontawesome.com/80d72fa568.js' crossorigin='anonymous'></script>
+</svelte:head>
+
+<div class='toolbar'>
+  <h1>SynText</h1>
+<div class:noscribe>
+    <Title on:request_change={(event) => request_change(event.detail)}/>
+</div>
+</div>
+<main>
+<div class:noscribe>
+  <Editor on:request_change={(event) => request_change(event.detail)}/>
+</div>
+
+
+<Syn undoFn={undo} bind:this={syn}/>
+</main>
+
+<div class='folks-tray'>
+  <Folks/>
+</div>
+
+<div class='tab' class:shown={tabShown} class:drawer-hidden={drawerHidden} on:mouseenter={showTab}
+     on:mouseleave={hideTab}>
+  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}>
+    <i class:drawer-hidden={drawerHidden} class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+  </div>
+</div>
+<div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab}
+     class:hidden={drawerHidden}>
+  <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
+  <div class='debug-content'>
+    <History changeToTextFn={changeToText}/>
+    <Debug/>
+  </div>
+</div>
 
 <style global>
 	main {
@@ -298,41 +303,4 @@
     }
   }
 </style>
-
-<svelte:head>
-  <script src='https://kit.fontawesome.com/80d72fa568.js' crossorigin='anonymous'></script>
-</svelte:head>
-
-<div class='toolbar'>
-  <h1>SynText</h1>
-<div class:noscribe>
-    <Title on:request_change={(event) => syn.request_change(event.detail)}/>
-</div>
-</div>
-<main>
-<div class:noscribe>
-  <Editor on:request_change={(event) => syn.request_change(event.detail)}/>
-</div>
-
-
-<Syn apply_delta_fn={applyDelta} undoFn={undo} bind:this={syn}/>
-</main>
-
-<div class='folks-tray'>
-  <Folks/>
-</div>
-
-<div class='tab' class:shown={tabShown} class:drawer-hidden={drawerHidden} on:mouseenter={showTab}
-     on:mouseleave={hideTab}>
-  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}>
-    <i class:drawer-hidden={drawerHidden} class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
-  </div>
-</div>
-<div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab}
-     class:hidden={drawerHidden}>
-  <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
-  <div class='debug-content'>
-    <History changeToTextFn={changeToText}/>
-    <Debug/>
-  </div>
-</div>
+u

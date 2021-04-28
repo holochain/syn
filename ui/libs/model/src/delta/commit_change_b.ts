@@ -1,6 +1,6 @@
 import { _b, assign } from '@ctx-core/object'
 import { Commit, rpc_commit_b, rpc_hash_content_b } from '@syn-ui/zome-client'
-import { bufferToBase64 } from '@syn-ui/utils'
+import { bufferToBase64, EntryHash, HeaderHash } from '@syn-ui/utils'
 import { content_b } from '../content'
 import {
   am_i_scribe_b, commit_in_progress_b, content_hash_b,
@@ -32,18 +32,18 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
         alert('No changes to commit!')
         return
       }
-      commit_in_progress.set(true)
+      commit_in_progress.$ = true
       try {
         const new_content_hash = await rpc_hash_content(content.$)
         console.log('committing from snapshot', snapshot_hash_str.$)
         console.log('  prev_hash:', content_hash_str.$)
         console.log('   new_hash:', bufferToBase64(new_content_hash))
         const commit:Commit = {
-          snapshot: snapshot_hash.$,
+          snapshot: snapshot_hash.$ as HeaderHash,
           change: {
             deltas: $recorded_changes.map(c=>JSON.stringify(c.delta)),
             content_hash: new_content_hash,
-            previous_change: content_hash.$,
+            previous_change: content_hash.$ as EntryHash,
             meta: {
               contributors: [],
               witnesses: [],
@@ -54,7 +54,7 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
         }
         try {
           const $current_commit_header_hash = await rpc_commit(commit)
-          current_commit_header_hash.set($current_commit_header_hash)
+          current_commit_header_hash.$ = $current_commit_header_hash
           // if commit successfull we need to update the content hash and its string in the session
           session_info.update($session_info=>
             assign($session_info, {
@@ -65,12 +65,12 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
             $committed_changes.push(...$recorded_changes)
             return $committed_changes
           })
-          recorded_changes.set([])
+          recorded_changes.$ = []
         } catch (e) {
           console.log('Error:', e)
         }
       } finally {
-        commit_in_progress.set(false)
+        commit_in_progress.$ = false
       }
     } else {
       alert(`You ain't the scribe!`)

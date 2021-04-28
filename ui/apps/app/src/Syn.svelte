@@ -12,7 +12,7 @@
   const commit_change = commit_change_b(ctx)
 
   // this properties are the app-defined functions to apply and undo changes
-  export let apply_delta_fn, undoFn
+  export let undoFn
 
   // -----------------------------------------------------------------------
 
@@ -22,7 +22,7 @@
   let app_port = 8888
   let app_id = 'syn'
   async function toggle() {
-    await toggle_session({ app_port, app_id, apply_delta_fn, ctx })
+    await toggle_session({ app_port, app_id, ctx })
     if (!$session_info) {
       console.log('disconnected')
     }

@@ -3,6 +3,7 @@ import { _b } from '@ctx-core/object'
 import { requested_changes_b } from './requested_changes_b'
 import { recorded_changes_b } from './recorded_changes_b'
 import { record_delta_b } from './record_delta_b'
+import type { ApplyDelta } from './ApplyDelta'
 export const record_deltas_b = _b('record_deltas', (ctx)=>{
   const requested_changes = requested_changes_b(ctx)
   return function record_deltas(_index:number, deltas:Delta[]) {
@@ -13,7 +14,7 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
         // if this change is our next requested change then remove it
         if (JSON.stringify(delta) == JSON.stringify($requested_changes[0].delta)) {
           const recorded_changes = recorded_changes_b(ctx)
-          recorded_changes.push($requested_changes.shift())
+          recorded_changes.push($requested_changes.shift() as ApplyDelta)
           requested_changes.set($requested_changes)
         } else {
           // TODO rebase?

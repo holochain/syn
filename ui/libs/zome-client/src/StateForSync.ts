@@ -1,14 +1,14 @@
-import type { HoloHash } from '@holochain/conductor-api'
+import type { EntryHash, HeaderHash } from '@syn-ui/utils'
 import type { Delta } from './Delta'
 export interface StateForSync {
-  snapshot:HoloHash
-  commit?:HoloHash
-  commit_content_hash:HoloHash
+  snapshot:EntryHash
+  commit?:HeaderHash
+  commit_content_hash:EntryHash
   deltas:Delta[]
 }
 export interface StateForSync_serialized_I {
-  snapshot:HoloHash
-  commit?:HoloHash
-  commit_content_hash:HoloHash
+  snapshot:EntryHash
+  commit?:HeaderHash
+  commit_content_hash:EntryHash
   deltas:string[]
 }

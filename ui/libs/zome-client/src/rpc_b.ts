@@ -33,7 +33,7 @@ export const rpc_b = _b('rpc', (ctx)=>{
       )
       return result
     } catch (error) {
-      console.log('ERROR: rpc threw error', error)
+      console.log(`ERROR: rpc ${fn_name}`, { error })
       throw(error)
       //  if (error == 'Error: Socket is not open') {
       // TODO        return doResetConnection(dispatch)

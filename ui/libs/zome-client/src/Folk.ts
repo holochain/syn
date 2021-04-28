@@ -1,17 +1,16 @@
-import type { HoloHash } from '@holochain/conductor-api'
+import type { AgentPubKey } from '@holochain/conductor-api'
 import type { FolkColors } from './FolkColors'
 export interface Folk {
-  pubKey:HoloHash
+  pubKey:AgentPubKey
   inSession?:boolean
   colors?:FolkColors
   lastSeen?:number
 }
-export type string_Folk_Record = Record<string, Folk>
 export type pk = 'pubKey'
 export type PubKeyToFolkRecord = {
-  [L in keyof Exclude<any, 'pubKey'>]: Folk;
-} & {
-  pubKey?: HoloHash
+  [L in keyof Exclude<any, 'pubKey'>]:Folk;
+}&{
+  pubKey?:AgentPubKey
 }
 export enum FolkStatus {
   FOLK_SEEN = 1,

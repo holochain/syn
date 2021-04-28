@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Svelte",
   "compileOnSave": true,
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -16,7 +18,8 @@
     "forceConsistentCasingInFileNames": true,
     "importsNotUsedAsValues": "error",
     "types": [
-      "node"
+      "node",
+      "svelte"
     ],
     "noImplicitAny": false,
     "resolveJsonModule": true,

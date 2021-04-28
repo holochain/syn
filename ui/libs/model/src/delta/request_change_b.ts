@@ -33,8 +33,8 @@ export const request_change_b = _b('request_change', (ctx)=>{
       // we want to apply this to current next_index plus any previously
       // requested changes that haven't yet be recorded
       const index = next_index.$ + $requested_changes.length
+      const run_apply_delta = run_apply_delta_b(ctx)
       for (const delta of deltas) {
-        const run_apply_delta = run_apply_delta_b(ctx)
         const undoable_change = run_apply_delta(delta)
         undoable_change.id = change_id
         undoable_change.at = change_at

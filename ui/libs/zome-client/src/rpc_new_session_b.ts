@@ -5,7 +5,7 @@ import type { SessionInfo } from './SessionInfo'
 export const rpc_new_session_b = _b('rpc_new_session', (ctx) => {
   const rpc = rpc_b(ctx)
   return async function rpc_new_session(
-    content:Content = { title: '', body: '' }
+    content:Content = { title: '', body: '', meta: {} }
   ):Promise<SessionInfo> {
     return rpc('new_session', { content })
   }

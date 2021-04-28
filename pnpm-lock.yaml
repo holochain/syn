@@ -6,20 +6,20 @@ importers:
     specifiers:
       '@babel/runtime': ^7.13.17
       '@changesets/cli': ^2.16.0
-      '@ctx-core/function': ^17.4.7
-      '@ctx-core/jetbrains': ^4.0.33
-      '@ctx-core/monorepo': ^15.0.54
+      '@ctx-core/function': ^17.4.8
+      '@ctx-core/jetbrains': ^4.0.34
+      '@ctx-core/monorepo': ^15.0.55
       '@ctx-core/pnpm-tools': ^6.0.11
-      pnpm: ^6.2.1
+      pnpm: ^6.2.3
       typescript: 4.2.4
     devDependencies:
       '@babel/runtime': 7.13.17
       '@changesets/cli': 2.16.0
-      '@ctx-core/function': 17.4.7
-      '@ctx-core/jetbrains': 4.0.33
-      '@ctx-core/monorepo': 15.0.54
+      '@ctx-core/function': 17.4.8
+      '@ctx-core/jetbrains': 4.0.34
+      '@ctx-core/monorepo': 15.0.55
       '@ctx-core/pnpm-tools': 6.0.11
-      pnpm: 6.2.1
+      pnpm: 6.2.3
       typescript: 4.2.4
 
   tests:
@@ -56,13 +56,13 @@ importers:
   ui/apps/app:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.6
+      '@ctx-core/object': ^17.5.13
+      '@ctx-core/store': ^24.5.8
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
       '@rollup/plugin-replace': ^2.4.2
-      '@rollup/plugin-typescript': ^6.1.0
+      '@rollup/plugin-typescript': ^8.2.1
       '@syn-ui/model': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
       '@tsconfig/svelte': ^1.0.10
@@ -79,19 +79,19 @@ importers:
       svelte-fa: ^2.2.0
       svelte-preprocess: ^4.7.2
       tslib: ^2.2.0
-      typescript: ^3.9.9
+      typescript: ^4.2.4
     dependencies:
       '@ctx-core/combinators': 6.0.10
       '@holochain/conductor-api': 0.0.3
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.6
+      '@ctx-core/object': 17.5.13
+      '@ctx-core/store': 24.5.8
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
-      '@rollup/plugin-typescript': 6.1.0_94bd13ed9056efdf75c69b35fe3b3146
+      '@rollup/plugin-typescript': 8.2.1_d21869dc49fccc93d6599238c3a50ee6
       '@syn-ui/model': link:../../libs/model
       '@syn-ui/zome-client': link:../../libs/zome-client
       '@tsconfig/svelte': 1.0.10
@@ -104,15 +104,15 @@ importers:
       rollup-plugin-terser: 7.0.2_rollup@2.45.2
       svelte: 3.37.0
       svelte-check: 1.5.2_svelte@3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@3.9.9
+      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
       tslib: 2.2.0
-      typescript: 3.9.9
+      typescript: 4.2.4
 
   ui/apps/headless:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.6
+      '@ctx-core/object': ^17.5.13
+      '@ctx-core/store': ^24.5.8
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -134,8 +134,8 @@ importers:
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.6
+      '@ctx-core/object': 17.5.13
+      '@ctx-core/store': 24.5.8
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
@@ -152,8 +152,8 @@ importers:
   ui/libs/model:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.6
+      '@ctx-core/object': ^17.5.13
+      '@ctx-core/store': ^24.5.8
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
@@ -161,8 +161,8 @@ importers:
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.6
+      '@ctx-core/object': 17.5.13
+      '@ctx-core/store': 24.5.8
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
@@ -177,17 +177,17 @@ importers:
 
   ui/libs/zome-client:
     specifiers:
-      '@ctx-core/function': ^17.4.7
-      '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.6
+      '@ctx-core/function': ^17.4.8
+      '@ctx-core/object': ^17.5.13
+      '@ctx-core/store': ^24.5.8
       '@holochain/conductor-api': ^0.0.3
       '@syn-ui/utils': workspace:^1.0.0
       buffer: ^6.0.3
       typescript: ^4.2.4
     devDependencies:
-      '@ctx-core/function': 17.4.7
-      '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.6
+      '@ctx-core/function': 17.4.8
+      '@ctx-core/object': 17.5.13
+      '@ctx-core/store': 24.5.8
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': link:../utils
       buffer: 6.0.3
@@ -397,55 +397,55 @@ packages:
       prettier: 1.19.1
     dev: true
 
-  /@ctx-core/array/20.2.13:
-    resolution: {integrity: sha512-BQObHyviZh1/8AxmcxjOfG1WyDGy7I3o/Yr30IzWkNS7ktAHioi3YUS/TyDwtDb6Mb5TiPGBAd5ANnf9TvE7LA==}
+  /@ctx-core/array/20.2.15:
+    resolution: {integrity: sha512-5O3LUlAdPYmhGMNNRYCexV9EvCQJg0qbVTUos1zsz9XjnLe4as50nRiyd/eXwovtsA4Qo7cNgvFVNxFgmlonfQ==}
     dependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.4.7
-      '@ctx-core/object': 17.5.11
-      '@ctx-core/set': 9.0.18
+      '@ctx-core/function': 17.4.8
+      '@ctx-core/object': 17.5.13
+      '@ctx-core/set': 9.0.20
     dev: true
 
-  /@ctx-core/cli-args/7.2.23:
-    resolution: {integrity: sha512-5qjmwEOnAchoarvZmFwZUkM+ZR/93s1o1oNx7T6iHW77/SAbfEfNsEg9tzFFidBUgXPVWEuSXO4kabs1eFLp+Q==}
+  /@ctx-core/cli-args/7.2.25:
+    resolution: {integrity: sha512-B7k/aybFB88hKmjfZ3d2es5sDfFtqLOVEW1e5DaPdJfOc4s1/9K07TRT7Cxuac5NwlZUguA+OEyQXG+bbRttwA==}
     dependencies:
-      '@ctx-core/array': 20.2.13
-      '@ctx-core/function': 17.4.7
-      '@ctx-core/object': 17.5.11
+      '@ctx-core/array': 20.2.15
+      '@ctx-core/function': 17.4.8
+      '@ctx-core/object': 17.5.13
     dev: true
 
   /@ctx-core/combinators/6.0.10:
     resolution: {integrity: sha512-l16FC/IsyfTOffJkRq5kZSgfnjNa8Wz7m0HpyGQu6//fcePpOvFL+HuQvXgnsMREF6DiayW03QXdStk1kCDBjw==}
 
-  /@ctx-core/ctx-core-package-tools/6.0.47:
-    resolution: {integrity: sha512-fEHIFI28aP1bHrFEeECqCNS3ZlR21cQNxq9Z8H/OkL57ooPsWRBlQQwziJCnFyAMl5fn42frksVTnW35QwXUuQ==}
+  /@ctx-core/ctx-core-package-tools/6.0.48:
+    resolution: {integrity: sha512-VtQKqt1SHoTBtNSBjJZyO9V0hQjvd6NN5mBpzBdoADNcyEJ6UMKGKsHfV6M2Sr2FbUM+bV2saicMJ3hzCKWWwQ==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.13
+      '@ctx-core/array': 20.2.15
     dev: true
 
-  /@ctx-core/function/17.4.7:
-    resolution: {integrity: sha512-ZDASKCKnyp5/TSejfetvibyuvjdt6Dhe/JbPcvF2Hm7p+EHhTSPdNyE3EdaTZarWs63AoBllJAxsTgdhL+vs9g==}
+  /@ctx-core/function/17.4.8:
+    resolution: {integrity: sha512-XEtd8ko5HlzZDMYNPRLRMIldLKWPMSRLmqGRxlYxtQvYDiwDobtOPxCyhzeDR7nlxSGBVBWI/7tMwhegnttUUw==}
     dev: true
 
-  /@ctx-core/jetbrains/4.0.33:
-    resolution: {integrity: sha512-5o0fnCLUl0gLqEqDM6NAokqOuO7kZo+Juv8qQP7cocVdEPS5/Dslk9wG1SLbpESwcCAr/Uam9VRkeQRTJlKMKg==}
+  /@ctx-core/jetbrains/4.0.34:
+    resolution: {integrity: sha512-4wGPtDyY8sEeR3uh01thHA4DdCIexqvCBD5SJPWlPYeA2qrj/BAzd7JNuAZRrouJCkWthf5W1kUxArAQkgsNXQ==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.23
+      '@ctx-core/cli-args': 7.2.25
       '@ctx-core/queue': 3.0.10
       esm: 3.2.25
       globby: 11.0.3
     dev: true
 
-  /@ctx-core/monorepo/15.0.54:
-    resolution: {integrity: sha512-fMeLRv5B9rfCjsOA5j5y72CY7Vtm+pVm5clp6xWJxV/XwNLPIXQRkgibznaqBQBdEa0yGKKVX2puI70aedcx0Q==}
+  /@ctx-core/monorepo/15.0.55:
+    resolution: {integrity: sha512-mJxvMK4JerYPqzRIgItdmwbWbT9FIGI7Z7Ct7msIKGNwm+I0YKe3h3KwH7Ay4AorFHe/hM5AH92c7/MtFfpELQ==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.13
-      '@ctx-core/cli-args': 7.2.23
-      '@ctx-core/ctx-core-package-tools': 6.0.47
-      '@ctx-core/package': 6.1.20
+      '@ctx-core/array': 20.2.15
+      '@ctx-core/cli-args': 7.2.25
+      '@ctx-core/ctx-core-package-tools': 6.0.48
+      '@ctx-core/package': 6.1.21
       '@ctx-core/queue': 3.0.10
       detect-indent: 6.0.0
       esm: 3.2.25
@@ -454,17 +454,17 @@ packages:
       semver: 7.3.5
     dev: true
 
-  /@ctx-core/object/17.5.11:
-    resolution: {integrity: sha512-j8BHbufH6GFz+8uogeZUptB4/0o2AUWi66SOa1ixFV1/rpMoSLOQqbXheiRJRAWHuonQjhvMjbRbVM0aaR4yvw==}
+  /@ctx-core/object/17.5.13:
+    resolution: {integrity: sha512-FUeqxZAj/XKH3m2cr/YZv21PJFyMebEWoUddYXQLk6vgEe8pL7BgXqE3gHSwu3SN/V70LkRI9XquqtEwNvkuSw==}
     dependencies:
-      '@ctx-core/function': 17.4.7
+      '@ctx-core/function': 17.4.8
     dev: true
 
-  /@ctx-core/package/6.1.20:
-    resolution: {integrity: sha512-dSdBXWBo9eT9Q3v74Q6wyVawKFwC6S+7pOdpI/ctPKwDqcuP28thI3cWD4O3Iafk4/HVsDDON3Sgse28KbJ2jg==}
+  /@ctx-core/package/6.1.21:
+    resolution: {integrity: sha512-1LAU/w/BEA+Og4nMNNZqL8DULgFUUHYdFn8xkKsiD6XE2tqBmjpeI8NliBz2a5rP9VGRReix0q1vjanCc4lY/g==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.23
+      '@ctx-core/cli-args': 7.2.25
       esm: 3.2.25
       resolve: 1.20.0
     dev: true
@@ -482,19 +482,19 @@ packages:
     resolution: {integrity: sha512-SUX8v4klI5/Xy4LeQ87V5h1WfK8k15YvFvsTw74fLYWYEaquy3nYnuduRsAY8L58xZ0uY/OQ++XHTiyIUCX9aA==}
     dev: true
 
-  /@ctx-core/set/9.0.18:
-    resolution: {integrity: sha512-RPT1HCPrBR/sGyisv1QN3Bc7/XbTTCKHVvpSvkR9OthPB1AHIyDpUx/vEjnJqojZ0Q0sr3GltuqQl0XAkUhO5g==}
+  /@ctx-core/set/9.0.20:
+    resolution: {integrity: sha512-eeXGmjWuJRHvypqHpNaKQWBKsx9b/dWSkfAHePgFNeVzmW5k1e3zd8g+suJPENpFcFHhbUizoqqRVwnVcTWwBw==}
     dependencies:
-      '@ctx-core/function': 17.4.7
+      '@ctx-core/function': 17.4.8
     dev: true
 
-  /@ctx-core/store/24.5.6:
-    resolution: {integrity: sha512-6e19x2i4xUVcQaEdjoUe85h6GNgZGESGQEmdJZzqeYJZO7M5w/GktcOEpNAac70c3n/y56nD0uKErDYt1ME41A==}
+  /@ctx-core/store/24.5.8:
+    resolution: {integrity: sha512-rTUxxR5DLymZPUaX+RXnWeXUCCown1WVhrCEMC8WWTRAoH08Avc25S5ovIWLxHODrzftcow8ou/REWo3r75fEQ==}
     dependencies:
-      '@ctx-core/array': 20.2.13
+      '@ctx-core/array': 20.2.15
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.4.7
-      '@ctx-core/object': 17.5.11
+      '@ctx-core/function': 17.4.8
+      '@ctx-core/object': 17.5.13
       svelte: 3.37.0
     dev: true
 
@@ -652,19 +652,19 @@ packages:
       rollup: 2.45.2
     dev: true
 
-  /@rollup/plugin-typescript/6.1.0_94bd13ed9056efdf75c69b35fe3b3146:
-    resolution: {integrity: sha512-hJxaiE6WyNOsK+fZpbFh9CUijZYqPQuAOWO5khaGTUkM8DYNNyA2TDlgamecE+qLOG1G1+CwbWMAx3rbqpp6xQ==}
+  /@rollup/plugin-typescript/8.2.1_d21869dc49fccc93d6599238c3a50ee6:
+    resolution: {integrity: sha512-Qd2E1pleDR4bwyFxqbjt4eJf+wB0UKVMLc7/BAFDGVdAXQMCsD4DUv5/7/ww47BZCYxWtJqe1Lo0KVNswBJlRw==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
       rollup: ^2.14.0
       tslib: '*'
-      typescript: '>=3.4.0'
+      typescript: '>=3.7.0'
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.45.2
       resolve: 1.20.0
       rollup: 2.45.2
       tslib: 2.2.0
-      typescript: 3.9.9
+      typescript: 4.2.4
     dev: true
 
   /@rollup/plugin-typescript/8.2.1_rollup@2.45.2+typescript@4.2.4:
@@ -2456,8 +2456,8 @@ packages:
       find-up: 4.1.0
     dev: true
 
-  /pnpm/6.2.1:
-    resolution: {integrity: sha512-aSrlGL3703pXhMaxFpFLAFakvpla0PaGN2/zOh5oG2qbvJ+jKuGkpHPhpLyAnhs/z+Je3wBaYA7vETu1f1xwqQ==}
+  /pnpm/6.2.3:
+    resolution: {integrity: sha512-qYRrxYyN14tqeMGu7E3P+INXDiYbGojn5mitVfUxidO9OsSnTGSqT85nkslfKW8YfChlzFVN0XdG+1Tj86tKhA==}
     engines: {node: '>=12.17'}
     hasBin: true
     dev: true
@@ -3024,8 +3024,8 @@ packages:
       minimist: 1.2.5
       source-map: 0.7.3
       svelte: 3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@3.9.9
-      typescript: 3.9.9
+      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
+      typescript: 4.2.4
     transitivePeerDependencies:
       - '@babel/core'
       - coffeescript
@@ -3042,55 +3042,6 @@ packages:
   /svelte-fa/2.2.0:
     resolution: {integrity: sha512-PN1H8AWDh+OwhwjJKTv4/zXvKvmvOEVSCVhIhji6Onx8XEw+CGf8BDR0BVUIp87IEX+DEqIo9pbyhgz8EoYZyA==}
     dev: false
-
-  /svelte-preprocess/4.7.2_svelte@3.37.0+typescript@3.9.9:
-    resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
-    engines: {node: '>= 9.11.2'}
-    requiresBuild: true
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3
-      node-sass: '*'
-      postcss: ^7 || ^8
-      postcss-load-config: ^2.1.0 || ^3.0.0
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: ^0.54.7
-      sugarss: ^2.0.0
-      svelte: ^3.23.0
-      typescript: ^3.9.5 || ^4.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      node-sass:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      '@types/pug': 2.0.4
-      '@types/sass': 1.16.0
-      detect-indent: 6.0.0
-      strip-indent: 3.0.0
-      svelte: 3.37.0
-      typescript: 3.9.9
-    dev: true
 
   /svelte-preprocess/4.7.2_svelte@3.37.0+typescript@4.2.4:
     resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
@@ -3297,12 +3248,6 @@ packages:
 
   /type/2.5.0:
     resolution: {integrity: sha512-180WMDQaIMm3+7hGXWf12GtdniDEy7nYcyFMKJn/eZz/6tSLXrUN9V0wKSbMjej0I1WHWbpREDEKHtqPQa9NNw==}
-    dev: true
-
-  /typescript/3.9.9:
-    resolution: {integrity: sha512-kdMjTiekY+z/ubJCATUPlRDl39vXYiMV9iyeMuEuXZh2we6zz80uovNN2WlAxmmdE/Z/YQe+EbOEXB5RHEED3w==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
     dev: true
 
   /typescript/4.2.4:

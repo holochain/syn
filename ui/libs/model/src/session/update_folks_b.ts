@@ -18,7 +18,7 @@ export const update_folks_b = _b('update_folks', (ctx)=>{
     }
     // if we don't have this key, create a record for it
     // including the default color
-    const $folks = folks.$
+    const $folks = folks.$ as PubKeyToFolkRecord
     _other($folks, pubKeyStr, pubKey)
     if (meta) {
       $folks[pubKeyStr]['meta'] = meta
@@ -32,7 +32,7 @@ export const update_folks_b = _b('update_folks', (ctx)=>{
       case FOLK_UNKNOWN:
         $folks[pubKeyStr]['inSession'] = false
     }
-    folks.set($folks)
+    folks.$ = $folks
   }
   function _other($folks:PubKeyToFolkRecord, pubKeyStr:string, pubKey:AgentPubKey) {
     if (!(pubKeyStr in $folks)) {

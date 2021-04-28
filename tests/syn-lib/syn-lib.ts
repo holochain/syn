@@ -1,6 +1,6 @@
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { Content, me_b } from '@syn-ui/zome-client'
+import { Content, me_b, PubKeyToFolkRecord } from '@syn-ui/zome-client'
 import { folks_b, join_session, scribe_str_b } from '@syn-ui/model'
 import { delay } from '../common'
 
@@ -24,7 +24,7 @@ process.on('unhandledRejection', error=>{
 // json so setting this variable to true
 const jsonDeltas = true
 export const oFn = (orchestrator)=>{
-  const default_content:Content = { title: '', body: '' }
+  const default_content:Content = { title: '', body: '', meta: {} }
   /*    orchestrator.registerScenario('syn connect', async (s, t) => {
           const [me_player] = await s.players([config])
           const [[me_happ]] = await me_player.installAgentsHapps(installation)
@@ -48,22 +48,25 @@ export const oFn = (orchestrator)=>{
     const appPort1:number = player1._conductor.app_ws.client.socket._url.split(':')[2]
     const appPort2:number = player2._conductor.app_ws.client.socket._url.split(':')[2]
     const c1 = join_session({
-      app_port: appPort1, app_id: syn1.hAppId, apply_delta_fn: applyDeltas
+      app_port: appPort1, app_id: syn1.hAppId,
     })
     // const c1 = new Connection({}, appPort1, syn1.hAppId)
     // await c1.open(default_content, applyDeltas)
     // await c1.joinSession()
     const c2 = join_session({
-      app_port: appPort2, app_id: syn2.hAppId, apply_delta_fn: applyDeltas
+      app_port: appPort2, app_id: syn2.hAppId,
     })
     // const c2 = new Connection({}, appPort2, syn2.hAppId)
     // await c2.open(default_content, applyDeltas)
     // await c2.joinSession()
-    t.equal(me_b(c1).$, scribe_str_b(c2).$)
+    const c1_me = me_b(c1)
+    t.equal(c1_me.$, scribe_str_b(c2).$)
+    const c2_folks = folks_b(c2)
     while (true) {
-      const others = Object.keys(folks_b(c2).$)
+      const $c2_folks = c2_folks.$ as PubKeyToFolkRecord
+      const others = Object.keys($c2_folks)
       if (others.length > 0) {
-        t.equal(folks_b(c2).$[others[0]].pubKey.toString('base64'), me_b(c1).$)
+        t.equal($c2_folks[others[0]].pubKey.toString('base64'), c1_me.$)
         break
       } else {
         await delay(1000)
@@ -71,23 +74,3 @@ export const oFn = (orchestrator)=>{
     }
   })
 }
-
-const applyDeltas = (content, deltas)=>{
-  for (const delta of deltas) {
-    switch (delta.type) {
-      case 'Title':
-        content.title = delta.value
-        break
-      case 'Add':
-        const [loc, text] = delta.value
-        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
-        break
-      case 'Delete':
-        const [start, end] = delta.value
-        content.body = content.body.slice(0, start) + content.body.slice(end)
-        break
-    }
-  }
-  return content
-}
-export type applyDeltas_T = ()=>Content

@@ -10,3 +10,4 @@ ui/node
 .cargo
 .idea
 .rollup.cache
+*.iml

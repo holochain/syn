@@ -1,4 +1,4 @@
-import type { HoloHash } from '@holochain/conductor-api'
+import type { AgentPubKey } from '@holochain/conductor-api'
 import type { FolkColors } from '@syn-ui/zome-client'
 import { arrayBufferToHex } from './arrayBufferToHex'
 import { rgbToHsl } from './rgbToHsl'
@@ -12,7 +12,7 @@ import { clamp } from './clamp'
 //           lookingCursor: Color,      // used for cursor when "looking at"
 // where Color is array: [h, s, l]
 // used in `use:setColor` on new Folk components
-export function getFolkColors(pubKey:HoloHash):FolkColors {
+export function getFolkColors(pubKey:AgentPubKey):FolkColors {
   // get a hex color from the folk's public key
   const hexColor = '#' + arrayBufferToHex(pubKey).slice(-6)
   // extract the RGB components from the hex color notation.

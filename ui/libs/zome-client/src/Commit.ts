@@ -1,15 +1,16 @@
-import type { HoloHash } from '@holochain/conductor-api'
+import type { AgentPubKey } from '@holochain/conductor-api'
+import type { EntryHash, HeaderHash } from '@syn-ui/utils/dist'
 export interface Commit {
-  snapshot:HoloHash
+  snapshot:HeaderHash
   change:{
     deltas:string[]
-    content_hash:HoloHash
-    previous_change:HoloHash
+    content_hash:EntryHash
+    previous_change:EntryHash
     meta:{
       contributors:string[]
       witnesses:string[]
       app_specific:null
     }
   },
-  participants:HoloHash[]
+  participants:AgentPubKey[]
 }

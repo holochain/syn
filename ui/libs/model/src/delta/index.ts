@@ -1,5 +1,4 @@
 export * from './ApplyDelta'
-export * from './apply_delta_fn_b'
 export * from './commit_change_b'
 export * from './committed_changes_b'
 export * from './deltas_b'

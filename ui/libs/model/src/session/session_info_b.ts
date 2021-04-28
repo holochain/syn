@@ -3,7 +3,7 @@ import { writable$, Writable$ } from '@ctx-core/store'
 import { rpc_get_session_b, SessionInfo } from '@syn-ui/zome-client'
 export const session_info_b = _b<session_info_I>('session_info', (ctx)=>{
   const rpc_get_session = rpc_get_session_b(ctx)
-  const session_info = assign(writable$(null), {
+  const session_info = assign(writable$<$session_info_T>(null), {
     refresh
   })
   return session_info
@@ -14,6 +14,7 @@ export const session_info_b = _b<session_info_I>('session_info', (ctx)=>{
     }
   }
 })
-export interface session_info_I extends Writable$<SessionInfo> {
+export type $session_info_T = SessionInfo|null
+export interface session_info_I extends Writable$<$session_info_T> {
   refresh():Promise<void>
 }

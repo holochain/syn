@@ -1,13 +1,10 @@
 import type { AppSignal } from '@holochain/conductor-api'
 import { clone } from '@ctx-core/object'
-import { I } from '@ctx-core/combinators'
-import { subscribe_wait_timeout } from '@ctx-core/store'
 import { bufferToBase64 } from '@syn-ui/utils'
 import {
   app_id_b, app_port_b, app_ws_cb_b, me_b, rpc_get_session_b, rpc_new_session_b,
   rpc_send_sync_request_b, SessionInfo,
 } from '@syn-ui/zome-client'
-import { apply_delta_fn_T, apply_delta_fn_b } from '../delta'
 import { am_i_scribe_b, session_info_b, sessions_b } from '../session'
 import {
   Change_SignalOps_b, ChangeReq_SignalOps_b, CommitNotice_SignalOps_b,
@@ -29,17 +26,12 @@ export async function join_session(params:join_session_params_T) {
     SyncResp_SignalOps_b(ctx),
   )
   const app_ws_cb = app_ws_cb_b(ctx)
-  // app_ws_cb.set($app_ws_cb)
   app_ws_cb.$ = $app_ws_cb
   const app_id = app_id_b(ctx)
-  // app_id.set(params.app_id)
   app_id.$ = params.app_id
   const app_port = app_port_b(ctx)
   app_port.$ = params.app_port
-  const $apply_delta_fn = params.apply_delta_fn
-  const apply_delta_fn = apply_delta_fn_b(ctx)
-  apply_delta_fn.$ = $apply_delta_fn
-  const $sessions = await subscribe_wait_timeout(sessions, I, 10_000)
+  const $sessions = await sessions.load()
   let $session_info:SessionInfo
   if ($sessions.length === 0) {
     const rpc_new_session = rpc_new_session_b(ctx)
@@ -78,6 +70,5 @@ export async function join_session(params:join_session_params_T) {
 export interface join_session_params_T {
   app_port:number
   app_id:string
-  apply_delta_fn:apply_delta_fn_T
   ctx?:object
 }

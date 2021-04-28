@@ -12,11 +12,11 @@
   "devDependencies": {
     "@babel/runtime": "^7.13.17",
     "@changesets/cli": "^2.16.0",
-    "@ctx-core/function": "^17.4.7",
-    "@ctx-core/jetbrains": "^4.0.33",
-    "@ctx-core/monorepo": "^15.0.54",
+    "@ctx-core/function": "^17.4.8",
+    "@ctx-core/jetbrains": "^4.0.34",
+    "@ctx-core/monorepo": "^15.0.55",
     "@ctx-core/pnpm-tools": "^6.0.11",
-    "pnpm": "^6.2.1",
+    "pnpm": "^6.2.3",
     "typescript": "4.2.4"
   },
   "noUpdate": []
