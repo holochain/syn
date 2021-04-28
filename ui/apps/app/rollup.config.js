@@ -5,6 +5,7 @@ import resolve from '@rollup/plugin-node-resolve'
 import livereload from 'rollup-plugin-livereload'
 import { terser } from 'rollup-plugin-terser'
 import css from 'rollup-plugin-css-only'
+import polyfills from 'rollup-plugin-node-polyfills'
 import typescript from '@rollup/plugin-typescript'
 import preprocess from 'svelte-preprocess'
 
@@ -37,12 +38,13 @@ export default {
     sourcemap: true,
     format: 'iife',
     name: 'app',
-    dir: 'public/build'
+    dir: 'public/build',
+    intro: 'const global = window;'
   },
   plugins: [
     replace({
       preventAssignment: true,
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE)
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
     }),
     svelte({
       compilerOptions: {
@@ -60,6 +62,7 @@ export default {
     // we'll extract any component CSS out into
     // a separate file - better for performance
     css({ output: 'main.css' }),
+    polyfills(),
 
     // If you have external dependencies installed from
     // npm, you'll most likely need these plugins. In
@@ -72,6 +75,10 @@ export default {
     }),
     typescript(),
     commonjs(),
+    typescript({
+      sourceMap: !production,
+      inlineSources: !production
+    }),
 
     // In dev mode, call `npm run start` once
     // the bundle has been generated

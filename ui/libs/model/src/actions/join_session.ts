@@ -29,8 +29,10 @@ export async function join_session(params:join_session_params_T) {
     SyncResp_SignalOps_b(ctx),
   )
   const app_ws_cb = app_ws_cb_b(ctx)
+  // app_ws_cb.set($app_ws_cb)
   app_ws_cb.$ = $app_ws_cb
   const app_id = app_id_b(ctx)
+  // app_id.set(params.app_id)
   app_id.$ = params.app_id
   const app_port = app_port_b(ctx)
   app_port.$ = params.app_port

@@ -14,7 +14,7 @@
   $: scribe = pubKeyStr == $scribe_str
 
   let outOfSession
-  $: outOfSession = (!$folks[pubKeyStr] || !$folks[pubKeyStr].inSession) && !me
+  $: outOfSession = $folks?.[pubKeyStr]?.inSession && !me
   function setUpHex(hexEl) {
     let colors
     if (me) {

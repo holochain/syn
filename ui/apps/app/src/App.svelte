@@ -10,6 +10,13 @@
   import Debug from './Debug.svelte'
   import History from './History.svelte'
   let ctx = {}
+  window.ctx = ctx
+  declare global {
+    interface Window {
+      ctx:object
+    }
+  }
+
   setContext('ctx', ctx)
   const scribe_str = scribe_str_b(ctx)
 

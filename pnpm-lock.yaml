@@ -57,25 +57,29 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.5
+      '@ctx-core/store': ^24.5.6
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
       '@rollup/plugin-replace': ^2.4.2
-      '@rollup/plugin-typescript': ^8.2.1
+      '@rollup/plugin-typescript': ^6.1.0
       '@syn-ui/model': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
+      '@tsconfig/svelte': ^1.0.10
+      buffer: ^6.0.3
       rollup: ^2.45.2
       rollup-plugin-css-only: ^3.1.0
       rollup-plugin-livereload: ^2.0.0
+      rollup-plugin-node-polyfills: ^0.2.1
       rollup-plugin-svelte: ^7.1.0
       rollup-plugin-terser: ^7.0.2
       sirv-cli: ^1.0.11
       svelte: ^3.37.0
+      svelte-check: ^1.5.2
       svelte-fa: ^2.2.0
       svelte-preprocess: ^4.7.2
       tslib: ^2.2.0
-      typescript: ^4.2.4
+      typescript: ^3.9.9
     dependencies:
       '@ctx-core/combinators': 6.0.10
       '@holochain/conductor-api': 0.0.3
@@ -83,28 +87,32 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.5
+      '@ctx-core/store': 24.5.6
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
-      '@rollup/plugin-typescript': 8.2.1_d21869dc49fccc93d6599238c3a50ee6
+      '@rollup/plugin-typescript': 6.1.0_94bd13ed9056efdf75c69b35fe3b3146
       '@syn-ui/model': link:../../libs/model
       '@syn-ui/zome-client': link:../../libs/zome-client
+      '@tsconfig/svelte': 1.0.10
+      buffer: 6.0.3
       rollup: 2.45.2
       rollup-plugin-css-only: 3.1.0_rollup@2.45.2
       rollup-plugin-livereload: 2.0.0
+      rollup-plugin-node-polyfills: 0.2.1
       rollup-plugin-svelte: 7.1.0_rollup@2.45.2+svelte@3.37.0
       rollup-plugin-terser: 7.0.2_rollup@2.45.2
       svelte: 3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
+      svelte-check: 1.5.2_svelte@3.37.0
+      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@3.9.9
       tslib: 2.2.0
-      typescript: 4.2.4
+      typescript: 3.9.9
 
   ui/apps/headless:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.5
+      '@ctx-core/store': ^24.5.6
       '@holochain/conductor-api': 0.0.3
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -127,7 +135,7 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.5
+      '@ctx-core/store': 24.5.6
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.45.2
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.45.2
       '@rollup/plugin-replace': 2.4.2_rollup@2.45.2
@@ -145,7 +153,7 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.5
+      '@ctx-core/store': ^24.5.6
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
@@ -154,7 +162,7 @@ importers:
     devDependencies:
       '@ctx-core/combinators': 6.0.10
       '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.5
+      '@ctx-core/store': 24.5.6
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
@@ -171,16 +179,18 @@ importers:
     specifiers:
       '@ctx-core/function': ^17.4.7
       '@ctx-core/object': ^17.5.11
-      '@ctx-core/store': ^24.5.5
+      '@ctx-core/store': ^24.5.6
       '@holochain/conductor-api': ^0.0.3
       '@syn-ui/utils': workspace:^1.0.0
+      buffer: ^6.0.3
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/function': 17.4.7
       '@ctx-core/object': 17.5.11
-      '@ctx-core/store': 24.5.5
+      '@ctx-core/store': 24.5.6
       '@holochain/conductor-api': 0.0.3
       '@syn-ui/utils': link:../utils
+      buffer: 6.0.3
       typescript: 4.2.4
 
 packages:
@@ -478,8 +488,8 @@ packages:
       '@ctx-core/function': 17.4.7
     dev: true
 
-  /@ctx-core/store/24.5.5:
-    resolution: {integrity: sha512-2PWc/SYGGN+GgUMxd4/pG2rRGDmhsE/8v1DEXJ2zGob7fzbgIofD0nHN/unpypQVUyrRuft5rFic6Cq15taS2A==}
+  /@ctx-core/store/24.5.6:
+    resolution: {integrity: sha512-6e19x2i4xUVcQaEdjoUe85h6GNgZGESGQEmdJZzqeYJZO7M5w/GktcOEpNAac70c3n/y56nD0uKErDYt1ME41A==}
     dependencies:
       '@ctx-core/array': 20.2.13
       '@ctx-core/combinators': 6.0.10
@@ -642,19 +652,19 @@ packages:
       rollup: 2.45.2
     dev: true
 
-  /@rollup/plugin-typescript/8.2.1_d21869dc49fccc93d6599238c3a50ee6:
-    resolution: {integrity: sha512-Qd2E1pleDR4bwyFxqbjt4eJf+wB0UKVMLc7/BAFDGVdAXQMCsD4DUv5/7/ww47BZCYxWtJqe1Lo0KVNswBJlRw==}
+  /@rollup/plugin-typescript/6.1.0_94bd13ed9056efdf75c69b35fe3b3146:
+    resolution: {integrity: sha512-hJxaiE6WyNOsK+fZpbFh9CUijZYqPQuAOWO5khaGTUkM8DYNNyA2TDlgamecE+qLOG1G1+CwbWMAx3rbqpp6xQ==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
       rollup: ^2.14.0
       tslib: '*'
-      typescript: '>=3.7.0'
+      typescript: '>=3.4.0'
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.45.2
       resolve: 1.20.0
       rollup: 2.45.2
       tslib: 2.2.0
-      typescript: 4.2.4
+      typescript: 3.9.9
     dev: true
 
   /@rollup/plugin-typescript/8.2.1_rollup@2.45.2+typescript@4.2.4:
@@ -692,6 +702,10 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.2.3
       rollup: 2.45.2
+    dev: true
+
+  /@tsconfig/svelte/1.0.10:
+    resolution: {integrity: sha512-EBrpH2iXXfaf/9z81koiDYkp2mlwW2XzFcAqn6qh7VKyP8zBvHHAQzNhY+W9vH5arAjmGAm5g8ElWq6YmXm3ig==}
     dev: true
 
   /@types/estree/0.0.39:
@@ -938,6 +952,13 @@ packages:
       ieee754: 1.2.1
     dev: true
 
+  /buffer/6.0.3:
+    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+    dev: true
+
   /builtin-modules/3.2.0:
     resolution: {integrity: sha512-lGzLKcioL90C7wMczpkY0n/oART3MbBa8R9OFGE1rJxoVI86u4WAGfEk8Wjv10eKSyTHVGkSo3bvBylCEtk7LA==}
     engines: {node: '>=6'}
@@ -949,6 +970,11 @@ packages:
       function-bind: 1.1.1
       get-intrinsic: 1.1.1
     dev: false
+
+  /callsites/3.1.0:
+    resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
+    engines: {node: '>=6'}
+    dev: true
 
   /camelcase-keys/6.2.2:
     resolution: {integrity: sha512-YrwaA0vEKazPBkn0ipTiMpSajYDSe+KjQfrjhcBMxJt/znbvlHd8Pw/Vamaz5EB4Wfhs3SUR3Z9mwRu/P3s3Yg==}
@@ -1678,6 +1704,14 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
+  /import-fresh/3.3.0:
+    resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
+    engines: {node: '>=6'}
+    dependencies:
+      parent-module: 1.0.1
+      resolve-from: 4.0.0
+    dev: true
+
   /indent-string/4.0.0:
     resolution: {integrity: sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==}
     engines: {node: '>=8'}
@@ -2190,7 +2224,6 @@ packages:
 
   /minimist/1.2.5:
     resolution: {integrity: sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==}
-    dev: false
 
   /mixme/0.5.1:
     resolution: {integrity: sha512-NaeZIckeBFT7i0XBEpGyFcAE0/bLcQ9MHErTpnU3bLWVE5WZbxG5Y3fDsMxYGifTo5khDA42OquXCC2ngKJB+g==}
@@ -2365,6 +2398,13 @@ packages:
   /p-try/2.2.0:
     resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
     engines: {node: '>=6'}
+    dev: true
+
+  /parent-module/1.0.1:
+    resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
+    engines: {node: '>=6'}
+    dependencies:
+      callsites: 3.1.0
     dev: true
 
   /parse-json/5.2.0:
@@ -2559,6 +2599,11 @@ packages:
     resolution: {integrity: sha1-eZlTn8ngR6N5KPoZb44VY9q9Nt4=}
     dev: true
 
+  /resolve-from/4.0.0:
+    resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
+    engines: {node: '>=4'}
+    dev: true
+
   /resolve-from/5.0.0:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
     engines: {node: '>=8'}
@@ -2607,6 +2652,15 @@ packages:
       rollup: 2.45.2
     dev: true
 
+  /rollup-plugin-inject/3.0.2:
+    resolution: {integrity: sha512-ptg9PQwzs3orn4jkgXJ74bfs5vYz1NCZlSQMBUA0wKcGp5i5pA1AO3fOUEte8enhGUC+iapTCzEWw2jEFFUO/w==}
+    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-inject.
+    dependencies:
+      estree-walker: 0.6.1
+      magic-string: 0.25.7
+      rollup-pluginutils: 2.8.2
+    dev: true
+
   /rollup-plugin-livereload/2.0.0:
     resolution: {integrity: sha512-oC/8NqumGYuphkqrfszOHUUIwzKsaHBICw6QRwT5uD07gvePTS+HW+GFwu6f9K8W02CUuTvtIM9AWJrbj4wE1A==}
     engines: {node: '>=8.3'}
@@ -2615,6 +2669,12 @@ packages:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+    dev: true
+
+  /rollup-plugin-node-polyfills/0.2.1:
+    resolution: {integrity: sha512-4kCrKPTJ6sK4/gLL/U5QzVT8cxJcofO0OU74tnB19F40cmuAKSzH5/siithxlofFEjwvw1YAhPmbvGNA6jEroA==}
+    dependencies:
+      rollup-plugin-inject: 3.0.2
     dev: true
 
   /rollup-plugin-svelte/7.1.0_rollup@2.45.2+svelte@3.37.0:
@@ -2951,9 +3011,86 @@ packages:
       has-flag: 4.0.0
     dev: true
 
+  /svelte-check/1.5.2_svelte@3.37.0:
+    resolution: {integrity: sha512-x9Pc13r814TKrMXY70IyqDEmPzuFiqNSpBmsrMKrFpi995MiG+lmqYnyw8iQC+DGh7H3eUt3LIFXbNd396XIFw==}
+    hasBin: true
+    peerDependencies:
+      svelte: ^3.24.0
+    dependencies:
+      chalk: 4.1.1
+      chokidar: 3.5.1
+      glob: 7.1.6
+      import-fresh: 3.3.0
+      minimist: 1.2.5
+      source-map: 0.7.3
+      svelte: 3.37.0
+      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@3.9.9
+      typescript: 3.9.9
+    transitivePeerDependencies:
+      - '@babel/core'
+      - coffeescript
+      - less
+      - node-sass
+      - postcss
+      - postcss-load-config
+      - pug
+      - sass
+      - stylus
+      - sugarss
+    dev: true
+
   /svelte-fa/2.2.0:
     resolution: {integrity: sha512-PN1H8AWDh+OwhwjJKTv4/zXvKvmvOEVSCVhIhji6Onx8XEw+CGf8BDR0BVUIp87IEX+DEqIo9pbyhgz8EoYZyA==}
     dev: false
+
+  /svelte-preprocess/4.7.2_svelte@3.37.0+typescript@3.9.9:
+    resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
+    engines: {node: '>= 9.11.2'}
+    requiresBuild: true
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3
+      node-sass: '*'
+      postcss: ^7 || ^8
+      postcss-load-config: ^2.1.0 || ^3.0.0
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: ^0.54.7
+      sugarss: ^2.0.0
+      svelte: ^3.23.0
+      typescript: ^3.9.5 || ^4.0.0
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      node-sass:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      '@types/pug': 2.0.4
+      '@types/sass': 1.16.0
+      detect-indent: 6.0.0
+      strip-indent: 3.0.0
+      svelte: 3.37.0
+      typescript: 3.9.9
+    dev: true
 
   /svelte-preprocess/4.7.2_svelte@3.37.0+typescript@4.2.4:
     resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
@@ -3160,6 +3297,12 @@ packages:
 
   /type/2.5.0:
     resolution: {integrity: sha512-180WMDQaIMm3+7hGXWf12GtdniDEy7nYcyFMKJn/eZz/6tSLXrUN9V0wKSbMjej0I1WHWbpREDEKHtqPQa9NNw==}
+    dev: true
+
+  /typescript/3.9.9:
+    resolution: {integrity: sha512-kdMjTiekY+z/ubJCATUPlRDl39vXYiMV9iyeMuEuXZh2we6zz80uovNN2WlAxmmdE/Z/YQe+EbOEXB5RHEED3w==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
     dev: true
 
   /typescript/4.2.4:

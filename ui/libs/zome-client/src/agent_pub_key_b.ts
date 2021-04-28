@@ -4,6 +4,6 @@ import { cell_id_b } from './cell_id_b'
 export const agent_pub_key_b = _b('agent_pub_key', (ctx)=>{
   const cell_id = cell_id_b(ctx)
   return derived$(cell_id, $cell_id=>
-    $cell_id?.[0]
+    $cell_id?.[1]
   )
 })
