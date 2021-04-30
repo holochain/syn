@@ -4,7 +4,7 @@ import { writable$ } from '@ctx-core/store'
 export const app_ws_b = _b('app_ws', ()=>{
   return writable$<$app_ws_T>(null)
 })
-export async function _app_ws(app_port:number, signal_fn:AppSignalCb) {
+export async function _$app_ws(app_port:number, signal_fn:AppSignalCb) {
   return await AppWebsocket.connect(
     `ws://localhost:${app_port}`,
     30000,
