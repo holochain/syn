@@ -43,7 +43,7 @@ export async function join_session(params:join_session_params_T) {
     const am_i_scribe = am_i_scribe_b(ctx)
     if (am_i_scribe.$ === true) {
       const rpc_send_sync_request = rpc_send_sync_request_b(ctx)
-      await rpc_send_sync_request($session_info)
+      await rpc_send_sync_request($session_info.scribe)
     }
   }
   const session_info = session_info_b(ctx)

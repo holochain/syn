@@ -14,8 +14,9 @@ export const rpc_send_folk_lore_b = _b('rpc_send_folk_lore', (ctx)=>{
 })
 export interface SendFolkLoreInput {
   participants:AgentPubKey[]
-  data:{
-    participants?:PubKeyToFolkRecord,
-    gone?:AgentPubKey[]
-  }
+  data:SendFolkLoreInputData
+}
+export interface SendFolkLoreInputData {
+  participants?:PubKeyToFolkRecord,
+  gone?:AgentPubKey[]
 }

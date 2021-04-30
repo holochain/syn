@@ -11,13 +11,13 @@ export const Change_SignalOps_b = _b<SignalOps>('Change_SignalOps', (ctx)=>{
       const deltas = serialized_deltas.map(d=>JSON.parse(d))
       const am_i_scribe = am_i_scribe_b(ctx)
       if (am_i_scribe.$ === true) {
-        console.log('change received but I\'m the scribe, so I\'m ignoring this!')
+        console.log(`change received but I'm the scribe, so I'm ignoring this!`)
       } else {
         console.log(`change arrived for ${index}:`, deltas)
         const $next_index = next_index.$
         if ($next_index === index) {
           const record_deltas = record_deltas_b(ctx)
-          record_deltas(index, deltas)
+          await record_deltas(deltas)
         } else {
           console.log(`change arrived out of sequence next_index: ${$next_index}, change index:${index}`)
           // TODO either call for sync, or do some waiting algorithm

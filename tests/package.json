@@ -19,12 +19,15 @@
     "uuidv4": "^6.2.7"
   },
   "devDependencies": {
-    "@holochain/conductor-api": "0.0.3",
+    "@ctx-core/combinators": "^6.0.10",
+    "@ctx-core/store": "^24.5.9",
+    "@holochain/conductor-api": "0.0.4",
     "@holochain/tryorama": "0.4.2",
     "@syn-ui/model": "workspace:^1.0.0",
     "@syn-ui/utils": "workspace:^1.0.0",
     "@syn-ui/zome-client": "workspace:^1.0.0",
     "@types/lodash": "^4.14.168",
-    "@types/node": "^15.0.1"
+    "@types/node": "^15.0.1",
+    "ava": "^3.15.0"
   }
 }

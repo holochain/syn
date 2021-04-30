@@ -47,13 +47,13 @@ export const oFn = (orchestrator)=>{
     await s.shareAllNodes([player1, player2])
     const appPort1:number = player1._conductor.app_ws.client.socket._url.split(':')[2]
     const appPort2:number = player2._conductor.app_ws.client.socket._url.split(':')[2]
-    const c1 = join_session({
+    const c1 = await join_session({
       app_port: appPort1, app_id: syn1.hAppId,
     })
     // const c1 = new Connection({}, appPort1, syn1.hAppId)
     // await c1.open(default_content, applyDeltas)
     // await c1.joinSession()
-    const c2 = join_session({
+    const c2 = await join_session({
       app_port: appPort2, app_id: syn2.hAppId,
     })
     // const c2 = new Connection({}, appPort2, syn2.hAppId)

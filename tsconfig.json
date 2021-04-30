@@ -13,7 +13,7 @@
     "target": "es2017",
     "isolatedModules": true,
     "sourceMap": true,
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "importsNotUsedAsValues": "error",

@@ -23,7 +23,8 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
           console.log('undoing ', change)
           const undoDelta = undoFn(change)
           console.log('undoDelta: ', undoDelta)
-          run_apply_delta(undoDelta)
+          const apply_deltas = apply_deltas_b(ctx)
+          await apply_deltas(undoDelta)
           return changes
           })
           }*/
@@ -34,7 +35,7 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
         console.log('HERE')
         const $session_info = session_info.$
         if ($session_info) {
-          await rpc_send_sync_request($session_info)
+          await rpc_send_sync_request($session_info.scribe)
         }
       }
     }

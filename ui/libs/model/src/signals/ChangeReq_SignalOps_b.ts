@@ -29,7 +29,7 @@ export const ChangeReq_SignalOps_b = _b<SignalOps>('ChangeReq_SignalOps', (ctx)=
           }
         }
         const record_deltas = record_deltas_b(ctx)
-        record_deltas(index, deltas)
+        await record_deltas(deltas)
         // notify all participants of the change
         await send_change({ index, deltas })
       }

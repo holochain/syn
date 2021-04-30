@@ -4,7 +4,6 @@ import { rpc_get_sessions_b, SessionInfo } from '@syn-ui/zome-client'
 import type { EntryHash } from '@syn-ui/utils'
 import { session_info_b } from './session_info_b'
 export const sessions_b = _b('sessions', (ctx)=>{
-  const rpc_get_sessions = rpc_get_sessions_b(ctx)
   const sessions = writable$<EntryHash[]|null>(null)
   const busy = writable$<boolean>(false)
   const out_sessions = sessions as sessions_T
@@ -19,20 +18,13 @@ export const sessions_b = _b('sessions', (ctx)=>{
   })
   return out_sessions
   async function load() {
-    console.debug('sessions_b|load|debug|1')
     busy.$ = true
     try {
-      console.debug('sessions_b|load|debug|2')
+      const rpc_get_sessions = rpc_get_sessions_b(ctx)
       sessions.$ = await rpc_get_sessions()
-      console.debug('sessions_b|load|debug|3', {
-        'sessions.$': sessions.$
-      })
     } finally {
       busy.$ = false
     }
-    console.debug('sessions_b|load|debug|4', {
-      'sessions.$': sessions.$
-    })
     return sessions.$
   }
   function unshift(...session_hash_a1:EntryHash[]) {

@@ -2,12 +2,12 @@ import { _b } from '@ctx-core/object'
 import { Delta, my_tag_b, rpc_send_change_request_b } from '@syn-ui/zome-client'
 import { am_i_scribe_b, scribe_b } from '../session'
 import { next_index_b } from './next_index_b'
-import { record_delta_b } from './record_delta_b'
 import { send_change_b } from './send_change_b'
 import { requested_changes_b } from './requested_changes_b'
-import { run_apply_delta_b } from './run_apply_delta_b'
+import { apply_deltas_b } from './apply_deltas_b'
+import { record_deltas_b } from './record_deltas_b'
 export const request_change_b = _b('request_change', (ctx)=>{
-  const record_delta = record_delta_b(ctx)
+  const record_deltas = record_deltas_b(ctx)
   const request_changes = requested_changes_b(ctx)
   let request_counter = 0
   return async function request_change(deltas:Delta[]) {
@@ -16,9 +16,7 @@ export const request_change_b = _b('request_change', (ctx)=>{
     const next_index = next_index_b(ctx)
     if (am_i_scribe.$ === true) {
       const $next_index = next_index.$
-      for (const delta of deltas) {
-        record_delta(delta)
-      }
+      await record_deltas(deltas)
       const send_change = send_change_b(ctx)
       await send_change({ index: $next_index, deltas })
     } else {
@@ -33,15 +31,13 @@ export const request_change_b = _b('request_change', (ctx)=>{
       // we want to apply this to current next_index plus any previously
       // requested changes that haven't yet be recorded
       const index = next_index.$ + $requested_changes.length
-      const run_apply_delta = run_apply_delta_b(ctx)
-      for (const delta of deltas) {
-        const undoable_change = run_apply_delta(delta)
+      const apply_deltas = apply_deltas_b(ctx)
+      const undoable_changes = await apply_deltas(deltas)
+      for (const undoable_change of undoable_changes) {
         undoable_change.id = change_id
         undoable_change.at = change_at
-        // append changes to the requested queue
-        // request_changes.push
-        $requested_changes.push(undoable_change)
       }
+      $requested_changes.push(...undoable_changes)
       request_changes.$ = $requested_changes
       console.log('REQUESTED', $requested_changes)
       const rpc_send_change_request = rpc_send_change_request_b(ctx)
