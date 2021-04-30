@@ -6,12 +6,15 @@ import { app_id_b } from './app_id_b'
 export const appInfo_b = _b('appInfo', (ctx)=>{
   const app_id = app_id_b(ctx)
   const app_ws = app_ws_b(ctx)
+  let current_$app_id:string = ''
   const appInfo:appInfo_T = derived$([app_ws, app_id], ([$app_ws, $app_id], set)=>{
     if (!$app_ws || !$app_id) return
     if (appInfo.$app_ws === $app_ws && appInfo.$app_id === $app_id) return
     assign(appInfo, { $app_ws, $app_id })
+    current_$app_id = $app_id
     ;(async ()=>{
       const $appInfo = await $app_ws.appInfo({ installed_app_id: $app_id })
+      if (current_$app_id !== $app_id) return
       set($appInfo)
     })()
   })

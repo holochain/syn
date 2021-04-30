@@ -2,7 +2,8 @@ import type { AppSignal } from '@holochain/conductor-api'
 import { clone } from '@ctx-core/object'
 import { bufferToBase64 } from '@syn-ui/utils'
 import {
-  app_id_b, app_port_b, app_ws_cb_b, me_b, rpc_get_session_b, rpc_new_session_b,
+  _app_ws,
+  app_id_b, app_port_b, app_ws_b, me_b, rpc_get_session_b, rpc_new_session_b,
   rpc_send_sync_request_b, SessionInfo,
 } from '@syn-ui/zome-client'
 import { am_i_scribe_b, session_info_b, sessions_b } from '../session'
@@ -25,12 +26,12 @@ export async function join_session(params:join_session_params_T) {
     SyncReq_SignalOps_b(ctx),
     SyncResp_SignalOps_b(ctx),
   )
-  const app_ws_cb = app_ws_cb_b(ctx)
-  app_ws_cb.$ = $app_ws_cb
   const app_id = app_id_b(ctx)
   app_id.$ = params.app_id
   const app_port = app_port_b(ctx)
   app_port.$ = params.app_port
+  const app_ws = app_ws_b(ctx)
+  app_ws.$ = await _app_ws(app_port.$, $app_ws_cb)
   const $sessions = await sessions.load()
   let $session_info:SessionInfo
   if ($sessions.length === 0) {
