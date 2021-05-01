@@ -25,7 +25,7 @@ importers:
   tests:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/store': ^24.5.9
+      '@ctx-core/store': ^24.7.1
       '@holochain/conductor-api': 0.0.4
       '@holochain/tryorama': 0.4.2
       '@syn-ui/model': workspace:^1.0.0
@@ -36,6 +36,7 @@ importers:
       ava: ^3.15.0
       esm: ^3.2.25
       lodash: ^4.17.21
+      pnpm: ^6.2.3
       tape: ^5.2.2
       ts-node: ^9.1.1
       typescript: ^4.2.4
@@ -49,7 +50,7 @@ importers:
       uuidv4: 6.2.7
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/store': 24.5.9
+      '@ctx-core/store': 24.7.1
       '@holochain/conductor-api': 0.0.4
       '@holochain/tryorama': 0.4.2
       '@syn-ui/model': link:../ui/libs/model
@@ -58,12 +59,13 @@ importers:
       '@types/lodash': 4.14.168
       '@types/node': 15.0.1
       ava: 3.15.0
+      pnpm: 6.2.3
 
   ui/apps/app:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.5.9
+      '@ctx-core/store': ^24.7.1
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -80,7 +82,7 @@ importers:
       rollup-plugin-svelte: ^7.1.0
       rollup-plugin-terser: ^7.0.2
       sirv-cli: ^1.0.11
-      svelte: ^3.37.0
+      svelte: ^3.38.0
       svelte-check: ^1.5.2
       svelte-fa: ^2.2.0
       svelte-preprocess: ^4.7.2
@@ -93,7 +95,7 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.5.9
+      '@ctx-core/store': 24.7.1
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.46.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.46.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.46.0
@@ -106,11 +108,11 @@ importers:
       rollup-plugin-css-only: 3.1.0_rollup@2.46.0
       rollup-plugin-livereload: 2.0.0
       rollup-plugin-node-polyfills: 0.2.1
-      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.37.0
+      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.0
       rollup-plugin-terser: 7.0.2_rollup@2.46.0
-      svelte: 3.37.0
-      svelte-check: 1.5.2_svelte@3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
+      svelte: 3.38.0
+      svelte-check: 1.5.2_svelte@3.38.0
+      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
       tslib: 2.2.0
       typescript: 4.2.4
 
@@ -118,7 +120,7 @@ importers:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.5.9
+      '@ctx-core/store': ^24.7.1
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -130,7 +132,7 @@ importers:
       rollup-plugin-svelte: ^7.1.0
       rollup-plugin-terser: ^7.0.2
       sirv-cli: ^1.0.11
-      svelte: ^3.37.0
+      svelte: ^3.38.0
       svelte-fa: ^2.2.0
       svelte-preprocess: ^4.7.2
       typescript: ^4.2.4
@@ -141,7 +143,7 @@ importers:
       svelte-fa: 2.2.0
     devDependencies:
       '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.5.9
+      '@ctx-core/store': 24.7.1
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.46.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.46.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.46.0
@@ -149,30 +151,30 @@ importers:
       rollup: 2.46.0
       rollup-plugin-css-only: 3.1.0_rollup@2.46.0
       rollup-plugin-livereload: 2.0.0
-      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.37.0
+      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.0
       rollup-plugin-terser: 7.0.2_rollup@2.46.0
-      svelte: 3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
+      svelte: 3.38.0
+      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
       typescript: 4.2.4
 
   ui/libs/model:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.5.9
+      '@ctx-core/store': ^24.7.1
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
-      svelte: ^3.37.0
+      svelte: ^3.38.0
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/combinators': 6.0.10
       '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.5.9
+      '@ctx-core/store': 24.7.1
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
-      svelte: 3.37.0
+      svelte: 3.38.0
       typescript: 4.2.4
 
   ui/libs/utils:
@@ -185,7 +187,7 @@ importers:
     specifiers:
       '@ctx-core/function': ^17.4.8
       '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.5.9
+      '@ctx-core/store': ^24.7.1
       '@holochain/conductor-api': ^0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       buffer: ^6.0.3
@@ -193,7 +195,7 @@ importers:
     devDependencies:
       '@ctx-core/function': 17.4.8
       '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.5.9
+      '@ctx-core/store': 24.7.1
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       buffer: 6.0.3
@@ -501,14 +503,14 @@ packages:
       '@ctx-core/function': 17.4.8
     dev: true
 
-  /@ctx-core/store/24.5.9:
-    resolution: {integrity: sha512-N+AKLLWOfXXf1Okk1EbfGHak5nHTuIxERNIvTcjk4TfksEcz6UpyU+AyZ6i0aGyQkFuBVlM5gSti5PTn3UXeEg==}
+  /@ctx-core/store/24.7.1:
+    resolution: {integrity: sha512-9ZwBLpT1rvSIDGt9JMQjT4fMDkjPety7Mwdr/vmXzkh6AIRKyeyzyxVSsGB1pgL3sh9QcFTgFMpQyoqdcLyXlQ==}
     dependencies:
       '@ctx-core/array': 20.2.18
       '@ctx-core/combinators': 6.0.10
       '@ctx-core/function': 17.4.8
       '@ctx-core/object': 17.5.15
-      svelte: 3.37.0
+      svelte: 3.38.0
     dev: true
 
   /@dabh/diagnostics/2.0.2:
@@ -3494,7 +3496,7 @@ packages:
       rollup-plugin-inject: 3.0.2
     dev: true
 
-  /rollup-plugin-svelte/7.1.0_rollup@2.46.0+svelte@3.37.0:
+  /rollup-plugin-svelte/7.1.0_rollup@2.46.0+svelte@3.38.0:
     resolution: {integrity: sha512-vopCUq3G+25sKjwF5VilIbiY6KCuMNHP1PFvx2Vr3REBNMDllKHFZN2B9jwwC+MqNc3UPKkjXnceLPEjTjXGXg==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -3504,7 +3506,7 @@ packages:
       require-relative: 0.8.7
       rollup: 2.46.0
       rollup-pluginutils: 2.8.2
-      svelte: 3.37.0
+      svelte: 3.38.0
     dev: true
 
   /rollup-plugin-terser/7.0.2_rollup@2.46.0:
@@ -3895,7 +3897,7 @@ packages:
       has-flag: 4.0.0
     dev: true
 
-  /svelte-check/1.5.2_svelte@3.37.0:
+  /svelte-check/1.5.2_svelte@3.38.0:
     resolution: {integrity: sha512-x9Pc13r814TKrMXY70IyqDEmPzuFiqNSpBmsrMKrFpi995MiG+lmqYnyw8iQC+DGh7H3eUt3LIFXbNd396XIFw==}
     hasBin: true
     peerDependencies:
@@ -3907,8 +3909,8 @@ packages:
       import-fresh: 3.3.0
       minimist: 1.2.5
       source-map: 0.7.3
-      svelte: 3.37.0
-      svelte-preprocess: 4.7.2_svelte@3.37.0+typescript@4.2.4
+      svelte: 3.38.0
+      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
       typescript: 4.2.4
     transitivePeerDependencies:
       - '@babel/core'
@@ -3927,7 +3929,7 @@ packages:
     resolution: {integrity: sha512-PN1H8AWDh+OwhwjJKTv4/zXvKvmvOEVSCVhIhji6Onx8XEw+CGf8BDR0BVUIp87IEX+DEqIo9pbyhgz8EoYZyA==}
     dev: false
 
-  /svelte-preprocess/4.7.2_svelte@3.37.0+typescript@4.2.4:
+  /svelte-preprocess/4.7.2_svelte@3.38.0+typescript@4.2.4:
     resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -3972,12 +3974,12 @@ packages:
       '@types/sass': 1.16.0
       detect-indent: 6.0.0
       strip-indent: 3.0.0
-      svelte: 3.37.0
+      svelte: 3.38.0
       typescript: 4.2.4
     dev: true
 
-  /svelte/3.37.0:
-    resolution: {integrity: sha512-TRF30F4W4+d+Jr2KzUUL1j8Mrpns/WM/WacxYlo5MMb2E5Qy2Pk1Guj6GylxsW9OnKQl1tnF8q3hG/hQ3h6VUA==}
+  /svelte/3.38.0:
+    resolution: {integrity: sha512-V0CbyzvXEka7zQtRYt++cpPh0zxxDUTIeNlq4KncGXn2qHnQFZ2i4L4+2QOfLwOudb9cewJeegupBQcscnBaaA==}
     engines: {node: '>= 8'}
     dev: true
 

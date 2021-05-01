@@ -35,7 +35,6 @@ module.exports = (orchestrator)=>{
     // Delta representation could be JSON or not, for now we are using
     // json so setting this variable to true
     const jsonDeltas = true
-
     const [me_player, alice_player, bob_player] = await s.players([config, config, config])
     const [[me_happ]] = await me_player.installAgentsHapps(installation)
     const [[alice_happ]] = await alice_player.installAgentsHapps(installation)
@@ -66,14 +65,14 @@ module.exports = (orchestrator)=>{
     try {
       await subscribe_wait_timeout(session_info_b(me_ctx), I, 10_000)
       // I created the session, so I should be the scribe
-      t.deepEqual(session_info_b(me_ctx)?.$?.scribe, me_pubkey)
+      t.deepEqual(session_info_b(me_ctx).$!.scribe, me_pubkey)
       // First ever session so content should be default content
-      t.deepEqual(session_info_b(me_ctx)?.$?.snapshot_content, { title: '', body: '' })
-      let sessionHash = session_info_b(me_ctx)?.$?.session as EntryHash
+      t.deepEqual(session_info_b(me_ctx).$!.snapshot_content, { title: '', body: '' })
+      let sessionHash = session_info_b(me_ctx).$!.session as EntryHash
 
       // check the hash_content zome call.
-      let hash = await rpc_hash_content_b(me_ctx)(session_info_b(me_ctx)?.$?.snapshot_content as Content)
-      t.deepEqual(session_info_b(me_ctx)?.$?.content_hash, hash)
+      let hash = await rpc_hash_content_b(me_ctx)(session_info_b(me_ctx).$!.snapshot_content)
+      t.deepEqual(session_info_b(me_ctx).$!.content_hash, hash)
 
       // check get_sessions utility zome call
       sessions = await rpc_get_sessions_b(me_ctx)()
@@ -83,11 +82,11 @@ module.exports = (orchestrator)=>{
       // exercise the get_session zome call
       const returnedSessionInfo = await rpc_get_session_b(me_ctx)(sessionHash)
       t.equal(sessions.length, 1)
-      t.deepEqual(session_info_b(me_ctx)?.$, returnedSessionInfo)
+      t.deepEqual(session_info_b(me_ctx).$, returnedSessionInfo)
 
       // check that initial snapshot was created by using the get_content zome call
-      const returned_content = await rpc_get_content_b(me_ctx)(session_info_b(me_ctx)?.$?.content_hash as EntryHash)
-      t.deepEqual(returned_content, session_info_b(me_ctx)?.$?.snapshot_content)
+      const returned_content = await rpc_get_content_b(me_ctx)(session_info_b(me_ctx).$!.content_hash)
+      t.deepEqual(returned_content, session_info_b(me_ctx).$!.snapshot_content)
 
       // set up the pending deltas array
       let pending_deltas:Delta[] = [{ type: 'Title', value: 'foo title' }, { type: 'Add', value: [0, 'bar content'] }]
@@ -136,11 +135,11 @@ module.exports = (orchestrator)=>{
 
       // add a content change
       let commit:Commit = {
-        snapshot: session_info_b(me_ctx)?.$?.content_hash as EntryHash,
+        snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
         change: {
           deltas: deltas,
           content_hash: new_content_hash_1,
-          previous_change: session_info_b(me_ctx)?.$?.content_hash as EntryHash, // this is the first change so same hash as snapshot
+          previous_change: session_info_b(me_ctx).$!.content_hash as EntryHash, // this is the first change so same hash as snapshot
           meta: {
             contributors: [],
             witnesses: [],
@@ -165,7 +164,7 @@ module.exports = (orchestrator)=>{
 
       deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
       commit = {
-        snapshot: session_info_b(me_ctx)?.$?.content_hash as EntryHash,
+        snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
         change: {
           deltas,
           content_hash: new_content_hash_2,
@@ -187,15 +186,15 @@ module.exports = (orchestrator)=>{
       let alice_session_info_$ = alice_session_info.$
       // alice_session_info.$ = await rpc_get_session_b(alice_ctx)(sessionHash)
       // alice should get my session
-      t.deepEqual(alice_session_info.$?.session, sessionHash)
-      t.deepEqual(alice_session_info.$?.scribe, me_pubkey)
-      t.deepEqual(alice_session_info.$?.snapshot_content, { title: '', body: '' })
+      t.deepEqual(alice_session_info.$!.session, sessionHash)
+      t.deepEqual(alice_session_info.$!.scribe, me_pubkey)
+      t.deepEqual(alice_session_info.$!.snapshot_content, { title: '', body: '' })
 
       await rpc_send_sync_request_b(alice_ctx)(me_pubkey)
 
       // check that deltas and snapshot content returned add up to the current real content
       await delay(500) // make time for integrating new data
-      const received_deltas:Delta[] = (jsonDeltas ? alice_session_info.$?.deltas.map(d=>JSON.parse(d)) : alice_session_info.$?.deltas) as Delta[]
+      const received_deltas:Delta[] = (jsonDeltas ? alice_session_info.$!.deltas.map(d=>JSON.parse(d)) : alice_session_info.$!.deltas) as Delta[]
       await apply_deltas_b(alice_ctx)(received_deltas)
       t.deepEqual(
         me_content.$,
@@ -204,8 +203,8 @@ module.exports = (orchestrator)=>{
 
       // confirm that the session_info_b(me_ctx)'s content hash matches the content_hash
       // generated by applying deltas
-      hash = await rpc_hash_content_b(alice_ctx)(alice_session_info.$?.snapshot_content as Content)
-      t.deepEqual(alice_session_info.$?.content_hash, hash)
+      hash = await rpc_hash_content_b(alice_ctx)(alice_session_info.$!.snapshot_content as Content)
+      t.deepEqual(alice_session_info.$!.content_hash, hash)
 
       // I should receive alice's request for the state as she joins the session
       t.deepEqual(me_signals.$[0], { signal_name: 'SyncReq', signal_payload: alice_pubkey })
@@ -216,7 +215,7 @@ module.exports = (orchestrator)=>{
       deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
 
       const state:StateForSync = {
-        snapshot: session_info_b(me_ctx)?.$?.content_hash as EntryHash,
+        snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
         commit: commit_header_hash,
         commit_content_hash: new_content_hash_2,
         deltas: pending_deltas,
@@ -248,7 +247,7 @@ module.exports = (orchestrator)=>{
       let me_ChangeReq_signals_length = filter_signal_name(me_signals.$, 'ChangeReq').length
       me_signals_length_$ = me_signals_length.$
       await rpc_send_change_request_b(alice_ctx)({
-        scribe: alice_session_info.$?.scribe as AgentPubKey,
+        scribe: alice_session_info.$!.scribe,
         index: 1,
         deltas: [alice_delta]
       })

@@ -24,7 +24,6 @@ export const SyncReq_SignalOps_b = _b<SignalOps>('SyncReq_SignalOps', (ctx)=>{
   return {
     SyncReq: async (signal)=>{
       const participant:HoloHash = signal.data.payload.signal_payload
-      const $me = me.$
       const am_i_scribe = am_i_scribe_b(ctx)
       if (am_i_scribe.$ === true) {
         update_folks(participant, FOLK_SEEN)
@@ -43,7 +42,7 @@ export const SyncReq_SignalOps_b = _b<SignalOps>('SyncReq_SignalOps', (ctx)=>{
         const $folks = folks.$
         let p = { ...$folks }
         const agent_pub_key = agent_pub_key_b(ctx)
-        p[$me] = {
+        p[me.$] = {
           pubKey: agent_pub_key.$
         }
         const data = { participants: p }
