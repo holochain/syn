@@ -1,9 +1,10 @@
 import { _b } from '@ctx-core/object'
-import { bufferToBase64, EntryHash, HeaderHash } from '@syn-ui/utils'
+import { bufferToBase64, console_b, EntryHash, HeaderHash } from '@syn-ui/utils'
 import { committed_changes_b, next_index_b, recorded_changes_b } from '../delta'
 import { content_hash_b, content_hash_str_b } from '../session'
 import type { SignalOps } from './SignalOps'
 export const CommitNotice_SignalOps_b = _b<SignalOps>('CommitNotice_SignalOps', (ctx)=>{
+    const console = console_b(ctx)
     const content_hash = content_hash_b(ctx)
     const content_hash_str = content_hash_str_b(ctx)
     const next_index = next_index_b(ctx)

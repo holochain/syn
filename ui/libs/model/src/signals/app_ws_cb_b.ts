@@ -1,6 +1,6 @@
 import type { AppSignal } from '@holochain/conductor-api'
 import { _b, clone } from '@ctx-core/object'
-import { bufferToBase64 } from '@syn-ui/utils'
+import { bufferToBase64, console_b } from '@syn-ui/utils'
 import { me_b } from '@syn-ui/zome-client'
 import {
     Change_SignalOps_b, ChangeReq_SignalOps_b, CommitNotice_SignalOps_b,
@@ -8,6 +8,7 @@ import {
     SignalOps, SyncReq_SignalOps_b, SyncResp_SignalOps_b
 } from '../signals'
 export const app_ws_cb_b = _b('app_ws_cb', (ctx)=>{
+    const console = console_b(ctx)
     const me = me_b(ctx)
     const signal_ops:SignalOps = clone(
         Change_SignalOps_b(ctx),

@@ -3,7 +3,7 @@ import { _b } from '@ctx-core/object'
 import {
     agent_pub_key_b, FOLK_SEEN, me_b, rpc_send_folk_lore_b, rpc_send_sync_response_b, StateForSync
 } from '@syn-ui/zome-client'
-import type { EntryHash } from '@syn-ui/utils'
+import { console_b, EntryHash } from '@syn-ui/utils'
 import { _scribe_signal_folk_pubKey_a1_b, recorded_changes_b } from '../delta'
 import {
     am_i_scribe_b, content_hash_b, current_commit_header_hash_b, folks_b,
@@ -11,6 +11,7 @@ import {
 } from '../session'
 import type { SignalOps } from './SignalOps'
 export const SyncReq_SignalOps_b = _b<SignalOps>('SyncReq_SignalOps', (ctx)=>{
+    const console = console_b(ctx)
     const me = me_b(ctx)
     const folks = folks_b(ctx)
     const update_folks = update_folks_b(ctx)

@@ -274,6 +274,7 @@ pub fn get_sessions(_: ()) -> ExternResult<SessionList> {
     let path = get_sessions_path();
     let links = get_links(path.hash()?, None)?.into_inner();
     let sessions = links.into_iter().map(|l| l.target).collect();
+    debug!("get_sessions: sessions: {:?}", sessions);
     Ok(SessionList(sessions))
 }
 

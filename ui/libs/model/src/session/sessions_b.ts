@@ -1,9 +1,10 @@
 import { _b, assign } from '@ctx-core/object'
 import { _readable_set_ctx$, Writable$ } from '@ctx-core/store'
 import { rpc_get_sessions_b, SessionInfo } from '@syn-ui/zome-client'
-import type { EntryHash } from '@syn-ui/utils'
+import { console_b, EntryHash } from '@syn-ui/utils'
 import { session_info_b } from './session_info_b'
 export const sessions_b = _b('sessions', (ctx)=>{
+    const console = console_b(ctx)
     const { store: sessions, set } = _readable_set_ctx$<EntryHash[]|null>(null)
     const { store: busy, set: set_busy } = _readable_set_ctx$<boolean>(false)
     const out_sessions = sessions as sessions_T
@@ -21,7 +22,11 @@ export const sessions_b = _b('sessions', (ctx)=>{
         set_busy(true)
         try {
             const rpc_get_sessions = rpc_get_sessions_b(ctx)
-            set(await rpc_get_sessions())
+            const $session_info = await rpc_get_sessions()
+            console.debug('sessions|load|debug|1', {
+                $session_info
+            })
+            set($session_info)
         } finally {
             set_busy(false)
         }

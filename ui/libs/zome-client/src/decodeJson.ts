@@ -8,7 +8,7 @@ export function decodeJson(jsonStr:string):ApiResponse {
                 return base64ToBuffer(value)
             }
         } catch (e) {
-            console.log('decodeJson Error:', e)
+            console.warn('decodeJson Error:', e)
         }
 
         // if flag not found no conversion is done

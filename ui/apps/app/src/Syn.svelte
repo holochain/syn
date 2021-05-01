@@ -59,7 +59,7 @@
     cursor: pointer;
   }
 </style>
-<button class:noscribe on:click={commit_change}>Commit</button>
+<button class:noscribe on:click={evt=>commit_change()}>Commit</button>
 
 <div>
   <h4>Holochain Connection:</h4>

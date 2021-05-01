@@ -1,10 +1,12 @@
 import { _b } from '@ctx-core/object'
 import type { Delta } from '@syn-ui/zome-client'
+import { console_b } from '@syn-ui/utils'
 import { requested_changes_b } from './requested_changes_b'
 import { recorded_changes_b } from './recorded_changes_b'
 import type { ApplyDelta } from './ApplyDelta'
 import { apply_deltas_b } from './apply_deltas_b'
 export const record_deltas_b = _b('record_deltas', (ctx)=>{
+    const console = console_b(ctx)
     const requested_changes = requested_changes_b(ctx)
     const apply_deltas = apply_deltas_b(ctx)
     const recorded_changes = recorded_changes_b(ctx)

@@ -1,5 +1,6 @@
 import { _b } from '@ctx-core/object'
 import { Delta, my_tag_b, rpc_send_change_request_b } from '@syn-ui/zome-client'
+import { console_b } from '@syn-ui/utils'
 import { am_i_scribe_b, scribe_b } from '../session'
 import { next_index_b } from './next_index_b'
 import { send_change_b } from './send_change_b'
@@ -7,6 +8,7 @@ import { requested_changes_b } from './requested_changes_b'
 import { apply_deltas_b } from './apply_deltas_b'
 import { record_deltas_b } from './record_deltas_b'
 export const request_change_b = _b('request_change', (ctx)=>{
+    const console = console_b(ctx)
     const record_deltas = record_deltas_b(ctx)
     const request_changes = requested_changes_b(ctx)
     let request_counter = 0

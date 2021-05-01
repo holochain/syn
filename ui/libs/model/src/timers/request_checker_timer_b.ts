@@ -1,10 +1,12 @@
 import { _b } from '@ctx-core/object'
 import { rpc_send_sync_request_b } from '@syn-ui/zome-client'
+import { console_b } from '@syn-ui/utils'
 import { requested_changes_b } from '../delta'
 import { session_info_b } from '../session'
 import { Timer } from './Timer'
 const request_timeout = 1000
 export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
+    const console = console_b(ctx)
     const requested_changes = requested_changes_b(ctx)
     const session_info = session_info_b(ctx)
     const rpc_send_sync_request = rpc_send_sync_request_b(ctx)

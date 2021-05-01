@@ -2,11 +2,13 @@ import type { AppWebsocket } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { subscribe_wait_timeout } from '@ctx-core/store'
+import { console_b } from '@syn-ui/utils'
 import { app_ws_b } from './app_ws_b'
 import { cell_id_b } from './cell_id_b'
 import { agent_pub_key_b } from './agent_pub_key_b'
 import { appInfo_b } from './appInfo_b'
 export const rpc_b = _b('rpc', (ctx)=>{
+    const console = console_b(ctx)
     const app_ws = app_ws_b(ctx)
     const cell_id = cell_id_b(ctx)
     const agent_pub_key = agent_pub_key_b(ctx)
