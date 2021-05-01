@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte'
   import {
-    commit_change_b, scribe_str_b, session_info_b, sessions_b, toggle_session
+      commit_change_b, scribe_str_b, session_info_b, sessions_b, toggle_session
   } from '@syn-ui/model'
   import { bufferToBase64 } from '@syn-ui/utils'
   const ctx = getContext('ctx')
@@ -22,10 +22,10 @@
   let app_port = 8888
   let app_id = 'syn'
   async function toggle() {
-    await toggle_session({ app_port, app_id, ctx })
-    if (!$session_info) {
-      console.log('disconnected')
-    }
+      await toggle_session({ app_port, app_id, ctx })
+      if (!$session_info) {
+          console.log('disconnected')
+      }
   }
 
   $: noscribe = $scribe_str === ''
@@ -49,7 +49,6 @@
   }
   input {
     width: 4em;
-    //border: 2px solid red;
     border-radius: 4px;
   }
   .session {

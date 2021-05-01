@@ -9,38 +9,38 @@
 
   let editingTitle = false
   function saveTitle() {
-    if (editingTitle) {
-      // only dispatch a changeReq if the title trying to be saved is different
-      // than the current title
-      if (titleBeingTyped !== $content.title) {
-        let delta = { type: 'Title', value: titleBeingTyped }
-        dispatch('request_change', [delta])
+      if (editingTitle) {
+          // only dispatch a changeReq if the title trying to be saved is different
+          // than the current title
+          if (titleBeingTyped !== $content.title) {
+              let delta = { type: 'Title', value: titleBeingTyped }
+              dispatch('request_change', [delta])
+          }
+          titleBeingTyped = ''
+          editingTitle = false
+      } else {
+          console.log('Can\'t run saveTitle when it wasn\'t being edited!')
       }
-      titleBeingTyped = ''
-      editingTitle = false
-    } else {
-      console.log("Can't run saveTitle when it wasn't being edited!")
-    }
   }
 
   let titleEl // variable to bind the title input to when it's created
   async function beginEditTitle() {
-    titleHover=false
-    titleBeingTyped = $content.title // fill the field with the current title
-    editingTitle = true
-    await tick() // wait for the title input element to be created
-    titleEl.focus()
+      titleHover = false
+      titleBeingTyped = $content.title // fill the field with the current title
+      editingTitle = true
+      await tick() // wait for the title input element to be created
+      titleEl.focus()
   }
 
   function handleTitleKeypress() {
-		if (event.key == 'Enter') {
-      saveTitle()
-    } else if (event.key == 'Escape') {
-      // don't save new title & discard changes
-      titleBeingTyped = ''
-      // turn off editing
-      editingTitle=false
-    }
+      if (event.key == 'Enter') {
+          saveTitle()
+      } else if (event.key == 'Escape') {
+          // don't save new title & discard changes
+          titleBeingTyped = ''
+          // turn off editing
+          editingTitle = false
+      }
   }
 
   // keep track of whether the doc is untitled
@@ -77,10 +77,10 @@
 
   /* input has to be below hover so it overrides */
   .title-input {
-  border-style: solid;
-  border-color: #ccc;
-  font-weight: bold;
-  margin-bottom: 0;
+    border-style: solid;
+    border-color: #ccc;
+    font-weight: bold;
+    margin-bottom: 0;
   }
 
   .untitled {
@@ -91,9 +91,11 @@
 <div class='title-wrapper'>
   Title:
   {#if editingTitle}
-    <input class='title-input' bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle} bind:this={titleEl}/>
+    <input class='title-input' bind:value={titleBeingTyped} on:keydown={handleTitleKeypress} on:blur={saveTitle}
+           bind:this={titleEl}/>
   {:else}
-    <div class='title' class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}} on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
+    <div class='title' class:title-hover={titleHover} on:mouseenter={()=>{titleHover=true}}
+         on:mouseleave={()=>{titleHover=false}} on:click={beginEditTitle}>
       <span class:untitled>
         {#if untitled}
           Untitled Document

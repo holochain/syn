@@ -3,10 +3,10 @@ import { writable$ } from '@ctx-core/store'
 import type { EntryHash } from '@syn-ui/utils/dist'
 import { session_info_b } from './session_info_b'
 export const content_hash_b = _b('content_hash', (ctx)=>{
-  const session_info = session_info_b(ctx)
-  const content_hash = writable$<undefined|EntryHash>(undefined)
-  session_info.subscribe($session_info=>{
-    content_hash.$ = $session_info?.content_hash
-  })
-  return content_hash
+    const session_info = session_info_b(ctx)
+    const content_hash = writable$<undefined|EntryHash>(undefined)
+    session_info.subscribe($session_info=>{
+        content_hash.$ = $session_info?.content_hash
+    })
+    return content_hash
 })

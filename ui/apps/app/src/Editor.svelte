@@ -12,83 +12,83 @@
   const my_colors = my_colors_b(ctx)
 
   function getLoc(tag) {
-    return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0
+      return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0
   }
 
   let editor:HTMLElement
   let editor_content1:string, editor_content2:string
-  $: editor_content1 = $content?.body?.slice(0, getLoc($my_tag))||''
-  $: editor_content2 = $content?.body?.slice(getLoc($my_tag))||''
+  $: editor_content1 = $content?.body?.slice(0, getLoc($my_tag)) || ''
+  $: editor_content2 = $content?.body?.slice(getLoc($my_tag)) || ''
 
   function addText(text) {
-    const loc = getLoc($my_tag)
-    const deltas:Delta[] = [{ type: 'Add', value: [loc, text] }]
-    for (const [tag, tagLoc] of Object.entries($content.meta)) {
-      if (tagLoc >= loc) {
-        deltas.push({ type: 'Meta', value: { setLoc: [tag, tagLoc + text.length] } })
+      const loc = getLoc($my_tag)
+      const deltas:Delta[] = [{ type: 'Add', value: [loc, text] }]
+      for (const [tag, tagLoc] of Object.entries($content.meta)) {
+          if (tagLoc >= loc) {
+              deltas.push({ type: 'Meta', value: { setLoc: [tag, tagLoc + text.length] } })
+          }
       }
-    }
-    dispatch('request_change', deltas)
+      dispatch('request_change', deltas)
   }
 
   function handleInput(event) {
-    const loc = getLoc($my_tag)
-    const key = event.key
-    if (key.length == 1) {
-      addText(key)
-    } else {
-      switch (key) {
-        case 'ArrowRight':
-          if (loc < $content.body.length) {
-            dispatch('request_change', [
-              { type: 'Meta', value: { setLoc: [$my_tag, loc + 1] } }
-            ])
-          }
-          break
-        case 'ArrowLeft':
-          if (loc > 0) {
-            dispatch('request_change', [
-              { type: 'Meta', value: { setLoc: [$my_tag, loc - 1] } }
-            ])
-          }
-          break
-        case 'Enter':
-          addText('\n')
-          break
-        case 'Backspace':
-          if (loc > 0) {
-            const deltas:Delta[] = [{ type: 'Delete', value: [loc - 1, loc] }]
-            for (const [tag, tagLoc] of Object.entries($content.meta)) {
-              if (tagLoc >= loc) {
-                deltas.push({ type: 'Meta', value: { setLoc: [tag, tagLoc - 1] } })
-              }
-            }
-            dispatch('request_change', deltas)
+      const loc = getLoc($my_tag)
+      const key = event.key
+      if (key.length == 1) {
+          addText(key)
+      } else {
+          switch (key) {
+              case 'ArrowRight':
+                  if (loc < $content.body.length) {
+                      dispatch('request_change', [
+                          { type: 'Meta', value: { setLoc: [$my_tag, loc + 1] } }
+                      ])
+                  }
+                  break
+              case 'ArrowLeft':
+                  if (loc > 0) {
+                      dispatch('request_change', [
+                          { type: 'Meta', value: { setLoc: [$my_tag, loc - 1] } }
+                      ])
+                  }
+                  break
+              case 'Enter':
+                  addText('\n')
+                  break
+              case 'Backspace':
+                  if (loc > 0) {
+                      const deltas:Delta[] = [{ type: 'Delete', value: [loc - 1, loc] }]
+                      for (const [tag, tagLoc] of Object.entries($content.meta)) {
+                          if (tagLoc >= loc) {
+                              deltas.push({ type: 'Meta', value: { setLoc: [tag, tagLoc - 1] } })
+                          }
+                      }
+                      dispatch('request_change', deltas)
+                  }
           }
       }
-    }
-    console.log('input', event.key)
+      console.log('input', event.key)
   }
   function handleClick(e) {
-    const offset = window.getSelection().focusOffset
-    let loc = offset > 0 ? offset : 0
-    if (window.getSelection().focusNode.parentElement == editor.lastChild) {
-      loc += editor_content1.length
-    }
-    if (loc != getLoc($my_tag)) {
-      dispatch('request_change', [
-        { type: 'Meta', value: { setLoc: [$my_tag, loc] } }
-      ])
-    }
+      const offset = window.getSelection().focusOffset
+      let loc = offset > 0 ? offset : 0
+      if (window.getSelection().focusNode.parentElement == editor.lastChild) {
+          loc += editor_content1.length
+      }
+      if (loc != getLoc($my_tag)) {
+          dispatch('request_change', [
+              { type: 'Meta', value: { setLoc: [$my_tag, loc] } }
+          ])
+      }
   }
 
   let cursor
   $: {
-    // wait for cursor and connection and color inside connection to exist
-    // before updating the cursor color
-    if ($my_colors) {
-      cursor.style['border-color'] = CSSifyHSL($my_colors.primary)
-    }
+      // wait for cursor and connection and color inside connection to exist
+      // before updating the cursor color
+      if ($my_colors) {
+          cursor.style['border-color'] = CSSifyHSL($my_colors.primary)
+      }
   }
 
 </script>

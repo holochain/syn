@@ -16,15 +16,15 @@
   let outOfSession
   $: outOfSession = $folks?.[pubKeyStr]?.inSession && !me
   function setUpHex(hexEl) {
-    let colors
-    if (me) {
-      colors = $my_colors
-    } else {
-      colors = $folks[pubKeyStr].colors
-    }
-    hexEl.style['background-color'] = CSSifyHSL(colors.primary)
-    // hex element's first child is its picture/hexagonColor div
-    hexEl.firstChild.style['background-color'] = CSSifyHSL(colors.hexagon)
+      let colors
+      if (me) {
+          colors = $my_colors
+      } else {
+          colors = $folks[pubKeyStr].colors
+      }
+      hexEl.style['background-color'] = CSSifyHSL(colors.primary)
+      // hex element's first child is its picture/hexagonColor div
+      hexEl.firstChild.style['background-color'] = CSSifyHSL(colors.hexagon)
   }
 
 </script>

@@ -6,18 +6,18 @@
   const requested_changes = requested_changes_b(ctx)
   const recorded_changes = recorded_changes_b(ctx)
   const committed_changes = committed_changes_b(ctx)
-  
+
   export let changeToTextFn
 
   // returns a list of historyEntry objects with some text
   // and a status (for styling)
   function changesToEntriesList(changes, status) {
-    let entriesList = []
-    for (let i=changes.length-1; i>=0; i--) {
-      const text = changeToTextFn(changes[i])
-      entriesList.push({'text': text, 'status': status})
-    }
-    return entriesList
+      let entriesList = []
+      for (let i = changes.length - 1; i >= 0; i--) {
+          const text = changeToTextFn(changes[i])
+          entriesList.push({ 'text': text, 'status': status })
+      }
+      return entriesList
   }
 
   let requestedH
@@ -30,12 +30,12 @@
   $: {historyEntries = [...requestedH, ...recordedH, ...committedH]}
 
   // when updating the list, also scroll to the newest historyEntry
-  afterUpdate(async () => {
-		let entryElem = document.getElementsByClassName('history-entries')[0]
-    if (entryElem.firstChild !== null) {
-      entryElem.firstChild.scrollIntoView(false)
-    }
-	})
+  afterUpdate(async ()=>{
+      let entryElem = document.getElementsByClassName('history-entries')[0]
+      if (entryElem.firstChild !== null) {
+          entryElem.firstChild.scrollIntoView(false)
+      }
+  })
 
 </script>
 <style>

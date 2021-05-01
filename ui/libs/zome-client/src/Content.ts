@@ -1,5 +1,5 @@
 export interface Content {
-  title:string
-  body:string
-  meta:Record<string, number>
+    title:string
+    body:string
+    meta:Record<string, number>
 }
