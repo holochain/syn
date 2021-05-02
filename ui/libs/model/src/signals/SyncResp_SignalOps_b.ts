@@ -18,7 +18,7 @@ export const SyncResp_SignalOps_b = _b<SignalOps>('SyncResp_SignalOps', (ctx)=>{
             })
             // Make sure that we are working off the same snapshot and commit
             const commit_content_hash_str = bufferToBase64(state.commit_content_hash)
-            if (commit_content_hash_str == content_hash_str.$) {
+            if ( commit_content_hash_str == content_hash_str.$) {
                 await record_deltas(state.deltas)
             } else {
                 console.log('WHOA, sync response has different current state assumptions')

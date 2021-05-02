@@ -4,4 +4,4 @@ import type { PubKeyToFolkRecord } from '@syn-ui/zome-client'
 export const folks_b = _b('folks', ()=>{
     return writable$<$folks_T>({})
 })
-export type $folks_T = PubKeyToFolkRecord|null
+export type $folks_T = PubKeyToFolkRecord

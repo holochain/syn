@@ -1,7 +1,7 @@
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import { Content, me_b, PubKeyToFolkRecord } from '@syn-ui/zome-client'
-import { folks_b, join_session, scribe_str_b } from '@syn-ui/model'
+import { folks_b, join_session, session_info_scribe_str_b } from '@syn-ui/model'
 import { delay } from '../common'
 
 const config = Config.gen()
@@ -60,10 +60,10 @@ export const oFn = (orchestrator)=>{
     // await c2.open(default_content, applyDeltas)
     // await c2.joinSession()
     const c1_me = me_b(c1)
-    t.equal(c1_me.$, scribe_str_b(c2).$)
+    t.equal(c1_me.$, session_info_scribe_str_b(c2).$)
     const c2_folks = folks_b(c2)
     while (true) {
-      const $c2_folks = c2_folks.$ as PubKeyToFolkRecord
+      const $c2_folks = c2_folks.$!
       const others = Object.keys($c2_folks)
       if (others.length > 0) {
         t.equal($c2_folks[others[0]].pubKey.toString('base64'), c1_me.$)

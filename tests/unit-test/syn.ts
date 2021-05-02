@@ -1,14 +1,13 @@
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { delay } from '@holochain/tryorama/lib/util'
 import { noop } from '@ctx-core/function'
 import { assign } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { Readable$, subscribe_wait_timeout, writable$ } from '@ctx-core/store'
 import { bufferToBase64, console_b, EntryHash } from '@syn-ui/utils'
-import { content_b, apply_deltas_b, session_info_b, join_session, leave_session } from '@syn-ui/model'
+import { content_b, apply_deltas_b, session_info_b, join_session, leave_session, content_hash_b } from '@syn-ui/model'
 import {
-    Commit, Content, Delta, my_tag_b, rpc_commit_b, rpc_get_content_b, rpc_get_folks_b, rpc_get_session_b,
+    Commit, Delta, my_tag_b, rpc_commit_b, rpc_get_content_b, rpc_get_folks_b, rpc_get_session_b,
     rpc_get_sessions_b, rpc_hash_content_b, rpc_send_change_b, rpc_send_change_request_b, rpc_send_folk_lore_b,
     rpc_send_heartbeat_b, rpc_send_sync_request_b, rpc_send_sync_response_b, Signal, StateForSync
 } from '@syn-ui/zome-client'
@@ -59,13 +58,12 @@ module.exports = (orchestrator)=>{
 
         const me_ctx = {}, alice_ctx = {}, bob_ctx = {}
         // To enable logs, remove log: noop
-        const console_overrides = { log: noop }
+        const show_full_logs = false
+        const console_overrides = show_full_logs ? {} : { log: noop }
         assign(console_b(me_ctx), console_overrides)
         assign(console_b(alice_ctx), console_overrides)
         assign(console_b(bob_ctx), console_overrides)
         await join_session({ app_port: me_port, app_id: me_happ.hAppId, ctx: me_ctx })
-        await join_session({ app_port: alice_port, app_id: alice_happ.hAppId, ctx: alice_ctx })
-        await join_session({ app_port: bob_port, app_id: bob_happ.hAppId, ctx: bob_ctx })
 
         try {
             await subscribe_wait_timeout(session_info_b(me_ctx), I, 10_000)
@@ -90,8 +88,10 @@ module.exports = (orchestrator)=>{
             t.deepEqual(session_info_b(me_ctx).$, session_info)
 
             // check that initial snapshot was created by using the get_content zome call
-            let content = await rpc_get_content_b(me_ctx)(session_info_b(me_ctx).$!.content_hash)
-            t.deepEqual(content, session_info_b(me_ctx).$!.snapshot_content)
+            t.deepEqual(
+                session_info_b(me_ctx).$!.snapshot_content,
+                await rpc_get_content_b(me_ctx)(session_info_b(me_ctx).$!.content_hash)
+            )
 
             // set up the pending deltas array
             let pending_deltas:Delta[] = [{ type: 'Title', value: 'foo title' }, { type: 'Add', value: [0, 'bar content'] }]
@@ -134,11 +134,11 @@ module.exports = (orchestrator)=>{
 
             // add a content change
             let commit:Commit = {
-                snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
+                snapshot: session_info_b(me_ctx).$!.content_hash!,
                 change: {
                     deltas: deltas,
                     content_hash: content_hash,
-                    previous_change: session_info_b(me_ctx).$!.content_hash as EntryHash, // this is the first change so same content_hash as snapshot
+                    previous_change: session_info_b(me_ctx).$!.content_hash!, // this is the first change so same content_hash as snapshot
                     meta: {
                         contributors: [],
                         witnesses: [],
@@ -163,7 +163,7 @@ module.exports = (orchestrator)=>{
 
             deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
             commit = {
-                snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
+                snapshot: session_info_b(me_ctx).$!.content_hash!,
                 change: {
                     deltas,
                     content_hash: new_content_hash_2,
@@ -180,36 +180,68 @@ module.exports = (orchestrator)=>{
             // clear the pending_deltas
             pending_deltas = []
 
+            let me_SyncResp_stack:Signal[], alice_SyncResp_stack:Signal[], me_SyncReq_stack:Signal[]
+
+                // check that deltas and snapshot content returned add up to the current real content
+            ;[alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>{
+                    [me_SyncReq_stack] = await waitfor_filtered_signals_change(()=>
+                            join_session({
+                                app_port: alice_port,
+                                app_id: alice_happ.hAppId,
+                                ctx: alice_ctx
+                            }),
+                        // rpc_send_sync_request_b(alice_ctx)(me_pubkey),
+                        [me_signals],
+                        $signals=>filter_signal_name($signals, 'SyncReq')
+                    )
+                },
+                [alice_signals],
+                $signals=>filter_signal_name($signals, 'SyncResp')
+            )
             // alice joins session
             const alice_session_info = session_info_b(alice_ctx)
-            let alice_session_info_$ = alice_session_info.$
-            // alice_session_info.$ = await rpc_get_session_b(alice_ctx)(session_hash)
+            const alice_content = content_b(alice_ctx)
             // alice should get my session
             t.deepEqual(alice_session_info.$!.session, session_hash)
             t.deepEqual(alice_session_info.$!.scribe, me_pubkey)
             t.deepEqual(alice_session_info.$!.snapshot_content, { title: '', body: '' })
-
-            await rpc_send_sync_request_b(alice_ctx)(me_pubkey)
-
-            // check that deltas and snapshot content returned add up to the current real content
-            await delay(500) // make time for integrating new data
-            const received_deltas:Delta[] = (jsonDeltas ? alice_session_info.$!.deltas.map(d=>JSON.parse(d)) : alice_session_info.$!.deltas) as Delta[]
-            console.debug('debug|1', {
-                received_deltas
-            })
-            await apply_deltas_b(alice_ctx)(received_deltas)
             t.deepEqual(
                 me_content.$,
                 { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(me_ctx).$]: 0 } } // content after two commits
             )
+            t.deepEqual(
+                alice_content.$,
+                { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(alice_ctx).$]: 0 } } // content after two commits
+            )
+            await leave_session({ ctx: alice_ctx })
+            ;[alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>{
+                    [me_SyncReq_stack] = await waitfor_filtered_signals_change(()=>
+                            join_session({
+                                app_port: alice_port,
+                                app_id: alice_happ.hAppId,
+                                ctx: alice_ctx
+                            }),
+                        // rpc_send_sync_request_b(alice_ctx)(me_pubkey),
+                        [me_signals],
+                        $signals=>filter_signal_name($signals, 'SyncReq')
+                    )
+                },
+                [alice_signals],
+                $signals=>filter_signal_name($signals, 'SyncResp')
+            )
+            t.deepEqual(
+                alice_content.$,
+                { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(alice_ctx).$]: 0 } } // content after two commits
+            )
 
             // confirm that the session_info_b(me_ctx)'s content content_hash matches the content_hash
             // generated by applying deltas
-            content_hash = await rpc_hash_content_b(alice_ctx)(alice_session_info.$!.snapshot_content as Content)
-            t.deepEqual(alice_session_info.$!.content_hash, content_hash)
+            content_hash = await rpc_hash_content_b(alice_ctx)(content_b(alice_ctx).$)
+            const alice_content_hash = content_hash_b(alice_ctx)
+            t.deepEqual(alice_content_hash.$, content_hash)
 
             // I should receive alice's request for the state as she joins the session
-            t.deepEqual(me_signals.$[0], { signal_name: 'SyncReq', signal_payload: alice_pubkey })
+            t.deepEqual(me_SyncReq_stack![0], { signal_name: 'SyncReq', signal_payload: alice_pubkey })
 
             // I add some pending deltas which I will then need to send to Alice as part of her Joining.
             pending_deltas = [{ type: 'Title', value: 'I haven\'t committed yet' }, { type: 'Add', value: [14, '\nBut made a new line! 🍑'] }]
@@ -217,12 +249,12 @@ module.exports = (orchestrator)=>{
             deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
 
             const state:StateForSync = {
-                snapshot: session_info_b(me_ctx).$!.content_hash as EntryHash,
+                snapshot: session_info_b(me_ctx).$!.content_hash!,
                 commit: commit_header_hash,
                 commit_content_hash: new_content_hash_2,
                 deltas: pending_deltas,
-            }
-            let [alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>
+            };
+            [alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>
                     rpc_send_sync_response_b(me_ctx)({
                         participant: alice_pubkey,
                         state,
@@ -236,18 +268,20 @@ module.exports = (orchestrator)=>{
             let receivedState = alice_SyncResp_stack[0].signal_payload
             t.deepEqual(receivedState, { ...state, deltas: pending_deltas.map(d=>JSON.stringify(d)) }) // deltas, commit, and snapshot match
 
+            await join_session({ app_port: bob_port, app_id: bob_happ.hAppId, ctx: bob_ctx })
             // bob joins session
-            const bob_$session_info = await rpc_get_session_b(bob_ctx)(session_hash)
+            const bob_$session_info = session_info_b(bob_ctx).$!
+            // const bob_$session_info = await rpc_get_session_b(bob_ctx)(session_hash)
             // bob should get my session
             t.deepEqual(bob_$session_info.scribe, me_pubkey)
             await rpc_send_sync_request_b(bob_ctx)(me_pubkey)
 
-            t.deepEqual(me_signals.$.map(ms=>ms.signal_name), ['SyncReq'])
+            t.deepEqual(me_signals.$.map(ms=>ms.signal_name), ['SyncReq', 'SyncReq', 'SyncReq'])
             // alice sends me a change req and I should receive it
             const alice_delta:Delta = { type: 'Title', value: 'Alice in Wonderland' }
             let delta = jsonDeltas ? JSON.stringify(alice_delta) : alice_delta
 
-            const [me_ChangeReq_stack] = await waitfor_filtered_signals_change(async ()=>
+            let [me_ChangeReq_stack] = await waitfor_filtered_signals_change(async ()=>
                     rpc_send_change_request_b(alice_ctx)({
                         scribe: alice_session_info.$!.scribe,
                         index: 1,
@@ -266,7 +300,7 @@ module.exports = (orchestrator)=>{
             let my_deltas:Delta[] = [{ type: 'Add', value: [0, 'Whoops!\n'] }, { type: 'Title', value: 'Alice in Wonderland' }]
             deltas = jsonDeltas ? my_deltas.map(d=>JSON.stringify(d)) : deltas
             // I send a change, and alice and bob should receive it.
-            const [alice_Change_stack, bob_Change_stack] = await waitfor_filtered_signals_change(async ()=>
+            let [alice_Change_stack, bob_Change_stack] = await waitfor_filtered_signals_change(async ()=>
                     rpc_send_change_b(me_ctx)({
                         participants: [alice_pubkey, bob_pubkey],
                         index: 2,
@@ -282,7 +316,7 @@ module.exports = (orchestrator)=>{
             t.deepEqual(a_sig.signal_payload, [2, deltas]) // delta_matches
             t.deepEqual(b_sig.signal_payload, [2, deltas]) // delta_matches
 
-            const [me_Heartbeat] = await waitfor_filtered_signals_change(async ()=>
+            let [me_Heartbeat] = await waitfor_filtered_signals_change(async ()=>
                     rpc_send_heartbeat_b(alice_ctx)({
                         scribe: me_pubkey,
                         data: 'Hello'
@@ -295,7 +329,7 @@ module.exports = (orchestrator)=>{
             t.deepEqual(me_sig.signal_payload[1], 'Hello')
             t.deepEqual(me_sig.signal_payload[0], alice_pubkey)
 
-            const [alice_FolkLore, bob_FolkLore] = await waitfor_filtered_signals_change(async ()=>
+            let [alice_FolkLore, bob_FolkLore] = await waitfor_filtered_signals_change(async ()=>
                     rpc_send_folk_lore_b(me_ctx)({
                         participants: [alice_pubkey, bob_pubkey],
                         data: {
@@ -338,8 +372,8 @@ module.exports = (orchestrator)=>{
             }))
 
             // alice asks for a sync request
-            const [me_SyncReq] = await waitfor_filtered_signals_change(async()=>
-                rpc_send_sync_request_b(alice_ctx)(me_pubkey),
+            let [me_SyncReq] = await waitfor_filtered_signals_change(async ()=>
+                    rpc_send_sync_request_b(alice_ctx)(me_pubkey),
                 [me_signals],
                 $signals=>filter_signal_name($signals, 'SyncReq')
             )
@@ -349,32 +383,40 @@ module.exports = (orchestrator)=>{
             // confirm that all agents got added to the folks anchor
             // TODO figure out why init doesn't happen immediately.
             let folks = await rpc_get_folks_b(me_ctx)()
-            t.equal(folks.length, 3)
+            t.deepEqual(folks, [
+                me_pubkey, alice_pubkey, bob_pubkey
+            ])
             /**/
         } finally {
             await leave_session({ ctx: me_ctx })
             await leave_session({ ctx: alice_ctx })
             await leave_session({ ctx: bob_ctx })
         }
-    })
-}
-function filter_signal_name($signals:Signal[], signal_name:string) {
-    return $signals.filter(s=>s.signal_name === signal_name)
-}
-async function waitfor_filtered_signals_change(
-    fn:()=>Promise<void>,
-    signals_a1:Readable$<Signal[]>[],
-    _filtered_signals:($signals:Signal[])=>Signal[],
-    timeout = 1000
-) {
-    const filtered_signals_a1 = signals_a1.map(signals=>_filtered_signals(signals.$))
-    await fn()
-    await Promise.all(signals_a1.map((signals, idx)=>
-        subscribe_wait_timeout(signals,
-            $signals=>{
-                return _filtered_signals($signals).length > filtered_signals_a1[idx].length
+        function filter_signal_name($signals:Signal[], signal_name:string) {
+            return $signals.filter(s=>s.signal_name === signal_name)
+        }
+        async function waitfor_filtered_signals_change(
+            fn:()=>Promise<any>,
+            signals_a1:Readable$<Signal[]>[],
+            _filtered_signals:($signals:Signal[])=>Signal[],
+            timeout = 1000,
+            err = new Error()
+        ) {
+            const filtered_signals_a1 = signals_a1.map(signals=>_filtered_signals(signals.$))
+            await fn()
+            try {
+                await Promise.all(signals_a1.map((signals, idx)=>
+                    subscribe_wait_timeout(signals,
+                        $signals=>{
+                            return _filtered_signals($signals).length > filtered_signals_a1[idx].length
+                        }, timeout)
+                ))
+                return signals_a1.map(signals=>_filtered_signals(signals.$).reverse())
+            } catch (e) {
+                err.message = e.message
+                throw err
+                return []
             }
-            , timeout)
-    ))
-    return signals_a1.map(signals=>_filtered_signals(signals.$).reverse())
+        }
+    })
 }

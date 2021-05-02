@@ -5,11 +5,4 @@ export const recorded_changes_b = _b('recorded_changes', ()=>
     new recorded_changes_T(writable$<$recorded_changes_T>([]))
 )
 export type $recorded_changes_T = ApplyDelta[]
-export class recorded_changes_T extends writable$_C<$recorded_changes_T> {
-    push = (...apply_delta_a1:ApplyDelta[])=>{
-        const $store = this.$
-        $store.push(...apply_delta_a1)
-        this.$ = $store
-        return $store
-    }
-}
+export class recorded_changes_T extends writable$_C<$recorded_changes_T> {}

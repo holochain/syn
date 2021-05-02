@@ -1,41 +1,32 @@
 import { _b } from '@ctx-core/object'
 import {
-    Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b, rpc_hash_content_b
+    Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b
 } from '@syn-ui/zome-client'
 import { content_b } from '../content'
-import { content_hash_b } from '../session'
+import { session_info_b, session_info_deltas_b } from '../session'
 import type { ApplyDelta } from './ApplyDelta'
-import { deltas_b } from './deltas_b'
-import { snapshot_content_b } from './snapshot_content_b'
 import { committed_changes_b } from './committed_changes_b'
 export const apply_deltas_b = _b('apply_deltas', (ctx)=>{
     const content = content_b(ctx)
     const my_tag = my_tag_b(ctx)
-    const deltas = deltas_b(ctx)
-    const snapshot_content = snapshot_content_b(ctx)
+    const session_info = session_info_b(ctx)
+    const session_info_deltas = session_info_deltas_b(ctx)
     const committed_changes = committed_changes_b(ctx)
-    let current_$snapshot_content:undefined|Content
-    snapshot_content.subscribe(async $snapshot_content=>{
-        if (!$snapshot_content || current_$snapshot_content === $snapshot_content) return
-        current_$snapshot_content = $snapshot_content
+    session_info.subscribe(async $session_info=>{
+        if (!$session_info) return
+        const { snapshot_content } = $session_info
         const $my_tag = my_tag.$
         const $content:Content = {
-            title: $snapshot_content.title,
-            body: $snapshot_content.body,
+            title: snapshot_content.title,
+            body: snapshot_content.body,
             meta: {}
         }
         if ($my_tag) {
             $content.meta[$my_tag] = 0
         }
         content.$ = $content
-        const new_$committed_changes:ApplyDelta[] = []
-        new_$committed_changes.push(
-            ...(await apply_deltas(deltas.$ || []))
-        )
-        committed_changes.update($committed_changes=>{
-            $committed_changes.push(...new_$committed_changes)
-            return $committed_changes
-        })
+        committed_changes.$ = []
+        await apply_deltas(session_info_deltas.$ || [])
     })
     return apply_deltas
     async function apply_deltas(deltas:Delta[]):Promise<ApplyDelta[]> {
@@ -79,9 +70,10 @@ export const apply_deltas_b = _b('apply_deltas', (ctx)=>{
             }
         }
         content.$ = $content
-        const rpc_hash_content = rpc_hash_content_b(ctx)
-        const content_hash = content_hash_b(ctx)
-        content_hash.$ = await rpc_hash_content($content)
+        committed_changes.update($committed_changes=>{
+            $committed_changes.push(...undoable_changes)
+            return $committed_changes
+        })
         return undoable_changes
     }
 })

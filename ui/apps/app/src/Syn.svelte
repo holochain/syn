@@ -1,14 +1,14 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte'
   import {
-      commit_change_b, scribe_str_b, session_info_b, sessions_b, toggle_session
+      commit_change_b, session_info_scribe_str_b, session_info_b, sessions_b, toggle_session
   } from '@syn-ui/model'
   import { bufferToBase64 } from '@syn-ui/utils'
   const ctx = getContext('ctx')
   const session_info = session_info_b(ctx)
   // this is the list of sessions returned by the DNA
   const sessions = sessions_b(ctx)
-  const scribe_str = scribe_str_b(ctx)
+  const session_info_scribe_str = session_info_scribe_str_b(ctx)
   const commit_change = commit_change_b(ctx)
 
   // this properties are the app-defined functions to apply and undo changes
@@ -28,7 +28,7 @@
       }
   }
 
-  $: noscribe = $scribe_str === ''
+  $: noscribe = $session_info_scribe_str === ''
 </script>
 <style>
   :global(.noscribe) {

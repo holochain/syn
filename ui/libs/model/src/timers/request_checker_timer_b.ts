@@ -33,7 +33,6 @@ export const request_checker_timer_b = _b('request_checker_timer', (ctx)=>{
 
                 // and send a sync request incase something just got out of sequence
                 // TODO: prepare for shifting to new scribe if they went offline
-                await session_info.refresh()
                 console.log('HERE')
                 const $session_info = session_info.$
                 if ($session_info) {

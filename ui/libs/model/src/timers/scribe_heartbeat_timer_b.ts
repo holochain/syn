@@ -1,6 +1,6 @@
 import { PubKeyToFolkRecord, rpc_send_folk_lore_b, rpc_send_heartbeat_b } from '@syn-ui/zome-client'
 import { _b } from '@ctx-core/object'
-import { am_i_scribe_b, folks_b, scribe_b } from '../session'
+import { am_i_scribe_b, folks_b, session_info_scribe_b } from '../session'
 import { _scribe_signal_folk_pubKey_a1_b } from '../delta'
 import { Timer } from './Timer'
 import type { AgentPubKey } from '@holochain/conductor-api'
@@ -35,9 +35,9 @@ export const scribe_heartbeat_timer_b = _b<Timer>('scribe_heartbeat_timer', (ctx
         } else {
             // I'm not the scribe so send them a heartbeat
             const rpc_send_heartbeat = rpc_send_heartbeat_b(ctx)
-            const scribe = scribe_b(ctx)
+            const session_info_scribe = session_info_scribe_b(ctx)
             await rpc_send_heartbeat({
-                scribe: scribe.$,
+                scribe: session_info_scribe.$!,
                 data: 'Hello'
             })
         }

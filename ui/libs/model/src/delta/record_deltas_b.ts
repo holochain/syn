@@ -3,7 +3,6 @@ import type { Delta } from '@syn-ui/zome-client'
 import { console_b } from '@syn-ui/utils'
 import { requested_changes_b } from './requested_changes_b'
 import { recorded_changes_b } from './recorded_changes_b'
-import type { ApplyDelta } from './ApplyDelta'
 import { apply_deltas_b } from './apply_deltas_b'
 export const record_deltas_b = _b('record_deltas', (ctx)=>{
     const console = console_b(ctx)
@@ -20,7 +19,7 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
                 if (JSON.stringify(delta) === JSON.stringify($requested_changes[0].delta)) {
                     const recorded_changes = recorded_changes_b(ctx)
                     const $recorded_changes = recorded_changes.$
-                    $recorded_changes.push($requested_changes.shift() as ApplyDelta)
+                    $recorded_changes.push($requested_changes.shift()!)
                     recorded_changes.$ = $recorded_changes
                     requested_changes.$ = $requested_changes
                 } else {
@@ -40,6 +39,9 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
         }
         const undoable_changes = await apply_deltas(apply_deltas_a1)
         // append changes to the recorded history
-        recorded_changes.push(...undoable_changes)
+        recorded_changes.update($recorded_changes=>{
+            $recorded_changes.push(...undoable_changes)
+            return $recorded_changes
+        })
     }
 })

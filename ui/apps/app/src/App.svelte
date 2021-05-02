@@ -1,6 +1,6 @@
 <script lang="ts">
     import { setContext } from 'svelte'
-    import { request_change_b, scribe_str_b } from '@syn-ui/model'
+    import { request_change_b, session_info_scribe_str_b } from '@syn-ui/model'
     import type { apply_delta_ret_T } from '@syn-ui/model'
     import type { AddDelta, Content, DeleteDelta, Delta, MetaDelta, TitleDelta } from '@syn-ui/zome-client'
     import Editor from './Editor.svelte'
@@ -20,7 +20,7 @@
 
     setContext('ctx', ctx)
     const request_change = request_change_b(ctx)
-    const scribe_str = scribe_str_b(ctx)
+    const session_info_scribe_str = session_info_scribe_str_b(ctx)
 
     $: disconnected = false
 
@@ -64,7 +64,7 @@
         return `${delta.type}:\n${detail}`
     }
 
-    $: noscribe = $scribe_str === ''
+    $: noscribe = $session_info_scribe_str === ''
     let syn
 
     // The debug drawer's ability to resized and hidden

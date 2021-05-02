@@ -1,7 +1,7 @@
 import { _b } from '@ctx-core/object'
 import { Delta, my_tag_b, rpc_send_change_request_b } from '@syn-ui/zome-client'
 import { console_b } from '@syn-ui/utils'
-import { am_i_scribe_b, scribe_b } from '../session'
+import { am_i_scribe_b, session_info_scribe_b } from '../session'
 import { next_index_b } from './next_index_b'
 import { send_change_b } from './send_change_b'
 import { requested_changes_b } from './requested_changes_b'
@@ -43,9 +43,9 @@ export const request_change_b = _b('request_change', (ctx)=>{
             request_changes.$ = $requested_changes
             console.log('REQUESTED', $requested_changes)
             const rpc_send_change_request = rpc_send_change_request_b(ctx)
-            const scribe = scribe_b(ctx)
+            const scribe = session_info_scribe_b(ctx)
             await rpc_send_change_request({
-                index, deltas, scribe: scribe.$
+                index, deltas, scribe: scribe.$!
             })
             request_counter += 1
         }
