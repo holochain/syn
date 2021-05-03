@@ -1,11 +1,14 @@
+import { isDeepStrictEqual } from 'util'
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { noop } from '@ctx-core/function'
+import { noop, promise_timeout } from '@ctx-core/function'
 import { assign } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { Readable$, subscribe_wait_timeout, writable$ } from '@ctx-core/store'
 import { bufferToBase64, console_b, EntryHash } from '@syn-ui/utils'
-import { content_b, apply_deltas_b, session_info_b, join_session, leave_session, content_hash_b } from '@syn-ui/model'
+import {
+    content_b, apply_deltas_b, session_info_b, join_session, leave_session, content_hash_b
+} from '@syn-ui/model'
 import {
     Commit, Delta, my_tag_b, rpc_commit_b, rpc_get_content_b, rpc_get_folks_b, rpc_get_session_b,
     rpc_get_sessions_b, rpc_hash_content_b, rpc_send_change_b, rpc_send_change_request_b, rpc_send_folk_lore_b,
@@ -66,6 +69,7 @@ module.exports = (orchestrator)=>{
         await join_session({ app_port: me_port, app_id: me_happ.hAppId, ctx: me_ctx })
 
         try {
+            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey])
             await subscribe_wait_timeout(session_info_b(me_ctx), I, 10_000)
             // I created the session, so I should be the scribe
             t.deepEqual(session_info_b(me_ctx).$!.scribe, me_pubkey)
@@ -180,10 +184,11 @@ module.exports = (orchestrator)=>{
             // clear the pending_deltas
             pending_deltas = []
 
+            // check that deltas and snapshot content returned add up to the current real content
             let me_SyncResp_stack:Signal[], alice_SyncResp_stack:Signal[], me_SyncReq_stack:Signal[]
 
-                // check that deltas and snapshot content returned add up to the current real content
-            ;[alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>{
+            // alice joins session
+            [alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>{
                     [me_SyncReq_stack] = await waitfor_filtered_signals_change(()=>
                             join_session({
                                 app_port: alice_port,
@@ -198,7 +203,12 @@ module.exports = (orchestrator)=>{
                 [alice_signals],
                 $signals=>filter_signal_name($signals, 'SyncResp')
             )
-            // alice joins session
+            await promise_timeout(async ()=>{
+                while (!isDeepStrictEqual(
+                    await rpc_get_folks_b(me_ctx)(),
+                    [me_pubkey, alice_pubkey])) {}
+            }, 500)
+            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey])
             const alice_session_info = session_info_b(alice_ctx)
             const alice_content = content_b(alice_ctx)
             // alice should get my session
@@ -209,9 +219,13 @@ module.exports = (orchestrator)=>{
                 me_content.$,
                 { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(me_ctx).$]: 0 } } // content after two commits
             )
-            t.deepEqual(
-                alice_content.$,
-                { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(alice_ctx).$]: 0 } } // content after two commits
+            await subscribe_wait_timeout(
+                alice_content,
+                $alice_content=>
+                    isDeepStrictEqual(
+                        $alice_content,
+                        { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(alice_ctx).$]: 0 } }),
+                1000
             )
             await leave_session({ ctx: alice_ctx })
             ;[alice_SyncResp_stack] = await waitfor_filtered_signals_change(async ()=>{
@@ -382,10 +396,11 @@ module.exports = (orchestrator)=>{
 
             // confirm that all agents got added to the folks anchor
             // TODO figure out why init doesn't happen immediately.
-            let folks = await rpc_get_folks_b(me_ctx)()
-            t.deepEqual(folks, [
-                me_pubkey, alice_pubkey, bob_pubkey
-            ])
+            await promise_timeout(async ()=>{
+                while (!isDeepStrictEqual(
+                    await rpc_get_folks_b(me_ctx)(),
+                    [me_pubkey, alice_pubkey, bob_pubkey])) {}
+            }, 500)
             /**/
         } finally {
             await leave_session({ ctx: me_ctx })

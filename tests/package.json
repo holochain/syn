@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@ctx-core/combinators": "^6.0.10",
-    "@ctx-core/store": "^24.7.1",
+    "@ctx-core/store": "^24.7.5",
     "@holochain/conductor-api": "0.0.4",
-    "@holochain/tryorama": "0.4.2",
+    "@holochain/tryorama": "0.4.3",
     "@syn-ui/model": "workspace:^1.0.0",
     "@syn-ui/utils": "workspace:^1.0.0",
     "@syn-ui/zome-client": "workspace:^1.0.0",

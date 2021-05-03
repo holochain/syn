@@ -6,7 +6,7 @@ importers:
     specifiers:
       '@babel/runtime': ^7.14.0
       '@changesets/cli': ^2.16.0
-      '@ctx-core/function': ^17.4.8
+      '@ctx-core/function': ^17.4.9
       '@ctx-core/jetbrains': ^4.0.34
       '@ctx-core/monorepo': ^15.0.56
       '@ctx-core/pnpm-tools': ^6.0.11
@@ -15,7 +15,7 @@ importers:
     devDependencies:
       '@babel/runtime': 7.14.0
       '@changesets/cli': 2.16.0
-      '@ctx-core/function': 17.4.8
+      '@ctx-core/function': 17.4.9
       '@ctx-core/jetbrains': 4.0.34
       '@ctx-core/monorepo': 15.0.56
       '@ctx-core/pnpm-tools': 6.0.11
@@ -25,9 +25,9 @@ importers:
   tests:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/store': ^24.7.1
+      '@ctx-core/store': ^24.7.5
       '@holochain/conductor-api': 0.0.4
-      '@holochain/tryorama': 0.4.2
+      '@holochain/tryorama': 0.4.3
       '@syn-ui/model': workspace:^1.0.0
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
@@ -50,9 +50,9 @@ importers:
       uuidv4: 6.2.7
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/store': 24.7.1
+      '@ctx-core/store': 24.7.5
       '@holochain/conductor-api': 0.0.4
-      '@holochain/tryorama': 0.4.2
+      '@holochain/tryorama': 0.4.3
       '@syn-ui/model': link:../ui/libs/model
       '@syn-ui/utils': link:../ui/libs/utils
       '@syn-ui/zome-client': link:../ui/libs/zome-client
@@ -64,8 +64,8 @@ importers:
   ui/apps/app:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.7.1
+      '@ctx-core/object': ^17.5.17
+      '@ctx-core/store': ^24.7.5
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -82,10 +82,10 @@ importers:
       rollup-plugin-svelte: ^7.1.0
       rollup-plugin-terser: ^7.0.2
       sirv-cli: ^1.0.11
-      svelte: ^3.38.0
+      svelte: ^3.38.2
       svelte-check: ^1.5.2
       svelte-fa: ^2.2.0
-      svelte-preprocess: ^4.7.2
+      svelte-preprocess: ^4.7.3
       tslib: ^2.2.0
       typescript: ^4.2.4
     dependencies:
@@ -94,8 +94,8 @@ importers:
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.7.1
+      '@ctx-core/object': 17.5.17
+      '@ctx-core/store': 24.7.5
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.46.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.46.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.46.0
@@ -108,19 +108,19 @@ importers:
       rollup-plugin-css-only: 3.1.0_rollup@2.46.0
       rollup-plugin-livereload: 2.0.0
       rollup-plugin-node-polyfills: 0.2.1
-      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.0
+      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.2
       rollup-plugin-terser: 7.0.2_rollup@2.46.0
-      svelte: 3.38.0
-      svelte-check: 1.5.2_svelte@3.38.0
-      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
+      svelte: 3.38.2
+      svelte-check: 1.5.2_svelte@3.38.2
+      svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
       tslib: 2.2.0
       typescript: 4.2.4
 
   ui/apps/headless:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.7.1
+      '@ctx-core/object': ^17.5.17
+      '@ctx-core/store': ^24.7.5
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.0.0
       '@rollup/plugin-node-resolve': ^11.2.1
@@ -132,9 +132,9 @@ importers:
       rollup-plugin-svelte: ^7.1.0
       rollup-plugin-terser: ^7.0.2
       sirv-cli: ^1.0.11
-      svelte: ^3.38.0
+      svelte: ^3.38.2
       svelte-fa: ^2.2.0
-      svelte-preprocess: ^4.7.2
+      svelte-preprocess: ^4.7.3
       typescript: ^4.2.4
     dependencies:
       '@ctx-core/combinators': 6.0.10
@@ -142,8 +142,8 @@ importers:
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.7.1
+      '@ctx-core/object': 17.5.17
+      '@ctx-core/store': 24.7.5
       '@rollup/plugin-commonjs': 18.0.0_rollup@2.46.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.46.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.46.0
@@ -151,30 +151,30 @@ importers:
       rollup: 2.46.0
       rollup-plugin-css-only: 3.1.0_rollup@2.46.0
       rollup-plugin-livereload: 2.0.0
-      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.0
+      rollup-plugin-svelte: 7.1.0_rollup@2.46.0+svelte@3.38.2
       rollup-plugin-terser: 7.0.2_rollup@2.46.0
-      svelte: 3.38.0
-      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
+      svelte: 3.38.2
+      svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
       typescript: 4.2.4
 
   ui/libs/model:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.7.1
+      '@ctx-core/object': ^17.5.17
+      '@ctx-core/store': ^24.7.5
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
-      svelte: ^3.38.0
+      svelte: ^3.38.2
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.7.1
+      '@ctx-core/object': 17.5.17
+      '@ctx-core/store': 24.7.5
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
-      svelte: 3.38.0
+      svelte: 3.38.2
       typescript: 4.2.4
 
   ui/libs/utils:
@@ -185,17 +185,17 @@ importers:
 
   ui/libs/zome-client:
     specifiers:
-      '@ctx-core/function': ^17.4.8
-      '@ctx-core/object': ^17.5.15
-      '@ctx-core/store': ^24.7.1
+      '@ctx-core/function': ^17.4.9
+      '@ctx-core/object': ^17.5.17
+      '@ctx-core/store': ^24.7.5
       '@holochain/conductor-api': ^0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       buffer: ^6.0.3
       typescript: ^4.2.4
     devDependencies:
-      '@ctx-core/function': 17.4.8
-      '@ctx-core/object': 17.5.15
-      '@ctx-core/store': 24.7.1
+      '@ctx-core/function': 17.4.9
+      '@ctx-core/object': 17.5.17
+      '@ctx-core/store': 24.7.5
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       buffer: 6.0.3
@@ -412,21 +412,21 @@ packages:
       arrify: 1.0.1
     dev: true
 
-  /@ctx-core/array/20.2.18:
-    resolution: {integrity: sha512-PjZK6iWxXrx2pxGKPYX5Qs/pwW5Wo2c/Rx5VPavKOiZQ++VWt+Uk3VfnwgS5R8A60yWi45zx6vdhFYkNB/xFcA==}
+  /@ctx-core/array/20.2.20:
+    resolution: {integrity: sha512-OpGLFpg78qHrQGxMFoLFJVe3qpk1GGhebOmw5sq8CMQhAJlj91VynQn3hSS/agg88XQwAAN05oP0BDtfEzNt1w==}
     dependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.4.8
-      '@ctx-core/object': 17.5.15
-      '@ctx-core/set': 9.0.20
+      '@ctx-core/function': 17.4.9
+      '@ctx-core/object': 17.5.17
+      '@ctx-core/set': 9.0.21
     dev: true
 
-  /@ctx-core/cli-args/7.2.27:
-    resolution: {integrity: sha512-xH5FDMnw+VD5rtLbFjOrNn2lgX3bPTXeh/2YyLTw/STxa+QjeUgKTlftxLDD5ZiGnfVtkuIXLbQX2G/ghZLfMQ==}
+  /@ctx-core/cli-args/7.2.29:
+    resolution: {integrity: sha512-udKauGZDrehl42SEQSyusaRA19v0g3lapYX2sDEYimt8wlmK8MCtU15w0vCtPAXOnB+7Z/vMUEMmhbCwOMXqkw==}
     dependencies:
-      '@ctx-core/array': 20.2.18
-      '@ctx-core/function': 17.4.8
-      '@ctx-core/object': 17.5.15
+      '@ctx-core/array': 20.2.20
+      '@ctx-core/function': 17.4.9
+      '@ctx-core/object': 17.5.17
     dev: true
 
   /@ctx-core/combinators/6.0.10:
@@ -436,18 +436,18 @@ packages:
     resolution: {integrity: sha512-AWvTxUL0ZEjlGjU+Ye546oLbFqqvwTzy+bEJmUxsNVgKeAGtKZNfd0hY5+QStHqf7bD10A6V4NM4CgcI7f9VJA==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.18
+      '@ctx-core/array': 20.2.20
     dev: true
 
-  /@ctx-core/function/17.4.8:
-    resolution: {integrity: sha512-XEtd8ko5HlzZDMYNPRLRMIldLKWPMSRLmqGRxlYxtQvYDiwDobtOPxCyhzeDR7nlxSGBVBWI/7tMwhegnttUUw==}
+  /@ctx-core/function/17.4.9:
+    resolution: {integrity: sha512-BsAVEgSWFfKdhH/B/+1TLGrgFGrit40CGjEl5w7XUHTDzEi/1OEUalSznD0TKZJ5sBXQGCakp3TaRgL5UIz3sA==}
     dev: true
 
   /@ctx-core/jetbrains/4.0.34:
     resolution: {integrity: sha512-4wGPtDyY8sEeR3uh01thHA4DdCIexqvCBD5SJPWlPYeA2qrj/BAzd7JNuAZRrouJCkWthf5W1kUxArAQkgsNXQ==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.27
+      '@ctx-core/cli-args': 7.2.29
       '@ctx-core/queue': 3.0.10
       esm: 3.2.25
       globby: 11.0.3
@@ -457,8 +457,8 @@ packages:
     resolution: {integrity: sha512-6/HYAUhrw1OrYnRFH6x5uMhlkJiQy0W5OJ3sOY2gikfiullhmre+r0NLytHnGaHZgXVkwWcRyi1eLqr7t3R/IA==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.18
-      '@ctx-core/cli-args': 7.2.27
+      '@ctx-core/array': 20.2.20
+      '@ctx-core/cli-args': 7.2.29
       '@ctx-core/ctx-core-package-tools': 6.0.49
       '@ctx-core/package': 6.1.21
       '@ctx-core/queue': 3.0.10
@@ -469,17 +469,17 @@ packages:
       semver: 7.3.5
     dev: true
 
-  /@ctx-core/object/17.5.15:
-    resolution: {integrity: sha512-Y1RhOn79IofjzCeav+QKUpRa5LdkQSrX6Lct8mxPkHP+FSWxDcnLqD+EouwesaqKN9nh7p8+gI4d/EmERaR4MQ==}
+  /@ctx-core/object/17.5.17:
+    resolution: {integrity: sha512-1qbnYvUj/Z4gN0G6MPmjTmhCS0P7rz2yMW8fcwsRB1iaf4GhbSkpCGyo+F1YJxwuLc/d1LDb/x6MPSPUEvJouA==}
     dependencies:
-      '@ctx-core/function': 17.4.8
+      '@ctx-core/function': 17.4.9
     dev: true
 
   /@ctx-core/package/6.1.21:
     resolution: {integrity: sha512-1LAU/w/BEA+Og4nMNNZqL8DULgFUUHYdFn8xkKsiD6XE2tqBmjpeI8NliBz2a5rP9VGRReix0q1vjanCc4lY/g==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.27
+      '@ctx-core/cli-args': 7.2.29
       esm: 3.2.25
       resolve: 1.20.0
     dev: true
@@ -497,20 +497,20 @@ packages:
     resolution: {integrity: sha512-SUX8v4klI5/Xy4LeQ87V5h1WfK8k15YvFvsTw74fLYWYEaquy3nYnuduRsAY8L58xZ0uY/OQ++XHTiyIUCX9aA==}
     dev: true
 
-  /@ctx-core/set/9.0.20:
-    resolution: {integrity: sha512-eeXGmjWuJRHvypqHpNaKQWBKsx9b/dWSkfAHePgFNeVzmW5k1e3zd8g+suJPENpFcFHhbUizoqqRVwnVcTWwBw==}
+  /@ctx-core/set/9.0.21:
+    resolution: {integrity: sha512-uynQWcGIlpr1l9NGGYFGGF82AzMBxW6x6wtK2iK0HFDWiVbKl6t7X37CVkV9xpVjbOJmFDTQt46+OO5DuNd3rg==}
     dependencies:
-      '@ctx-core/function': 17.4.8
+      '@ctx-core/function': 17.4.9
     dev: true
 
-  /@ctx-core/store/24.7.1:
-    resolution: {integrity: sha512-9ZwBLpT1rvSIDGt9JMQjT4fMDkjPety7Mwdr/vmXzkh6AIRKyeyzyxVSsGB1pgL3sh9QcFTgFMpQyoqdcLyXlQ==}
+  /@ctx-core/store/24.7.5:
+    resolution: {integrity: sha512-XxjAPVZnkuXT9PR2b1jXViKtxI4jDniONLbpwwjLWAdKrMjYbUf0Sg8OUPv5101zfRahuRQgP28tsRARv39SqA==}
     dependencies:
-      '@ctx-core/array': 20.2.18
+      '@ctx-core/array': 20.2.20
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.4.8
-      '@ctx-core/object': 17.5.15
-      svelte: 3.38.0
+      '@ctx-core/function': 17.4.9
+      '@ctx-core/object': 17.5.17
+      svelte: 3.38.1
     dev: true
 
   /@dabh/diagnostics/2.0.2:
@@ -519,19 +519,6 @@ packages:
       colorspace: 1.1.2
       enabled: 2.0.0
       kuler: 2.0.0
-    dev: true
-
-  /@holochain/conductor-api/0.0.3:
-    resolution: {integrity: sha512-wok/uiyGoX4m59wMhT3VX2Ma6bXBfZwp8F8iqTb/XiHz0UpROOCrUELXnmN9Ee1sYnmJcTLYRhRTCZ73WRgkdA==}
-    dependencies:
-      '@msgpack/msgpack': 2.4.0
-      '@types/ws': 7.4.2
-      isomorphic-ws: 4.0.1_ws@7.4.5
-      nanoid: 3.1.22
-      ws: 7.4.5
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
     dev: true
 
   /@holochain/conductor-api/0.0.4:
@@ -555,10 +542,10 @@ packages:
       winston-null: 2.0.0_winston@3.3.3
     dev: true
 
-  /@holochain/tryorama/0.4.2:
-    resolution: {integrity: sha512-2Da3zWfXRO/xItRMhzxhRdu+6c9ce0lCZ7hXLjJ2HQ8pspdU6oVHVPhlblwr1Bk1n0W43LM11XVC1YbgzFWZBw==}
+  /@holochain/tryorama/0.4.3:
+    resolution: {integrity: sha512-IHaNZSCCeaa+kmC7AN7Vo5sAknBqHMD3WyC1hWwc2F40JwdAaaGb74uGMgPtg6bdxpsmEVUPSHFKW5ex07+WCg==}
     dependencies:
-      '@holochain/conductor-api': 0.0.3
+      '@holochain/conductor-api': 0.0.4
       '@holochain/hachiko': 0.5.2
       '@iarna/toml': 2.2.5
       '@msgpack/msgpack': 2.6.0
@@ -566,10 +553,10 @@ packages:
       axios: 0.19.2
       base-64: 0.1.0
       colors: 1.4.0
-      fp-ts: 2.10.4
+      fp-ts: 2.10.5
       get-port: 5.1.1
-      io-ts: 2.2.16_fp-ts@2.10.4
-      io-ts-reporters: 1.2.2_fp-ts@2.10.4+io-ts@2.2.16
+      io-ts: 2.2.16_fp-ts@2.10.5
+      io-ts-reporters: 1.2.2_fp-ts@2.10.5+io-ts@2.2.16
       lodash: 4.17.21
       memoizee: 0.4.15
       ramda: 0.26.1
@@ -1970,8 +1957,8 @@ packages:
     resolution: {integrity: sha1-C+4AUBiusmDQo6865ljdATbsG5k=}
     dev: false
 
-  /fp-ts/2.10.4:
-    resolution: {integrity: sha512-vMTB5zNc9PnE20q145PNbkiL9P9WegwmKVOFloi/NfHnPdAlcob6I3AKqlH/9u3k3/M/GOftZhcJdBrb+NtnDA==}
+  /fp-ts/2.10.5:
+    resolution: {integrity: sha512-X2KfTIV0cxIk3d7/2Pvp/pxL/xr2MV1WooyEzKtTWYSc1+52VF4YzjBTXqeOlSiZsPCxIBpDGfT9Dyo7WEY0DQ==}
     dev: true
 
   /fs-extra/7.0.1:
@@ -2230,22 +2217,22 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /io-ts-reporters/1.2.2_fp-ts@2.10.4+io-ts@2.2.16:
+  /io-ts-reporters/1.2.2_fp-ts@2.10.5+io-ts@2.2.16:
     resolution: {integrity: sha512-igASwWWkDY757OutNcM6zTtdJf/eTZYkoe2ymsX2qpm5bKZLo74FJYjsCtMQOEdY7dRHLLEulCyFQwdN69GBCg==}
     peerDependencies:
       fp-ts: ^2.0.2
       io-ts: ^2.0.0
     dependencies:
-      fp-ts: 2.10.4
-      io-ts: 2.2.16_fp-ts@2.10.4
+      fp-ts: 2.10.5
+      io-ts: 2.2.16_fp-ts@2.10.5
     dev: true
 
-  /io-ts/2.2.16_fp-ts@2.10.4:
+  /io-ts/2.2.16_fp-ts@2.10.5:
     resolution: {integrity: sha512-y5TTSa6VP6le0hhmIyN0dqEXkrZeJLeC5KApJq6VLci3UEKF80lZ+KuoUs02RhBxNWlrqSNxzfI7otLX1Euv8Q==}
     peerDependencies:
       fp-ts: ^2.5.0
     dependencies:
-      fp-ts: 2.10.4
+      fp-ts: 2.10.5
     dev: true
 
   /irregular-plurals/3.3.0:
@@ -3496,7 +3483,7 @@ packages:
       rollup-plugin-inject: 3.0.2
     dev: true
 
-  /rollup-plugin-svelte/7.1.0_rollup@2.46.0+svelte@3.38.0:
+  /rollup-plugin-svelte/7.1.0_rollup@2.46.0+svelte@3.38.2:
     resolution: {integrity: sha512-vopCUq3G+25sKjwF5VilIbiY6KCuMNHP1PFvx2Vr3REBNMDllKHFZN2B9jwwC+MqNc3UPKkjXnceLPEjTjXGXg==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -3506,7 +3493,7 @@ packages:
       require-relative: 0.8.7
       rollup: 2.46.0
       rollup-pluginutils: 2.8.2
-      svelte: 3.38.0
+      svelte: 3.38.2
     dev: true
 
   /rollup-plugin-terser/7.0.2_rollup@2.46.0:
@@ -3897,7 +3884,7 @@ packages:
       has-flag: 4.0.0
     dev: true
 
-  /svelte-check/1.5.2_svelte@3.38.0:
+  /svelte-check/1.5.2_svelte@3.38.2:
     resolution: {integrity: sha512-x9Pc13r814TKrMXY70IyqDEmPzuFiqNSpBmsrMKrFpi995MiG+lmqYnyw8iQC+DGh7H3eUt3LIFXbNd396XIFw==}
     hasBin: true
     peerDependencies:
@@ -3909,8 +3896,8 @@ packages:
       import-fresh: 3.3.0
       minimist: 1.2.5
       source-map: 0.7.3
-      svelte: 3.38.0
-      svelte-preprocess: 4.7.2_svelte@3.38.0+typescript@4.2.4
+      svelte: 3.38.2
+      svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
       typescript: 4.2.4
     transitivePeerDependencies:
       - '@babel/core'
@@ -3929,8 +3916,8 @@ packages:
     resolution: {integrity: sha512-PN1H8AWDh+OwhwjJKTv4/zXvKvmvOEVSCVhIhji6Onx8XEw+CGf8BDR0BVUIp87IEX+DEqIo9pbyhgz8EoYZyA==}
     dev: false
 
-  /svelte-preprocess/4.7.2_svelte@3.38.0+typescript@4.2.4:
-    resolution: {integrity: sha512-EToG+08rEsA33btv+C5g2qnRArwpTc5AoU0QBB3ZEkYagxAb2yPNsy0qsmtvbJOTBMy6o3oyijDdl3DMpMvpEg==}
+  /svelte-preprocess/4.7.3_svelte@3.38.2+typescript@4.2.4:
+    resolution: {integrity: sha512-Zx1/xLeGOIBlZMGPRCaXtlMe4ZA0faato5Dc3CosEqwu75MIEPuOstdkH6cy+RYTUYynoxzNaDxkPX4DbrPwRA==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
     peerDependencies:
@@ -3974,12 +3961,17 @@ packages:
       '@types/sass': 1.16.0
       detect-indent: 6.0.0
       strip-indent: 3.0.0
-      svelte: 3.38.0
+      svelte: 3.38.2
       typescript: 4.2.4
     dev: true
 
-  /svelte/3.38.0:
-    resolution: {integrity: sha512-V0CbyzvXEka7zQtRYt++cpPh0zxxDUTIeNlq4KncGXn2qHnQFZ2i4L4+2QOfLwOudb9cewJeegupBQcscnBaaA==}
+  /svelte/3.38.1:
+    resolution: {integrity: sha512-N3XLAyfzqrFxwRLevBeW7Dke9ZlHRVGSIed5abo4Drvj+zvd2OyWpFa1x4nQUc8Lnvt4Kcn8/5le1peRDybNqg==}
+    engines: {node: '>= 8'}
+    dev: true
+
+  /svelte/3.38.2:
+    resolution: {integrity: sha512-q5Dq0/QHh4BLJyEVWGe7Cej5NWs040LWjMbicBGZ+3qpFWJ1YObRmUDZKbbovddLC9WW7THTj3kYbTOFmU9fbg==}
     engines: {node: '>= 8'}
     dev: true
 
