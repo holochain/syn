@@ -12,7 +12,7 @@
   "devDependencies": {
     "@babel/runtime": "^7.14.0",
     "@changesets/cli": "^2.16.0",
-    "@ctx-core/function": "^17.4.9",
+    "@ctx-core/function": "^17.5.0",
     "@ctx-core/jetbrains": "^4.0.34",
     "@ctx-core/monorepo": "^15.0.56",
     "@ctx-core/pnpm-tools": "^6.0.11",

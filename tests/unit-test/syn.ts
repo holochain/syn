@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'util'
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { noop, promise_timeout } from '@ctx-core/function'
+import { noop, waitfor } from '@ctx-core/function'
 import { assign } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { Readable$, subscribe_wait_timeout, writable$ } from '@ctx-core/store'
@@ -15,7 +15,6 @@ import {
     Delta, my_tag_b, rpc_get_content_b, rpc_get_folks_b, rpc_get_session_b, rpc_hash_content_b,
     rpc_send_heartbeat_b, rpc_send_sync_request_b, Signal
 } from '@syn-ui/zome-client'
-import { delay } from '@holochain/tryorama/lib/util'
 
 const config = Config.gen()
 
@@ -153,13 +152,13 @@ module.exports = (orchestrator)=>{
                 { type: 'Delete', value: [4, 11] },    // 'baz  new'
                 { type: 'Add', value: [4, 'monkey'] }, // 'baz monkey new'
             ]
-            const new_content_hash_2 = (await promise_timeout(async ()=>{
+            await (async ()=>{
                 const $current_commit_header_hash = current_commit_header_hash_b(me_ctx).$!
-                for (; ;) {
-                    if (current_commit_header_hash_b(me_ctx).$! === $current_commit_header_hash) return
-                    await delay(0)
-                }
-            }, 500))!
+                await waitfor(async ()=>
+                    (current_commit_header_hash_b(me_ctx).$!) === $current_commit_header_hash,
+                    500
+                )
+            })()
 
             deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
             await request_change_b(me_ctx)(pending_deltas)
@@ -201,23 +200,12 @@ module.exports = (orchestrator)=>{
                     [[alice_signals], $signals=>filter_signal_name($signals, 'SyncResp')]
                 ]
             )
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey])
-                    ) return
-                    await delay(0)
-                }
-            }, 500)
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(
-                            await rpc_get_folks_b(alice_ctx)(), [me_pubkey, alice_pubkey])
-                    ) return
-                    await delay(0)
-                }
-            }, 500)
+            await waitfor(
+                async ()=>isDeepStrictEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey]),
+                500)
+            await waitfor(async ()=>
+                    isDeepStrictEqual(await rpc_get_folks_b(alice_ctx)(), [me_pubkey, alice_pubkey]),
+                500)
             t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey], _caller_line())
             const alice_session_info = session_info_b(alice_ctx)
             const alice_content = content_b(alice_ctx)
@@ -225,22 +213,16 @@ module.exports = (orchestrator)=>{
             t.deepEqual(alice_session_info.$!.session, session_hash, _caller_line())
             t.deepEqual(alice_session_info.$!.scribe, me_pubkey, _caller_line())
             t.deepEqual(alice_session_info.$!.snapshot_content, { title: '', body: '' }, _caller_line())
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(alice_session_info.$!.deltas, [
-                            '{"type":"Title","value":"foo title"}',
-                            '{"type":"Add","value":[0,"bar content"]}',
-                            '{"type":"Delete","value":[0,3]}',
-                            '{"type":"Add","value":[0,"baz"]}',
-                            '{"type":"Add","value":[11," new"]}',
-                            '{"type":"Delete","value":[4,11]}',
-                            '{"type":"Add","value":[4,"monkey"]}'
-                        ])
-                    ) return
-                    await delay(0)
-                }
-            }, 1000)
+            await waitfor(async ()=>
+                isDeepStrictEqual(alice_session_info.$!.deltas, [
+                    '{"type":"Title","value":"foo title"}',
+                    '{"type":"Add","value":[0,"bar content"]}',
+                    '{"type":"Delete","value":[0,3]}',
+                    '{"type":"Add","value":[0,"baz"]}',
+                    '{"type":"Add","value":[11," new"]}',
+                    '{"type":"Delete","value":[4,11]}',
+                    '{"type":"Add","value":[4,"monkey"]}'
+                ]), 1000)
 
             await subscribe_wait_timeout(
                 alice_content,
@@ -336,33 +318,18 @@ module.exports = (orchestrator)=>{
             // const bob_$session_info = await rpc_get_session_b(bob_ctx)(session_hash)
             // bob should get my session
             t.deepEqual(bob_$session_info.scribe, me_pubkey, _caller_line())
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(folks_b(me_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
-                        && isDeepStrictEqual(folks_b(me_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey)
-                    ) return
-                    await delay(0)
-                }
-            }, 1000)
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(folks_b(alice_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
-                        && isDeepStrictEqual(folks_b(alice_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey)
-                    ) return
-                    await delay(0)
-                }
-            }, 1000)
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(folks_b(bob_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
-                        && isDeepStrictEqual(folks_b(bob_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey)
-                    ) return
-                    await delay(0)
-                }
-            }, 1000)
+            await waitfor(async ()=>
+                isDeepStrictEqual(folks_b(me_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
+                && isDeepStrictEqual(folks_b(me_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey),
+                1000)
+            await waitfor(async ()=>
+                isDeepStrictEqual(folks_b(alice_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
+                && isDeepStrictEqual(folks_b(alice_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey),
+                1000)
+            await waitfor(async ()=>
+                isDeepStrictEqual(folks_b(bob_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
+                && isDeepStrictEqual(folks_b(bob_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey),
+                1000)
             t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _caller_line())
             t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _caller_line())
             t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].inSession, true, _caller_line())
@@ -434,22 +401,20 @@ module.exports = (orchestrator)=>{
 
             // confirm that all agents got added to the folks anchor
             // TODO figure out why init doesn't happen immediately.
-            await promise_timeout(async ()=>{
-                for (; ;) {
-                    if (
-                        isDeepStrictEqual(
-                            await rpc_get_folks_b(me_ctx)(),
-                            [me_pubkey, alice_pubkey, bob_pubkey])
-                    ) return
-                    await delay(0)
-                }
-            }, 500)
+            await waitfor(async ()=>{
+                    const $folks = await rpc_get_folks_b(me_ctx)()
+                    return isDeepStrictEqual($folks, [me_pubkey, alice_pubkey, bob_pubkey])
+                },
+                500)
             /**/
+            t.pass(_caller_line())
         } finally {
             console.debug('finally|leave_session')
-            await leave_session({ ctx: me_ctx })
-            await leave_session({ ctx: alice_ctx })
-            await leave_session({ ctx: bob_ctx })
+            await Promise.all([
+                leave_session({ ctx: me_ctx }),
+                leave_session({ ctx: alice_ctx }),
+                leave_session({ ctx: bob_ctx }),
+            ])
         }
         function filter_signal_name($signals:Signal[], signal_name:string) {
             return $signals.filter(s=>s.signal_name === signal_name)
