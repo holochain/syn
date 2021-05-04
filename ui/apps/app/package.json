@@ -14,8 +14,8 @@
     "svelte-fa": "^2.2.0"
   },
   "devDependencies": {
-    "@ctx-core/object": "^17.5.18",
-    "@ctx-core/store": "^24.7.10",
+    "@ctx-core/object": "^17.5.19",
+    "@ctx-core/store": "^24.7.11",
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-node-resolve": "^11.2.1",
     "@rollup/plugin-replace": "^2.4.2",

@@ -1,11 +1,11 @@
 import { isDeepStrictEqual } from 'util'
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { noop, waitfor } from '@ctx-core/function'
+import { _stacktrace_filename_line, noop, waitfor } from '@ctx-core/function'
 import { assign } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { Readable$, subscribe_wait_timeout, writable$ } from '@ctx-core/store'
-import { _caller_line, bufferToBase64, console_b } from '@syn-ui/utils'
+import { bufferToBase64, console_b } from '@syn-ui/utils'
 import {
     content_b, session_info_b, join_session, leave_session, content_hash_b, sessions_b, commit_change_b,
     current_commit_header_hash_b, request_change_b, recorded_changes_b, committed_changes_b, folks_b,
@@ -54,7 +54,7 @@ module.exports = (orchestrator)=>{
         const bob_pubkey = bob.cellId[1]
         const bob_pubkey_base64 = bufferToBase64(bob_pubkey)
 
-        t.equal((await me.call('syn', 'get_sessions')).length, 0, _caller_line())
+        t.equal((await me.call('syn', 'get_sessions')).length, 0, _stacktrace_filename_line())
         const me_port:number = parseInt(me_player._conductor.appClient.client.socket.url.split(':')[2])
         const alice_port:number = parseInt(alice_player._conductor.appClient.client.socket.url.split(':')[2])
         const bob_port:number = parseInt(bob_player._conductor.appClient.client.socket.url.split(':')[2])
@@ -69,35 +69,35 @@ module.exports = (orchestrator)=>{
         await join_session({ app_port: me_port, app_id: me_happ.hAppId, ctx: me_ctx })
 
         try {
-            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey], _caller_line())
+            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey], _stacktrace_filename_line())
             await subscribe_wait_timeout(session_info_b(me_ctx), I, 10_000)
             // I created the session, so I should be the scribe
-            t.deepEqual(session_info_b(me_ctx).$!.scribe, me_pubkey, _caller_line())
+            t.deepEqual(session_info_b(me_ctx).$!.scribe, me_pubkey, _stacktrace_filename_line())
             // First ever session so content should be default content
-            t.deepEqual(session_info_b(me_ctx).$!.snapshot_content, { title: '', body: '' }, _caller_line())
+            t.deepEqual(session_info_b(me_ctx).$!.snapshot_content, { title: '', body: '' }, _stacktrace_filename_line())
             let session_hash = session_info_b(me_ctx).$!.session
 
             // check the hash_content zome call.
             t.deepEqual(
                 session_info_b(me_ctx).$!.content_hash,
                 await rpc_hash_content_b(me_ctx)(session_info_b(me_ctx).$!.snapshot_content),
-                _caller_line()
+                _stacktrace_filename_line()
             )
 
             // check get_sessions utility zome call
             const me_sessions = sessions_b(me_ctx)
-            t.equal(me_sessions.$!.length, 1, _caller_line())
-            t.deepEqual(me_sessions.$![0], session_hash, _caller_line())
+            t.equal(me_sessions.$!.length, 1, _stacktrace_filename_line())
+            t.deepEqual(me_sessions.$![0], session_hash, _stacktrace_filename_line())
 
             // exercise the get_session zome call
-            t.equal(me_sessions.$!.length, 1, _caller_line())
-            t.deepEqual(session_info_b(me_ctx).$, await rpc_get_session_b(me_ctx)(session_hash), _caller_line())
+            t.equal(me_sessions.$!.length, 1, _stacktrace_filename_line())
+            t.deepEqual(session_info_b(me_ctx).$, await rpc_get_session_b(me_ctx)(session_hash), _stacktrace_filename_line())
 
             // check that initial snapshot was created by using the get_content zome call
             t.deepEqual(
                 session_info_b(me_ctx).$!.snapshot_content,
                 await rpc_get_content_b(me_ctx)(session_info_b(me_ctx).$!.content_hash),
-                _caller_line()
+                _stacktrace_filename_line()
             )
 
             // set up the pending deltas array
@@ -141,8 +141,8 @@ module.exports = (orchestrator)=>{
 
             // add a content change
             await commit_change_b(me_ctx)()
-            t.equal(current_commit_header_hash_b(me_ctx).$!.length, 39, _caller_line()) // is a content_hash
-            t.deepEqual(recorded_changes_b(me_ctx).$, [], _caller_line())
+            t.equal(current_commit_header_hash_b(me_ctx).$!.length, 39, _stacktrace_filename_line()) // is a content_hash
+            t.deepEqual(recorded_changes_b(me_ctx).$, [], _stacktrace_filename_line())
 
             // add a second content change
             pending_deltas = [
@@ -168,7 +168,7 @@ module.exports = (orchestrator)=>{
                 { delta: { type: 'Add', value: [11, ' new'] } },  // 'baz content new'
                 { delta: { type: 'Delete', value: [4, 11] }, deleted: 'content' },    // 'baz  new'
                 { delta: { type: 'Add', value: [4, 'monkey'] } }, // 'baz monkey new'
-            ], _caller_line())
+            ], _stacktrace_filename_line())
 
             await commit_change_b(me_ctx)()
             // clear the pending_deltas
@@ -180,7 +180,7 @@ module.exports = (orchestrator)=>{
             t.deepEqual(
                 me_content.$,
                 { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(me_ctx).$]: 0 } }, // content after two commits
-                _caller_line()
+                _stacktrace_filename_line()
             )
             let alice_FolkLore_stack:Signal[]
                 // alice joins session
@@ -206,13 +206,13 @@ module.exports = (orchestrator)=>{
             await waitfor(async ()=>
                     isDeepStrictEqual(await rpc_get_folks_b(alice_ctx)(), [me_pubkey, alice_pubkey]),
                 500)
-            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey], _caller_line())
+            t.deepEqual(await rpc_get_folks_b(me_ctx)(), [me_pubkey, alice_pubkey], _stacktrace_filename_line())
             const alice_session_info = session_info_b(alice_ctx)
             const alice_content = content_b(alice_ctx)
             // alice should get my session
-            t.deepEqual(alice_session_info.$!.session, session_hash, _caller_line())
-            t.deepEqual(alice_session_info.$!.scribe, me_pubkey, _caller_line())
-            t.deepEqual(alice_session_info.$!.snapshot_content, { title: '', body: '' }, _caller_line())
+            t.deepEqual(alice_session_info.$!.session, session_hash, _stacktrace_filename_line())
+            t.deepEqual(alice_session_info.$!.scribe, me_pubkey, _stacktrace_filename_line())
+            t.deepEqual(alice_session_info.$!.snapshot_content, { title: '', body: '' }, _stacktrace_filename_line())
             await waitfor(async ()=>
                 isDeepStrictEqual(alice_session_info.$!.deltas, [
                     '{"type":"Title","value":"foo title"}',
@@ -250,17 +250,17 @@ module.exports = (orchestrator)=>{
             t.deepEqual(
                 alice_content.$,
                 { title: 'foo title', body: 'baz monkey new', meta: { [my_tag_b(alice_ctx).$]: 0 } },// content after two commits
-                _caller_line()
+                _stacktrace_filename_line()
             )
 
             // confirm that the session_info_b(me_ctx)'s content content_hash matches the content_hash
             // generated by applying deltas
             content_hash = await rpc_hash_content_b(alice_ctx)(content_b(alice_ctx).$)
             const alice_content_hash = content_hash_b(alice_ctx)
-            t.deepEqual(alice_content_hash.$, content_hash, _caller_line())
+            t.deepEqual(alice_content_hash.$, content_hash, _stacktrace_filename_line())
 
             // I should receive alice's request for the state as she joins the session
-            t.deepEqual(me_SyncReq_stack![0], { signal_name: 'SyncReq', signal_payload: alice_pubkey }, _caller_line())
+            t.deepEqual(me_SyncReq_stack![0], { signal_name: 'SyncReq', signal_payload: alice_pubkey }, _stacktrace_filename_line())
 
             // I add some pending deltas which I will then need to send to Alice as part of her Joining.
             pending_deltas = [{ type: 'Title', value: 'I haven\'t committed yet' }, { type: 'Add', value: [14, '\nBut made a new line! 🍑'] }]
@@ -276,11 +276,11 @@ module.exports = (orchestrator)=>{
                 ])
 
             // Alice should have received uncommitted deltas
-            t.equal(alice_Change_stack[0].signal_name, 'Change', _caller_line())
-            t.deepEqual(alice_Change_stack[0].signal_payload[0], me_index, _caller_line()) // deltas, commit, and snapshot match
-            t.deepEqual(alice_Change_stack[0].signal_payload[1], pending_deltas.map(d=>JSON.stringify(d)), _caller_line()) // deltas, commit, and snapshot match
+            t.equal(alice_Change_stack[0].signal_name, 'Change', _stacktrace_filename_line())
+            t.deepEqual(alice_Change_stack[0].signal_payload[0], me_index, _stacktrace_filename_line()) // deltas, commit, and snapshot match
+            t.deepEqual(alice_Change_stack[0].signal_payload[1], pending_deltas.map(d=>JSON.stringify(d)), _stacktrace_filename_line()) // deltas, commit, and snapshot match
 
-            t.deepEqual(me_signals.$.map(ms=>ms.signal_name), ['SyncReq', 'SyncReq'], _caller_line())
+            t.deepEqual(me_signals.$.map(ms=>ms.signal_name), ['SyncReq', 'SyncReq'], _stacktrace_filename_line())
             // alice sends me a change req and I should receive it
             const alice_delta:Delta = { type: 'Title', value: 'Alice in Wonderland' }
             let delta = jsonDeltas ? JSON.stringify(alice_delta) : alice_delta
@@ -290,10 +290,10 @@ module.exports = (orchestrator)=>{
                     request_change_b(alice_ctx)([alice_delta]),
                 [[[me_signals], $signals=>filter_signal_name($signals, 'ChangeReq')]]
             )
-            t.deepEqual(me_ChangeReq_stack[0].signal_name, 'ChangeReq', _caller_line())
-            t.equal(me_ChangeReq_stack[0].signal_payload[0], alice_index, _caller_line())
+            t.deepEqual(me_ChangeReq_stack[0].signal_name, 'ChangeReq', _stacktrace_filename_line())
+            t.equal(me_ChangeReq_stack[0].signal_payload[0], alice_index, _stacktrace_filename_line())
             const receiveDelta = jsonDeltas ? JSON.parse(me_ChangeReq_stack[0].signal_payload[1]) : me_ChangeReq_stack[0].signal_payload[1]
-            t.deepEqual(receiveDelta, alice_delta, _caller_line()) // delta_matches
+            t.deepEqual(receiveDelta, alice_delta, _stacktrace_filename_line()) // delta_matches
 
             let alice_SyncReq_stack:Signal[], bob_SyncResp_stack:Signal[], bob_FolkLore_stack:Signal[]
             ;[
@@ -317,7 +317,7 @@ module.exports = (orchestrator)=>{
             const bob_$session_info = session_info_b(bob_ctx).$!
             // const bob_$session_info = await rpc_get_session_b(bob_ctx)(session_hash)
             // bob should get my session
-            t.deepEqual(bob_$session_info.scribe, me_pubkey, _caller_line())
+            t.deepEqual(bob_$session_info.scribe, me_pubkey, _stacktrace_filename_line())
             await waitfor(async ()=>
                 isDeepStrictEqual(folks_b(me_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
                 && isDeepStrictEqual(folks_b(me_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey),
@@ -330,34 +330,34 @@ module.exports = (orchestrator)=>{
                 isDeepStrictEqual(folks_b(bob_ctx).$[alice_pubkey_base64]?.pubKey, alice_pubkey)
                 && isDeepStrictEqual(folks_b(bob_ctx).$[bob_pubkey_base64]?.pubKey, bob_pubkey),
                 1000)
-            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _caller_line())
-            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _caller_line())
-            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].inSession, true, _caller_line())
-            t.ok(folks_b(me_ctx).$[alice_pubkey_base64].lastSeen! <= Date.now(), _caller_line())
-            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _caller_line())
-            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _caller_line())
-            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].inSession, true, _caller_line())
-            t.ok(folks_b(me_ctx).$[bob_pubkey_base64].lastSeen! <= Date.now(), _caller_line())
-            t.deepEqual(folks_b(alice_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _caller_line())
-            t.deepEqual(folks_b(alice_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _caller_line())
-            t.deepEqual(folks_b(alice_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _caller_line())
-            t.deepEqual(folks_b(alice_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _caller_line())
-            t.deepEqual(folks_b(bob_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _caller_line())
-            t.deepEqual(folks_b(bob_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _caller_line())
-            t.deepEqual(folks_b(bob_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _caller_line())
-            t.deepEqual(folks_b(bob_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _caller_line())
+            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _stacktrace_filename_line())
+            t.deepEqual(folks_b(me_ctx).$[alice_pubkey_base64].inSession, true, _stacktrace_filename_line())
+            t.ok(folks_b(me_ctx).$[alice_pubkey_base64].lastSeen! <= Date.now(), _stacktrace_filename_line())
+            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _stacktrace_filename_line())
+            t.deepEqual(folks_b(me_ctx).$[bob_pubkey_base64].inSession, true, _stacktrace_filename_line())
+            t.ok(folks_b(me_ctx).$[bob_pubkey_base64].lastSeen! <= Date.now(), _stacktrace_filename_line())
+            t.deepEqual(folks_b(alice_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(alice_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _stacktrace_filename_line())
+            t.deepEqual(folks_b(alice_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(alice_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _stacktrace_filename_line())
+            t.deepEqual(folks_b(bob_ctx).$[alice_pubkey_base64].pubKey, alice_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(bob_ctx).$[alice_pubkey_base64].colors, getFolkColors(alice_pubkey), _stacktrace_filename_line())
+            t.deepEqual(folks_b(bob_ctx).$[bob_pubkey_base64].pubKey, bob_pubkey, _stacktrace_filename_line())
+            t.deepEqual(folks_b(bob_ctx).$[bob_pubkey_base64].colors, getFolkColors(bob_pubkey), _stacktrace_filename_line())
 
-            t.equal(alice_FolkLore_stack[0].signal_name, 'FolkLore', _caller_line())
-            t.equal(bob_FolkLore_stack[0].signal_name, 'FolkLore', _caller_line())
+            t.equal(alice_FolkLore_stack[0].signal_name, 'FolkLore', _stacktrace_filename_line())
+            t.equal(bob_FolkLore_stack[0].signal_name, 'FolkLore', _stacktrace_filename_line())
             ;(()=>{
                 const alice_signal = JSON.parse(alice_FolkLore_stack[0].signal_payload)
-                t.deepEqual(alice_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _caller_line())
-                t.deepEqual(alice_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _caller_line())
+                t.deepEqual(alice_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _stacktrace_filename_line())
+                t.deepEqual(alice_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _stacktrace_filename_line())
             })()
             ;(()=>{
                 const bob_signal = JSON.parse(bob_FolkLore_stack[0].signal_payload)
-                t.deepEqual(bob_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _caller_line())
-                t.deepEqual(bob_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _caller_line())
+                t.deepEqual(bob_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _stacktrace_filename_line())
+                t.deepEqual(bob_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _stacktrace_filename_line())
             })()
 
             let my_deltas:Delta[] = [{ type: 'Add', value: [0, 'Whoops!\n'] }, { type: 'Title', value: 'Alice in Wonderland' }]
@@ -371,12 +371,12 @@ module.exports = (orchestrator)=>{
                     [[alice_signals, bob_signals], $signals=>filter_signal_name($signals, 'Change')]
                 ]
             )
-            t.equal(alice_Change_stack[0].signal_name, 'Change', _caller_line())
-            t.equal(bob_Change_stack[0].signal_name, 'Change', _caller_line())
-            t.deepEqual(alice_Change_stack[0].signal_payload[0], me_index, _caller_line()) // delta_matches
-            t.deepEqual(alice_Change_stack[0].signal_payload[1], deltas, _caller_line()) // delta_matches
-            t.deepEqual(bob_Change_stack[0].signal_payload[0], me_index, _caller_line()) // delta_matches
-            t.deepEqual(bob_Change_stack[0].signal_payload[1], deltas, _caller_line()) // delta_matches
+            t.equal(alice_Change_stack[0].signal_name, 'Change', _stacktrace_filename_line())
+            t.equal(bob_Change_stack[0].signal_name, 'Change', _stacktrace_filename_line())
+            t.deepEqual(alice_Change_stack[0].signal_payload[0], me_index, _stacktrace_filename_line()) // delta_matches
+            t.deepEqual(alice_Change_stack[0].signal_payload[1], deltas, _stacktrace_filename_line()) // delta_matches
+            t.deepEqual(bob_Change_stack[0].signal_payload[0], me_index, _stacktrace_filename_line()) // delta_matches
+            t.deepEqual(bob_Change_stack[0].signal_payload[1], deltas, _stacktrace_filename_line()) // delta_matches
 
             let me_Heartbeat:Signal[]
             ;[[me_Heartbeat]] = await waitfor_filtered_signals_change(async ()=>
@@ -387,9 +387,9 @@ module.exports = (orchestrator)=>{
                 [[[me_signals], $signals=>filter_signal_name($signals, 'Heartbeat')]]
             )
             let me_sig = me_Heartbeat[0]
-            t.equal(me_sig.signal_name, 'Heartbeat', _caller_line())
-            t.deepEqual(me_sig.signal_payload[1], 'Hello', _caller_line())
-            t.deepEqual(me_sig.signal_payload[0], alice_pubkey, _caller_line())
+            t.equal(me_sig.signal_name, 'Heartbeat', _stacktrace_filename_line())
+            t.deepEqual(me_sig.signal_payload[1], 'Hello', _stacktrace_filename_line())
+            t.deepEqual(me_sig.signal_payload[0], alice_pubkey, _stacktrace_filename_line())
 
             // alice asks for a sync request
             let me_SyncReq:Signal[]
@@ -397,7 +397,7 @@ module.exports = (orchestrator)=>{
                     rpc_send_sync_request_b(alice_ctx)(me_pubkey),
                 [[[me_signals], $signals=>filter_signal_name($signals, 'SyncReq')]]
             )
-            t.equal(me_SyncReq[0].signal_name, 'SyncReq', _caller_line())
+            t.equal(me_SyncReq[0].signal_name, 'SyncReq', _stacktrace_filename_line())
 
             // confirm that all agents got added to the folks anchor
             // TODO figure out why init doesn't happen immediately.
@@ -407,7 +407,7 @@ module.exports = (orchestrator)=>{
                 },
                 500)
             /**/
-            t.pass(_caller_line())
+            t.pass(_stacktrace_filename_line())
         } finally {
             console.debug('finally|leave_session')
             await Promise.all([

@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@ctx-core/combinators": "^6.0.10",
-    "@ctx-core/store": "^24.7.10",
+    "@ctx-core/store": "^24.7.11",
     "@holochain/conductor-api": "0.0.4",
     "@holochain/tryorama": "0.4.2",
     "@syn-ui/model": "workspace:^1.0.0",
