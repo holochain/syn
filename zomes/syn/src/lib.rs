@@ -179,6 +179,7 @@ fn get_snapshot_info_for_session(
             let (snapshot_hash, _) = element.header().entry_data().unwrap(); // should always have entry data
 
             let commits = get_links_and_load_type::<ContentChange>(snapshot_hash.clone(), None)?;
+            debug!("get_snapshot_info_for_session|commits|debug|1|{:?}", &commits);
             // build hash map from commits vec, with keys as previous_change
             let tuples = commits
                 .into_iter()

@@ -32,9 +32,13 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
         }
     }
     async function try_commit() {
-        const $recorded_changes = recorded_changes.$
-        if ($recorded_changes.length == 0) {
-            alert('No changes to commit!')
+        if (recorded_changes.$.length == 0) {
+            const msg = 'No changes to commit!'
+            if (typeof window === 'undefined') {
+                console.info(msg)
+            } else {
+                window.alert(msg)
+            }
             return
         }
         commit_in_progress.$ = true
@@ -46,7 +50,7 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
             const commit:Commit = {
                 snapshot: session_info_snapshot_hash.$!,
                 change: {
-                    deltas: $recorded_changes.map(c=>JSON.stringify(c.delta)),
+                    deltas: recorded_changes.$.map(c=>JSON.stringify(c.delta)),
                     content_hash: new_content_hash,
                     previous_change: content_hash.$!,
                     meta: {
@@ -58,17 +62,17 @@ export const commit_change_b = _b('commit_change', (ctx)=>{
                 participants: _scribe_signal_folk_pubKey_a1()
             }
             try {
-                const $current_commit_header_hash = await rpc_commit(commit)
-                current_commit_header_hash.$ = $current_commit_header_hash
+                current_commit_header_hash.$ = await rpc_commit(commit)
                 // if commit successful we need to update the content hash and its string in the session
                 content_hash.$ = new_content_hash
                 committed_changes.update($committed_changes=>{
-                    $committed_changes.push(...$recorded_changes)
+                    $committed_changes.push(...recorded_changes.$)
                     return $committed_changes
                 })
                 recorded_changes.$ = []
             } catch (e) {
-                console.log('Error:', e)
+                console.trace('Error:', e)
+                throw e
             }
         } finally {
             commit_in_progress.$ = false

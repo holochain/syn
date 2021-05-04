@@ -1,7 +1,5 @@
 import { _b } from '@ctx-core/object'
-import {
-    Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b
-} from '@syn-ui/zome-client'
+import { Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b } from '@syn-ui/zome-client'
 import { content_b } from '../content'
 import { session_info_b, session_info_deltas_b } from '../session'
 import type { ApplyDelta } from './ApplyDelta'
@@ -26,7 +24,8 @@ export const apply_deltas_b = _b('apply_deltas', (ctx)=>{
         }
         content.$ = $content
         committed_changes.$ = []
-        await apply_deltas(session_info_deltas.$ || [])
+        const undoable_changes = await apply_deltas(session_info_deltas.$ || [])
+        committed_changes.$ = undoable_changes
     })
     return apply_deltas
     async function apply_deltas(deltas:Delta[]):Promise<ApplyDelta[]> {
@@ -70,10 +69,6 @@ export const apply_deltas_b = _b('apply_deltas', (ctx)=>{
             }
         }
         content.$ = $content
-        committed_changes.update($committed_changes=>{
-            $committed_changes.push(...undoable_changes)
-            return $committed_changes
-        })
         return undoable_changes
     }
 })

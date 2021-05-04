@@ -7,8 +7,6 @@ import { apply_deltas_b } from './apply_deltas_b'
 export const record_deltas_b = _b('record_deltas', (ctx)=>{
     const console = console_b(ctx)
     const requested_changes = requested_changes_b(ctx)
-    const apply_deltas = apply_deltas_b(ctx)
-    const recorded_changes = recorded_changes_b(ctx)
     return async function record_deltas(deltas:Delta[]) {
         const $requested_changes = requested_changes.$
         console.log('record_deltas REQUESTED', $requested_changes)
@@ -37,8 +35,10 @@ export const record_deltas_b = _b('record_deltas', (ctx)=>{
                 apply_deltas_a1.push(delta)
             }
         }
+        const apply_deltas = apply_deltas_b(ctx)
         const undoable_changes = await apply_deltas(apply_deltas_a1)
         // append changes to the recorded history
+        const recorded_changes = recorded_changes_b(ctx)
         recorded_changes.update($recorded_changes=>{
             $recorded_changes.push(...undoable_changes)
             return $recorded_changes

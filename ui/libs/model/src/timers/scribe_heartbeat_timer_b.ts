@@ -1,9 +1,9 @@
-import { PubKeyToFolkRecord, rpc_send_folk_lore_b, rpc_send_heartbeat_b } from '@syn-ui/zome-client'
+import type { AgentPubKey } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
+import { rpc_send_folk_lore_b, rpc_send_heartbeat_b } from '@syn-ui/zome-client'
 import { am_i_scribe_b, folks_b, session_info_scribe_b } from '../session'
 import { _scribe_signal_folk_pubKey_a1_b } from '../delta'
 import { Timer } from './Timer'
-import type { AgentPubKey } from '@holochain/conductor-api'
 // const outOfSessionTimout = 30 * 1000
 const outOfSessionTimout = 8 * 1000 // testing code :)
 // const heartbeatInterval = 15 * 1000 // 15 seconds
@@ -16,7 +16,7 @@ export const scribe_heartbeat_timer_b = _b<Timer>('scribe_heartbeat_timer', (ctx
             // examine folks last seen time and see if any have crossed the session out-of-session
             // timeout so we can tell everybody else about them having dropped.
             const gone:AgentPubKey[] = []
-            const $folks = folks.$ as PubKeyToFolkRecord
+            const $folks = folks.$
             for (const [pubKeyStr, folk] of Object.entries($folks)) {
                 if (folk.inSession && (Date.now() - ($folks[pubKeyStr].lastSeen || 0) > outOfSessionTimout)) {
                     folk.inSession = false

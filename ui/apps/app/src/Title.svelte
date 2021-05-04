@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, getContext, tick } from 'svelte'
   import { content_b } from '@syn-ui/model'
+  import type { Delta } from '@syn-ui/zome-client'
   const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
   const content = content_b(ctx)
@@ -13,7 +14,7 @@
           // only dispatch a changeReq if the title trying to be saved is different
           // than the current title
           if (titleBeingTyped !== $content.title) {
-              let delta = { type: 'Title', value: titleBeingTyped }
+              let delta:Delta = { type: 'Title', value: titleBeingTyped }
               dispatch('request_change', [delta])
           }
           titleBeingTyped = ''

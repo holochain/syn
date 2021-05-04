@@ -6,19 +6,14 @@ import {
 } from '@syn-ui/zome-client'
 import { getFolkColors } from '../colors'
 import { folks_b } from './folks_b'
-import { am_i_scribe_b } from './am_i_scribe_b'
 export const update_folks_b = _b('update_folks', (ctx)=>{
-    const am_i_scribe = am_i_scribe_b(ctx)
     const folks = folks_b(ctx)
     return update_folks
     function update_folks(pubKey:AgentPubKey, status:FolkStatus, meta?:number) {
         const pubKeyStr = bufferToBase64(pubKey)
-        if (am_i_scribe.$) {
-            return
-        }
         // if we don't have this key, create a record for it
         // including the default color
-        const $folks = folks.$ as PubKeyToFolkRecord
+        const $folks = folks.$
         _other($folks, pubKeyStr, pubKey)
         if (meta) {
             $folks[pubKeyStr]['meta'] = meta

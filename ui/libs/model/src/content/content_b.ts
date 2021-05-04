@@ -6,5 +6,5 @@ export const content_b = _b('content', ()=>{
     return content
 })
 export function _$content() {
-  return { title: '', body: '', meta: {} }
+    return { title: '', body: '', meta: {} }
 }

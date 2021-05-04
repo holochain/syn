@@ -12,7 +12,7 @@ export const Heartbeat_SignalOps_b = _b<SignalOps>('Heartbeat_SignalOps', (ctx)=
             let [from, msg] = signal.data.payload.signal_payload
             console.log('got heartbeat', msg, 'from:', from)
             if (am_i_scribe.$ === true) {
-                // I am the scribe and I've recieved a heartbeat from a concerned Folk
+                // I am the scribe and I've received a heartbeat from a concerned Folk
                 update_folks(from, FOLK_SEEN)
             } else {
                 console.log(`heartbeat received but I'm not the scribe.`)

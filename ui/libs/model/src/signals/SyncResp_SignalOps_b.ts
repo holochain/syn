@@ -9,7 +9,6 @@ import type { SignalOps } from './SignalOps'
 export const SyncResp_SignalOps_b = _b<SignalOps>('SyncResp_SignalOps', (ctx)=>{
     const console = console_b(ctx)
     const content_hash_str = content_hash_str_b(ctx)
-    const record_deltas = record_deltas_b(ctx)
     return {
         SyncResp: async (signal)=>{
             const serialized_state:SerializedStateForSync = signal.data.payload.signal_payload
@@ -18,7 +17,8 @@ export const SyncResp_SignalOps_b = _b<SignalOps>('SyncResp_SignalOps', (ctx)=>{
             })
             // Make sure that we are working off the same snapshot and commit
             const commit_content_hash_str = bufferToBase64(state.commit_content_hash)
-            if ( commit_content_hash_str == content_hash_str.$) {
+            if (commit_content_hash_str == content_hash_str.$) {
+                const record_deltas = record_deltas_b(ctx)
                 await record_deltas(state.deltas)
             } else {
                 console.log('WHOA, sync response has different current state assumptions')

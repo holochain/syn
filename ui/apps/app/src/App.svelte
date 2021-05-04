@@ -1,14 +1,15 @@
 <script lang="ts">
     import { setContext } from 'svelte'
     import { request_change_b, session_info_scribe_str_b } from '@syn-ui/model'
-    import type { apply_delta_ret_T } from '@syn-ui/model'
-    import type { AddDelta, Content, DeleteDelta, Delta, MetaDelta, TitleDelta } from '@syn-ui/zome-client'
+    import type { Delta } from '@syn-ui/zome-client'
     import Editor from './Editor.svelte'
-    import Title from './Title.svelte'
+    import type { Title_I } from './Title_I'
+    import in_Title from './Title.svelte'
     import Folks from './Folks.svelte'
     import Syn from './Syn.svelte'
     import Debug from './Debug.svelte'
     import History from './History.svelte'
+    const Title:Title_I = in_Title
 
     let ctx = {}
     window.ctx = ctx
@@ -130,12 +131,12 @@
 <div class='toolbar'>
     <h1>SynText</h1>
     <div class:noscribe>
-        <Title on:request_change={(event) => request_change(event.detail)}/>
+        <Title on:request_change={(event: CustomEvent<Delta[]>) => request_change(event.detail)}/>
     </div>
 </div>
 <main>
     <div class:noscribe>
-        <Editor on:request_change={(event) => request_change(event.detail)}/>
+        <Editor on:request_change={(event: CustomEvent<Delta[]>) => request_change(event.detail)}/>
     </div>
 
 
