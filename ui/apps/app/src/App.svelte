@@ -131,12 +131,12 @@
 <div class='toolbar'>
     <h1>SynText</h1>
     <div class:noscribe>
-        <Title on:request_change={(event: CustomEvent<Delta[]>) => request_change(event.detail)}/>
+        <Title on:request_change={(event) => request_change(event.detail)}/>
     </div>
 </div>
 <main>
     <div class:noscribe>
-        <Editor on:request_change={(event: CustomEvent<Delta[]>) => request_change(event.detail)}/>
+        <Editor on:request_change={(event) => request_change(event.detail)}/>
     </div>
 
 
