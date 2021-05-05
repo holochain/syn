@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'util'
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
-import { _stacktrace_filename_line, noop, waitfor } from '@ctx-core/function'
+import { _stacktrace_filename_line, noop, run, waitfor } from '@ctx-core/function'
 import { assign } from '@ctx-core/object'
 import { I } from '@ctx-core/combinators'
 import { Readable$, subscribe_wait_timeout, writable$ } from '@ctx-core/store'
@@ -152,13 +152,13 @@ module.exports = (orchestrator)=>{
                 { type: 'Delete', value: [4, 11] },    // 'baz  new'
                 { type: 'Add', value: [4, 'monkey'] }, // 'baz monkey new'
             ]
-            await (async ()=>{
+            await run(async ()=>{
                 const $current_commit_header_hash = current_commit_header_hash_b(me_ctx).$!
                 await waitfor(async ()=>
                     (current_commit_header_hash_b(me_ctx).$!) === $current_commit_header_hash,
                     500
                 )
-            })()
+            })
 
             deltas = jsonDeltas ? pending_deltas.map(d=>JSON.stringify(d)) : pending_deltas
             await request_change_b(me_ctx)(pending_deltas)
@@ -349,16 +349,16 @@ module.exports = (orchestrator)=>{
 
             t.equal(alice_FolkLore_stack[0].signal_name, 'FolkLore', _stacktrace_filename_line())
             t.equal(bob_FolkLore_stack[0].signal_name, 'FolkLore', _stacktrace_filename_line())
-            ;(()=>{
+            run(()=>{
                 const alice_signal = JSON.parse(alice_FolkLore_stack[0].signal_payload)
                 t.deepEqual(alice_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _stacktrace_filename_line())
                 t.deepEqual(alice_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _stacktrace_filename_line())
-            })()
-            ;(()=>{
+            })
+            run(()=>{
                 const bob_signal = JSON.parse(bob_FolkLore_stack[0].signal_payload)
                 t.deepEqual(bob_signal.participants[alice_pubkey_base64].pubKey, alice_pubkey_base64, _stacktrace_filename_line())
                 t.deepEqual(bob_signal.participants[bob_pubkey_base64].pubKey, bob_pubkey_base64, _stacktrace_filename_line())
-            })()
+            })
 
             let my_deltas:Delta[] = [{ type: 'Add', value: [0, 'Whoops!\n'] }, { type: 'Title', value: 'Alice in Wonderland' }]
             deltas = jsonDeltas ? my_deltas.map(d=>JSON.stringify(d)) : deltas

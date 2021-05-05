@@ -6,18 +6,18 @@ importers:
     specifiers:
       '@babel/runtime': ^7.14.0
       '@changesets/cli': ^2.16.0
-      '@ctx-core/function': ^17.6.0
-      '@ctx-core/jetbrains': ^4.0.34
-      '@ctx-core/monorepo': ^15.0.56
+      '@ctx-core/function': ^17.8.2
+      '@ctx-core/jetbrains': ^4.0.35
+      '@ctx-core/monorepo': ^15.0.57
       '@ctx-core/pnpm-tools': ^6.0.11
       pnpm: ^6.2.5
       typescript: 4.2.4
     devDependencies:
       '@babel/runtime': 7.14.0
       '@changesets/cli': 2.16.0
-      '@ctx-core/function': 17.6.0
-      '@ctx-core/jetbrains': 4.0.34
-      '@ctx-core/monorepo': 15.0.56
+      '@ctx-core/function': 17.8.2
+      '@ctx-core/jetbrains': 4.0.35
+      '@ctx-core/monorepo': 15.0.57
       '@ctx-core/pnpm-tools': 6.0.11
       pnpm: 6.2.5
       typescript: 4.2.4
@@ -25,14 +25,14 @@ importers:
   tests:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/store': ^24.7.11
+      '@ctx-core/store': ^24.7.17
       '@holochain/conductor-api': 0.0.4
       '@holochain/tryorama': 0.4.2
       '@syn-ui/model': workspace:^1.0.0
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
       '@types/lodash': ^4.14.168
-      '@types/node': ^15.0.1
+      '@types/node': ^15.0.2
       ava: ^3.15.0
       esm: ^3.2.25
       lodash: ^4.17.21
@@ -50,25 +50,25 @@ importers:
       uuidv4: 6.2.7
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/store': 24.7.11
+      '@ctx-core/store': 24.7.17
       '@holochain/conductor-api': 0.0.4
       '@holochain/tryorama': 0.4.2
       '@syn-ui/model': link:../ui/libs/model
       '@syn-ui/utils': link:../ui/libs/utils
       '@syn-ui/zome-client': link:../ui/libs/zome-client
       '@types/lodash': 4.14.168
-      '@types/node': 15.0.1
+      '@types/node': 15.0.2
       ava: 3.15.0
       pnpm: 6.2.5
 
   ui/apps/app:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.19
-      '@ctx-core/store': ^24.7.11
+      '@ctx-core/object': ^17.5.24
+      '@ctx-core/store': ^24.7.17
       '@holochain/conductor-api': 0.0.4
-      '@rollup/plugin-commonjs': ^18.0.0
-      '@rollup/plugin-node-resolve': ^11.2.1
+      '@rollup/plugin-commonjs': ^18.1.0
+      '@rollup/plugin-node-resolve': ^13.0.0
       '@rollup/plugin-replace': ^2.4.2
       '@rollup/plugin-typescript': ^8.2.1
       '@syn-ui/model': workspace:^1.0.0
@@ -94,10 +94,10 @@ importers:
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.19
-      '@ctx-core/store': 24.7.11
-      '@rollup/plugin-commonjs': 18.0.0_rollup@2.47.0
-      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.47.0
+      '@ctx-core/object': 17.5.24
+      '@ctx-core/store': 24.7.17
+      '@rollup/plugin-commonjs': 18.1.0_rollup@2.47.0
+      '@rollup/plugin-node-resolve': 13.0.0_rollup@2.47.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.47.0
       '@rollup/plugin-typescript': 8.2.1_810b5a6d1c7477a73baaceebd2991e4b
       '@syn-ui/model': link:../../libs/model
@@ -119,11 +119,11 @@ importers:
   ui/apps/headless:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.19
-      '@ctx-core/store': ^24.7.11
+      '@ctx-core/object': ^17.5.24
+      '@ctx-core/store': ^24.7.17
       '@holochain/conductor-api': 0.0.4
-      '@rollup/plugin-commonjs': ^18.0.0
-      '@rollup/plugin-node-resolve': ^11.2.1
+      '@rollup/plugin-commonjs': ^18.1.0
+      '@rollup/plugin-node-resolve': ^13.0.0
       '@rollup/plugin-replace': ^2.4.2
       '@rollup/plugin-typescript': ^8.2.1
       rollup: ^2.47.0
@@ -142,10 +142,10 @@ importers:
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
     devDependencies:
-      '@ctx-core/object': 17.5.19
-      '@ctx-core/store': 24.7.11
-      '@rollup/plugin-commonjs': 18.0.0_rollup@2.47.0
-      '@rollup/plugin-node-resolve': 11.2.1_rollup@2.47.0
+      '@ctx-core/object': 17.5.24
+      '@ctx-core/store': 24.7.17
+      '@rollup/plugin-commonjs': 18.1.0_rollup@2.47.0
+      '@rollup/plugin-node-resolve': 13.0.0_rollup@2.47.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.47.0
       '@rollup/plugin-typescript': 8.2.1_rollup@2.47.0+typescript@4.2.4
       rollup: 2.47.0
@@ -160,8 +160,8 @@ importers:
   ui/libs/model:
     specifiers:
       '@ctx-core/combinators': ^6.0.10
-      '@ctx-core/object': ^17.5.19
-      '@ctx-core/store': ^24.7.11
+      '@ctx-core/object': ^17.5.24
+      '@ctx-core/store': ^24.7.17
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       '@syn-ui/zome-client': workspace:^1.0.0
@@ -169,8 +169,8 @@ importers:
       typescript: ^4.2.4
     devDependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/object': 17.5.19
-      '@ctx-core/store': 24.7.11
+      '@ctx-core/object': 17.5.24
+      '@ctx-core/store': 24.7.17
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       '@syn-ui/zome-client': link:../zome-client
@@ -185,17 +185,17 @@ importers:
 
   ui/libs/zome-client:
     specifiers:
-      '@ctx-core/function': ^17.6.0
-      '@ctx-core/object': ^17.5.19
-      '@ctx-core/store': ^24.7.11
+      '@ctx-core/function': ^17.8.2
+      '@ctx-core/object': ^17.5.24
+      '@ctx-core/store': ^24.7.17
       '@holochain/conductor-api': ^0.0.4
       '@syn-ui/utils': workspace:^1.0.0
       buffer: ^6.0.3
       typescript: ^4.2.4
     devDependencies:
-      '@ctx-core/function': 17.6.0
-      '@ctx-core/object': 17.5.19
-      '@ctx-core/store': 24.7.11
+      '@ctx-core/function': 17.8.2
+      '@ctx-core/object': 17.5.24
+      '@ctx-core/store': 24.7.17
       '@holochain/conductor-api': 0.0.4
       '@syn-ui/utils': link:../utils
       buffer: 6.0.3
@@ -412,55 +412,55 @@ packages:
       arrify: 1.0.1
     dev: true
 
-  /@ctx-core/array/20.2.22:
-    resolution: {integrity: sha512-KTvL+5tstfo7oal7mSYsnItpC7HGHILqIKFG/gtTp1V+Q83830XAwBHTSJLwI7lTvIb2/s3uLqROnlBD2HwinQ==}
+  /@ctx-core/array/20.2.27:
+    resolution: {integrity: sha512-JOuBl8h78AOltpwkBIrspFrHO5rAAWOA0MfA3tAABErYiJN9IsF5epDish0N4utfP5aKGX+zpXFCmwG8S2lbPg==}
     dependencies:
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.6.0
-      '@ctx-core/object': 17.5.19
-      '@ctx-core/set': 9.0.23
+      '@ctx-core/function': 17.8.2
+      '@ctx-core/object': 17.5.24
+      '@ctx-core/set': 9.0.28
     dev: true
 
-  /@ctx-core/cli-args/7.2.31:
-    resolution: {integrity: sha512-gmw8eQwFhn2NCENEMi81TTKmoOuzyPdnfMlIlsIVBNUzh8tIqXeLPSoJRGwAy+MQJ7Y77lVZhnUR2vNfFXf8Hw==}
+  /@ctx-core/cli-args/7.2.36:
+    resolution: {integrity: sha512-RnF77Nm0sY4X3AOyFifokc/t+/lqzmDB1voMO9H+O5mod6K9fQfQS7K8YfIn6lFwx6UKkFPkTpTH56mTK2PlVw==}
     dependencies:
-      '@ctx-core/array': 20.2.22
-      '@ctx-core/function': 17.6.0
-      '@ctx-core/object': 17.5.19
+      '@ctx-core/array': 20.2.27
+      '@ctx-core/function': 17.8.2
+      '@ctx-core/object': 17.5.24
     dev: true
 
   /@ctx-core/combinators/6.0.10:
     resolution: {integrity: sha512-l16FC/IsyfTOffJkRq5kZSgfnjNa8Wz7m0HpyGQu6//fcePpOvFL+HuQvXgnsMREF6DiayW03QXdStk1kCDBjw==}
 
-  /@ctx-core/ctx-core-package-tools/6.0.49:
-    resolution: {integrity: sha512-AWvTxUL0ZEjlGjU+Ye546oLbFqqvwTzy+bEJmUxsNVgKeAGtKZNfd0hY5+QStHqf7bD10A6V4NM4CgcI7f9VJA==}
+  /@ctx-core/ctx-core-package-tools/6.0.50:
+    resolution: {integrity: sha512-657P7H3uLHQLX/qzQa9BFRy0Z87hkblTx3ry+x3m3cXyC72MZ/GHQP7YxEHTiqQ/9lS+3Mbxjki6Z2cEXWh03g==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.22
+      '@ctx-core/array': 20.2.27
     dev: true
 
-  /@ctx-core/function/17.6.0:
-    resolution: {integrity: sha512-Dr0dxCen22a/O2P7pj/tmXSYKOq0i7EeokgSOcqb8SaF+9vsMd7TMB5tsHVLTy7KedKkW4waewc3BcWGJ1l56A==}
+  /@ctx-core/function/17.8.2:
+    resolution: {integrity: sha512-dn1+mBlaDUfvmN0j61kD5peC0FRCXL/zkEy9YrPkcWeCMaOFN4zSUVbLt55zv1yXPARDTz6B2NR78vq1ojMXsQ==}
     dev: true
 
-  /@ctx-core/jetbrains/4.0.34:
-    resolution: {integrity: sha512-4wGPtDyY8sEeR3uh01thHA4DdCIexqvCBD5SJPWlPYeA2qrj/BAzd7JNuAZRrouJCkWthf5W1kUxArAQkgsNXQ==}
+  /@ctx-core/jetbrains/4.0.35:
+    resolution: {integrity: sha512-BSSwxdENKxxCcFsTD4lL1h7Pokonkgu2P+aKgLMtNBUu32rDNydYSw/wWlA/tXJ+6XZpaGW7r3m3pkhfnZpkeA==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.31
+      '@ctx-core/cli-args': 7.2.36
       '@ctx-core/queue': 3.0.10
       esm: 3.2.25
       globby: 11.0.3
     dev: true
 
-  /@ctx-core/monorepo/15.0.56:
-    resolution: {integrity: sha512-6/HYAUhrw1OrYnRFH6x5uMhlkJiQy0W5OJ3sOY2gikfiullhmre+r0NLytHnGaHZgXVkwWcRyi1eLqr7t3R/IA==}
+  /@ctx-core/monorepo/15.0.57:
+    resolution: {integrity: sha512-2eJtIsvEoiYASAPIz9KBPmkrnzoa4t8c35baVE+HhPSKn7FJXPqkeh88MDAQflvWE+vQVubQsLNX247depbkOA==}
     hasBin: true
     dependencies:
-      '@ctx-core/array': 20.2.22
-      '@ctx-core/cli-args': 7.2.31
-      '@ctx-core/ctx-core-package-tools': 6.0.49
-      '@ctx-core/package': 6.1.21
+      '@ctx-core/array': 20.2.27
+      '@ctx-core/cli-args': 7.2.36
+      '@ctx-core/ctx-core-package-tools': 6.0.50
+      '@ctx-core/package': 6.1.22
       '@ctx-core/queue': 3.0.10
       detect-indent: 6.0.0
       esm: 3.2.25
@@ -469,17 +469,17 @@ packages:
       semver: 7.3.5
     dev: true
 
-  /@ctx-core/object/17.5.19:
-    resolution: {integrity: sha512-KDzYn6ZZA0YVdAh8OasHuqEf+nFVhqHa7J7e5onIgC9w/JTpAZMVLangH6Pqp3zp5Pds8pMzpkWHOezDhzIrjA==}
+  /@ctx-core/object/17.5.24:
+    resolution: {integrity: sha512-BuG85Ts+LfAnbCabq4+Vw90zRKt8wbMyz573kVdAaYcHYMYwZtfcwbS+HGhNfiHitnvIWYZ9W10BR6nCZorM/A==}
     dependencies:
-      '@ctx-core/function': 17.6.0
+      '@ctx-core/function': 17.8.2
     dev: true
 
-  /@ctx-core/package/6.1.21:
-    resolution: {integrity: sha512-1LAU/w/BEA+Og4nMNNZqL8DULgFUUHYdFn8xkKsiD6XE2tqBmjpeI8NliBz2a5rP9VGRReix0q1vjanCc4lY/g==}
+  /@ctx-core/package/6.1.22:
+    resolution: {integrity: sha512-3CMMIbjx5tJPugWGTV9DuRm+OdyLd0aEMhBZ/Y4BUyTVjCIeoBdXt0lF+BEIRYGBO7vYaCdH1XkcUrCnX63noQ==}
     hasBin: true
     dependencies:
-      '@ctx-core/cli-args': 7.2.31
+      '@ctx-core/cli-args': 7.2.36
       esm: 3.2.25
       resolve: 1.20.0
     dev: true
@@ -497,20 +497,20 @@ packages:
     resolution: {integrity: sha512-SUX8v4klI5/Xy4LeQ87V5h1WfK8k15YvFvsTw74fLYWYEaquy3nYnuduRsAY8L58xZ0uY/OQ++XHTiyIUCX9aA==}
     dev: true
 
-  /@ctx-core/set/9.0.23:
-    resolution: {integrity: sha512-cONviaeKCRr3tNk8Kr565sRX8q3VlLkgPCRd4yBfgeYJ1qWCDqdF8gFwxSRJO0qV6Dy1VvAj8KcdNwu9oyeriw==}
+  /@ctx-core/set/9.0.28:
+    resolution: {integrity: sha512-VOqt/rs4Q08gRVWPF959JIVvwCGv4cXmacQoDyCs1HbwSDJ5T8t73jHFPnlUoL8ARlzMjAv/+J/2/X1ZKVpzIg==}
     dependencies:
-      '@ctx-core/function': 17.6.0
+      '@ctx-core/function': 17.8.2
     dev: true
 
-  /@ctx-core/store/24.7.11:
-    resolution: {integrity: sha512-ATahTIWVPwYul2WmiYcdOYCUoPg0EY6ystp3bthhfm/dDFIg/sYtCEy5DVrRCVVI1ZUgSDj6Tb8LjEhavzgzzw==}
+  /@ctx-core/store/24.7.17:
+    resolution: {integrity: sha512-ruuhQZj+3tZ6k27JhiX+/y2zpGN4ezZ/Xsh0wTDuZ5VzBeGqh7TfOTB2EKbFiSiFXXd6u2cFgesbgd2Rs/0GKQ==}
     dependencies:
-      '@ctx-core/array': 20.2.22
+      '@ctx-core/array': 20.2.27
       '@ctx-core/combinators': 6.0.10
-      '@ctx-core/function': 17.6.0
-      '@ctx-core/object': 17.5.19
-      svelte: 3.38.1
+      '@ctx-core/function': 17.8.2
+      '@ctx-core/object': 17.5.24
+      svelte: 3.38.2
     dev: true
 
   /@dabh/diagnostics/2.0.2:
@@ -590,7 +590,7 @@ packages:
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
     dependencies:
       '@babel/runtime': 7.14.0
-      '@types/node': 12.20.11
+      '@types/node': 12.20.12
       find-up: 4.1.0
       fs-extra: 8.1.0
     dev: true
@@ -639,8 +639,8 @@ packages:
     resolution: {integrity: sha512-6RglhutqrGFMO1MNUXp95RBuYIuc8wTnMAV5MUhLmjTOy78ncwOw7RgeQ/HeymkKXRhZd0s2DNrM1rL7unk3MQ==}
     dev: false
 
-  /@rollup/plugin-commonjs/18.0.0_rollup@2.47.0:
-    resolution: {integrity: sha512-fj92shhg8luw7XbA0HowAqz90oo7qtLGwqTKbyZ8pmOyH8ui5e+u0wPEgeHLH3djcVma6gUCUrjY6w5R2o1u6g==}
+  /@rollup/plugin-commonjs/18.1.0_rollup@2.47.0:
+    resolution: {integrity: sha512-h3e6T9rUxVMAQswpDIobfUHn/doMzM9sgkMrsMWCFLmB84PSoC8mV8tOloAJjSRwdqhXBqstlX2BwBpHJvbhxg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
       rollup: ^2.30.0
@@ -655,11 +655,11 @@ packages:
       rollup: 2.47.0
     dev: true
 
-  /@rollup/plugin-node-resolve/11.2.1_rollup@2.47.0:
-    resolution: {integrity: sha512-yc2n43jcqVyGE2sqV5/YCmocy9ArjVAP/BeXyTtADTBBX6V0e5UMqwO8CdQ0kzjb6zu5P1qMzsScCMRvE9OlVg==}
+  /@rollup/plugin-node-resolve/13.0.0_rollup@2.47.0:
+    resolution: {integrity: sha512-41X411HJ3oikIDivT5OKe9EZ6ud6DXudtfNrGbC4nniaxx2esiWjkLOzgnZsWq1IM8YIeL2rzRGLZLBjlhnZtQ==}
     engines: {node: '>= 10.0.0'}
     peerDependencies:
-      rollup: ^1.20.0||^2.0.0
+      rollup: ^2.42.0
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.47.0
       '@types/resolve': 1.17.1
@@ -764,12 +764,12 @@ packages:
     resolution: {integrity: sha512-fZQQafSREFyuZcdWFAExYjBiCL7AUCdgsk80iO0q4yihYYdcIiH28CcuPTGFgLOCC8RlW49GSQxdHwZP+I7CNg==}
     dev: true
 
-  /@types/node/12.20.11:
-    resolution: {integrity: sha512-gema+apZ6qLQK7k7F0dGkGCWQYsL0qqKORWOQO6tq46q+x+1C0vbOiOqOwRVlh4RAdbQwV/j/ryr3u5NOG1fPQ==}
+  /@types/node/12.20.12:
+    resolution: {integrity: sha512-KQZ1al2hKOONAs2MFv+yTQP1LkDWMrRJ9YCVRalXltOfXsBmH5IownLxQaiq0lnAHwAViLnh2aTYqrPcRGEbgg==}
     dev: true
 
-  /@types/node/15.0.1:
-    resolution: {integrity: sha512-TMkXt0Ck1y0KKsGr9gJtWGjttxlZnnvDtphxUOSd0bfaR6Q1jle+sPvrzNR1urqYTWMinoKvjKfXUGsumaO1PA==}
+  /@types/node/15.0.2:
+    resolution: {integrity: sha512-p68+a+KoxpoB47015IeYZYRrdqMUcpbK8re/zpFB8Ld46LHC1lPEbp3EXgkEhAYEcPvjJF6ZO+869SQ0aH1dcA==}
 
   /@types/normalize-package-data/2.4.0:
     resolution: {integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==}
@@ -782,13 +782,13 @@ packages:
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 15.0.1
+      '@types/node': 15.0.2
     dev: true
 
   /@types/sass/1.16.0:
     resolution: {integrity: sha512-2XZovu4NwcqmtZtsBR5XYLw18T8cBCnU2USFHTnYLLHz9fkhnoEMoDsqShJIOFsFhn5aJHjweiUUdTrDGujegA==}
     dependencies:
-      '@types/node': 15.0.1
+      '@types/node': 15.0.2
     dev: true
 
   /@types/semver/6.2.2:
@@ -802,15 +802,15 @@ packages:
   /@types/ws/7.4.2:
     resolution: {integrity: sha512-PbeN0Eydl7LQl4OIav29YmkO2LxbVuz3nZD/kb19lOS+wLgIkRbWMNmU/QQR7ABpOJ7D7xDOU8co7iohObewrw==}
     dependencies:
-      '@types/node': 15.0.1
+      '@types/node': 15.0.2
 
   /acorn-walk/8.1.0:
     resolution: {integrity: sha512-mjmzmv12YIG/G8JQdQuz2MUDShEJ6teYpT5bmWA4q7iwoGen8xtt3twF3OvzIUl+Q06aWIjvnwQUKvQ6TtMRjg==}
     engines: {node: '>=0.4.0'}
     dev: true
 
-  /acorn/8.2.2:
-    resolution: {integrity: sha512-VrMS8kxT0e7J1EX0p6rI/E0FbfOVcvBpbIqHThFv+f8YrZIlMfVotYcXKVPmTvPW8sW5miJzfUFrrvthUZg8VQ==}
+  /acorn/8.2.4:
+    resolution: {integrity: sha512-Ibt84YwBDDA890eDiDCEqcbwvHlBvzzDkU2cGBBDDI1QWT12jTiXIOn2CIw5KK4i6N5Z2HUxwYjzriDyqaqqZg==}
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
@@ -959,7 +959,7 @@ packages:
     hasBin: true
     dependencies:
       '@concordance/react': 2.0.0
-      acorn: 8.2.2
+      acorn: 8.2.4
       acorn-walk: 8.1.0
       ansi-styles: 5.2.0
       arrgv: 1.0.2
@@ -2268,8 +2268,8 @@ packages:
     resolution: {integrity: sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ==}
     dev: true
 
-  /is-bigint/1.0.1:
-    resolution: {integrity: sha512-J0ELF4yHFxHy0cmSxZuheDOz2luOdVvqjwmEcj8H/L1JHeuEDSDbeRP+Dk9kFVk5RTFzbucJ2Kb9F7ixY2QaCg==}
+  /is-bigint/1.0.2:
+    resolution: {integrity: sha512-0JV5+SOCQkIdzjBK9buARcV804Ddu7A0Qet6sHi3FimE9ne6m4BGQZfRn+NZiXbBk4F4XmHfDZIipLj9pX8dSA==}
     dev: false
 
   /is-binary-path/2.1.0:
@@ -2523,7 +2523,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 15.0.1
+      '@types/node': 15.0.2
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: true
@@ -3978,11 +3978,6 @@ packages:
       typescript: 4.2.4
     dev: true
 
-  /svelte/3.38.1:
-    resolution: {integrity: sha512-N3XLAyfzqrFxwRLevBeW7Dke9ZlHRVGSIed5abo4Drvj+zvd2OyWpFa1x4nQUc8Lnvt4Kcn8/5le1peRDybNqg==}
-    engines: {node: '>= 8'}
-    dev: true
-
   /svelte/3.38.2:
     resolution: {integrity: sha512-q5Dq0/QHh4BLJyEVWGe7Cej5NWs040LWjMbicBGZ+3qpFWJ1YObRmUDZKbbovddLC9WW7THTj3kYbTOFmU9fbg==}
     engines: {node: '>= 8'}
@@ -4271,7 +4266,7 @@ packages:
   /which-boxed-primitive/1.0.2:
     resolution: {integrity: sha512-bwZdv0AKLpplFY2KZRX6TvyuN7ojjr7lwkg6ml0roIy9YeuSr7JS372qlNW18UQYzgYK9ziGcerWqZOmEn9VNg==}
     dependencies:
-      is-bigint: 1.0.1
+      is-bigint: 1.0.2
       is-boolean-object: 1.1.0
       is-number-object: 1.0.4
       is-string: 1.0.5
