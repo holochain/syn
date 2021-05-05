@@ -637,7 +637,8 @@ export class Session {
 }
 
 export class Connection {
-  constructor(appPort, appId) {
+  constructor(appHost, appPort, appId) {
+    this.appHost = appHost;
     this.appPort = appPort;
     this.appId = appId;
     this.sessions = []
@@ -646,7 +647,7 @@ export class Connection {
   async open(defaultContent, applyDeltaFn) {
     var self = this;
     this.appClient = await AppWebsocket.connect(
-      `ws://localhost:${this.appPort}`,
+      `ws://${this.appHost}:${this.appPort}`,
       30000,
       (signal) => signalHandler(self, signal))
 

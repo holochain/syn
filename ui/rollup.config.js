@@ -39,7 +39,8 @@ export default {
 	},
 	plugins: [
 	  replace({
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE)
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
+            'process.env.APP_HOST': JSON.stringify(process.env.APP_HOST)
           }),
 	  svelte({
 			compilerOptions: {
