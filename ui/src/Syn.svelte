@@ -21,12 +21,12 @@
 
   const dispatch = createEventDispatcher()
 
-  let adminPort=1234
+  let appHost= process.env.APP_HOST || 'localhost'
   let appPort=8888
   let appId='syn'
   async function toggle() {
     if (!$connection) {
-      $connection = new Connection(appPort, appId)
+      $connection = new Connection(appHost, appPort, appId)
       await $connection.open({title:'', body:''}, applyDeltaFn)
 
       session = $connection.syn.session
@@ -82,7 +82,8 @@
 
 <div>
   <h4>Holochain Connection:</h4>
-  App Port: <input bind:value={appPort}>
+  Host: <input bind:value={appHost}>
+  Port: <input bind:value={appPort}>
   AppId: <input bind:value={appId}>
   <button on:click={toggle}>
     {#if $connection}

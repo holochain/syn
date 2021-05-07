@@ -8,3 +8,7 @@ ui/node
 .hc*
 *.happ
 .cargo
+/tmp/*
+
+# Negative ignores last:
+!.gitkeep
