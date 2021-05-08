@@ -1,0 +1,48 @@
+{
+  "name": "Syn",
+  "version": "0.0.1",
+  "description": "Real-time collaboration on holochain",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "alex": "electron . alex --no-sandbox",
+    "billy": "electron . billy --no-sandbox",
+    "camille": "electron . camille --no-sandbox",
+    "start-no": "electron . --no-sandbox --enable-logging",
+    "package-windows": "electron-packager . Syn --platform=win32 --out=./build --overwrite",
+    "package-osx": "electron-packager . Syn --platform=darwin --arch=x64 --out=./build --overwrite",
+    "package-mac": "electron-packager . Syn --platform=darwin --arch=x64 --prune=true --overwrite --out=./build",
+    "package-linux-asar": "electron-packager . Syn --platform=linux --arch=x64 --asar --prune=true --overwrite --out=./build",
+    "package-linux": "electron-packager . Syn --platform=linux --arch=x64 --overwrite --out=./build"
+  },
+  "repository": "https://github.com/holochain/syn",
+  "keywords": [
+    "Electron",
+    "Holochain",
+    "Syn"
+  ],
+  "author": "Holochain Foundation and contributors",
+  "license": "CAL-1.0",
+  "dependencies": {
+    "@holochain/conductor-api": "github:holochain/holochain-conductor-api#damien",
+    "byte-base64": "^1.1.0",
+    "command-exists": "^1.2.8",
+    "dialogs": "^2.0.1",
+    "electron-context-menu": "^0.12.1",
+    "electron-debug": "^3.0.1",
+    "electron-log": "^3.0.9",
+    "electron-osx-sign": "^0.4.14",
+    "electron-packager": "^14.1.0",
+    "electron-prompt": "^1.6.0",
+    "fix-path": "^2.1.0",
+    "lint": "^0.7.0",
+    "open": "^6.3.0",
+    "request": "^2.88.2",
+    "smalltalk": "^4.0.6",
+    "sudo-prompt": "^9.0.0",
+    "tree-kill": "^1.2.2"
+  },
+  "devDependencies": {
+    "electron": "^8.5.5"
+  }
+}

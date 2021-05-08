@@ -24,6 +24,19 @@
   let appHost= process.env.APP_HOST || 'localhost'
   let appPort=8888
   let appId='syn'
+  let electronCtx = false
+  let devCtx = true
+
+  const HREF_PORT = window.location.port
+  // No HREF PORT when run by Electron
+  // Use different values when in electron
+  if (HREF_PORT === "") {
+    electronCtx = true
+    devCtx = false
+    let searchParams = new URLSearchParams(window.location.search);
+    appPort = searchParams.get("APP");
+    toggle()
+  }
   async function toggle() {
     if (!$connection) {
       $connection = new Connection(appHost, appPort, appId)
@@ -80,6 +93,7 @@
 </style>
 <button class:noscribe on:click={commitChange}>Commit</button>
 
+{#if devCtx}
 <div>
   <h4>Holochain Connection:</h4>
   Host: <input bind:value={appHost}>
@@ -93,6 +107,7 @@
     {/if}
   </button>
 </div>
+{/if}
 
 <div class='sessions'>
   Sessions:
