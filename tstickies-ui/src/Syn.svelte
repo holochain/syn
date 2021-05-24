@@ -96,7 +96,7 @@
     cursor: pointer;
   }
 </style>
-<button class:noscribe on:click={commitChange}>Commit</button>
+<!-- <button class:noscribe on:click={commitChange}>Commit</button>
 
 <div>
   <h4>Holochain Connection:</h4>
@@ -120,4 +120,4 @@
     </span>
   {/each}
   {/if}
-</div>
+</div> -->
