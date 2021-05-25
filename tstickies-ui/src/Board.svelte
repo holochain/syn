@@ -164,19 +164,29 @@
     flex-basis: 26px;
     height: 25px;
     padding: 0 5px;
-    border: 1px solid black;
+    border: 1px solid white;
+    position: relative;
   }
   .vote :global(svg) {
     margin-right: auto;
   }
-  .votes-0 {
-    border-color: white;
+  .voted {
+    border-color: black;
   }
-  .votes-1 {
+  .vote-counts {
+    padding-top: 2px;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    left: -3px;
+    justify-content: flex-start;
   }
-  .votes-2 {
-  }
-  .votes-3 {
+  .vote-count {
+    border-radius: 50px;
+    width: 5px;
+    height: 5px;
+    background-color: black;
+    margin-bottom: 2px;
   }
 </style>
 
@@ -194,10 +204,15 @@
           <div class='votes'>
             {#each ['talk', 'star', 'question'] as type }
               <div
-                class:vote={true}
-                class={`votes-${myVotes(votes, type)}`}
+                class="vote"
+                class:voted={myVotes(votes, type) > 0}
                 on:click|stopPropagation={() => voteOnSticky(id, type)}>
                 <svelte:component this={VOTE_TYPE_TO_COMPONENT[type]} /> {countVotes(votes, type)}
+                <div class='vote-counts'>
+                {#each new Array(myVotes(votes, type)).map((_, i) => i) as index }
+                  <div class='vote-count' />
+                {/each}
+                </div>
               </div>
             {/each}
           </div>
