@@ -29,6 +29,7 @@
             return sticky
           }
         })
+        console.log('updated stickies', JSON.stringify(updatedStickies))
         content.body = JSON.stringify(updatedStickies)
         return [content, {delta, deleted: stickies.find(sticky => sticky.id === delta.value.id)}]
       }
