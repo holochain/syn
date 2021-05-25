@@ -88,6 +88,12 @@
   $: noscribe = $scribeStr === ''
   let syn
 
+  $: agentPubkey = ''
+
+  function setAgentPubkey (newAgentPubkey) {
+    console.log('setting agent pubkey', newAgentPubkey)
+    agentPubkey = newAgentPubkey
+  }
 
   // The debug drawer's ability to resized and hidden
   let resizeable
@@ -183,6 +189,6 @@
 
 <div class='app'>
   <Toolbar />
-  <Board on:requestChange={(event) => syn.requestChange(event.detail)} />
-  <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
+  <Board on:requestChange={(event) => syn.requestChange(event.detail)} agentPubkey={agentPubkey} />
+  <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} setAgentPubkey={setAgentPubkey} />
 </div>

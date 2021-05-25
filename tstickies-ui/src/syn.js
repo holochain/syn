@@ -298,7 +298,7 @@ export class Session {
     return this.recorded.length
   }
 
-  _runApplyDelta(delta) { 
+  _runApplyDelta(delta) {
     const [newContent, undoableChange] = this.applyDeltaFn(this._content, delta)
     this._content = newContent
     this.content.set(this._content)
@@ -678,6 +678,10 @@ export class Connection {
         await this.syn.sendSyncReq()
       }
     }
+  }
+
+  getAgentPubkey () {
+    return this.syn.zome.agentPubKey
   }
 }
 

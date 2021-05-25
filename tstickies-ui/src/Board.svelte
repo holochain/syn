@@ -8,35 +8,9 @@
   import StarIcon from './icons/StarIcon.svelte'
   import { v1 as uuidv1 } from 'uuid';
 
-  const dispatch = createEventDispatcher()
+  export let agentPubkey
 
-//   $: stickies = $content.body.length === 0 ? [{
-//     id: '1',
-//     text: 'A retro item',
-//     votes: {
-//           talk: 0, star: 0, question: 0
-//         }
-//   },{
-//     id: '2',
-//     text: 'Improve awesomeness',
-//     votes: {
-//           talk: 0, star: 0, question: 0
-//         }
-//   }, {
-//     id: '3',
-//     text: 'An unusually long sticky to test what happens with unusually long stickies. But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. No one rejects, dislikes, or avoids pleasure itself, because it is pleasure, but because those who do not know how to pursue pleasure rationally encounter consequences that are extremely painful. Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally circumstances occur in which toil and pain can procure him some great pleasure. To take a trivial example, which of us ever undertakes laborious physical exercise, except to obtain some advantage from it? But who has any right to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain that produces no resultant pleasure?',
-//     votes: {
-//           talk: 0, star: 0, question: 0
-//         }
-//   },
-//   {
-//     id: '4',
-//     text: 'Fix small absence of awesomeness',
-//     votes: {
-//           talk: 0, star: 0, question: 0
-//         }
-//   }
-// ] : JSON.parse($content.body)
+  const dispatch = createEventDispatcher()
 
   $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
 
@@ -63,7 +37,7 @@
         id: uuidv1(),
         text,
         votes: {
-          talk: 0, star: 0, question: 0
+          talk: {}, star: {}, question: {}
         }
       }}
     ])
@@ -102,8 +76,15 @@
 
     const votes = {
       ...sticky.votes,
-      [type]: (sticky.votes[type] + 1) % 4
+      [type]: {
+        ...sticky.votes[type],
+        [agentPubkey]: ((sticky.votes[type][agentPubkey] || 0) + 1) % 4
+      }
     }
+
+    console.log('VOTING', agentPubkey)
+    console.log('votes before', sticky.votes)
+    console.log('votes after', votes)
 
     dispatch('requestChange', [
       {type: 'update-sticky', value: {
@@ -111,6 +92,21 @@
         votes
       }}
     ])
+  }
+
+  const countVotes = (votes, type) => {
+    const agentKeys = Object.keys(votes[type])
+    return agentKeys.reduce((total, agentKey) => total + (votes[type][agentKey] || 0), 0)
+  }
+
+  const myVotes = (votes, type) => {
+    return votes[type][agentPubkey] || 0
+  }
+
+  const VOTE_TYPE_TO_COMPONENT = {
+    talk: SpeakingIcon,
+    star: StarIcon,
+    question: QuestionIcon
   }
 
 </script>
@@ -163,15 +159,24 @@
   .vote {
     display: flex;
     align-items: center;
-    background: #C9C9C9;
-    border: 1px solid #000000;
+    background: white;
     border-radius: 5px;
     flex-basis: 26px;
     height: 25px;
     padding: 0 5px;
+    border: 1px solid black;
   }
   .vote :global(svg) {
     margin-right: auto;
+  }
+  .votes-0 {
+    border-color: white;
+  }
+  .votes-1 {
+  }
+  .votes-2 {
+  }
+  .votes-3 {
   }
 </style>
 
@@ -187,15 +192,14 @@
         <div class='sticky' on:click={editSticky(id)}>
           {text}
           <div class='votes'>
-            <div class='vote' on:click|stopPropagation={() => voteOnSticky(id, 'talk')}>
-              <SpeakingIcon /> {votes.talk}
-            </div>
-            <div class='vote' on:click|stopPropagation={() => voteOnSticky(id, 'star')}>
-              <StarIcon /> {votes.star}
-            </div>
-            <div class='vote' on:click|stopPropagation={() => voteOnSticky(id, 'question')}>
-              <QuestionIcon /> {votes.question}
-            </div>
+            {#each ['talk', 'star', 'question'] as type }
+              <div
+                class:vote={true}
+                class={`votes-${myVotes(votes, type)}`}
+                on:click|stopPropagation={() => voteOnSticky(id, type)}>
+                <svelte:component this={VOTE_TYPE_TO_COMPONENT[type]} /> {countVotes(votes, type)}
+              </div>
+            {/each}
           </div>
         </div>
       {/if}

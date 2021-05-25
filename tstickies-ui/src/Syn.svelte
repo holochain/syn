@@ -10,6 +10,8 @@
   export let applyDeltaFn
   export let undoFn
 
+  export let setAgentPubkey
+
   // this is the list of sessions returned by the DNA
   let sessions
 
@@ -28,6 +30,7 @@
     $connection = new Connection(appPort, appId)
     await $connection.open({ ...emptySession }, applyDeltaFn)
 
+    setAgentPubkey(bufferToBase64($connection.getAgentPubkey()))
     session = $connection.syn.session
 
     console.log('joining session...')
