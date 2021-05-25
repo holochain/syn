@@ -11,10 +11,13 @@
 </script>
 
 <style>
-  .toolbar {
+  .sort-options {
+    margin-left: auto
   }
 </style>
 
 <div class='toolbar'>
   <h1>Talking Stickies</h1>
+  <div class='sort-options'>
+  </div>
 </div>

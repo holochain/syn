@@ -40,6 +40,7 @@
   const dispatch = createEventDispatcher()
 
   let adminPort=1234
+
   let appPort=8888
   let appId='syn'
   async function toggle() {
