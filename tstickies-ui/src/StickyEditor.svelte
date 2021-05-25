@@ -1,4 +1,8 @@
 <script>
+  import ExIcon from './icons/ExIcon.svelte'
+  import TrashIcon from './icons/TrashIcon.svelte'
+  import CheckIcon from './icons/CheckIcon.svelte'
+
   export let handleSave
   export let handleDelete = undefined
   export let cancelEdit
@@ -10,38 +14,48 @@
 <style>
   .sticky-editor {
     display: flex;
-    background-color: #C5FFFD;
-    width: 200px;
-    height: 100px;
+    background-color: #D4F3EE;
+    flex-basis: 270px;
+    height: 140px;
     margin: 20px;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 4px 5px 13px 0px rgba(0,0,0,0.38);
-  }  
+    font-style: normal;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: #000000;
+  }
   .textarea {
-    background-color: #C5FFFD;
+    background-color: rgba(255, 255, 255, 0.72);
+    border: 1px solid #C9C9C9;
+    box-sizing: border-box;
+    border-radius: 3px;
     width: 100%;
     height: 100%;
   }
   .controls {
     display: flex;
     flex-direction: column;
-  }
-  button {
-    background-color: #FFBFB7;
-    border-radius: 4px;
-    border: none;
-    font-size: 12px;
-    margin-left: 3px;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 7px;
   }
 </style>
 
 <div class='sticky-editor'>
   <textarea class='textarea' bind:value={text} />
   <div class='controls'>
-    <button on:click={() => handleSave(text)}>Save</button>
-    <button on:click={cancelEdit}>Cancel</button>
+    <div on:click={cancelEdit}>
+      <ExIcon />
+    </div>
+    <div on:click={() => handleSave(text)}>
+      <CheckIcon />
+    </div>
     {#if handleDelete}
-      <button on:click={handleDelete}>Delete</button>
+      <div on:click={handleDelete}>
+        <TrashIcon />
+      </div>
     {/if}
   </div>
 </div>

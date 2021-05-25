@@ -7,7 +7,21 @@
 
   const dispatch = createEventDispatcher()
 
-  $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
+  $: stickies = $content.body.length === 0 ? [{
+    id: '1',
+    text: 'A retro item'
+  },{
+    id: '2',
+    text: 'Improve awesomeness'
+  }, {
+    id: '3',
+    text: 'An unusually long sticky to test what happens with unusually long stickies. But I must explain to you how all this mistaken idea of denouncing pleasure and praising pain was born and I will give you a complete account of the system, and expound the actual teachings of the great explorer of the truth, the master-builder of human happiness. No one rejects, dislikes, or avoids pleasure itself, because it is pleasure, but because those who do not know how to pursue pleasure rationally encounter consequences that are extremely painful. Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally circumstances occur in which toil and pain can procure him some great pleasure. To take a trivial example, which of us ever undertakes laborious physical exercise, except to obtain some advantage from it? But who has any right to find fault with a man who chooses to enjoy a pleasure that has no annoying consequences, or one who avoids a pain that produces no resultant pleasure?'
+  },
+  {
+    id: '4',
+    text: 'Fix small absence of awesomeness'
+  }
+] : JSON.parse($content.body)
 
   let creating = false
 
@@ -52,49 +66,59 @@
 <style>
   .board {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     min-height: 500px;
+    padding: 30px 60px;
     background-color: white;
     box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.25);
     border-radius: 3px;
     flex: 1;
   }
-  .sticky {
-    background-color: #C5FFFD;
-    width: 200px;
-    height: 100px;
-    margin: 20px;
-    padding: 20px;
-    box-shadow: 4px 5px 13px 0px rgba(0,0,0,0.38);
-
+  .stickies {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
   }
-  .add {
-    background-color: #FFBFB7;
-    box-shadow: 4px 5px 13px 0px rgba(0,0,0,0.38);
+  .sticky {
+    background-color: #D4F3EE;
+    flex-basis: 212px;
+    min-height: 100px;
+    margin: 25px;
+    padding: 20px;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    color: #000000;
+  }
+  .add-sticky {
     display: flex;
     align-items: center;
     max-height: 30px;
-    padding: 10px;
-    margin: 20px;
-    border: 0px;
+  }
+  .add-sticky  :global(svg) {
+    margin-right: 6px;
   }
 </style>
 
 <div class='board'>
-  {#each stickies as { id, text} (id)}
-    {#if editingStickyId === id}
-      <StickyEditor handleSave={updateSticky(id)} handleDelete={deleteSticky(id)} {cancelEdit} {text} />
-    {:else}
-      <div class='sticky' on:click={editSticky(id)}>{text}</div>
+  <div class='add-sticky' on:click={newSticky}>
+    <PlusIcon  />Add Sticky
+  </div>
+  <div class='stickies'>
+    {#each stickies as { id, text} (id)}
+      {#if editingStickyId === id}
+        <StickyEditor handleSave={updateSticky(id)} handleDelete={deleteSticky(id)} {cancelEdit} {text} />
+      {:else}
+        <div class='sticky' on:click={editSticky(id)}>{text}</div>
+      {/if}
+    {/each}
+    {#if creating}
+      <StickyEditor handleSave={addSticky} {cancelEdit} />
+    {:else if stickies.length > 0}
+      <div on:click={newSticky}>
+        <PlusIcon  />
+      </div>
     {/if}
-  {/each}
-  {#if creating}
-    <StickyEditor handleSave={addSticky} {cancelEdit} />
-  {:else}
-    <div on:click={newSticky}>
-      dakdaslkdas;l
-      <PlusIcon  />
-    </div>
-  {/if}
+  </div>
 </div>

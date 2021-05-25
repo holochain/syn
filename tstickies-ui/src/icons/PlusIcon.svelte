@@ -1,7 +1,3 @@
-<script>
-import { log } from "console";
-
-</script>
 <style>
   .plus-icon {
     width: 30px;
