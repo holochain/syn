@@ -1,0 +1,23 @@
+{
+  "name": "@syn-ui/dev",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {},
+  "workspaces": {
+    "packages": [
+      "ui/apps/*",
+      "ui/libs/*"
+    ]
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.14.0",
+    "@changesets/cli": "^2.16.0",
+    "@ctx-core/function": "^17.8.2",
+    "@ctx-core/jetbrains": "^4.0.35",
+    "@ctx-core/monorepo": "^15.0.57",
+    "@ctx-core/pnpm-tools": "^6.0.11",
+    "pnpm": "^6.2.5",
+    "typescript": "4.2.4"
+  },
+  "noUpdate": []
+}

@@ -1,4 +1,5 @@
 {
+  "name": "@syn-ui/tests",
   "main": "index.js",
   "scripts": {
     "test": "npm run test:setup && npm run test:standard",
@@ -11,16 +12,26 @@
   "license": "CAL-1.0",
   "dependencies": {
     "esm": "^3.2.25",
-    "lodash": "^4.17.19",
-    "tape": "^5.0.1",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.6",
-    "uuidv4": "^6.2.3"
+    "lodash": "^4.17.21",
+    "tape": "^5.2.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4",
+    "uuidv4": "^6.2.7"
   },
   "devDependencies": {
-    "@holochain/conductor-api": "0.0.1",
+    "@ctx-core/combinators": "^6.0.10",
+    "@ctx-core/store": "^24.7.17",
+    "@holochain/conductor-api": "0.0.4",
     "@holochain/tryorama": "0.4.3",
-    "@types/lodash": "^4.14.158",
-    "@types/node": "^14.0.14"
-  }
+    "@syn-ui/model": "workspace:^1.0.0",
+    "@syn-ui/utils": "workspace:^1.0.0",
+    "@syn-ui/zome-client": "workspace:^1.0.0",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^15.0.2",
+    "ava": "^3.15.0",
+    "pnpm": "^6.2.5"
+  },
+  "noUpdate": [
+    "@holochain/tryorama"
+  ]
 }

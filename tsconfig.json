@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Svelte",
+  "compileOnSave": true,
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "preserveSymlinks": false,
+    "esModuleInterop": true,
+    "noEmitOnError": true,
+    "noErrorTruncation": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "isolatedModules": true,
+    "sourceMap": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "importsNotUsedAsValues": "error",
+    "types": [
+      "node",
+      "svelte"
+    ],
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "lib": [
+      "ES2019",
+      "ES6",
+      "dom"
+    ]
+  },
+  "exclude": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "**/dist/**"
+  ],
+  "references": []
+}

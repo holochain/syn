@@ -12,3 +12,6 @@ ui/node
 
 # Negative ignores last:
 !.gitkeep
+.idea
+.rollup.cache
+*.iml

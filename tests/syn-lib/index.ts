@@ -1,2 +1,3 @@
-require = require("esm")(module/*, options*/)
-module.exports = require("./main")
+require = require('esm')(module)
+export * from './main'
+export * from './syn-lib'

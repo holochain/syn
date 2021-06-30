@@ -55,17 +55,17 @@ test-unit:
 
 test-dna:
 	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && npm test
+	    cd tests && ./node_modules/.bin/pnpm test
 
 test-dna-debug:
 	@echo "Starting Scenario tests in $$(pwd)..."; \
-	    cd tests && npm run test-debug
+	    cd tests && ./node_modules/.bin/pnpm run test-debug
 
 test-e2e:	test-node test-dna
 
 test-node:
 	@echo "Setting up Scenario/Stress test Javascript..."; \
-	    cd tests && npm install && cd ..
+	    cd tests && ./node_modules/.bin/pnpm install && cd ..
 
 # Generic targets; does not require a Nix environment
 .PHONY: clean

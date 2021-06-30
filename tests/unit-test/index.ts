@@ -1,3 +1,4 @@
+require = require('esm')(module)
 import { Orchestrator } from '@holochain/tryorama'
 
 const orchestrator = new Orchestrator()
