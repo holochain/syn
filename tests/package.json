@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@holochain/conductor-api": "0.0.1",
-    "@holochain/tryorama": "0.4.1",
+    "@holochain/tryorama": "0.4.3",
     "@types/lodash": "^4.14.158",
     "@types/node": "^14.0.14"
   }
