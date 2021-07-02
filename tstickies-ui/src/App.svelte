@@ -95,6 +95,13 @@
     agentPubkey = newAgentPubkey
   }
 
+  $: sortOption = null
+
+  function setSortOption (newSortOption) {
+    console.log('setting sort option', newSortOption)
+    sortOption = newSortOption
+  }
+
   // The debug drawer's ability to resized and hidden
   let resizeable
   let resizeHandle
@@ -188,7 +195,10 @@
 </svelte:head>
 
 <div class='app'>
-  <Toolbar />
-  <Board on:requestChange={(event) => syn.requestChange(event.detail)} agentPubkey={agentPubkey} />
+  <Toolbar setSortOption={setSortOption} sortOption={sortOption} />
+  <Board
+    on:requestChange={(event) => syn.requestChange(event.detail)}
+    agentPubkey={agentPubkey}
+    sortOption={sortOption} />
   <Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} setAgentPubkey={setAgentPubkey} />
 </div>

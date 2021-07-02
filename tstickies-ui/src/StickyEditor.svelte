@@ -40,6 +40,7 @@
     align-items: center;
     justify-content: space-between;
     padding-left: 7px;
+    padding-top: 5px;
   }
 </style>
 

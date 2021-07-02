@@ -1,23 +1,19 @@
 <script>
-  import { createEventDispatcher } from 'svelte'
-  import { content } from './stores.js'
+  import SortSelector from './SortSelector.svelte'
 
-  const dispatch = createEventDispatcher()
-
-  $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
-
-
+  export let setSortOption
+  export let sortOption
 
 </script>
 
 <style>
-  .sort-options {
-    margin-left: auto
+  .toolbar {
+    display: flex;
+    align-items: center;
   }
 </style>
 
 <div class='toolbar'>
   <h1>Talking Stickies</h1>
-  <div class='sort-options'>
-  </div>
+  <SortSelector setSortOption={setSortOption} sortOption={sortOption} />
 </div>

@@ -7,12 +7,20 @@
   import QuestionIcon from './icons/QuestionIcon.svelte'
   import StarIcon from './icons/StarIcon.svelte'
   import { v1 as uuidv1 } from 'uuid';
+  import { sortBy } from 'lodash/fp'
 
   export let agentPubkey
+  export let sortOption
 
   const dispatch = createEventDispatcher()
 
   $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
+
+  $: sortStickies = sortOption
+    ? sortBy(sticky => countVotes(sticky.votes, sortOption) * -1)
+    : stickies => stickies
+
+  $: sortedStickies = sortStickies(stickies)
 
   let creating = false
 
@@ -166,6 +174,7 @@
     padding: 0 5px;
     border: 1px solid white;
     position: relative;
+    cursor: pointer;
   }
   .vote :global(svg) {
     margin-right: auto;
@@ -195,7 +204,7 @@
     <PlusIcon  />Add Sticky
   </div>
   <div class='stickies'>
-    {#each stickies as { id, text, votes } (id)}
+    {#each sortedStickies as { id, text, votes } (id)}
       {#if editingStickyId === id}
         <StickyEditor handleSave={updateSticky(id)} handleDelete={deleteSticky(id)} {cancelEdit} {text} />
       {:else}
