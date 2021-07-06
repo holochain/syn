@@ -11,11 +11,14 @@
   export let undoFn
 
   export let setAgentPubkey
+  let contentChanged
 
   // this is the list of sessions returned by the DNA
   let sessions
 
   export function requestChange(deltas) {
+    console.log('REQUEST CHANGE!')
+    contentChanged = true
     $session.requestChange(deltas)
   }
 
@@ -29,24 +32,29 @@
     $connection = new Connection('localhost', appPort, appId)
     await $connection.open({ ...emptySession }, applyDeltaFn)
 
-    // setAgentPubkey(bufferToBase64($connection.getAgentPubkey()))
-
-    // console.log('agent key', bufferToBase64($connection.getAgentPubkey()))
+    setAgentPubkey(bufferToBase64($connection.getAgentPubkey()))
 
     session = $connection.syn.session
 
     console.log('joining session...')
     await $connection.joinSession()
     sessions = $connection.sessions
+
+
+    setInterval(() => {
+      console.log('firing interval', $session.amScribe, $session.isDirty)
+      console.log('amScribe', $session.amScribe(), $session.isDirty)
+
+      if ($session.amScribe() && $session.isDirty) {
+        console.log('committing change')
+        commitChange()
+        $session.isDirty = false
+      }
+    }, 15 * 1000)
+
   })
 
   // -----------------------------------------------------------------------
-
-  const dispatch = createEventDispatcher()
-
-  let appHost= process.env.APP_HOST || 'localhost'
-  let appPort=8888
-  let appId='syn'
 
   async function commitChange() {
     $session.commitChange()
@@ -84,4 +92,11 @@
     cursor: pointer;
   }
 </style>
+<div>
+  {#if contentChanged}
+    FRESH CHANGES!
+  {:else }
+    ALL RECORDED!
+  {/if}
+  </div>
 

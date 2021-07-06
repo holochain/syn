@@ -306,6 +306,7 @@ export class Session {
   // If we are the scribe, no need to go into the zome
   // TODO: prevent reentry
   requestChange(deltas) {
+    console.log('BINGO BANGO')
     // any requested made by the scribe should be recorded immediately
     if (this._scribeStr == this.me) {
       const index = this.nextIndex()

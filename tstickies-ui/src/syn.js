@@ -238,7 +238,8 @@ export class Session {
     this.requestedChanges = requestedChanges
     this.committedChanges = committedChanges
     this.scribeStr = scribeStr
-
+    
+    this.isDirty = false
     this.others = {}
     this.folks.set(this.others)
 
@@ -306,6 +307,8 @@ export class Session {
   // If we are the scribe, no need to go into the zome
   // TODO: prevent reentry
   requestChange(deltas) {
+    console.log('BINGO BANGO')
+
     // any requested made by the scribe should be recorded immediately
     if (this._scribeStr == this.me) {
       const index = this.nextIndex()
@@ -339,6 +342,7 @@ export class Session {
   }
 
   addChangeAsScribe(change) {
+    console.log('ADD CHANGE AS SCRIBE')
     let [index, deltas] = change
     const nextIndex = this.nextIndex()
     if (nextIndex != index) {
@@ -360,6 +364,10 @@ export class Session {
 
     // notify all participants of the change
     this.sendChange(index, deltas)
+  }
+
+  amScribe() {
+    return this._scribeStr == this.me
   }
 
   async commitChange() {
@@ -484,6 +492,8 @@ export class Session {
 
 
   async sendChange(index, deltas) {
+    console.log('sending change, dirtying session')
+    this.isDirty = true
     const participants = this.folksForScribeSignals()
     if (participants.length > 0) {
       deltas = deltas.map(d=>JSON.stringify(d))
