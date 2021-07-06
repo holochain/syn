@@ -4,6 +4,8 @@ node_modules/
 target/
 ui/public/build/
 ui/node
+tstickies-ui/public/build/
+tstickies-ui/node
 *.dna
 .hc*
 *.happ
@@ -12,3 +14,4 @@ ui/node
 
 # Negative ignores last:
 !.gitkeep
+
