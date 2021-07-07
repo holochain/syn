@@ -1,0 +1,9 @@
+name = "tstickies"
+type = 'webpack'
+account_id = '18ff2b4e6205b938652998cfca0d8cff'
+route = 'tstickies.holo.host/*'
+zone_id = '35f34e8f9d04ef8c87283ea9fb812989'
+usage_model = ''
+workers_dev = true
+target_type = "webpack"
+site = {bucket = "./public",entry-point = "workers-site"}
