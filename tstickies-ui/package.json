@@ -20,6 +20,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "@holo-host/web-sdk": "^0.5.1",
     "@holochain/conductor-api": "0.0.1-dev.14",
     "lodash": "^4.17.21",
     "sirv-cli": "^1.0.0",

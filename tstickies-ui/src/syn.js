@@ -1,18 +1,19 @@
-import { AppWebsocket } from '@holochain/conductor-api'
 import { getFolkColors } from './colors.js'
 import {bufferToBase64, decodeJson, encodeJson} from './utils.js'
+import { Connection as WebSdkConnection } from '@holo-host/web-sdk'
 
 import { session, nextIndex, requestedChanges, recordedChanges, committedChanges, connection, scribeStr, content, folks } from './stores.js'
 
 export class Zome {
-  constructor(appClient, appId) {
+  constructor(appClient, appId, dnaAlias) {
     this.appClient = appClient
     this.appId = appId
+    this.dnaAlias = dnaAlias
   }
 
   async attach() {
     // setup the syn instance data
-    this.appInfo = await this.appClient.appInfo({ installed_app_id: this.appId })
+    this.appInfo = await this.appClient.appInfo()
     this.cellId = this.appInfo.cell_data[0][0]
     this.agentPubKey = this.cellId[1]
     this.dna = this.cellId[0]
@@ -32,16 +33,11 @@ export class Zome {
     try {
       const zome_name = 'syn'
       console.log(`Making zome call ${fn_name} with:`, payload)
-      const result = await this.appClient.callZome(
-        {
-          cap: null,
-          cell_id: this.cellId,
-          zome_name,
-          fn_name,
-          provenance: this.agentPubKey,
-          payload
-        },
-        timeout
+      const result = await this.appClient.zomeCall(
+        this.dnaAlias,
+        zome_name,
+        fn_name,
+        payload
       )
       return result
     } catch (error) {
@@ -56,13 +52,13 @@ export class Zome {
 }
 
 export class Syn {
-  constructor(defaultContent, applyDeltaFn, appClient, appId) {
+  constructor(defaultContent, applyDeltaFn, appClient, appId, dnaAlias) {
 
     console.log('Syn constructor', applyDeltaFn)
 
     this.defaultContent = defaultContent,
     this.applyDeltaFn = applyDeltaFn,
-    this.zome = new Zome(appClient, appId)
+    this.zome = new Zome(appClient, appId, dnaAlias)
     this.session = session,
     this.folks = folks,
     this.connection = connection
@@ -651,14 +647,37 @@ export class Connection {
     console.log('connection', applyDeltaFn)
 
     var self = this;
-    this.appClient = await AppWebsocket.connect(
-      `ws://localhost:${this.appPort}`,
-      (signal) => signalHandler(self, signal))
+    const webSdkConnection = new WebSdkConnection(
+      `https://chaperone.holo.host/`,
+      signal => signalHandler(self, signal)
+    )
+
+    webSdkConnection.ready().catch(e => {
+      console.error('Failed to load chaperone:', e)
+      commit('failedToLoadChaperone')
+    })
+
+    await new Promise(resolve => {
+      webSdkConnection.addListener('connected', resolve)
+    })
 
     console.log('connection established:', this)
 
+    const app_info = await webSdkConnection.appInfo()
+    
+    const {
+      cell_data: [
+        {
+          cell_id: [dnaHash, agentId],
+          cell_nick
+        }
+      ]
+    } = app_info
+
+
+
     // TODO: in the future we should be able manage and to attach to multiple syn happs
-    this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId)
+    this.syn = new Syn(defaultContent, applyDeltaFn, this.appClient, this.appId, cell_nick)
     await this.syn.attach(this.appId)
     this.sessions = await this.syn.getSessions()
   }
