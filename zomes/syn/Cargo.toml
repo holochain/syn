@@ -1,18 +1,16 @@
 [package]
+authors = ["eric.harris-braun@holo.host"]
+edition = "2018"
 name = "syn"
 version = "0.0.1"
-authors = [ "eric.harris-braun@holo.host" ]
-edition = "2018"
 
 [lib]
+crate-type = ["cdylib", "rlib"]
 name = "syn"
-crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-serde = "=1.0.123"
+serde = "1"
 #chrono = { version = "0.4", features = ['alloc', 'std']}
 derive_more = "0.99.9"
 thiserror = "1.0.20"
-#hdk = "0"
-hdk = "0.0.100"
-#hc_utils = "0"
+hdk = "0.0.101"

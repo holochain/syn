@@ -1,7 +1,6 @@
 import path from 'path'
 import { Config, InstallAgentsHapps } from '@holochain/tryorama'
 import { Content, me_b, PubKeyToFolkRecord } from '@syn-ui/zome-client'
-import { folks_b, join_session, session_info_scribe_str_b } from '@syn-ui/model'
 import { delay } from '../common'
 
 const config = Config.gen()
@@ -47,7 +46,7 @@ export const oFn = (orchestrator)=>{
     await s.shareAllNodes([player1, player2])
     const appPort1:number = player1._conductor.app_ws.client.socket._url.split(':')[2]
     const appPort2:number = player2._conductor.app_ws.client.socket._url.split(':')[2]
-    const c1 = await join_session({
+    /* const c1 = await join_session({
       app_port: appPort1, app_id: syn1.hAppId,
     })
     // const c1 = new Connection({}, appPort1, syn1.hAppId)
@@ -71,6 +70,6 @@ export const oFn = (orchestrator)=>{
       } else {
         await delay(1000)
       }
-    }
+    } */
   })
 }
