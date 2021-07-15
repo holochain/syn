@@ -7,16 +7,17 @@
   "scripts": {
     "build": "tsc"
   },
+  "type": "module",
   "devDependencies": {
-    "@holochain/conductor-api": "0.0.4",
+    "@holochain/conductor-api": "0.1.1",
     "@syn/zome-client": "workspace:^0.0.1",
     "@types/lodash-es": "^4.17.4",
     "svelte": "^3.38.2",
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "github:holochain-open-dev/cell-client#build",
-    "@holochain-open-dev/core-types": "github:holochain-open-dev/core-types#build",
+    "@holochain-open-dev/cell-client": "^0.0.1",
+    "@holochain-open-dev/core-types": "^0.1.1",
     "lodash-es": "^4.17.21"
   }
 }

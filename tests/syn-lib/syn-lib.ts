@@ -6,11 +6,15 @@ import {
   ConfigSeed,
 } from "@holochain/tryorama";
 import { Content } from "@syn/zome-client";
+
 import { HolochainClient } from "@holochain-open-dev/cell-client";
 import { AppWebsocket } from "@holochain/conductor-api";
-import { applyDelta, applyDeltas, delay, initialContent } from "../common";
-import { createSynStore } from "@syn/store";
+import { applyDelta, delay, initialContent } from "../common.js";
 import { get } from "svelte/store";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import { createSynStore } from "@syn/store";
 
 const config = Config.gen();
 
@@ -78,9 +82,9 @@ async function spawnSyn(s, config: ConfigSeed) {
   await s.shareAllNodes(allPlayers);
 
   const [[syn]] = await player.installAgentsHapps(installation);
-  const appPort: number = player._conductor?._appInterfacePort as number;
+  const url = (player as any)._conductor.appClient.client.socket.url;
 
-  const appWs = await AppWebsocket.connect(`ws://localhost:${appPort}`);
+  const appWs = await AppWebsocket.connect(url);
 
   return new HolochainClient(appWs, {
     cell_id: syn.cells[0].cellId,

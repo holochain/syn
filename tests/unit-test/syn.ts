@@ -8,9 +8,12 @@ import {
   serializeHash,
   Signal,
   TextDelta,
-} from "../common";
+} from "../common.js";
 import { encode, decode } from "@msgpack/msgpack";
-import { cloneDeepWith } from "lodash";
+import { cloneDeepWith } from "lodash-es";
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const config = Config.gen();
 

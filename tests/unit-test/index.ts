@@ -1,5 +1,5 @@
 import { Orchestrator } from "@holochain/tryorama";
-import syn from "./syn";
+import syn from "./syn.js";
 
 const orchestrator = new Orchestrator();
 

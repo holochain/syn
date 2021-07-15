@@ -23,6 +23,7 @@ in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   buildInputs = with nixpkgs; [
    nodePackages.pnpm
+   nodejs-14_x
   ];
 
   shellHook = ''
