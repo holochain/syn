@@ -1,4 +1,4 @@
-import { bufferToBase64 } from '@syn-ui/utils'
+import { bufferToBase64 } from '@syn/utils'
 export function encodeJson(obj) {
     return JSON.stringify(obj, function (key, value) {
         if (key === 'pubKey') {

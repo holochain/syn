@@ -1,4 +1,4 @@
-import { base64ToBuffer } from '@syn-ui/utils'
+import { base64ToBuffer } from '@syn/utils'
 import type { ApiResponse } from './ApiResponse'
 export function decodeJson(jsonStr:string):ApiResponse {
     return JSON.parse(jsonStr, function (key:string, value:string) {

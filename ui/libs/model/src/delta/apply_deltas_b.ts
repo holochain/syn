@@ -1,5 +1,5 @@
 import { _b } from '@ctx-core/object'
-import { Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b } from '@syn-ui/zome-client'
+import { Content, Delta, AddDelta, DeleteDelta, MetaDelta, TitleDelta, my_tag_b } from '@syn/zome-client'
 import { content_b } from '../content'
 import { session_info_b, session_info_deltas_b } from '../session'
 import type { ApplyDelta } from './ApplyDelta'

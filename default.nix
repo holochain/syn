@@ -25,7 +25,6 @@ in nixpkgs.mkShell {
    nodePackages.pnpm
   ];
 
-
   shellHook = ''
   '';
 }

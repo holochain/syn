@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, getContext, tick } from 'svelte'
-  import { content_b } from '@syn-ui/model'
-  import type { Delta } from '@syn-ui/zome-client'
+  import { content_b } from '@syn/model'
+  import type { Delta } from '@syn/zome-client'
   const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()
   const content = content_b(ctx)

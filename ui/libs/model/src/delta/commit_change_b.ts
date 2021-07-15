@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import { Commit, rpc_commit_b, rpc_hash_content_b } from '@syn-ui/zome-client'
-import { bufferToBase64, console_b } from '@syn-ui/utils'
+import { Commit, rpc_commit_b, rpc_hash_content_b } from '@syn/zome-client'
+import { bufferToBase64, console_b } from '@syn/utils'
 import { content_b } from '../content'
 import {
     am_i_scribe_b, commit_in_progress_b, content_hash_b, content_hash_str_b,

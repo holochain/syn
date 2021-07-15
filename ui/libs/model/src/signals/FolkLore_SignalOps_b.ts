@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import { decodeJson, FOLK_GONE, FOLK_UNKNOWN } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import { decodeJson, FOLK_GONE, FOLK_UNKNOWN } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { am_i_scribe_b, update_folks_b } from '../session'
 import type { SignalOps } from './SignalOps'
 export const FolkLore_SignalOps_b = _b<SignalOps>('FolkLore_SignalOps', (ctx)=>{

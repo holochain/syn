@@ -1,7 +1,7 @@
-use commit::CommitInfo;
-use delta::Change;
-use folks::register_as_folk;
-use hdk::prelude::holo_hash::AgentPubKeyB64;
+use commit::CommitNotice;
+use delta::{ChangeBundle, ChangeRequest};
+use folks::{register_as_folk, Heartbeat};
+use hdk::prelude::holo_hash::EntryHashB64;
 use hdk::prelude::*;
 
 mod commit;
@@ -16,27 +16,43 @@ mod utils;
 use session::Session;
 
 use content::Content;
-use sync::StateForSync;
+use sync::{RequestSyncInput, StateForSync};
 
-use crate::commit::ContentChange;
+use crate::commit::Commit;
 
 entry_defs![
     Path::entry_def(),
     Content::entry_def(),
-    ContentChange::entry_def(),
+    Commit::entry_def(),
     Session::entry_def()
 ];
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SignalPayload {
+    session_hash: EntryHashB64,
+    message: SynMessage,
+}
+
+impl SignalPayload {
+    fn new(session_hash: EntryHashB64, message: SynMessage) -> Self {
+        SignalPayload {
+            session_hash,
+            message,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(tag = "signal_name", content = "signal_payload")]
-enum SignalPayload {
-    SyncReq(AgentPubKeyB64), // content is who the request is from
+#[serde(tag = "type", content = "payload")]
+enum SynMessage {
+    SyncReq(RequestSyncInput), // content is who the request is from
     SyncResp(StateForSync),
-    ChangeReq(Change),
-    Change(Change),
-    Heartbeat((AgentPubKeyB64, String)), // signal to scribe for maintaining participant info
-    FolkLore(String),                    // signal to participants to update other participants info
-    CommitNotice(CommitInfo),            // signal for sennding commit and content hash after commit
+    ChangeReq(ChangeRequest),
+    ChangeNotice(ChangeBundle),
+    Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
+    FolkLore(String),     // signal to participants to update other participants info
+    CommitNotice(CommitNotice), // signal for sennding commit and content hash after commit
 }
 
 #[hdk_extern]

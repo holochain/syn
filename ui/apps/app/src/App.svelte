@@ -1,7 +1,7 @@
 <script lang="ts">
     import { setContext } from 'svelte'
-    import { request_change_b, session_info_scribe_str_b } from '@syn-ui/model'
-    import type { Delta } from '@syn-ui/zome-client'
+    import { request_change_b, session_info_scribe_str_b } from '@syn/model'
+    import type { Delta } from '@syn/zome-client'
     import Editor from './Editor.svelte'
     import type { Title_I } from './Title_I'
     import in_Title from './Title.svelte'

@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import { FOLK_SEEN } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import { FOLK_SEEN } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { am_i_scribe_b, update_folks_b } from '../session'
 import type { SignalOps } from './SignalOps'
 export const Heartbeat_SignalOps_b = _b<SignalOps>('Heartbeat_SignalOps', (ctx)=>{

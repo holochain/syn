@@ -1,7 +1,7 @@
 import type { AppSignal } from '@holochain/conductor-api'
 import { _b, clone } from '@ctx-core/object'
-import { bufferToBase64, console_b } from '@syn-ui/utils'
-import { me_b } from '@syn-ui/zome-client'
+import { bufferToBase64, console_b } from '@syn/utils'
+import { me_b } from '@syn/zome-client'
 import {
     Change_SignalOps_b, ChangeReq_SignalOps_b, CommitNotice_SignalOps_b,
     FolkLore_SignalOps_b, Heartbeat_SignalOps_b,

@@ -1,5 +1,5 @@
 {
-  "name": "@syn-ui/headless",
+  "name": "@syn/headless",
   "version": "1.0.0",
   "scripts": {
     "build": "rollup -c",

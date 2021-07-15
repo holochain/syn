@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import type { Delta } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import type { Delta } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { next_index_b, record_deltas_b, send_change_b } from '../delta'
 import { am_i_scribe_b } from '../session'
 import type { SignalOps } from './SignalOps'

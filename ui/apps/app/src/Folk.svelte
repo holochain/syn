@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte'
-  import { CSSifyHSL, folks_b, my_colors_b, session_info_scribe_str_b, session_info_b } from '@syn-ui/model'
+  import { CSSifyHSL, folks_b, my_colors_b, session_info_scribe_str_b, session_info_b } from '@syn/model'
   const ctx = getContext('ctx')
   const folks = folks_b(ctx)
   const session_info_scribe_str = session_info_scribe_str_b(ctx)

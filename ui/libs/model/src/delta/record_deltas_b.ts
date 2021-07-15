@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import type { Delta } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import type { Delta } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { requested_changes_b } from './requested_changes_b'
 import { recorded_changes_b } from './recorded_changes_b'
 import { apply_deltas_b } from './apply_deltas_b'

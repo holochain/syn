@@ -1,4 +1,4 @@
 export interface Signal {
-    signal_name:string,
-    signal_payload?
+  signal_name: string;
+  signal_payload?;
 }

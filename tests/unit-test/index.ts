@@ -1,8 +1,8 @@
-require = require('esm')(module)
-import { Orchestrator } from '@holochain/tryorama'
+import { Orchestrator } from "@holochain/tryorama";
+import syn from "./syn";
 
-const orchestrator = new Orchestrator()
+const orchestrator = new Orchestrator();
 
-require('./syn')(orchestrator)
+syn(orchestrator);
 
-orchestrator.run()
+orchestrator.run();

@@ -1,5 +1,5 @@
 import type { HoloHash } from '@holochain/conductor-api'
-import type { DeltaValue } from '@syn-ui/zome-client'
+import type { DeltaValue } from '@syn/zome-client'
 export interface StateForSync {
     snapshot:HoloHash,
     commit:HoloHash,

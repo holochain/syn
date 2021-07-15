@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte'
-  import { folks_b } from '@syn-ui/model'
-  import { me_b } from '@syn-ui/zome-client'
+  import { folks_b } from '@syn/model'
+  import { me_b } from '@syn/zome-client'
   import Folk from './Folk.svelte'
   const ctx = getContext('ctx')
   const me = me_b(ctx)

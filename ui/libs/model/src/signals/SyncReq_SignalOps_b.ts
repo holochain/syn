@@ -2,8 +2,8 @@ import type { AgentPubKey } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
 import {
     agent_pub_key_b, FOLK_SEEN, me_b, rpc_send_folk_lore_b, rpc_send_sync_response_b, StateForSync
-} from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+} from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { _scribe_signal_folk_pubKey_a1_b, recorded_changes_b } from '../delta'
 import {
     am_i_scribe_b, content_hash_b, current_commit_header_hash_b, folks_b,

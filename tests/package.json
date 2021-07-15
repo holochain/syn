@@ -1,9 +1,9 @@
 {
-  "name": "@syn-ui/tests",
+  "name": "@syn/tests",
   "main": "index.js",
   "scripts": {
     "test": "npm run test:setup && npm run test:standard",
-    "test:standard": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts",
+    "test:standard": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --trace-warnings unit-test/index.ts",
     "test:setup": "CARGO_TARGET_DIR=../target cargo build --release --target wasm32-unknown-unknown && hc dna pack .. -o ../syn.dna && hc app pack .. -o ../syn.happ",
     "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node syn-lib/index.ts",
     "test-debug": "RUST_LOG='[debug]=debug' TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts"
@@ -11,10 +11,14 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
+    "@holochain-open-dev/cell-client": "github:holochain-open-dev/cell-client#build",
     "@msgpack/msgpack": "^2.7.0",
+    "@syn/store": "workspace:^1.0.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
     "lodash": "^4.17.21",
+    "path": "^0.12.7",
+    "svelte": "^3.38.3",
     "tape": "^5.2.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4",
@@ -23,12 +27,13 @@
   "devDependencies": {
     "@holochain/conductor-api": "0.0.4",
     "@holochain/tryorama": "0.4.3",
-    "@syn-ui/zome-client": "workspace:^0.0.1",
+    "@syn/zome-client": "workspace:^0.0.1",
     "@types/lodash": "^4.14.168",
     "@types/node": "^15.0.2",
     "ava": "^3.15.0",
     "pnpm": "^6.2.5"
   },
+  "type": "module",
   "noUpdate": [
     "@holochain/tryorama"
   ]

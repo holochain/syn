@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import { Delta, my_tag_b, rpc_send_change_request_b } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import { Delta, my_tag_b, rpc_send_change_request_b } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { am_i_scribe_b, session_info_scribe_b } from '../session'
 import { next_index_b } from './next_index_b'
 import { send_change_b } from './send_change_b'

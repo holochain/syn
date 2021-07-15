@@ -1,4 +1,4 @@
-import type { Content, Delta } from '@syn-ui/zome-client'
+import type { Content, Delta } from '@syn/zome-client'
 export interface ApplyDelta {
     delta:Delta
     deleted?:ApplyDelta_deleted_T

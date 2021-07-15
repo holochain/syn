@@ -1,6 +1,6 @@
 import type { AppSignal } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
-import { console_b } from '@syn-ui/utils'
+import { console_b } from '@syn/utils'
 import { next_index_b, record_deltas_b } from '../delta'
 import { am_i_scribe_b } from '../session'
 import type { SignalOps } from './SignalOps'

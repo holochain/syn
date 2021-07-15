@@ -10,7 +10,7 @@ name = "syn"
 
 [dependencies]
 serde = "1"
-#chrono = { version = "0.4", features = ['alloc', 'std']}
+chrono = { version = "0.4", features = ['serde']}
 derive_more = "0.99.9"
 thiserror = "1.0.20"
 hdk = "0.0.101"

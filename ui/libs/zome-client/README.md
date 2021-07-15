@@ -1,1 +1,1 @@
-# @syn-ui/model
+# @syn/model

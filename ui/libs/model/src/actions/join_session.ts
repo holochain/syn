@@ -1,6 +1,6 @@
 import {
     app_id_b, app_port_b, app_ws_b, rpc_get_session_b, rpc_new_session_b, rpc_send_sync_request_b, SessionInfo,
-} from '@syn-ui/zome-client'
+} from '@syn/zome-client'
 import { am_i_scribe_b, session_info_b, session_info_session_str_b, sessions_b, sessions_str_a1_b } from '../session'
 import { request_checker_timer_b, scribe_heartbeat_timer_b } from '../timers'
 import { app_ws_cb_b } from '../signals'

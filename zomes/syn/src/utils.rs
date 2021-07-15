@@ -5,7 +5,7 @@ use crate::error::{SynError, SynResult};
 pub fn get_links_and_load_type<R: TryFrom<Entry>>(
     base: EntryHash,
     tag: Option<LinkTag>,
-) -> SynResult<Vec<R>> {
+) -> SynResult<Vec<(HeaderHash, EntryHash, R)>> {
     let links = get_links(base.into(), tag)?.into_inner();
 
     Ok(links
@@ -18,7 +18,7 @@ pub fn get_links_and_load_type<R: TryFrom<Entry>>(
                     .into_option()
                     .ok_or(SynError::HashNotFound)?;
                 let entry: R = R::try_from(e).map_err(|_e| SynError::HashNotFound)?;
-                return Ok(entry);
+                return Ok((element.header_address().clone(), link.target.clone(), entry));
             };
             Err(SynError::HashNotFound)
         })

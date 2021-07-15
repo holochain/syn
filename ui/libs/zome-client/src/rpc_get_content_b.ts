@@ -1,5 +1,5 @@
 import { _b } from '@ctx-core/object'
-import type { EntryHash } from '@syn-ui/utils'
+import type { EntryHash } from '@syn/utils'
 import { rpc_b } from './rpc_b'
 import type { SessionInfo } from './SessionInfo'
 export const rpc_get_content_b = _b('rpc_get_content', (ctx)=>{

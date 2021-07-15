@@ -1,7 +1,7 @@
 import { _b, assign } from '@ctx-core/object'
 import { _readable_set_ctx$, Writable$ } from '@ctx-core/store'
-import { rpc_get_sessions_b, SessionInfo } from '@syn-ui/zome-client'
-import type { EntryHash } from '@syn-ui/utils'
+import { rpc_get_sessions_b, SessionInfo } from '@syn/zome-client'
+import type { EntryHash } from '@syn/utils'
 import { session_info_b } from './session_info_b'
 export const sessions_b = _b('sessions', (ctx)=>{
     const { store: sessions, set } = _readable_set_ctx$<EntryHash[]|null>(null)

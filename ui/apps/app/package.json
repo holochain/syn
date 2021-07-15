@@ -1,5 +1,5 @@
 {
-  "name": "@syn-ui/app",
+  "name": "@syn/app",
   "version": "1.0.0",
   "scripts": {
     "build": "rollup -c",
@@ -20,8 +20,7 @@
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@rollup/plugin-replace": "^2.4.2",
     "@rollup/plugin-typescript": "^8.2.1",
-    "@syn-ui/model": "workspace:^1.0.0",
-    "@syn-ui/zome-client": "workspace:^1.0.0",
+    "@syn/zome-client": "workspace:^0.0.1",
     "@tsconfig/svelte": "^1.0.10",
     "buffer": "^6.0.3",
     "rollup": "^2.47.0",

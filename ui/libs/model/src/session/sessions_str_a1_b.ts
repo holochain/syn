@@ -1,7 +1,7 @@
 import { _b } from '@ctx-core/object'
 import { sessions_b } from './sessions_b'
 import { derived$, Readable$ } from '@ctx-core/store'
-import { bufferToBase64 } from '@syn-ui/utils/dist'
+import { bufferToBase64 } from '@syn/utils/dist'
 export const sessions_str_a1_b = _b<sessions_str_a1_T>('sessions_str_a1', (ctx)=>{
     const sessions = sessions_b(ctx)
     const sessions_str_a1 = derived$(sessions, $sessions=>

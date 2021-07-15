@@ -85,6 +85,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "time",
  "winapi",
 ]
@@ -906,6 +907,7 @@ checksum = "1e81da0851ada1f3e9d4312c704aa4f8806f0f9d69faaf8df2f3464b4a9437c2"
 name = "syn"
 version = "0.0.1"
 dependencies = [
+ "chrono",
  "derive_more",
  "hdk",
  "serde",

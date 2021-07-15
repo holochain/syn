@@ -1,6 +1,6 @@
 import type { AgentPubKey } from '@holochain/conductor-api'
 import { _b } from '@ctx-core/object'
-import { rpc_send_folk_lore_b, rpc_send_heartbeat_b } from '@syn-ui/zome-client'
+import { rpc_send_folk_lore_b, rpc_send_heartbeat_b } from '@syn/zome-client'
 import { am_i_scribe_b, folks_b, session_info_scribe_b } from '../session'
 import { _scribe_signal_folk_pubKey_a1_b } from '../delta'
 import { Timer } from './Timer'

@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
-import { rpc_send_sync_request_b } from '@syn-ui/zome-client'
-import { console_b } from '@syn-ui/utils'
+import { rpc_send_sync_request_b } from '@syn/zome-client'
+import { console_b } from '@syn/utils'
 import { requested_changes_b } from '../delta'
 import { session_info_b } from '../session'
 import { Timer } from './Timer'

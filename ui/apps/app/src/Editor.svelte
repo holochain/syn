@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte'
-  import { my_tag_b } from '@syn-ui/zome-client'
-  import type { Delta } from '@syn-ui/zome-client'
-  import { content_b, CSSifyHSL, my_colors_b, session_info_b } from '@syn-ui/model'
+  import { my_tag_b } from '@syn/zome-client'
+  import type { Delta } from '@syn/zome-client'
+  import { content_b, CSSifyHSL, my_colors_b, session_info_b } from '@syn/model'
 
   const ctx = getContext('ctx')
   const dispatch = createEventDispatcher()

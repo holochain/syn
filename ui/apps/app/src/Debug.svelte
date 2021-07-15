@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte'
-  import { content_hash_str_b, next_index_b, session_info_scribe_str_b, session_info_b } from '@syn-ui/model'
-  import { dna_b } from '@syn-ui/zome-client'
+  import { content_hash_str_b, next_index_b, session_info_scribe_str_b, session_info_b } from '@syn/model'
+  import { dna_b } from '@syn/zome-client'
   const ctx = getContext('ctx')
   const dna = dna_b(ctx)
   const session_info_scribe_str = session_info_scribe_str_b(ctx)

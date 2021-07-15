@@ -1,5 +1,5 @@
-use hdk::prelude::*;
 use hdk::prelude::holo_hash::*;
+use hdk::prelude::*;
 
 use crate::error::SynResult;
 
@@ -10,8 +10,7 @@ use crate::error::SynResult;
 #[derive(Clone, Default)]
 pub struct Content(SerializedBytes);
 
-
-pub fn put_content_inner(content: Content) -> SynResult<(HeaderHashB64, EntryHashB64)> {
+pub fn put_snapshot_inner(content: Content) -> SynResult<(HeaderHashB64, EntryHashB64)> {
     let header_hash = create_entry(&content)?;
     let content_hash = hash_entry(&content)?;
 
@@ -27,21 +26,17 @@ pub fn put_content_inner(content: Content) -> SynResult<(HeaderHashB64, EntryHas
 // Used by the clerk to commit a snapshot of the content and link it to
 // the snapshot anchor.
 #[hdk_extern]
-pub fn put_content(content: Content) -> ExternResult<EntryHashB64> {
-    let (_, content_hash) = put_content_inner(content)?;
+pub fn put_snapshot(content: Content) -> ExternResult<EntryHashB64> {
+    let (_, content_hash) = put_snapshot_inner(content)?;
     Ok(content_hash)
 }
 
-/// The optional content
-#[derive(Serialize, Deserialize, Debug)]
-pub struct OptionContent(Option<Content>);
-
 #[hdk_extern]
-fn get_content(input: EntryHashB64) -> ExternResult<OptionContent> {
+pub fn get_snapshot(input: EntryHashB64) -> ExternResult<Option<Content>> {
     if let Some(element) = get(EntryHash::from(input), GetOptions::content())? {
-        Ok(OptionContent(element.into_inner().1.to_app_option()?))
+        Ok(element.into_inner().1.to_app_option()?)
     } else {
-        Ok(OptionContent(None))
+        Ok(None)
     }
 }
 

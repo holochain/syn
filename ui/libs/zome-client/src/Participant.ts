@@ -1,5 +1,5 @@
-import type { HoloHash } from '@holochain/conductor-api'
+import type { AgentPubKey, HoloHash} from '@holochain/conductor-api'
 export interface Participant extends HoloHash {
-    pubKey:HoloHash
+    pubKey:AgentPubKey
     meta:number
 }

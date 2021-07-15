@@ -1,6 +1,6 @@
 import { _b } from '@ctx-core/object'
 import { writable$ } from '@ctx-core/store'
-import type { EntryHash } from '@syn-ui/utils/dist'
+import type { EntryHash } from '@syn/utils/dist'
 import { session_info_b } from './session_info_b'
 export const content_hash_b = _b('content_hash', (ctx)=>{
     const session_info = session_info_b(ctx)

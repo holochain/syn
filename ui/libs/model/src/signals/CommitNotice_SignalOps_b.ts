@@ -1,5 +1,5 @@
 import { _b } from '@ctx-core/object'
-import { bufferToBase64, console_b, EntryHash, HeaderHash } from '@syn-ui/utils'
+import { bufferToBase64, console_b, EntryHash, HeaderHash } from '@syn/utils'
 import { committed_changes_b, next_index_b, recorded_changes_b } from '../delta'
 import { content_hash_b, content_hash_str_b } from '../session'
 import type { SignalOps } from './SignalOps'
