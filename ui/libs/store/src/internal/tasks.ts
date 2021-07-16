@@ -9,25 +9,29 @@ import type { SynWorkspace } from "./workspace";
 export function initBackgroundTasks<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>
 ) {
-  setInterval(() => {
+  const intervals: any[] = [];
+
+  const heartbeatInterval = setInterval(() => {
     const state = get(workspace.store);
     for (const sessionHash of Object.keys(state.joinedSessions)) {
       heartbeat(workspace, sessionHash);
     }
   }, workspace.config.hearbeatInterval);
+  intervals.push(heartbeatInterval);
 
-  setInterval(() => {
+  const checkRequestInterval = setInterval(() => {
     const state = get(workspace.store);
     for (const sessionHash of Object.keys(state.joinedSessions)) {
       checkRequestedChanges(workspace, sessionHash);
     }
   }, workspace.config.requestTimeout / 2);
+  intervals.push(checkRequestInterval);
 
   if (
     (workspace.config.commitStrategy as { CommitEveryNMs: number })
       .CommitEveryNMs
   ) {
-    setInterval(() => {
+    const commitInterval = setInterval(() => {
       const state = get(workspace.store);
       for (const sessionHash of Object.keys(state.joinedSessions)) {
         if (amIScribe(state, sessionHash)) {
@@ -35,5 +39,10 @@ export function initBackgroundTasks<CONTENT, DELTA>(
         }
       }
     }, (workspace.config.commitStrategy as { CommitEveryNMs: number }).CommitEveryNMs);
+    intervals.push(commitInterval);
   }
+
+  return {
+    cancel: () => intervals.forEach((i) => clearInterval(i)),
+  };
 }

@@ -57,19 +57,26 @@ export const oFn = (orchestrator) => {
     let currentContent = get(bobSessionStore.currentContent);
     t.equal(currentContent.title, "A new title");
 
-    aliceSessionStore.requestChange([{ type: "Title", value: "Another thing" }]);
+    aliceSessionStore.requestChange([
+      { type: "Title", value: "Another thing" },
+    ]);
 
     await delay(1000);
 
     currentContent = get(bobSessionStore.currentContent);
     t.equal(currentContent.title, "Another thing");
 
-    bobSessionStore.requestChange([{ type: "Title", value: "Bob is the boss" }]);
+    bobSessionStore.requestChange([
+      { type: "Title", value: "Bob is the boss" },
+    ]);
 
     await delay(1000);
 
     currentContent = get(aliceSessionStore.currentContent);
     t.equal(currentContent.title, "Bob is the boss");
+
+    await aliceSyn.close();
+    await bobSyn.close();
   });
 };
 

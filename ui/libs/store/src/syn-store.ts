@@ -42,7 +42,7 @@ export function createSynStore<CONTENT, DELTA>(
     config: fullConfig,
   };
 
-  initBackgroundTasks(workspace);
+  const { cancel } = initBackgroundTasks(workspace);
 
   return {
     getAllSessions: () => client.getSessions(),
@@ -54,6 +54,10 @@ export function createSynStore<CONTENT, DELTA>(
       const sessionHash = await newSession(workspace, fromSnapshot);
       return buildSessionStore(workspace, sessionHash);
     },
+    close: async () => {
+      client.close();
+      cancel();
+    },
   };
 }
 
@@ -63,4 +67,5 @@ export interface SynStore<CONTENT, DELTA> {
   newSession(
     fromSnapshot?: EntryHashB64
   ): Promise<SessionStore<CONTENT, DELTA>>;
+  close: () => Promise<void>;
 }

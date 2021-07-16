@@ -9,9 +9,11 @@
   },
   "dependencies": {
     "@ctx-core/combinators": "^6.0.10",
+    "@holochain-open-dev/cell-client": "^0.0.3",
     "@holochain/conductor-api": "0.0.4",
     "sirv-cli": "^1.0.11",
-    "svelte-fa": "^2.2.0"
+    "svelte-fa": "^2.2.0",
+    "up": "^1.0.2"
   },
   "devDependencies": {
     "@ctx-core/object": "^17.5.24",

@@ -42,6 +42,12 @@ export function scribeRequestChange<CONTENT, DELTA>(
       changes: changeBundle,
     });
 
+    triggerCommitIfNecessary(
+      workspace,
+      sessionHash,
+      session.uncommittedChanges.deltas.length
+    );
+    
     session.myFolkIndex += deltas.length;
     return state;
   });
@@ -98,17 +104,29 @@ export function handleChangeRequest<CONTENT, DELTA>(
       sessionHash,
     });
 
-    if (
-      (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
-        .CommitEveryNDeltas &&
-      (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
-        .CommitEveryNDeltas > session.uncommittedChanges.deltas.length
-    ) {
-      commitChanges(workspace, sessionHash);
-    }
+    triggerCommitIfNecessary(
+      workspace,
+      sessionHash,
+      session.uncommittedChanges.deltas.length
+    );
 
     return state;
   });
+}
+
+function triggerCommitIfNecessary<CONTENT, DELTA>(
+  workspace: SynWorkspace<CONTENT, DELTA>,
+  sessionHash: EntryHashB64,
+  uncommittedChangesCount
+) {
+  if (
+    (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
+      .CommitEveryNDeltas &&
+    (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
+      .CommitEveryNDeltas < uncommittedChangesCount
+  ) {
+    commitChanges(workspace, sessionHash);
+  }
 }
 
 function putDeltas<CONTENT, DELTA>(

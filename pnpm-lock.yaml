@@ -10,8 +10,13 @@ importers:
       '@ctx-core/jetbrains': ^4.0.35
       '@ctx-core/monorepo': ^15.0.57
       '@ctx-core/pnpm-tools': ^6.0.11
+      '@holochain-open-dev/cell-client': ^0.0.3
       pnpm: ^6.2.5
       typescript: 4.2.4
+      up: ^1.0.2
+    dependencies:
+      '@holochain-open-dev/cell-client': 0.0.3
+      up: 1.0.2
     devDependencies:
       '@babel/runtime': 7.14.0
       '@changesets/cli': 2.16.0
@@ -24,7 +29,7 @@ importers:
 
   tests:
     specifiers:
-      '@holochain-open-dev/cell-client': ^0.0.1
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain/conductor-api': 0.1.1
       '@holochain/tryorama': 0.4.3
       '@msgpack/msgpack': ^2.7.0
@@ -42,9 +47,10 @@ importers:
       tape: ^5.2.2
       ts-node: ^9.1.1
       typescript: ^4.3.5
+      up: ^1.0.2
       uuidv4: ^6.2.11
     dependencies:
-      '@holochain-open-dev/cell-client': 0.0.1
+      '@holochain-open-dev/cell-client': 0.0.3
       '@msgpack/msgpack': 2.7.0
       '@syn/store': link:../ui/libs/store
       esm: 3.2.25
@@ -55,6 +61,7 @@ importers:
       tape: 5.2.2
       ts-node: 9.1.1_typescript@4.3.5
       typescript: 4.3.5
+      up: 1.0.2
       uuidv4: 6.2.11
     devDependencies:
       '@holochain/conductor-api': 0.1.1
@@ -70,6 +77,7 @@ importers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.24
       '@ctx-core/store': ^24.7.17
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.1.0
       '@rollup/plugin-node-resolve': ^13.0.0
@@ -91,11 +99,14 @@ importers:
       svelte-preprocess: ^4.7.3
       tslib: ^2.2.0
       typescript: ^4.2.4
+      up: ^1.0.2
     dependencies:
       '@ctx-core/combinators': 6.0.10
+      '@holochain-open-dev/cell-client': 0.0.3
       '@holochain/conductor-api': 0.0.4
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
+      up: 1.0.2
     devDependencies:
       '@ctx-core/object': 17.5.24
       '@ctx-core/store': 24.7.17
@@ -123,6 +134,7 @@ importers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.24
       '@ctx-core/store': ^24.7.17
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain/conductor-api': 0.0.4
       '@rollup/plugin-commonjs': ^18.1.0
       '@rollup/plugin-node-resolve': ^13.0.0
@@ -138,11 +150,14 @@ importers:
       svelte-fa: ^2.2.0
       svelte-preprocess: ^4.7.3
       typescript: ^4.2.4
+      up: ^1.0.2
     dependencies:
       '@ctx-core/combinators': 6.0.10
+      '@holochain-open-dev/cell-client': 0.0.3
       '@holochain/conductor-api': 0.0.4
       sirv-cli: 1.0.11
       svelte-fa: 2.2.0
+      up: 1.0.2
     devDependencies:
       '@ctx-core/object': 17.5.24
       '@ctx-core/store': 24.7.17
@@ -164,10 +179,15 @@ importers:
       '@ctx-core/combinators': ^6.0.10
       '@ctx-core/object': ^17.5.24
       '@ctx-core/store': ^24.7.17
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain/conductor-api': 0.0.4
       '@syn/zome-client': workspace:^0.0.1
       svelte: ^3.38.2
       typescript: ^4.2.4
+      up: ^1.0.2
+    dependencies:
+      '@holochain-open-dev/cell-client': 0.0.3
+      up: 1.0.2
     devDependencies:
       '@ctx-core/combinators': 6.0.10
       '@ctx-core/object': 17.5.24
@@ -179,7 +199,7 @@ importers:
 
   ui/libs/store:
     specifiers:
-      '@holochain-open-dev/cell-client': ^0.0.1
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain-open-dev/core-types': ^0.1.1
       '@holochain/conductor-api': 0.1.1
       '@syn/zome-client': workspace:^0.0.1
@@ -187,10 +207,12 @@ importers:
       lodash-es: ^4.17.21
       svelte: ^3.38.2
       typescript: ^4.2.4
+      up: ^1.0.2
     dependencies:
-      '@holochain-open-dev/cell-client': 0.0.1
+      '@holochain-open-dev/cell-client': 0.0.3
       '@holochain-open-dev/core-types': 0.1.1
       lodash-es: 4.17.21
+      up: 1.0.2
     devDependencies:
       '@holochain/conductor-api': 0.1.1
       '@syn/zome-client': link:../zome-client
@@ -200,19 +222,21 @@ importers:
 
   ui/libs/zome-client:
     specifiers:
-      '@holochain-open-dev/cell-client': ^0.0.1
+      '@holochain-open-dev/cell-client': ^0.0.3
       '@holochain-open-dev/core-types': ^0.1.1
       '@holochain/conductor-api': ^0.1.1
       '@msgpack/msgpack': ^2.7.0
       '@types/lodash-es': ^4.17.4
       lodash-es: ^4.17.21
       typescript: ^4.2.4
+      up: ^1.0.2
     dependencies:
-      '@holochain-open-dev/cell-client': 0.0.1
+      '@holochain-open-dev/cell-client': 0.0.3
       '@holochain-open-dev/core-types': 0.1.1
       '@holochain/conductor-api': 0.1.1
       '@msgpack/msgpack': 2.7.0
       lodash-es: 4.17.21
+      up: 1.0.2
     devDependencies:
       '@types/lodash-es': 4.17.4
       typescript: 4.2.4
@@ -618,8 +642,8 @@ packages:
     resolution: {integrity: sha512-GTfeQ2iYvYYrIkuaF0QupWP/y8sdItwL6Tr1osyaU7eUsWtGfpZqDcTZny8KNDdnQAEEP2nDWZORA/Z3EMJa3w==}
     dev: false
 
-  /@holochain-open-dev/cell-client/0.0.1:
-    resolution: {integrity: sha512-W1oohKRjdRwKgMbCy5YZArleJ6bQo8LADa/N2CKXeGuc4wm+9uEfCs8E3XmDoK1ydfQDU2KX9pQCmvRX5MAZGA==}
+  /@holochain-open-dev/cell-client/0.0.3:
+    resolution: {integrity: sha512-+GftiHIdBuVf10G8fUgLC6kYBcrJae0Vw5wLYfShfYId1yybo3LuZ3f8kMKeATeQIXgqX+L5MYhPwMP9hie4wg==}
     dependencies:
       '@holo-host/chaperone': 7.1.2
       '@holo-host/web-sdk': github.com/guillemcordoba/web-sdk/3778b3a1bf8014ea4164e6a62306db84694630aa
@@ -4476,6 +4500,10 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
     dev: true
+
+  /up/1.0.2:
+    resolution: {integrity: sha1-Jfh2hv2sUQ9nRE/ot70ViLVZUmc=}
+    dev: false
 
   /update-notifier/5.1.0:
     resolution: {integrity: sha512-ItnICHbeMh9GqUy31hFPrD1kcuZ3rpxDZbf4KUDavXwS0bW5m7SLbDQpGX3UYr072cbrF5hFUs3r5tUsPwjfHw==}

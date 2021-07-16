@@ -22,21 +22,29 @@ import { allMessageTypes, SynSignal } from "./types/signal";
 import { deepDecodeUint8Arrays } from "./utils";
 
 export class SynClient {
+  unsubscribe: () => void = () => {};
+
   constructor(
     public cellClient: CellClient,
     protected handleSignal: (synSignal: SynSignal) => void,
     protected zomeName = "syn"
   ) {
-    cellClient.addSignalHandler((signal) => {
-      console.log(signal);
-      if (
-        isEqual(cellClient.cellId, signal.data.cellId) &&
-        signal.data.payload.message &&
-        allMessageTypes.includes(signal.data.payload.message.type)
-      ) {
-        handleSignal(deepDecodeUint8Arrays(signal.data.payload));
-      }
-    });
+    cellClient
+      .addSignalHandler((signal) => {
+        console.log(signal);
+        if (
+          isEqual(cellClient.cellId, signal.data.cellId) &&
+          signal.data.payload.message &&
+          allMessageTypes.includes(signal.data.payload.message.type)
+        ) {
+          handleSignal(deepDecodeUint8Arrays(signal.data.payload));
+        }
+      })
+      .then(({ unsubscribe }) => (this.unsubscribe = unsubscribe));
+  }
+
+  public close() {
+    return this.unsubscribe();
   }
 
   /** Content */

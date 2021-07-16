@@ -13,7 +13,7 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.1",
+    "@holochain-open-dev/cell-client": "^0.0.3",
     "@msgpack/msgpack": "^2.7.0",
     "@syn/store": "workspace:^1.0.0",
     "esm": "^3.2.25",
@@ -24,6 +24,7 @@
     "tape": "^5.2.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.3.5",
+    "up": "^1.0.2",
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {

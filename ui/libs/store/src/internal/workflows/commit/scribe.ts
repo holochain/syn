@@ -33,7 +33,7 @@ export async function commitChanges<CONTENT, DELTA>(
   };
   const newCommitHash = await workspace.client.commit(commitInput);
 
-  // TODO: what happens if we have a new change while committing
+  // TODO: what happens if we have a new change while committing?
 
   workspace.store.update((state) => {
     putNewCommit(state, sessionHash, newCommitHash, commit);
