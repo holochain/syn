@@ -123,7 +123,7 @@ function triggerCommitIfNecessary<CONTENT, DELTA>(
     (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
       .CommitEveryNDeltas &&
     (workspace.config.commitStrategy as { CommitEveryNDeltas: number })
-      .CommitEveryNDeltas < uncommittedChangesCount
+      .CommitEveryNDeltas <= uncommittedChangesCount
   ) {
     commitChanges(workspace, sessionHash);
   }

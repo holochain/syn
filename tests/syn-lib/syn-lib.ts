@@ -37,7 +37,11 @@ export const oFn = (orchestrator) => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = createSynStore(aliceClient, initialContent, applyDelta);
+    const aliceSyn = createSynStore(aliceClient, initialContent, applyDelta, {
+      commitStrategy: {
+        CommitEveryNDeltas: 3,
+      },
+    });
     const bobSyn = createSynStore(bobClient, initialContent, applyDelta);
 
     const aliceSessionStore = await aliceSyn.newSession();
@@ -74,6 +78,16 @@ export const oFn = (orchestrator) => {
 
     currentContent = get(aliceSessionStore.currentContent);
     t.equal(currentContent.title, "Bob is the boss");
+
+    bobSessionStore.requestChange([
+      { type: "Add", loc: 0, text: "Hi " },
+      { type: "Add", loc: 3, text: "there" },
+    ]);
+
+    await delay(1000);
+
+    currentContent = get(aliceSessionStore.currentContent);
+    t.equal(currentContent.body, "Hi there");
 
     await aliceSyn.close();
     await bobSyn.close();

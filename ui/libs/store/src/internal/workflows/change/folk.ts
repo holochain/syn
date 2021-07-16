@@ -78,12 +78,13 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
 
   let session = selectSession(state, sessionHash) as SessionWorkspace;
 
+  console.log(session.requestedChanges);
   if (
     session.requestedChanges.length > 0 &&
     Date.now() - session.requestedChanges[0].atDate >
       workspace.config.requestTimeout
   ) {
-    // and send a sync request incase something just got out of sequence
+    // send a sync request incase something just got out of sequence
     // TODO: prepare for shifting to new scribe if they went offline
 
     await joinSession(workspace, sessionHash);
@@ -163,7 +164,7 @@ function clearRequested(session: SessionWorkspace, myChanges: FolkChanges) {
   for (const requestedChange of session.requestedChanges) {
     if (
       !(
-        requestedChange.atFolkIndex > myChanges.atFolkIndex &&
+        requestedChange.atFolkIndex >= myChanges.atFolkIndex &&
         requestedChange.atFolkIndex <
           myChanges.atFolkIndex + myChanges.sessionChanges.length
       )
