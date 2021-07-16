@@ -33,7 +33,7 @@ pub struct ChangeMeta {
 pub struct Commit {
     pub changes: ChangeBundle,
 
-    pub previous_commit_hashes: Vec<HeaderHashB64>,
+    pub previous_commit_hash: Option<HeaderHashB64>,
 
     // hash of Content on which these deltas are to be applied
     pub previous_content_hash: EntryHashB64,

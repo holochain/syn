@@ -23,6 +23,7 @@ export interface ChangeBundle {
 export interface SendChangeRequestInput {
   sessionHash: EntryHashB64;
   scribe: AgentPubKeyB64;
+  atSessionIndex: number;
   atFolkIndex: number;
   deltas: Array<Delta>;
 }

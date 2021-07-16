@@ -1,8 +1,7 @@
-import type { SessionInfo } from "@syn/zome-client";
 import type { EntryHashB64 } from "@holochain-open-dev/core-types";
 
-import { applyCommits, orderCommits } from "../utils";
-import type { SynWorkspace } from "../workspace";
+import { applyCommits, orderCommits } from "../../utils";
+import type { SynWorkspace } from "../../workspace";
 
 // Pick and join a session
 export async function joinSession<CONTENT, DELTA>(
@@ -54,20 +53,3 @@ export async function joinSession<CONTENT, DELTA>(
   });
 }
 
-// For now, very simple logic: get all the sessions, and join the first one
-// If there are no sessions, create a new one
-export async function getSessionToJoin<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>
-): Promise<SessionInfo> {
-  const sessions = await workspace.client.getSessions();
-  if (sessions.length === 0) {
-    const snapshotHash = await workspace.client.putSnapshot(
-      workspace.initialContent
-    );
-    return workspace.client.newSession({
-      snapshotHash,
-    });
-  } else {
-    return workspace.client.getSession(sessions[0]);
-  }
-}

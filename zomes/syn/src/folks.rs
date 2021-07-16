@@ -6,10 +6,18 @@ use crate::{SignalPayload, SynMessage};
 /// Input to the send folklore call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
+pub enum FolkLore {
+    Participants(Vec<AgentPubKeyB64>),
+    Gone(Vec<AgentPubKeyB64>),
+}
+
+/// Input to the send folklore call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SendFolkLoreInput {
     pub session_hash: EntryHashB64,
     pub participants: Vec<AgentPubKeyB64>,
-    pub data: String,
+    pub data: FolkLore,
 }
 
 #[hdk_extern]
@@ -24,18 +32,15 @@ fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
     Ok(())
 }
 
-#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-pub struct FolksList(Vec<AgentPubKeyB64>);
-
 #[hdk_extern]
-fn get_folks(_: ()) -> ExternResult<FolksList> {
+fn get_folks(_: ()) -> ExternResult<Vec<AgentPubKeyB64>> {
     let folks_anchor_hash = get_folks_path().hash()?;
     let links = get_links(folks_anchor_hash, None)?.into_inner();
     let folks = links
         .into_iter()
         .map(|l| AgentPubKey::from(l.target).into())
         .collect();
-    Ok(FolksList(folks))
+    Ok(folks)
 }
 
 pub fn register_as_folk() -> ExternResult<()> {

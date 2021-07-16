@@ -9,9 +9,12 @@ import {
   selectSession,
 } from "../../../state/selectors";
 import type { SynWorkspace } from "../../workspace";
-import type { RequestedChange, SessionWorkspace } from "../../../state/syn-state";
+import type {
+  RequestedChange,
+  SessionWorkspace,
+} from "../../../state/syn-state";
 import { applyChangeBundle } from "../../utils";
-import { joinSession } from "../sessions";
+import { joinSession } from "../sessions/folk";
 
 export function folkRequestChange<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -34,6 +37,7 @@ export function folkRequestChange<CONTENT, DELTA>(
     const newRequestedChanges: RequestedChange[] = [];
 
     const atDate = Date.now();
+    console.log(session.uncommittedChanges);
     const currentSessionIndex = selectCurrentSessionIndex(session);
     for (let i = 0; i < deltas.length; i++) {
       newRequestedChanges.push({
@@ -51,6 +55,7 @@ export function folkRequestChange<CONTENT, DELTA>(
 
     workspace.client.sendChangeRequest({
       atFolkIndex: session.myFolkIndex,
+      atSessionIndex: currentSessionIndex,
       deltas,
       scribe: session.session.scribe,
       sessionHash,
@@ -118,6 +123,30 @@ export function handleChangeNotice<CONTENT, DELTA>(
       workspace.applyDeltaFn,
       changes
     );
+    session.uncommittedChanges.deltas = [
+      ...session.uncommittedChanges.deltas,
+      changes.deltas,
+    ];
+
+    for (const [author, newFolkChanges] of Object.entries(
+      session.uncommittedChanges.authors
+    )) {
+      if (!session.uncommittedChanges.authors[author]) {
+        session.uncommittedChanges.authors[author] = newFolkChanges;
+      } else {
+        const folkChanges = session.uncommittedChanges.authors[author];
+        if (
+          folkChanges.atFolkIndex + folkChanges.sessionChanges.length !==
+          newFolkChanges.atFolkIndex
+        ) {
+          // We missed changes from this folk?
+        }
+        folkChanges.sessionChanges = [
+          ...folkChanges.sessionChanges,
+          ...newFolkChanges.sessionChanges,
+        ];
+      }
+    }
 
     const myChanges = changes.authors[state.myPubKey];
     if (myChanges) {

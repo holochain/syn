@@ -13,11 +13,12 @@ import type { ApplyDeltaFn } from "../../../apply-delta";
 import {
   amIScribe,
   selectCurrentSessionIndex,
+  selectFolksInSession,
   selectSession,
 } from "../../../state/selectors";
 import type { SessionWorkspace } from "../../../state/syn-state";
 import type { SynWorkspace } from "../../workspace";
-import { putJustSeenFolks } from "../heartbeat/utils";
+import { putJustSeenFolks } from "../folklore/utils";
 import { commitChanges } from "../commit/scribe";
 
 export function scribeRequestChange<CONTENT, DELTA>(
@@ -36,7 +37,7 @@ export function scribeRequestChange<CONTENT, DELTA>(
     );
 
     workspace.client.sendChange({
-      participants: Object.keys(session.folks),
+      participants: selectFolksInSession(session),
       sessionHash,
       changes: changeBundle,
     });
@@ -93,7 +94,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
 
     workspace.client.sendChange({
       changes: changeBundle,
-      participants: Object.keys(session.folks),
+      participants: selectFolksInSession(session),
       sessionHash,
     });
 

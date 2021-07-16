@@ -1,6 +1,7 @@
 import { decode } from "@msgpack/msgpack";
 
 export function deepDecodeUint8Arrays(object: any): any {
+  if (object === undefined || object === null) return object;
   if (object instanceof Uint8Array) return decode(object);
 
   if (typeof object !== "object") return object;

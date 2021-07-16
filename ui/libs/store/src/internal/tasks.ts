@@ -3,7 +3,7 @@ import { amIScribe } from "../state/selectors";
 import { checkRequestedChanges } from "./workflows/change/folk";
 import { commitChanges } from "./workflows/commit/scribe";
 
-import { heartbeat } from "./workflows/heartbeat";
+import { heartbeat } from "./workflows/folklore";
 import type { SynWorkspace } from "./workspace";
 
 export function initBackgroundTasks<CONTENT, DELTA>(

@@ -12,8 +12,9 @@ import type { SynWorkspace } from "./internal/workspace";
 import { handleSignal } from "./internal/signals";
 import { defaultConfig, SynConfig } from "./config";
 import { initBackgroundTasks } from "./internal/tasks";
-import { joinSession } from "./internal/workflows/sessions";
+import { joinSession } from "./internal/workflows/sessions/folk";
 import { buildSessionStore, SessionStore } from "./external/session-store";
+import { newSession } from "./internal/workflows/sessions/scribe";
 
 export function createSynStore<CONTENT, DELTA>(
   cellClient: CellClient,
@@ -50,15 +51,8 @@ export function createSynStore<CONTENT, DELTA>(
       return buildSessionStore(workspace, sessionHash);
     },
     newSession: async (fromSnapshot?: EntryHashB64) => {
-      if (!fromSnapshot) {
-        fromSnapshot = await workspace.client.putSnapshot(
-          workspace.initialContent
-        );
-      }
-      const sessionHash = await workspace.client.newSession({
-        snapshotHash: fromSnapshot,
-      });
-      return buildSessionStore(workspace, sessionHash.sessionHash);
+      const sessionHash = await newSession(workspace, fromSnapshot);
+      return buildSessionStore(workspace, sessionHash);
     },
   };
 }

@@ -96,7 +96,7 @@ export function selectMissedUncommittedChanges(
   const sessionWorkspace = synState.joinedSessions[sessionHash];
 
   if (
-    sessionWorkspace.uncommittedChanges.atSessionIndex > latestSeenSessionIndex
+    sessionWorkspace.uncommittedChanges.atSessionIndex >= latestSeenSessionIndex
   )
     return sessionWorkspace.uncommittedChanges;
   else {

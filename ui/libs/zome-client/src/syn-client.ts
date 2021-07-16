@@ -2,12 +2,17 @@ import type { CellClient } from "@holochain-open-dev/cell-client";
 import type {
   EntryHashB64,
   HeaderHashB64,
+  Dictionary,
   AgentPubKeyB64,
 } from "@holochain-open-dev/core-types";
 import { encode, decode } from "@msgpack/msgpack";
 import { isEqual } from "lodash-es";
 
-import type { SendChangeInput, SendChangeRequestInput } from "./types/delta";
+import type {
+  ChangeBundle,
+  SendChangeInput,
+  SendChangeRequestInput,
+} from "./types/delta";
 import type { Commit, CommitInput, Content } from "./types/commit";
 import type { SendFolkLoreInput } from "./types/folks";
 import type { SendHeartbeatInput } from "./types/heartbeat";
@@ -23,10 +28,11 @@ export class SynClient {
     protected zomeName = "syn"
   ) {
     cellClient.addSignalHandler((signal) => {
+      console.log(signal);
       if (
         isEqual(cellClient.cellId, signal.data.cellId) &&
-        signal.data.payload.type &&
-        allMessageTypes.includes(signal.data.payload.type)
+        signal.data.payload.message &&
+        allMessageTypes.includes(signal.data.payload.message.type)
       ) {
         handleSignal(deepDecodeUint8Arrays(signal.data.payload));
       }
@@ -47,7 +53,10 @@ export class SynClient {
   public commit(commitInput: CommitInput): Promise<HeaderHashB64> {
     const commit = {
       ...commitInput,
-      commit: this.encodeCommit(commitInput.commit),
+      commit: {
+        ...commitInput.commit,
+        changes: this.encodeChangeBundle(commitInput.commit.changes),
+      },
     };
 
     return this.callZome("commit", commit);
@@ -81,10 +90,7 @@ export class SynClient {
   }
 
   public sendFolkLore(sendFolkLoreInput: SendFolkLoreInput): Promise<void> {
-    return this.callZome("send_folk_lore", {
-      ...sendFolkLoreInput,
-      data: JSON.stringify(sendFolkLoreInput.data),
-    });
+    return this.callZome("send_folk_lore", sendFolkLoreInput);
   }
 
   /** Sync */
@@ -97,18 +103,46 @@ export class SynClient {
   public sendSyncResponse(
     syncResponseInput: SendSyncResponseInput
   ): Promise<void> {
-    return this.callZome("send_sync_response", syncResponseInput);
+    const missedCommits: Dictionary<any> = {};
+
+    for (const hash of Object.keys(syncResponseInput.state.missedCommits)) {
+      missedCommits[hash] = this.encodeCommit(
+        syncResponseInput.state.missedCommits[hash]
+      );
+    }
+
+    const input = {
+      ...syncResponseInput,
+      state: {
+        ...syncResponseInput.state,
+        missedCommits,
+        uncommittedChanges: this.encodeChangeBundle(
+          syncResponseInput.state.uncommittedChanges
+        ),
+      },
+    };
+
+    return this.callZome("send_sync_response", input);
   }
 
   /** Changes */
   public sendChangeRequest(
     changeRequestInput: SendChangeRequestInput
   ): Promise<void> {
-    return this.callZome("send_change_request", changeRequestInput);
+    const input = {
+      ...changeRequestInput,
+      deltas: changeRequestInput.deltas.map((d) => encode(d)),
+    };
+
+    return this.callZome("send_change_request", input);
   }
 
   public sendChange(sendChangeInput: SendChangeInput): Promise<void> {
-    return this.callZome("send_change", sendChangeInput);
+    const input = {
+      ...sendChangeInput,
+      changes: this.encodeChangeBundle(sendChangeInput.changes),
+    };
+    return this.callZome("send_change", input);
   }
 
   /** Heartbeat */
@@ -138,10 +172,14 @@ export class SynClient {
   private encodeCommit(commit: Commit) {
     return {
       ...commit,
-      changes: {
-        ...commit.changes,
-        deltas: commit.changes.deltas.map((d) => encode(d)),
-      },
+      changes: this.encodeChangeBundle(commit.changes),
+    };
+  }
+
+  private encodeChangeBundle(changes: ChangeBundle) {
+    return {
+      ...changes,
+      deltas: changes.deltas.map((d) => encode(d)),
     };
   }
 

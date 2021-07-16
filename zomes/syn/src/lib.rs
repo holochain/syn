@@ -1,6 +1,6 @@
 use commit::CommitNotice;
 use delta::{ChangeBundle, ChangeRequest};
-use folks::{register_as_folk, Heartbeat};
+use folks::{FolkLore, Heartbeat, register_as_folk};
 use hdk::prelude::holo_hash::EntryHashB64;
 use hdk::prelude::*;
 
@@ -51,7 +51,7 @@ enum SynMessage {
     ChangeReq(ChangeRequest),
     ChangeNotice(ChangeBundle),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
-    FolkLore(String),     // signal to participants to update other participants info
+    FolkLore(FolkLore),     // signal to participants to update other participants info
     CommitNotice(CommitNotice), // signal for sennding commit and content hash after commit
 }
 

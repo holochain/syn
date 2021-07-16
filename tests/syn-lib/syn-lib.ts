@@ -32,26 +32,7 @@ process.on("unhandledRejection", (error) => {
   console.log("unhandledRejection", error);
 });
 
-// Delta representation could be JSON or not, for now we are using
-// json so setting this variable to true
-const jsonDeltas = true;
 export const oFn = (orchestrator) => {
-  const default_content: Content = { title: "", body: "", meta: {} };
-  /*    orchestrator.registerScenario('syn connect', async (s, t) => {
-          const [me_player] = await s.players([config])
-          const [[me_happ]] = await me_player.installAgentsHapps(installation)
-          const app_port = me_player._conductor.app_ws.client.socket._url.split(":")[2];
-          const c = new Connection(app_port, me_happ.hAppId)
-          t.equal(c.app_port, app_port)
-          t.equal(c.app_id, me_happ.hAppId)
-          t.equal(c.sessions.length, 0)
-          t.equal(c.syn, undefined)
-          t.equal(c.app_ws, undefined)
-
-          await c.open(default_content, () => {})
-          t.notEqual(c.app_ws, undefined)
-          t.deepEqual(c.syn.default_content, default_content)
-      })*/
   orchestrator.registerScenario("syn 2 nodes", async (s, t) => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
@@ -62,15 +43,33 @@ export const oFn = (orchestrator) => {
     const aliceSessionStore = await aliceSyn.newSession();
     const info = get(aliceSessionStore.info);
 
+    t.ok(info.sessionHash);
+    console.log(info);
+
+    await delay(1000);
+
     const bobSessionStore = await bobSyn.joinSession(info.sessionHash);
 
     aliceSessionStore.requestChange([{ type: "Title", value: "A new title" }]);
 
-    await delay(500);
+    await delay(1000);
 
     let currentContent = get(bobSessionStore.currentContent);
-
     t.equal(currentContent.title, "A new title");
+
+    aliceSessionStore.requestChange([{ type: "Title", value: "Another thing" }]);
+
+    await delay(1000);
+
+    currentContent = get(bobSessionStore.currentContent);
+    t.equal(currentContent.title, "Another thing");
+
+    bobSessionStore.requestChange([{ type: "Title", value: "Bob is the boss" }]);
+
+    await delay(1000);
+
+    currentContent = get(aliceSessionStore.currentContent);
+    t.equal(currentContent.title, "Bob is the boss");
   });
 };
 
@@ -80,6 +79,9 @@ async function spawnSyn(s, config: ConfigSeed) {
   const [player]: Player[] = await s.players([config]);
   allPlayers.push(player);
   await s.shareAllNodes(allPlayers);
+  player.setSignalHandler((signal) => {
+    console.log("Received Signal for player:", signal.data.payload);
+  });
 
   const [[syn]] = await player.installAgentsHapps(installation);
   const url = (player as any)._conductor.appClient.client.socket.url;

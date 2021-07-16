@@ -7,8 +7,8 @@ import { handleSyncResponse } from "./workflows/sync/folk";
 import { selectSession } from "../state/selectors";
 import { handleChangeRequest } from "./workflows/change/scribe";
 import { handleCommitNotice } from "./workflows/commit/folk";
-import { handleFolkLore } from "./workflows/heartbeat/folk";
-import { handleHeartbeat } from "./workflows/heartbeat/scribe";
+import { handleFolkLore } from "./workflows/folklore/folk";
+import { handleHeartbeat } from "./workflows/folklore/scribe";
 import { handleChangeNotice } from "./workflows/change/folk";
 
 export function handleSignal<CONTENT, DELTA>(

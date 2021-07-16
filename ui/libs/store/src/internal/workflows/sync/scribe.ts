@@ -3,12 +3,13 @@ import type { EntryHashB64 } from "@holochain-open-dev/core-types";
 
 import {
   amIScribe,
+  selectFolksInSession,
   selectMissedCommits,
   selectMissedUncommittedChanges,
   selectSession,
 } from "../../../state/selectors";
 import type { SynWorkspace } from "../../workspace";
-import { putJustSeenFolks } from "../heartbeat/utils";
+import { putJustSeenFolks } from "../folklore/utils";
 import type { SessionWorkspace } from "../../../state/syn-state";
 
 /**
@@ -29,7 +30,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
   requestSyncInput: RequestSyncInput
 ): void {
   workspace.store.update((synState) => {
-    if (amIScribe(synState, sessionHash)) {
+    if (!amIScribe(synState, sessionHash)) {
       console.log("syncReq received but I'm not the scribe!");
       return synState;
     }
@@ -61,12 +62,12 @@ export function handleSyncRequest<CONTENT, DELTA>(
       sessionHash,
     });
 
-    const participants = [...Object.keys(session.folks), synState.myPubKey];
+    const participants = selectFolksInSession(session);
 
     workspace.client.sendFolkLore({
       participants,
       sessionHash,
-      data: { participants },
+      data: { participants: [...participants, synState.myPubKey] },
     });
     return synState;
   });
