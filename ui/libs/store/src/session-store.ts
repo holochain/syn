@@ -1,6 +1,6 @@
 import type { Session } from '@syn/zome-client';
 import type { Readable } from 'svelte/store';
-import { derived } from 'svelte/store';
+import { derived, get } from 'svelte/store';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import type { SessionFolk } from './state/syn-state';
@@ -12,9 +12,11 @@ import { selectSession } from './state/selectors';
 import { requestChange } from './internal/workflows/change';
 
 export interface SessionStore<CONTENT, DELTA> {
+  hash: EntryHashB64;
+  info: Session;
+
   content: Readable<CONTENT>;
   folks: Readable<Dictionary<SessionFolk>>;
-  info: Readable<{ sessionHash: EntryHashB64; session: Session }>;
 
   requestChange(deltas: DELTA[]): void;
   leave(): Promise<void>;
@@ -32,15 +34,12 @@ export function buildSessionStore<CONTENT, DELTA>(
     workspace.store,
     state => selectSession(state, sessionHash).folks
   );
-  const info = derived(workspace.store, state => ({
-    session: selectSession(state, sessionHash).session,
-    sessionHash,
-  }));
 
   return {
+    hash: sessionHash,
+    info: selectSession(get(workspace.store), sessionHash).session,
     content,
     folks,
-    info,
     requestChange: deltas => requestChange(workspace, sessionHash, deltas),
     leave: async () => {}, // TODO
   };

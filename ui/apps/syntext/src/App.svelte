@@ -1,158 +1,182 @@
 <script>
-  import Editor from './Editor.svelte'
-  import Title from './Title.svelte'
-  import Folks from './Folks.svelte'
-  import Syn from './Syn.svelte'
-  import Debug from './Debug.svelte'
-  import History from './History.svelte'
-  import { content, scribeStr } from './stores.js'
+  import Editor from './Editor.svelte';
+  import Title from './Title.svelte';
+  import Folks from './Folks.svelte';
+  import Debug from './Debug.svelte';
+  import History from './History.svelte';
+  import { content, scribeStr } from './stores.js';
+  import { SynContext, SynFolks } from '@syn/elements';
+  import { createStore } from './syn';
 
-  $: disconnected = false
-
-  // definition of how to apply a delta to the content
-  // if the delta is destructive also returns what was
-  // destroyed for use by undo
-  function applyDelta(content, delta) {
-    switch(delta.type) {
-    case 'Title':
-      {
-        const deleted = content.title
-        content.title = delta.value
-        return [content, {delta, deleted}]
-      }
-    case 'Add':
-      {
-        const [loc, text] = delta.value
-        content.body = content.body.slice(0, loc) + text + content.body.slice(loc)
-        return [content, {delta}]
-      }
-    case 'Delete':
-      {
-        const [start, end] = delta.value
-        const deleted = content.body.slice(start,end)
-        content.body = content.body.slice(0, start) + content.body.slice(end)
-        return [content, {delta, deleted}]
-      }
-    case 'Meta':
-      {
-        const [tag, loc] = delta.value.setLoc
-        const deleted = [tag, content.meta[tag]]
-        content.meta[tag] = loc
-        return [content, {delta, deleted}]
-      }
-    }
-  }
-
-  // definition of how to undo a change, returns a delta that will undo the change
-  function undo(change) {
-    const delta = change.delta
-    switch(delta.type) {
-    case 'Title':
-      return {type:'Title', value:change.deleted}
-      break
-    case 'Add':
-      const [loc, text] = delta.value
-      return {type:'Delete', value: [loc, loc+text.length]}
-      break
-    case 'Delete':
-      const [start, end] = delta.value
-      return {type:'Add', value:[start, change.deleted]}
-      break
-    case 'Meta':
-      return {type:'Meta', value:{setLoc: change.deleted}}
-    }
-  }
+  $: disconnected = false;
 
   // definition of how to convert a change to text for the history renderer
   function changeToText(change) {
-    let delta = change.delta
-    let detail
-    switch(delta.type) {
-    case 'Add':
-      detail = `${delta.value[1]}@${delta.value[0]}`
-      break
-    case 'Delete':
-      detail = `${change.deleted}@${delta.value[0]}`
-      break
-    case 'Title':
-      detail = `${change.deleted}->${delta.value}`
-      break
-    case 'Meta':
-      detail = ''
+    let delta = change.delta;
+    let detail;
+    switch (delta.type) {
+      case 'Add':
+        detail = `${delta.value[1]}@${delta.value[0]}`;
+        break;
+      case 'Delete':
+        detail = `${change.deleted}@${delta.value[0]}`;
+        break;
+      case 'Title':
+        detail = `${change.deleted}->${delta.value}`;
+        break;
+      case 'Meta':
+        detail = '';
     }
-    return `${delta.type}:\n${detail}`
+    return `${delta.type}:\n${detail}`;
   }
 
-
-  $: noscribe = $scribeStr === ''
-  let syn
-
+  $: noscribe = $scribeStr === '';
+  let syn;
 
   // The debug drawer's ability to resized and hidden
-  let resizeable
-  let resizeHandle
-  const minDrawerSize = 0
-  const maxDrawerSize = document.documentElement.clientHeight - 30 - 10
-  const initResizeable = (resizeableEl) => {
-    resizeableEl.style.setProperty('--max-height', `${maxDrawerSize}px`)
-    resizeableEl.style.setProperty('--min-height', `${minDrawerSize}px`)
-  }
+  let resizeable;
+  let resizeHandle;
+  const minDrawerSize = 0;
+  const maxDrawerSize = document.documentElement.clientHeight - 30 - 10;
+  const initResizeable = resizeableEl => {
+    resizeableEl.style.setProperty('--max-height', `${maxDrawerSize}px`);
+    resizeableEl.style.setProperty('--min-height', `${minDrawerSize}px`);
+  };
 
-  const setDrawerHeight = (height) => {
-    document.documentElement.style.setProperty('--resizeable-height', `${height}px`)
-  }
+  const setDrawerHeight = height => {
+    document.documentElement.style.setProperty(
+      '--resizeable-height',
+      `${height}px`
+    );
+  };
   const getDrawerHeight = () => {
-    const pxHeight = getComputedStyle(resizeable)
-      .getPropertyValue('--resizeable-height')
-    return parseInt(pxHeight, 10)
-  }
+    const pxHeight = getComputedStyle(resizeable).getPropertyValue(
+      '--resizeable-height'
+    );
+    return parseInt(pxHeight, 10);
+  };
 
-  const startDragging = (event) => {
-    event.preventDefault()
-    const host = resizeable
-    const startingDrawerHeight = getDrawerHeight()
-    const yOffset = event.pageY
+  const startDragging = event => {
+    event.preventDefault();
+    const host = resizeable;
+    const startingDrawerHeight = getDrawerHeight();
+    const yOffset = event.pageY;
 
-    const mouseDragHandler = (moveEvent) => {
-      moveEvent.preventDefault()
-      const primaryButtonPressed = moveEvent.buttons === 1
+    const mouseDragHandler = moveEvent => {
+      moveEvent.preventDefault();
+      const primaryButtonPressed = moveEvent.buttons === 1;
       if (!primaryButtonPressed) {
-        setDrawerHeight(Math.min(Math.max(getDrawerHeight(), minDrawerSize), maxDrawerSize))
-        window.removeEventListener('pointermove', mouseDragHandler)
-        return
+        setDrawerHeight(
+          Math.min(Math.max(getDrawerHeight(), minDrawerSize), maxDrawerSize)
+        );
+        window.removeEventListener('pointermove', mouseDragHandler);
+        return;
       }
-      setDrawerHeight(Math.min(Math.max((yOffset - moveEvent.pageY ) + startingDrawerHeight, minDrawerSize), maxDrawerSize))
-    }
-    const remove = window.addEventListener('pointermove', mouseDragHandler)
-  }
+      setDrawerHeight(
+        Math.min(
+          Math.max(
+            yOffset - moveEvent.pageY + startingDrawerHeight,
+            minDrawerSize
+          ),
+          maxDrawerSize
+        )
+      );
+    };
+    const remove = window.addEventListener('pointermove', mouseDragHandler);
+  };
 
-  let drawerHidden = false
+  let drawerHidden = false;
   const hideDrawer = () => {
-    drawerHidden = true
-  }
+    drawerHidden = true;
+  };
   const showDrawer = () => {
-    drawerHidden = false
-  }
+    drawerHidden = false;
+  };
 
   let tabShown = false;
   const showTab = () => {
-    tabShown = true
-  }
+    tabShown = true;
+  };
   const hideTab = () => {
-    tabShown = false
-  }
+    tabShown = false;
+  };
 
+  let synStore;
+  createStore().then(store => (synStore = store));
+  $: synStore;
+
+  customElements.define('syn-context', SynContext)
+  customElements.define('syn-folks', SynFolks)
 </script>
 
+<svelte:head>
+  <script
+    src="https://kit.fontawesome.com/80d72fa568.js"
+    crossorigin="anonymous"></script>
+</svelte:head>
+
+<div class="toolbar">
+  <h1>SynText</h1>
+  <div class:noscribe>
+    <Title on:requestChange={event => syn.requestChange(event.detail)} />
+  </div>
+</div>
+<main>
+  <div class:noscribe>
+    <Editor on:requestChange={event => syn.requestChange(event.detail)} />
+  </div>
+</main>
+
+<div class="folks-tray">
+  <Folks />
+</div>
+
+<div
+  class="tab"
+  class:shown={tabShown}
+  class:drawer-hidden={drawerHidden}
+  on:mouseenter={showTab}
+  on:mouseleave={hideTab}
+>
+  <div
+    class="tab-inner"
+    class:shown={tabShown}
+    on:click={drawerHidden ? showDrawer() : hideDrawer()}
+  >
+    <i
+      class:drawer-hidden={drawerHidden}
+      class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"
+    />
+  </div>
+</div>
+<div
+  class="debug-drawer"
+  bind:this={resizeable}
+  use:initResizeable
+  on:mouseenter={showTab}
+  on:mouseleave={hideTab}
+  class:hidden={drawerHidden}
+>
+  <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging} />
+  <div class="debug-content">
+    <History changeToTextFn={changeToText} />
+    <Debug />
+  </div>
+
+  <syn-context store={synStore}>
+    <syn-folks />
+  </syn-context>
+</div>
+
 <style>
-	main {
-		padding: 1em;
-    background: hsla(100, 20%, 50%, .2);
+  main {
+    padding: 1em;
+    background: hsla(100, 20%, 50%, 0.2);
     grid-column: 1 / 2;
-	}
+  }
 
   .toolbar {
-    background: hsla(19, 20%, 50%, .2);
+    background: hsla(19, 20%, 50%, 0.2);
     padding: 2rem;
     grid-column: 1 / 2;
   }
@@ -160,7 +184,7 @@
   .folks-tray {
     min-width: calc((var(--folks-padding) * 2) + var(--folk-hex-width));
     width: auto;
-    background: hsla(255, 20%, 50%, .2);
+    background: hsla(255, 20%, 50%, 0.2);
     grid-column: 2 / 3;
     grid-row: 1/4;
   }
@@ -227,7 +251,7 @@
 
   .tab-inner {
     position: absolute;
-    box-sizing: border-box;  /* borders included in size */
+    box-sizing: border-box; /* borders included in size */
     width: var(--tab-width);
     height: var(--tab-width);
     background: hsla(180, 30%, 85%);
@@ -287,40 +311,3 @@
     }
   }
 </style>
-
-<svelte:head>
-  <script src='https://kit.fontawesome.com/80d72fa568.js' crossorigin='anonymous'></script>
-</svelte:head>
-
-<div class='toolbar'>
-  <h1>SynText</h1>
-<div class:noscribe>
-    <Title on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
-</div>
-<main>
-<div class:noscribe>
-  <Editor on:requestChange={(event) => syn.requestChange(event.detail)}/>
-</div>
-
-
-<Syn applyDeltaFn={applyDelta} undoFn={undo} bind:this={syn} />
-</main>
-
-<div class='folks-tray'>
-  <Folks />
-</div>
-
-<div class='tab' class:shown={tabShown} class:drawer-hidden={drawerHidden} on:mouseenter={showTab} on:mouseleave={hideTab}>
-  <div class='tab-inner' class:shown={tabShown} on:click={drawerHidden ? showDrawer() : hideDrawer()}>
-    <i class:drawer-hidden={drawerHidden} class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
-  </div>
-</div>
-<div class='debug-drawer' bind:this={resizeable} use:initResizeable on:mouseenter={showTab} on:mouseleave={hideTab} class:hidden={drawerHidden}>
-  <div class='handle' bind:this={resizeHandle} on:mousedown={startDragging}></div>
-  <div class='debug-content'>
-    <History changeToTextFn={changeToText}/>
-    <Debug />
-  </div>
-
-</div>
