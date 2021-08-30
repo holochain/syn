@@ -2,12 +2,12 @@
   "name": "@syn/tests",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:setup && npm run test:standard",
-    "test:standard": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node unit-test/index.ts",
-    "test:setup": "CARGO_TARGET_DIR=../target cargo build --release --target wasm32-unknown-unknown && hc dna pack .. -o ../syn.dna && hc app pack .. -o ../syn.happ",
-    "test:lib": "npm run test:setup && npm run build:client && npm run build:lib && TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node syn-lib/index.ts",
-    "build:client": "cd ../ui/libs/store && npm run build",
-    "build:lib": "cd ../ui/libs/zome-client && npm run build",
+    "test": "npm run test:setup && npm run test:zome && npm run test:lib",
+    "test:setup": "cd ../ && npm run build:dna",
+    "test:zome": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/zome/index.ts",
+    "test:lib": "npm run build:client && npm run build:lib && TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/lib/index.ts",
+    "build:client": "cd ../ui/libs/zome-client && npm run build",
+    "build:lib": "cd ../ui/libs/store && npm run build",
     "test-debug": "RUST_LOG='[debug]=debug' TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts"
   },
   "author": "",
@@ -15,7 +15,6 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.0.3",
     "@msgpack/msgpack": "^2.7.0",
-    "@syn/store": "workspace:^1.0.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
     "lodash-es": "^4.17.21",
@@ -28,16 +27,10 @@
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@holochain/conductor-api": "0.1.1",
-    "@holochain/tryorama": "0.4.3",
-    "@syn/zome-client": "workspace:^0.0.1",
+    "@holochain/tryorama": "holochain/tryorama#3970c375e5f48bbf520e8ec906fb37f1ee29c35e",
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.14.2",
-    "ava": "^3.15.0",
-    "pnpm": "^6.10.0"
+    "ava": "^3.15.0"
   },
-  "type": "module",
-  "noUpdate": [
-    "@holochain/tryorama"
-  ]
+  "type": "module"
 }

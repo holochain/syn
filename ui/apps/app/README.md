@@ -1,1 +1,0 @@
-# Holochain Syn App

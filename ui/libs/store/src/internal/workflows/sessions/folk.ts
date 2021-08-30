@@ -9,6 +9,7 @@ export async function joinSession<CONTENT, DELTA>(
   sessionHash: EntryHashB64
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
+
   const orderedCommitHashes = orderCommits(
     session.session.snapshotHash,
     session.commits
@@ -49,7 +50,8 @@ export async function joinSession<CONTENT, DELTA>(
       });
     }
 
+    state.activeSessionHash = session.sessionHash;
+
     return state;
   });
 }
-

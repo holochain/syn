@@ -25,7 +25,7 @@ For more details read the [design documents](DESIGN.md), read the [article](http
   - Assemble the DNA:
 
   ```bash
-  make build
+  npm run build:happ
   ```
 
 ## UI

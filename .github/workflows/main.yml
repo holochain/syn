@@ -30,16 +30,9 @@ jobs:
       - name: build-holochain
         run: |
           cd $GITHUB_WORKSPACE
-          nix-shell . --run "make build"
+          nix-shell . --run "npm run build:happ"
           
       - name: test-holochain
         run: |
           cd $GITHUB_WORKSPACE
-          nix-shell . --run "make test"          
-          
-      - name: build-ui
-        run: |
-          cd $GITHUB_WORKSPACE
-          nix-shell . --run "cd ui && npm install"
-          nix-shell . --run "cd ui && npm run build"
-          
+          nix-shell . --run "cd tests && npm test"          

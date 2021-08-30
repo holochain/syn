@@ -1,0 +1,16 @@
+[package]
+authors = ["eric.harris-braun@holo.host"]
+edition = "2018"
+name = "hc_zome_syn"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_zome_syn"
+
+[dependencies]
+serde = "1"
+chrono = { version = "0.4", features = ['serde']}
+derive_more = "0.99.9"
+thiserror = "1.0.20"
+hdk = "0.0.104"

@@ -34,6 +34,8 @@ export async function newSession<CONTENT, DELTA>(
       folks: {},
     };
 
+    state.activeSessionHash = session.sessionHash;
+
     return state;
   });
 

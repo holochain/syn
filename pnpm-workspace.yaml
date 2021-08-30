@@ -1,4 +1,0 @@
-packages:
-  - 'ui/apps/*'
-  - 'ui/libs/*'
-  - 'tests'

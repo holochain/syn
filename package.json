@@ -2,26 +2,33 @@
   "name": "@syn/dev",
   "private": true,
   "version": "0.0.0",
-  "scripts": {},
-  "workspaces": {
-    "packages": [
-      "ui/apps/*",
-      "ui/libs/*"
-    ]
+  "scripts": {
+    "start:happ": "",
+    "build:happ": "npm run build:dna && hc app pack dna/workdir/happ",
+    "build:dna": "npm run build:zome && hc dna pack dna/workdir/dna",
+    "build:zome": "cd dna && CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
   },
+  "workspaces": [
+    "tests",
+    "ui/apps/syntext",
+    "ui/libs/*"
+  ],
   "devDependencies": {
     "@babel/runtime": "^7.14.0",
-    "@changesets/cli": "^2.16.0",
-    "@ctx-core/function": "^17.8.2",
-    "@ctx-core/jetbrains": "^4.0.35",
-    "@ctx-core/monorepo": "^15.0.57",
-    "@ctx-core/pnpm-tools": "^6.0.11",
-    "pnpm": "^6.2.5",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "lint-staged": "^11.1.2",
+    "prettier": "^2.3.2",
     "typescript": "4.2.4"
   },
-  "noUpdate": [],
-  "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.3",
-    "up": "^1.0.2"
+  "eslintConfig": {
+    "extends": [
+      "@open-wc/eslint-config",
+      "eslint-config-prettier"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
   }
 }

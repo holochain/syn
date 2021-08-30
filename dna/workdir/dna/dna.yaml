@@ -1,0 +1,8 @@
+---
+manifest_version: "1"
+name: syn
+uuid: ~
+properties: ~
+zomes:
+  - name: syn
+    bundled: "../../target/wasm32-unknown-unknown/release/hc_zome_syn.wasm"

@@ -29,6 +29,15 @@ export function selectSession(
   return synState.joinedSessions[sessionHash];
 }
 
+export function selectLastCommitTime(
+  state: SynState,
+  sessionHash: EntryHashB64
+): number {
+  const commit = selectLatestCommit(state, sessionHash);
+  if (commit) return commit.createdAt;
+  else return selectSession(state, sessionHash).session.createdAt;
+}
+
 export function selectLatestCommit(
   state: SynState,
   sessionHash: EntryHashB64
@@ -43,7 +52,6 @@ export function selectLatestCommitHash(
   session: SessionWorkspace
 ): HeaderHashB64 | undefined {
   if (session.commitHashes.length === 0) return undefined;
-
   return session.commitHashes[session.commitHashes.length - 1];
 }
 

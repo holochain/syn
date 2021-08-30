@@ -10,15 +10,17 @@ export interface CommitInput {
   sessionSnapshot: EntryHashB64;
 
   commit: Commit;
-  
+
   participants: AgentPubKeyB64[];
 }
 
 export interface Commit {
   changes: ChangeBundle;
 
-  previousCommitHash: HeaderHashB64 | undefined;
-  
+  createdAt: number;
+
+  previousCommitHashes: Array<HeaderHashB64>;
+
   previousContentHash: EntryHashB64;
   newContentHash: EntryHashB64;
   meta: ChangeMeta;

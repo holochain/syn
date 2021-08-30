@@ -17,11 +17,13 @@ export function buildCommitFromUncommitted(
   newContentHash: EntryHashB64
 ): Commit {
   const session = selectSession(state, sessionHash) as SessionWorkspace;
+  const lastCommitHash = selectLatestCommitHash(session);
   return {
     changes: session.uncommittedChanges,
     newContentHash,
-    previousCommitHash: selectLatestCommitHash(session),
+    previousCommitHashes: lastCommitHash ? [lastCommitHash] : [],
     previousContentHash: selectLatestCommittedContentHash(state, sessionHash),
+    createdAt: Date.now(),
     meta: {
       appSpecific: null,
       witnesses: [],

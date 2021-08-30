@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { derived, Readable, writable } from "svelte/store";
 import type { EntryHashB64 } from "@holochain-open-dev/core-types";
 import type { CellClient } from "@holochain-open-dev/cell-client";
 import { serializeHash } from "@holochain-open-dev/core-types";
@@ -10,17 +10,17 @@ import { initialState } from "./state/syn-state";
 import type { SynState } from "./state/syn-state";
 import type { SynWorkspace } from "./internal/workspace";
 import { handleSignal } from "./internal/signals";
-import { defaultConfig, SynConfig } from "./config";
+import { defaultConfig, RecursivePartial, SynConfig } from "./config";
 import { initBackgroundTasks } from "./internal/tasks";
 import { joinSession } from "./internal/workflows/sessions/folk";
-import { buildSessionStore, SessionStore } from "./external/session-store";
+import { buildSessionStore, SessionStore } from "./session-store";
 import { newSession } from "./internal/workflows/sessions/scribe";
 
 export function createSynStore<CONTENT, DELTA>(
   cellClient: CellClient,
   initialContent: CONTENT,
   applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
-  config?: Partial<SynConfig>
+  config?: RecursivePartial<SynConfig>
 ): SynStore<CONTENT, DELTA> {
   let workspace: SynWorkspace<CONTENT, DELTA> = undefined as any;
 
@@ -50,8 +50,14 @@ export function createSynStore<CONTENT, DELTA>(
       await joinSession(workspace, sessionHash);
       return buildSessionStore(workspace, sessionHash);
     },
+    joinedSessions: derived(workspace.store, (state) =>
+      Object.keys(state.joinedSessions)
+    ),
+    joinedSessionStore: (sessionHash) =>
+      buildSessionStore(workspace, sessionHash),
     newSession: async (fromSnapshot?: EntryHashB64) => {
       const sessionHash = await newSession(workspace, fromSnapshot);
+
       return buildSessionStore(workspace, sessionHash);
     },
     close: async () => {
@@ -64,6 +70,10 @@ export function createSynStore<CONTENT, DELTA>(
 export interface SynStore<CONTENT, DELTA> {
   getAllSessions(): Promise<EntryHashB64[]>;
   joinSession(sessionHash: EntryHashB64): Promise<SessionStore<CONTENT, DELTA>>;
+  joinedSessions: Readable<EntryHashB64[]>;
+  joinedSessionStore: (
+    sessionHash: EntryHashB64
+  ) => SessionStore<CONTENT, DELTA>;
   newSession(
     fromSnapshot?: EntryHashB64
   ): Promise<SessionStore<CONTENT, DELTA>>;
