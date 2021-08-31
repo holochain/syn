@@ -1,7 +1,7 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { css, html, LitElement } from 'lit';
-import { property } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import type { SynStore } from '@syn/store';
 import { contextProvided, provide } from '@lit-labs/context';
 
@@ -12,10 +12,12 @@ export class SynSession extends ScopedElementsMixin(LitElement) {
   sessionHash!: EntryHashB64;
 
   @contextProvided({ context: synContext, multiple: true })
+  @state()
   synStore!: SynStore<any, any>;
 
   render() {
-    return html`<slot
+    return html`
+    <slot
       ${provide(
         synSessionContext,
         this.synStore?.sessionStore(this.sessionHash)

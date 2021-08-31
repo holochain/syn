@@ -1,12 +1,12 @@
 <script>
   import Editor from './Editor.svelte';
   import Title from './Title.svelte';
-  import Folks from './Folks.svelte';
   import Debug from './Debug.svelte';
   import History from './History.svelte';
   import { content, scribeStr } from './stores.js';
   import { SynContext, SynFolks } from '@syn/elements';
   import { createStore } from './syn';
+  import { setContext } from 'svelte';
 
   $: disconnected = false;
 
@@ -102,11 +102,20 @@
   };
 
   let synStore;
-  createStore().then(store => (synStore = store));
+  createStore().then(store => {
+    store.newSession().then(()=>{
+
+      synStore = store;
+    });
+  });
   $: synStore;
 
-  customElements.define('syn-context', SynContext)
-  customElements.define('syn-folks', SynFolks)
+  customElements.define('syn-context', SynContext);
+  customElements.define('syn-folks', SynFolks);
+
+  setContext('store', {
+    getStore: () => synStore,
+  });
 </script>
 
 <svelte:head>
@@ -115,58 +124,63 @@
     crossorigin="anonymous"></script>
 </svelte:head>
 
-<div class="toolbar">
-  <h1>SynText</h1>
-  <div class:noscribe>
-    <Title on:requestChange={event => syn.requestChange(event.detail)} />
+{#if synStore}
+  <div class="toolbar">
+    <h1>SynText</h1>
+    <div class:noscribe>
+      <Title
+        on:requestChange={event =>
+          synStore.activeSession.requestChange([event.detail])}
+      />
+    </div>
   </div>
-</div>
-<main>
-  <div class:noscribe>
-    <Editor on:requestChange={event => syn.requestChange(event.detail)} />
+  <main>
+    <div class:noscribe>
+      <Editor on:requestChange={event => syn.requestChange(event.detail)} />
+    </div>
+  </main>
+
+  <div class="folks-tray">
+    <syn-context store={synStore}>
+      <syn-folks />
+    </syn-context>
   </div>
-</main>
 
-<div class="folks-tray">
-  <Folks />
-</div>
-
-<div
-  class="tab"
-  class:shown={tabShown}
-  class:drawer-hidden={drawerHidden}
-  on:mouseenter={showTab}
-  on:mouseleave={hideTab}
->
   <div
-    class="tab-inner"
+    class="tab"
     class:shown={tabShown}
-    on:click={drawerHidden ? showDrawer() : hideDrawer()}
+    class:drawer-hidden={drawerHidden}
+    on:mouseenter={showTab}
+    on:mouseleave={hideTab}
   >
-    <i
-      class:drawer-hidden={drawerHidden}
-      class="tab-icon fas {drawerHidden ? 'fa-chevron-up' : 'fa-chevron-down'}"
-    />
+    <div
+      class="tab-inner"
+      class:shown={tabShown}
+      on:click={drawerHidden ? showDrawer() : hideDrawer()}
+    >
+      <i
+        class:drawer-hidden={drawerHidden}
+        class="tab-icon fas {drawerHidden
+          ? 'fa-chevron-up'
+          : 'fa-chevron-down'}"
+      />
+    </div>
   </div>
-</div>
-<div
-  class="debug-drawer"
-  bind:this={resizeable}
-  use:initResizeable
-  on:mouseenter={showTab}
-  on:mouseleave={hideTab}
-  class:hidden={drawerHidden}
->
-  <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging} />
-  <div class="debug-content">
-    <History changeToTextFn={changeToText} />
-    <Debug />
+  <div
+    class="debug-drawer"
+    bind:this={resizeable}
+    use:initResizeable
+    on:mouseenter={showTab}
+    on:mouseleave={hideTab}
+    class:hidden={drawerHidden}
+  >
+    <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging} />
+    <div class="debug-content">
+      <History changeToTextFn={changeToText} />
+      <Debug />
+    </div>
   </div>
-
-  <syn-context store={synStore}>
-    <syn-folks />
-  </syn-context>
-</div>
+{/if}
 
 <style>
   main {

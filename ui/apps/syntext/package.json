@@ -3,10 +3,8 @@
   "version": "0.0.1",
   "scripts": {
     "build": "rollup -c",
-    "dev": "concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"rollup -c -w\"",
-    "start": "sirv public",
-    "start:happ": "cd ../../../ && npm run build:happ && npm run start:happ",
-    "dev:libs": "cd ../../../ && npm run build:watch -w @syn/elements"
+    "dev": "rollup -c -w",
+    "start": "sirv public"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
@@ -26,6 +24,7 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.0.3",
     "@holochain/conductor-api": "0.2.0",
+    "@lit-labs/context": "github:holochain-open-dev/context#build",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^2.2.0"
   }

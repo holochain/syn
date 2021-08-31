@@ -1,5 +1,8 @@
 import { derived, Readable, writable } from 'svelte/store';
-import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type {
+  AgentPubKeyB64,
+  EntryHashB64,
+} from '@holochain-open-dev/core-types';
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
 import { SynClient } from '@syn/zome-client';
@@ -15,8 +18,12 @@ import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { newSession } from './internal/workflows/sessions/scribe';
+import { FolkColors, getFolkColors } from './utils/colors';
 
 export interface SynStore<CONTENT, DELTA> {
+  myPubKey: AgentPubKeyB64;
+  myColors: FolkColors;
+
   getAllSessions(): Promise<EntryHashB64[]>;
 
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
@@ -39,7 +46,8 @@ export function createSynStore<CONTENT, DELTA>(
 
   const fullConfig = merge(config, defaultConfig());
 
-  const state: SynState = initialState(serializeHash(cellClient.cellId[1]));
+  const myPubKey = serializeHash(cellClient.cellId[1]);
+  const state: SynState = initialState(myPubKey);
 
   const store = writable(state);
 
@@ -63,6 +71,8 @@ export function createSynStore<CONTENT, DELTA>(
   });
 
   return {
+    myPubKey,
+    myColors: getFolkColors(myPubKey),
     getAllSessions: () => client.getSessions(),
     joinSession: async sessionHash => joinSession(workspace, sessionHash),
     activeSession,

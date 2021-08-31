@@ -3,8 +3,9 @@ import type {
   Dictionary,
   EntryHashB64,
   HeaderHashB64,
-} from "@holochain-open-dev/core-types";
-import type { ChangeBundle, Commit, Delta, Session } from "@syn/zome-client";
+} from '@holochain-open-dev/core-types';
+import type { ChangeBundle, Commit, Delta, Session } from '@syn/zome-client';
+import type { FolkColors } from '../utils/colors';
 
 /**
  * deltas: []
@@ -35,6 +36,7 @@ export interface RequestedChange {
 export interface SessionFolk {
   lastSeen: number;
   inSession: boolean;
+  colors: FolkColors;
 }
 
 export interface SessionWorkspace {

@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "start:happ": "hc s generate -r=8888 dna/workdir/happ/syn.happ -a syn",
+    "start": "concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"npm run dev -w syntext\"",
+    "dev:libs": "concurrently -k \"npm run build:watch -w @syn/store\" \"npm run build:watch -w @syn/elements\"",
+    "start:happ": "npm run build:happ && hc s generate -r=8888 dna/workdir/happ/syn.happ -a syn",
     "build:happ": "npm run build:dna && hc app pack dna/workdir/happ",
     "build:dna": "npm run build:zome && hc dna pack dna/workdir/dna",
     "build:zome": "cd dna && CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
@@ -15,6 +17,7 @@
   ],
   "devDependencies": {
     "@babel/runtime": "^7.14.0",
+    "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "lint-staged": "^11.1.2",

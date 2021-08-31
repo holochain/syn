@@ -4,7 +4,8 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "scripts": {
-    "build": "rimraf dist && tsc"
+    "build": "rimraf dist && tsc",
+    "build:watch": "tsc -w"
   },
   "type": "module",
   "devDependencies": {

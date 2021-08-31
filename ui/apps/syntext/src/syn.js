@@ -6,29 +6,31 @@ import { createSynStore } from '@syn/store';
 // if the delta is destructive also returns what was
 // destroyed for use by undo
 function applyDelta(content, delta) {
+  console.log(content, delta)
   switch (delta.type) {
     case 'Title': {
       const deleted = content.title;
       content.title = delta.value;
-      return [content, { delta, deleted }];
+      return content;
     }
     case 'Add': {
       const [loc, text] = delta.value;
+      console.log(content.body.slice(0, loc) + text + content.body.slice(loc))
       content.body =
         content.body.slice(0, loc) + text + content.body.slice(loc);
-      return [content, { delta }];
+      return content;
     }
     case 'Delete': {
       const [start, end] = delta.value;
       const deleted = content.body.slice(start, end);
       content.body = content.body.slice(0, start) + content.body.slice(end);
-      return [content, { delta, deleted }];
+      return content;
     }
     case 'Meta': {
       const [tag, loc] = delta.value.setLoc;
       const deleted = [tag, content.meta[tag]];
       content.meta[tag] = loc;
-      return [content, { delta, deleted }];
+      return content;
     }
   }
 }
@@ -62,5 +64,5 @@ export async function createStore() {
 
   const client = new HolochainClient(appWebsocket, cellData.cell_data[0]);
 
-  return createSynStore(client, { title: '', body: '' }, applyDelta);
+  return createSynStore(client, { title: '', body: '', meta:  {} }, applyDelta);
 }
