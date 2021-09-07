@@ -14,7 +14,7 @@ import {
   amIScribe,
   selectCurrentSessionIndex,
   selectFolksInSession,
-  selectSession,
+  selectSessionWorkspace,
 } from "../../../state/selectors";
 import type { SessionWorkspace } from "../../../state/syn-state";
 import type { SynWorkspace } from "../../workspace";
@@ -27,7 +27,7 @@ export function scribeRequestChange<CONTENT, DELTA>(
   deltas: DELTA[]
 ) {
   workspace.store.update((state) => {
-    const session = selectSession(state, sessionHash);
+    const session = selectSessionWorkspace(state, sessionHash);
     const changeBundle = putDeltas(
       workspace.applyDeltaFn,
       session,
@@ -66,7 +66,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSession(state, sessionHash);
+    const session = selectSessionWorkspace(state, sessionHash);
 
     putJustSeenFolks(session, state.myPubKey, [changeRequest.folk]);
 

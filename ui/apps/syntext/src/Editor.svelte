@@ -12,8 +12,6 @@
   $: session = store.activeSession;
   $: content = unnest(store.activeSession, s => s.content);
 
-  console.log(session);
-
   function getLoc(tag) {
     return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0;
   }

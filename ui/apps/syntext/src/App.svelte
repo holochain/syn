@@ -4,7 +4,7 @@
   import Debug from './Debug.svelte';
   import History from './History.svelte';
   import { content, scribeStr } from './stores.js';
-  import { SynContext, SynFolks } from '@syn/elements';
+  import { SynContext, SynFolks, SynSessions } from '@syn/elements';
   import { createStore } from './syn';
   import { setContext } from 'svelte';
 
@@ -103,14 +103,14 @@
 
   let synStore;
   createStore().then(store => {
-    store.newSession().then(()=>{
-
+    store.newSession().then(() => {
       synStore = store;
     });
   });
   $: synStore;
 
   customElements.define('syn-context', SynContext);
+  customElements.define('syn-sessions', SynSessions);
   customElements.define('syn-folks', SynFolks);
 
   setContext('store', {
@@ -128,21 +128,20 @@
   <div class="toolbar">
     <h1>SynText</h1>
     <div class:noscribe>
-      <Title
-        on:requestChange={event =>
-          synStore.activeSession.requestChange([event.detail])}
-      />
+      <Title />
     </div>
   </div>
   <main>
     <div class:noscribe>
-      <Editor on:requestChange={event => syn.requestChange(event.detail)} />
+      <Editor />
     </div>
   </main>
 
   <div class="folks-tray">
+    Hi
     <syn-context store={synStore}>
       <syn-folks />
+      <syn-sessions />
     </syn-context>
   </div>
 

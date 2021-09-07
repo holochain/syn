@@ -1,43 +1,40 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { css, html, LitElement     } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
-import type { SessionFolk } from '@syn/store';
 import { styleMap } from 'lit/directives/style-map.js';
 import { classMap } from 'lit/directives/class-map.js';
 
-import { CSSifyHSL } from '../utils/colors';
+import { CSSifyHSL, getFolkColors } from '../utils/colors';
 
 export class SynFolk extends ScopedElementsMixin(LitElement) {
   @property()
   pubKey!: AgentPubKeyB64;
 
-  @property()
-  folk!: SessionFolk;
+  @property({ attribute: 'in-session' })
+  inSession: boolean = false;
 
   @property({ attribute: 'is-scribe' })
   isScribe: boolean = false;
 
   render() {
+    const colors = getFolkColors(this.pubKey);
+
     return html`
       <div class=${classMap({ 'scribe-wrapper': this.isScribe })}>
         <div
-          class=${classMap({
-            folk: true,
+          class="folk ${classMap({
             scribe: this.isScribe,
-            'out-of-session': this.folk.inSession,
-          })}
-          class="folk scribe"
-          class:me
-          class:out-of-session="{outOfSession}"
+            'out-of-session': !this.inSession,
+          })}"
           style=${styleMap({
-            'background-color': CSSifyHSL(this.folk.colors.primary),
+            'background-color': CSSifyHSL(colors.primary),
           })}
         >
           <div
             class="folk-color"
             style=${styleMap({
-              'background-color': CSSifyHSL(this.folk.colors.hexagon),
+              'background-color': CSSifyHSL(colors.hexagon),
             })}
           ></div>
           ${this.pubKey.slice(-4)}

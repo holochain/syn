@@ -19,9 +19,10 @@
     "@holochain-open-dev/core-types": "^0.1.1",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.0-next.4",
+    "@scoped-elements/material-web": "0.0.4",
     "@syn/store": "0.0.1",
     "lit": "^2.0.0-rc.3",
-    "lit-svelte-stores": "^0.0.9",
+    "lit-svelte-stores": "^0.0.10",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
   }

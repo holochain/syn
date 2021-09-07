@@ -3,7 +3,7 @@ import type { CommitNotice } from "@syn/zome-client";
 import {
   amIScribe,
   selectLatestCommittedContentHash,
-  selectSession,
+  selectSessionWorkspace,
 } from "../../../state/selectors";
 import type { SessionWorkspace } from "../../../state/syn-state";
 
@@ -25,7 +25,7 @@ export function handleCommitNotice<CONTENT, DELTA>(
       state,
       sessionHash
     );
-    const session = selectSession(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
 
     if (
       latestCommittedContentHash === commitNotice.previousContentHash &&

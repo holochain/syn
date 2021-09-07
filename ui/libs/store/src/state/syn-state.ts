@@ -5,7 +5,6 @@ import type {
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
 import type { ChangeBundle, Commit, Delta, Session } from '@syn/zome-client';
-import type { FolkColors } from '../utils/colors';
 
 /**
  * deltas: []
@@ -21,6 +20,7 @@ import type { FolkColors } from '../utils/colors';
 export interface SynState {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
+  sessions: Dictionary<Session>; // Segmented by EntryHashB64
   joinedSessions: Dictionary<SessionWorkspace>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by HeaderHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64
@@ -36,12 +36,10 @@ export interface RequestedChange {
 export interface SessionFolk {
   lastSeen: number;
   inSession: boolean;
-  colors: FolkColors;
 }
 
 export interface SessionWorkspace {
   sessionHash: EntryHashB64;
-  session: Session;
 
   commitHashes: Array<HeaderHashB64>;
   myFolkIndex: number;
@@ -70,6 +68,7 @@ export function initialState(myPubKey: AgentPubKeyB64): SynState {
   const internalStore: SynState = {
     myPubKey,
     activeSessionHash: undefined,
+    sessions: {},
     joinedSessions: {},
     commits: {},
     snapshots: {},

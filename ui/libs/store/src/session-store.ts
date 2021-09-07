@@ -8,12 +8,12 @@ import type { SynWorkspace } from './internal/workspace';
 
 export type { SessionFolk };
 
-import { selectSession } from './state/selectors';
+import { selectSessionWorkspace } from './state/selectors';
 import { requestChange } from './internal/workflows/change';
 
 export interface SessionStore<CONTENT, DELTA> {
-  hash: EntryHashB64;
-  info: Session;
+  sessionHash: EntryHashB64;
+  session: Session;
 
   content: Readable<CONTENT>;
   folks: Readable<Dictionary<SessionFolk>>;
@@ -28,16 +28,16 @@ export function buildSessionStore<CONTENT, DELTA>(
 ): SessionStore<CONTENT, DELTA> {
   const content = derived(
     workspace.store,
-    state => selectSession(state, sessionHash).currentContent
+    state => selectSessionWorkspace(state, sessionHash).currentContent
   );
   const folks = derived(
     workspace.store,
-    state => selectSession(state, sessionHash).folks
+    state => selectSessionWorkspace(state, sessionHash).folks
   );
 
   return {
-    hash: sessionHash,
-    info: selectSession(get(workspace.store), sessionHash).session,
+    sessionHash: sessionHash,
+    session: get(workspace.store).sessions[sessionHash],
     content,
     folks,
     requestChange: deltas => requestChange(workspace, sessionHash, deltas),

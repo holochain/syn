@@ -1,6 +1,6 @@
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
-import type { SynWorkspace } from "../../workspace";
+import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
 export async function newSession<CONTENT, DELTA>(
@@ -17,10 +17,11 @@ export async function newSession<CONTENT, DELTA>(
     snapshotHash: fromSnapshot,
   });
 
-  workspace.store.update((state) => {
+  workspace.store.update(state => {
+    state.sessions[session.sessionHash] = session.session;
+
     state.joinedSessions[session.sessionHash] = {
       sessionHash: session.sessionHash,
-      session: session.session,
       commitHashes: [],
       currentContent,
       myFolkIndex: 0,

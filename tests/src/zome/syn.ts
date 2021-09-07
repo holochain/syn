@@ -52,7 +52,7 @@ export default orchestrator => {
     const bob_pubkey = serializeHash(bob.cellId[1]);
 
     let sessions = await me.call('syn', 'get_sessions');
-    t.equal(sessions.length, 0);
+    t.equal(Object.keys(sessions).length, 0);
 
     // create initial session
     let snapshotHash = await me.call(
@@ -83,14 +83,14 @@ export default orchestrator => {
 
     // check get_sessions utility zome call
     sessions = await me.call('syn', 'get_sessions');
-    t.equal(sessions.length, 1);
-    t.deepEqual(sessions[0], sessionHash);
+    t.equal(Object.keys(sessions).length, 1);
+    t.deepEqual(Object.keys(sessions)[0], sessionHash);
 
     await delay(1000);
 
     sessions = await alice.call('syn', 'get_sessions');
-    t.equal(sessions.length, 1);
-    t.deepEqual(sessions[0], sessionHash);
+    t.equal(Object.keys(sessions).length, 1);
+    t.deepEqual(Object.keys(sessions)[0], sessionHash);
 
     // exercise the get_session zome call
     const returnedSessionInfo = await me.call(
@@ -98,7 +98,6 @@ export default orchestrator => {
       'get_session',
       sessionHash
     );
-    t.equal(sessions.length, 1);
     t.deepEqual(sessionInfo, returnedSessionInfo);
 
     // check that initial snapshot was created by using the get_snapshot zome call

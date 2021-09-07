@@ -4,9 +4,8 @@ import type {
 } from '@holochain-open-dev/core-types';
 import type { FolkLore } from '@syn/zome-client';
 
-import { amIScribe, selectSession } from '../../../state/selectors';
+import { amIScribe, selectSessionWorkspace } from '../../../state/selectors';
 import type { SessionWorkspace } from '../../../state/syn-state';
-import { getFolkColors } from '../../../utils/colors';
 import type { SynWorkspace } from '../../workspace';
 import { putJustSeenFolks } from './utils';
 
@@ -21,7 +20,7 @@ export function handleFolkLore<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSession(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
     if ((folklore as { gone: AgentPubKeyB64[] }).gone) {
       putGoneFolks(session, (folklore as { gone: AgentPubKeyB64[] }).gone);
     } else {
@@ -42,7 +41,6 @@ function putGoneFolks(session: SessionWorkspace, goneFolks: AgentPubKeyB64[]) {
       session.folks[goneFolk] = {
         inSession: false,
         lastSeen: 0, // First time we are seeing this folk
-        colors: getFolkColors(goneFolk),
       };
     } else {
       session.folks[goneFolk].inSession = false;

@@ -1,25 +1,25 @@
-import type { CellClient } from "@holochain-open-dev/cell-client";
+import type { CellClient } from '@holochain-open-dev/cell-client';
 import type {
   EntryHashB64,
   HeaderHashB64,
   Dictionary,
   AgentPubKeyB64,
-} from "@holochain-open-dev/core-types";
-import { encode, decode } from "@msgpack/msgpack";
-import { isEqual } from "lodash-es";
+} from '@holochain-open-dev/core-types';
+import { encode, decode } from '@msgpack/msgpack';
+import { isEqual } from 'lodash-es';
 
 import type {
   ChangeBundle,
   SendChangeInput,
   SendChangeRequestInput,
-} from "./types/delta";
-import type { Commit, CommitInput, Content } from "./types/commit";
-import type { SendFolkLoreInput } from "./types/folks";
-import type { SendHeartbeatInput } from "./types/heartbeat";
-import type { NewSessionInput, SessionInfo } from "./types/session";
-import type { SendSyncRequestInput, SendSyncResponseInput } from "./types/sync";
-import { allMessageTypes, SynSignal } from "./types/signal";
-import { deepDecodeUint8Arrays } from "./utils";
+} from './types/delta';
+import type { Commit, CommitInput, Content } from './types/commit';
+import type { SendFolkLoreInput } from './types/folks';
+import type { SendHeartbeatInput } from './types/heartbeat';
+import type { NewSessionInput, Session, SessionInfo } from './types/session';
+import type { SendSyncRequestInput, SendSyncResponseInput } from './types/sync';
+import { allMessageTypes, SynSignal } from './types/signal';
+import { deepDecodeUint8Arrays } from './utils';
 
 export class SynClient {
   unsubscribe: () => void = () => {};
@@ -27,10 +27,10 @@ export class SynClient {
   constructor(
     public cellClient: CellClient,
     protected handleSignal: (synSignal: SynSignal) => void,
-    protected zomeName = "syn"
+    protected zomeName = 'syn'
   ) {
     cellClient
-      .addSignalHandler((signal) => {
+      .addSignalHandler(signal => {
         console.log(signal);
         if (
           isEqual(cellClient.cellId, signal.data.cellId) &&
@@ -49,11 +49,11 @@ export class SynClient {
 
   /** Content */
   public putSnapshot(content: Content): Promise<EntryHashB64> {
-    return this.callZome("put_snapshot", encode(content));
+    return this.callZome('put_snapshot', encode(content));
   }
 
   public async getSnapshot(snapshotHash: EntryHashB64): Promise<Content> {
-    const content = await this.callZome("get_snapshot", snapshotHash);
+    const content = await this.callZome('get_snapshot', snapshotHash);
     return decode(content);
   }
 
@@ -67,45 +67,45 @@ export class SynClient {
       },
     };
 
-    return this.callZome("commit", commit);
+    return this.callZome('commit', commit);
   }
 
   /** Hash */
   public hashContent(content: Content): Promise<EntryHashB64> {
-    return this.callZome("hash_content", encode(content));
+    return this.callZome('hash_content', encode(content));
   }
 
   /** Session */
   public async getSession(sessionHash: EntryHashB64): Promise<SessionInfo> {
-    const sessionInfo = await this.callZome("get_session", sessionHash);
+    const sessionInfo = await this.callZome('get_session', sessionHash);
     return this.decodeSessionInfo(sessionInfo);
   }
 
   public async newSession(
     newSessionInput: NewSessionInput
   ): Promise<SessionInfo> {
-    const sessionInfo = await this.callZome("new_session", newSessionInput);
+    const sessionInfo = await this.callZome('new_session', newSessionInput);
     return this.decodeSessionInfo(sessionInfo);
   }
 
-  public getSessions(): Promise<Array<EntryHashB64>> {
-    return this.callZome("get_sessions", null);
+  public getSessions(): Promise<Dictionary<Session>> {
+    return this.callZome('get_sessions', null);
   }
 
   /** Folks */
   public getFolks(): Promise<Array<AgentPubKeyB64>> {
-    return this.callZome("get_folks", null);
+    return this.callZome('get_folks', null);
   }
 
   public sendFolkLore(sendFolkLoreInput: SendFolkLoreInput): Promise<void> {
-    return this.callZome("send_folk_lore", sendFolkLoreInput);
+    return this.callZome('send_folk_lore', sendFolkLoreInput);
   }
 
   /** Sync */
   public sendSyncRequest(
     syncRequestInput: SendSyncRequestInput
   ): Promise<void> {
-    return this.callZome("send_sync_request", syncRequestInput);
+    return this.callZome('send_sync_request', syncRequestInput);
   }
 
   public sendSyncResponse(
@@ -130,7 +130,7 @@ export class SynClient {
       },
     };
 
-    return this.callZome("send_sync_response", input);
+    return this.callZome('send_sync_response', input);
   }
 
   /** Changes */
@@ -139,10 +139,10 @@ export class SynClient {
   ): Promise<void> {
     const input = {
       ...changeRequestInput,
-      deltas: changeRequestInput.deltas.map((d) => encode(d)),
+      deltas: changeRequestInput.deltas.map(d => encode(d)),
     };
 
-    return this.callZome("send_change_request", input);
+    return this.callZome('send_change_request', input);
   }
 
   public sendChange(sendChangeInput: SendChangeInput): Promise<void> {
@@ -150,12 +150,12 @@ export class SynClient {
       ...sendChangeInput,
       changes: this.encodeChangeBundle(sendChangeInput.changes),
     };
-    return this.callZome("send_change", input);
+    return this.callZome('send_change', input);
   }
 
   /** Heartbeat */
   public sendHeartbeat(heartbeatInput: SendHeartbeatInput): Promise<void> {
-    return this.callZome("send_heartbeat", heartbeatInput);
+    return this.callZome('send_heartbeat', heartbeatInput);
   }
 
   /** Helpers */
@@ -187,7 +187,7 @@ export class SynClient {
   private encodeChangeBundle(changes: ChangeBundle) {
     return {
       ...changes,
-      deltas: changes.deltas.map((d) => encode(d)),
+      deltas: changes.deltas.map(d => encode(d)),
     };
   }
 
@@ -195,7 +195,7 @@ export class SynClient {
     return {
       ...commit,
       changes: {
-        deltas: commit.changes.deltas.map((d) => decode(d)),
+        deltas: commit.changes.deltas.map(d => decode(d)),
       },
     };
   }

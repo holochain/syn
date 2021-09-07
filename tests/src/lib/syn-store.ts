@@ -38,14 +38,17 @@ export const oFn = orchestrator => {
     });
     const bobSyn = createSynStore(bobClient, initialContent, applyDelta);
 
-    const aliceSessionStore = await aliceSyn.newSession();
-    const info = get(aliceSessionStore.info);
+    const sessionHash = await aliceSyn.newSession();
 
-    t.ok(info.sessionHash);
+    const aliceSessionStore = aliceSyn.sessionStore(sessionHash);
+
+    t.ok(aliceSessionStore.sessionHash);
+    t.equal(aliceSessionStore.session.scribe, aliceSyn.myPubKey);
 
     await delay(2000);
 
-    const bobSessionStore = await bobSyn.joinSession(info.sessionHash);
+    await bobSyn.joinSession(sessionHash);
+    const bobSessionStore = aliceSyn.sessionStore(sessionHash);
 
     aliceSessionStore.requestChange([{ type: 'Title', value: 'A new title' }]);
 

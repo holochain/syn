@@ -1,7 +1,6 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 
 import type { SessionWorkspace } from '../../../state/syn-state';
-import { getFolkColors } from '../../../utils/colors';
 
 export function putJustSeenFolks(
   session: SessionWorkspace,
@@ -14,11 +13,9 @@ export function putJustSeenFolks(
     if (folk !== myPubKey) {
       if (!session.folks[folk]) {
         // First time we are seeing this folk
-        const colors = getFolkColors(folk);
         session.folks[folk] = {
           lastSeen: now,
           inSession: true,
-          colors,
         };
       } else {
         session.folks[folk].lastSeen = now;

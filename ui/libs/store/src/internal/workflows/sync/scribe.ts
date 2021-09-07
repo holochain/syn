@@ -6,7 +6,7 @@ import {
   selectFolksInSession,
   selectMissedCommits,
   selectMissedUncommittedChanges,
-  selectSession,
+  selectSessionWorkspace,
 } from "../../../state/selectors";
 import type { SynWorkspace } from "../../workspace";
 import { putJustSeenFolks } from "../folklore/utils";
@@ -35,7 +35,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
       return synState;
     }
 
-    const session = selectSession(synState, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(synState, sessionHash) as SessionWorkspace;
 
     putJustSeenFolks(session, synState.myPubKey, [requestSyncInput.folk]);
 

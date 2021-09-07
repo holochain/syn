@@ -1,35 +1,37 @@
-import type { ChangeBundle, FolkChanges } from "@syn/zome-client";
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
-import { cloneDeep } from "lodash-es";
-import { get } from "svelte/store";
+import type { ChangeBundle, FolkChanges } from '@syn/zome-client';
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { cloneDeep } from 'lodash-es';
+import { get } from 'svelte/store';
 
 import {
   amIScribe,
   selectCurrentSessionIndex,
-  selectSession,
-} from "../../../state/selectors";
-import type { SynWorkspace } from "../../workspace";
+  selectSessionWorkspace,
+} from '../../../state/selectors';
+import type { SynWorkspace } from '../../workspace';
 import type {
   RequestedChange,
   SessionWorkspace,
-} from "../../../state/syn-state";
-import { applyChangeBundle } from "../../utils";
-import { joinSession } from "../sessions/folk";
+} from '../../../state/syn-state';
+import { applyChangeBundle } from '../../utils';
+import { joinSession } from '../sessions/folk';
 
 export function folkRequestChange<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
   deltas: DELTA[]
 ) {
-  workspace.store.update((state) => {
-    const session = selectSession(state, sessionHash);
+  workspace.store.update(state => {
+    const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
 
     // TODO: don't do this if strategy === CRDT
-    session.prerequestContent = cloneDeep(session.currentContent);
+    sessionWorkspace.prerequestContent = cloneDeep(
+      sessionWorkspace.currentContent
+    );
 
     for (const delta of deltas) {
-      session.currentContent = workspace.applyDeltaFn(
-        session.currentContent,
+      sessionWorkspace.currentContent = workspace.applyDeltaFn(
+        sessionWorkspace.currentContent,
         delta
       );
     }
@@ -37,31 +39,31 @@ export function folkRequestChange<CONTENT, DELTA>(
     const newRequestedChanges: RequestedChange[] = [];
 
     const atDate = Date.now();
-    console.log(session.uncommittedChanges);
-    const currentSessionIndex = selectCurrentSessionIndex(session);
+    console.log(sessionWorkspace.uncommittedChanges);
+    const currentSessionIndex = selectCurrentSessionIndex(sessionWorkspace);
     for (let i = 0; i < deltas.length; i++) {
       newRequestedChanges.push({
         atDate,
-        atFolkIndex: session.myFolkIndex + i,
+        atFolkIndex: sessionWorkspace.myFolkIndex + i,
         atSessionIndex: currentSessionIndex + i,
         delta: deltas[i],
       });
     }
 
-    session.requestedChanges = [
-      ...session.requestedChanges,
+    sessionWorkspace.requestedChanges = [
+      ...sessionWorkspace.requestedChanges,
       ...newRequestedChanges,
     ];
 
     workspace.client.sendChangeRequest({
-      atFolkIndex: session.myFolkIndex,
+      atFolkIndex: sessionWorkspace.myFolkIndex,
       atSessionIndex: currentSessionIndex,
       deltas,
-      scribe: session.session.scribe,
+      scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
 
-    session.myFolkIndex += deltas.length;
+    sessionWorkspace.myFolkIndex += deltas.length;
 
     return state;
   });
@@ -76,7 +78,7 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     return;
   }
 
-  let session = selectSession(state, sessionHash) as SessionWorkspace;
+  let session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
 
   console.log(session.requestedChanges);
   if (
@@ -90,10 +92,10 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     await joinSession(workspace, sessionHash);
 
     state = get(workspace.store);
-    session = selectSession(state, sessionHash) as SessionWorkspace;
+    session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
     await workspace.client.sendSyncRequest({
       lastSessionIndexSeen: selectCurrentSessionIndex(session),
-      scribe: session.session.scribe,
+      scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
   }
@@ -105,7 +107,7 @@ export function handleChangeNotice<CONTENT, DELTA>(
   sessionHash: EntryHashB64,
   changes: ChangeBundle
 ) {
-  workspace.store.update((state) => {
+  workspace.store.update(state => {
     if (amIScribe(state, sessionHash)) {
       console.warn(
         `Received a change notice but I'm the scribe for this session, ignoring`
@@ -113,7 +115,10 @@ export function handleChangeNotice<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSession(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(
+      state,
+      sessionHash
+    ) as SessionWorkspace;
 
     // TODO
     // If CRDT, we don't care about requested changes

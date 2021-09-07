@@ -1,7 +1,7 @@
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
-import { applyCommits, orderCommits } from "../../utils";
-import type { SynWorkspace } from "../../workspace";
+import { applyCommits, orderCommits } from '../../utils';
+import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
 export async function joinSession<CONTENT, DELTA>(
@@ -15,9 +15,7 @@ export async function joinSession<CONTENT, DELTA>(
     session.commits
   );
 
-  const orderedCommits = orderedCommitHashes.map(
-    (hash) => session.commits[hash]
-  );
+  const orderedCommits = orderedCommitHashes.map(hash => session.commits[hash]);
 
   const currentContent = applyCommits(
     session.snapshot,
@@ -25,10 +23,10 @@ export async function joinSession<CONTENT, DELTA>(
     orderedCommits
   );
 
-  workspace.store.update((state) => {
+  workspace.store.update(state => {
+    state.sessions[session.sessionHash] = session.session;
     state.joinedSessions[session.sessionHash] = {
       sessionHash: session.sessionHash,
-      session: session.session,
       commitHashes: orderedCommitHashes,
       currentContent,
       myFolkIndex: 0,

@@ -78,15 +78,34 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
 #[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
 pub struct SessionList(Vec<EntryHashB64>);
 #[hdk_extern]
-pub fn get_sessions(_: ()) -> ExternResult<SessionList> {
+pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
     let links = get_links(path.hash()?, None)?.into_inner();
-    let sessions = links
+
+    let sessions_get_inputs = links
         .into_iter()
-        .map(|l| EntryHashB64::from(l.target))
+        .map(|l| GetInput::new(AnyDhtHash::from(l.target), GetOptions::default()))
         .collect();
+
+    let sessions_vec = HDK.with(|h| h.borrow().get(sessions_get_inputs))?;
+    let mut sessions = HashMap::new();
+
+    for session in sessions_vec {
+        if let Some(element) = session {
+            let session: Session = element
+                .entry()
+                .to_app_option()?
+                .ok_or(SynError::HashNotFound)?;
+            let session_hash = element
+                .header()
+                .entry_hash()
+                .ok_or(SynError::HashNotFound)?;
+            sessions.insert(EntryHashB64::from(session_hash.clone()), session);
+        }
+    }
+
     debug!("get_sessions: sessions: {:?}", sessions);
-    Ok(SessionList(sessions))
+    Ok(sessions)
 }
 
 /** Helpers */

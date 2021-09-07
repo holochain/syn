@@ -2,12 +2,9 @@
   "name": "@syn/tests",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:setup && npm run test:zome && npm run test:lib",
-    "test:setup": "cd ../ && npm run build:dna",
+    "test": "npm run test:zome && npm run test:lib",
     "test:zome": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/zome/index.ts",
-    "test:lib": "npm run build:client && npm run build:lib && TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/lib/index.ts",
-    "build:client": "cd ../ui/libs/zome-client && npm run build",
-    "build:lib": "cd ../ui/libs/store && npm run build",
+    "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/lib/index.ts",
     "test-debug": "RUST_LOG='[debug]=debug' TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts"
   },
   "author": "",

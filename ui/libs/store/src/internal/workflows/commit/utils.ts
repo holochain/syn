@@ -8,7 +8,7 @@ import type { SessionWorkspace, SynState } from "../../../state/syn-state";
 import {
   selectLatestCommitHash,
   selectLatestCommittedContentHash,
-  selectSession,
+  selectSessionWorkspace,
 } from "../../../state/selectors";
 
 export function buildCommitFromUncommitted(
@@ -16,7 +16,7 @@ export function buildCommitFromUncommitted(
   sessionHash: EntryHashB64,
   newContentHash: EntryHashB64
 ): Commit {
-  const session = selectSession(state, sessionHash) as SessionWorkspace;
+  const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
   const lastCommitHash = selectLatestCommitHash(session);
   return {
     changes: session.uncommittedChanges,
@@ -38,7 +38,7 @@ export function putNewCommit(
   commit: Commit
 ) {
   state.commits[newCommitHash] = commit;
-  const session = selectSession(state, sessionHash) as SessionWorkspace;
+  const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
   session.commitHashes.push(newCommitHash);
 
   const newSessionIndex =

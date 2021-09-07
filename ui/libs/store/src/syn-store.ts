@@ -1,11 +1,12 @@
 import { derived, Readable, writable } from 'svelte/store';
 import type {
   AgentPubKeyB64,
+  Dictionary,
   EntryHashB64,
 } from '@holochain-open-dev/core-types';
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
-import { SynClient } from '@syn/zome-client';
+import { Session, SynClient } from '@syn/zome-client';
 import { merge } from 'lodash-es';
 
 import type { ApplyDeltaFn } from './apply-delta';
@@ -18,16 +19,15 @@ import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { newSession } from './internal/workflows/sessions/scribe';
-import { FolkColors, getFolkColors } from './utils/colors';
 
 export interface SynStore<CONTENT, DELTA> {
   myPubKey: AgentPubKeyB64;
-  myColors: FolkColors;
 
-  getAllSessions(): Promise<EntryHashB64[]>;
+  fetchAllSessions(): Promise<void>;
 
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
+  knownSessions: Readable<Dictionary<Session>>;
   sessionStore: (sessionHash: EntryHashB64) => SessionStore<CONTENT, DELTA>;
 
   newSession(fromSnapshot?: EntryHashB64): Promise<EntryHashB64>;
@@ -72,13 +72,22 @@ export function createSynStore<CONTENT, DELTA>(
 
   return {
     myPubKey,
-    myColors: getFolkColors(myPubKey),
-    getAllSessions: () => client.getSessions(),
+    fetchAllSessions: async () => {
+      const sessions = await client.getSessions();
+      workspace.store.update(state => {
+        state.sessions = {
+          ...state.sessions,
+          ...sessions,
+        };
+        return state;
+      });
+    },
     joinSession: async sessionHash => joinSession(workspace, sessionHash),
     activeSession,
     joinedSessions: derived(workspace.store, state =>
       Object.keys(state.joinedSessions)
     ),
+    knownSessions: derived(workspace.store, state => state.sessions),
     sessionStore: sessionHash => buildSessionStore(workspace, sessionHash),
     newSession: async (fromSnapshot?: EntryHashB64) =>
       newSession(workspace, fromSnapshot),

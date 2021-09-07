@@ -18,11 +18,11 @@ export function selectScribe(
   synState: SynState,
   sessionHash: EntryHashB64
 ): AgentPubKeyB64 {
-  const session = synState.joinedSessions[sessionHash];
-  return session.session.scribe;
+  const session = synState.sessions[sessionHash];
+  return session.scribe;
 }
 
-export function selectSession(
+export function selectSessionWorkspace(
   synState: SynState,
   sessionHash: EntryHashB64
 ): SessionWorkspace {
@@ -35,7 +35,7 @@ export function selectLastCommitTime(
 ): number {
   const commit = selectLatestCommit(state, sessionHash);
   if (commit) return commit.createdAt;
-  else return selectSession(state, sessionHash).session.createdAt;
+  else return state.sessions[sessionHash].createdAt;
 }
 
 export function selectLatestCommit(
@@ -43,7 +43,7 @@ export function selectLatestCommit(
   sessionHash: EntryHashB64
 ): Commit | undefined {
   const commitHash = selectLatestCommitHash(
-    selectSession(state, sessionHash) as SessionWorkspace
+    selectSessionWorkspace(state, sessionHash) as SessionWorkspace
   );
   return commitHash ? state.commits[commitHash] : undefined;
 }
@@ -63,7 +63,7 @@ export function selectLatestCommittedContentHash(
   if (latestCommit) return latestCommit.newContentHash;
   // If there is no commit after the initial snapshot,
   // the last committed entry hash is the initial snapshot hash
-  return synState.joinedSessions[sessionHash].session.snapshotHash;
+  return synState.sessions[sessionHash].snapshotHash;
 }
 
 export function selectAllCommits(

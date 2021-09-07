@@ -1,9 +1,9 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { css, html, LitElement, PropertyValues } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
-import type { SessionStore, SynStore } from '@syn/store';
+import type { SynStore } from '@syn/store';
 import { provide } from '@lit-labs/context';
-import { StoreController } from 'lit-svelte-stores';
+import { DynamicStore } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';
 import { SynSession } from './syn-session';
@@ -16,19 +16,12 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
   @property()
   store!: SynStore<any, any>;
 
-  _activeSession!: StoreController<SessionStore<any, any> | undefined>;
-
-  updated(cv: PropertyValues) {
-    super.updated(cv);
-    if (cv.has('store')) {
-      this._activeSession = new StoreController(this, this.store.activeSession);
-    }
-  }
+  _activeSession = new DynamicStore(this, () => this.store.activeSession);
 
   render() {
     return html`
       <syn-session
-        .sessionHash=${this._activeSession?.value?.hash}
+        .sessionHash=${this._activeSession.value?.sessionHash}
         ${provide(synContext, this.store)}
       >
         <slot></slot>

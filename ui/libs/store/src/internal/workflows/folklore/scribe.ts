@@ -4,7 +4,7 @@ import type {
 } from "@holochain-open-dev/core-types";
 
 import {
-  selectSession,
+  selectSessionWorkspace,
   selectFolksInSession,
   amIScribe,
 } from "../../../state/selectors";
@@ -17,7 +17,7 @@ export function notifyGoneFolks<CONTENT, DELTA>(
   sessionHash: EntryHashB64
 ) {
   workspace.store.update((state) => {
-    const session = selectSession(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
     const gone = updateGoneFolks(session, workspace.config.outOfSessionTimeout);
 
     if (gone.length > 0) {
@@ -42,7 +42,7 @@ export function handleHeartbeat<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSession(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
     putJustSeenFolks(session, state.myPubKey, [fromFolk]);
 
     return state;

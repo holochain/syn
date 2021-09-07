@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "scripts": {
     "start": "cross-env HC_PORT=$(port) concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"npm run dev -w syntext\"",
-    "dev:libs": "concurrently -k \"npm run build:watch -w @syn/store\" \"npm run build:watch -w @syn/elements\"",
-    "start:happ": "npm run build:happ && hc s generate -r=$HC_PORT dna/workdir/happ/syn.happ -a syn",
+    "dev:libs": "concurrently -k \"npm run build:watch -w @syn/zome-client\" \"npm run build:watch -w @syn/store\" \"npm run build:watch -w @syn/elements\"",
+    "test": "npm run build:happ && npm run build -w @syn/zome-client -w @syn/store && npm test -w @syn/tests",
+    "start:happ": "npm run build:happ && hc s generate -r=$HC_PORT dna/workdir/happ/syn.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
     "build:happ": "npm run build:dna && hc app pack dna/workdir/happ",
     "build:dna": "npm run build:zome && hc dna pack dna/workdir/dna",
     "build:zome": "cd dna && CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"

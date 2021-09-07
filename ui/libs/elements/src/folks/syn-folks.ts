@@ -16,30 +16,23 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
 
   @contextProvided({ context: synSessionContext, multiple: true })
   @state()
-  session!: SessionStore<any, any>;
+  sessionStore!: SessionStore<any, any>;
 
-  _folks = new DynamicStore(this, () => this.session?.folks); 
-
+  _folks = new DynamicStore(this, () => this.sessionStore?.folks);
+  
   render() {
-    if (!this.session || !this._folks.value)
+    if (!this.sessionStore || !this._folks.value)
       return html`<span>There is no active session</span>`;
 
     return html`
       <div class="column">
-        <syn-folk
-          .pubKey=${this.syn.myPubKey}
-          .folk=${{
-            colors: this.syn.myColors,
-            inSession: true,
-            lastSeen: Date.now(),
-          }}
-        ></syn-folk>
+        <syn-folk .pubKey=${this.syn.myPubKey} in-session></syn-folk>
         ${Object.entries(this._folks.value).map(
           ([pubKey, folk]) =>
             html`<syn-folk
               .pubKey=${pubKey}
-              .folk=${folk}
-              .isScribe=${this.session.info.scribe === pubKey}
+              .inSession=${folk.inSession}
+              .isScribe=${this.sessionStore.session.scribe === pubKey}
             ></syn-folk>`
         )}
       </div>

@@ -4,7 +4,7 @@ import { merge } from "lodash-es";
 
 import {
   selectLatestCommittedContentHash,
-  selectSession,
+  selectSessionWorkspace,
 } from "../../../state/selectors";
 import { orderCommits, applyCommits, applyChangeBundle } from "../../utils";
 import type { SynWorkspace } from "../../workspace";
@@ -15,7 +15,7 @@ export function handleSyncResponse<CONTENT, DELTA>(
   stateForSync: StateForSync
 ) {
   workspace.store.update((state) => {
-    const sessionWorkspace = selectSession(state, sessionHash);
+    const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
 
     // Put the missed commits in the state
     const latestCommittedContentHash = selectLatestCommittedContentHash(

@@ -5,7 +5,8 @@
   "module": "./dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && tsc"
+    "build": "rimraf dist && tsc",
+    "build:watch": "tsc -w"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.4",
