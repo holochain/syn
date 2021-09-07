@@ -21,7 +21,7 @@
     "@open-wc/scoped-elements": "^2.0.0-next.4",
     "@syn/store": "0.0.1",
     "lit": "^2.0.0-rc.3",
-    "lit-svelte-stores": "^0.0.3",
+    "lit-svelte-stores": "^0.0.9",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
   }

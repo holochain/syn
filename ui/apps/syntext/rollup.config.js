@@ -5,9 +5,21 @@ import resolve from '@rollup/plugin-node-resolve';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
-import builtins from "rollup-plugin-node-builtins";
+import builtins from 'rollup-plugin-node-builtins';
+import copy from 'copy';
+import os from 'os';
 
 const production = !process.env.ROLLUP_WATCH;
+
+const HC_PORT = process.env.HC_PORT || 8888;
+const PUBLIC_FOLDER = production
+  ? 'public'
+  : `${os.tmpdir()}/public-${HC_PORT}`;
+
+copy('public/*', PUBLIC_FOLDER, function (err, files) {
+  if (err) throw err;
+  // `files` is an array of the files that were copied
+});
 
 function serve() {
   let server;
@@ -25,6 +37,10 @@ function serve() {
         {
           stdio: ['ignore', 'inherit', 'inherit'],
           shell: true,
+          env: {
+            ...process.env,
+            PUBLIC_FOLDER,
+          },
         }
       );
 
@@ -40,10 +56,11 @@ export default {
     sourcemap: true,
     format: 'iife',
     name: 'app',
-    file: 'public/build/bundle.js',
+    file: `${PUBLIC_FOLDER}/build/bundle.js`,
   },
   plugins: [
     replace({
+      'process.env.HC_PORT': JSON.stringify(process.env.HC_PORT),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
       'process.env.APP_HOST': JSON.stringify(process.env.APP_HOST),
     }),
@@ -75,7 +92,7 @@ export default {
 
     // Watch the `public` directory and refresh the
     // browser on changes when not in production
-    !production && livereload('public'),
+    !production && livereload(PUBLIC_FOLDER),
 
     // If we're building for production (npm run build
     // instead of npm run dev), minify

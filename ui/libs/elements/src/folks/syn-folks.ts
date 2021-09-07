@@ -1,12 +1,11 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { html, LitElement, PropertyValues } from 'lit';
-import type { SessionFolk, SessionStore, SynStore } from '@syn/store';
-import { StoreController } from 'lit-svelte-stores';
+import { html, LitElement } from 'lit';
+import type { SessionStore, SynStore } from '@syn/store';
+import { DynamicStore } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
-import type { Dictionary } from '@holochain-open-dev/core-types';
+import { contextProvided } from '@lit-labs/context';
 
 import { synContext, synSessionContext } from '../context/contexts';
-import { contextProvided } from '@lit-labs/context';
 import { SynFolk } from './syn-folk';
 import { sharedStyles } from '../shared-styles';
 
@@ -19,22 +18,10 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
   @state()
   session!: SessionStore<any, any>;
 
-  @state()
-  _folks!: StoreController<Dictionary<SessionFolk>> | undefined;
-
-  updated(changedValues: PropertyValues) {
-    super.updated(changedValues);
-
-    if (changedValues.has('session')) {
-      console.log(this.session)
-      this._folks = this.session
-        ? new StoreController(this, this.session.folks)
-        : undefined;
-    }
-  }
+  _folks = new DynamicStore(this, () => this.session?.folks); 
 
   render() {
-    if (!this.session || !this._folks)
+    if (!this.session || !this._folks.value)
       return html`<span>There is no active session</span>`;
 
     return html`
@@ -47,7 +34,7 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
             lastSeen: Date.now(),
           }}
         ></syn-folk>
-        ${Object.entries(this._folks?.value).map(
+        ${Object.entries(this._folks.value).map(
           ([pubKey, folk]) =>
             html`<syn-folk
               .pubKey=${pubKey}

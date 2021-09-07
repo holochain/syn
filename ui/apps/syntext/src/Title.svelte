@@ -1,9 +1,16 @@
 <script>
-  import { content } from './stores.js'
-  import { createEventDispatcher, tick } from 'svelte'
+  import { createEventDispatcher, tick, getContext } from 'svelte'
+  import { unnest } from '@syn/store';
+
   const dispatch = createEventDispatcher()
 
   let titleBeingTyped = ''
+
+  const { getStore } = getContext('store');
+
+  const store = getStore();
+  $: session = store.activeSession;
+  $: content = unnest(store.activeSession, s => s.content);
 
   let editingTitle = false
   function saveTitle() {
@@ -12,7 +19,7 @@
       // than the current title
       if (titleBeingTyped !== $content.title) {
         let delta = { type: 'Title', value: titleBeingTyped }
-        dispatch('requestChange', [delta])
+        $session.requestChange([delta])
       }
       titleBeingTyped = ''
       editingTitle = false

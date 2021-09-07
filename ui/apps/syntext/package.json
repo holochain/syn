@@ -4,7 +4,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public"
+    "start": "sirv $PUBLIC_FOLDER"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
@@ -12,7 +12,9 @@
     "@rollup/plugin-replace": "^2.3.4",
     "@syn/elements": "0.0.1",
     "@syn/store": "0.0.1",
+    "catch-exit": "^1.2.2",
     "concurrently": "^6.2.1",
+    "copy": "^0.3.2",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",
