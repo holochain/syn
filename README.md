@@ -1,11 +1,13 @@
 # syn
+
 > Generalized DNA for building real-time shared-state hApps on holochain
 
 Syn: Etymology. From Ancient Greek συμ- (sum-), variant of συν- (sun-), from σύν (sún, “with, in company with, together with”).
 
 ## Design
 
-This project makes it easy to build collaborative apps in the distributed peer-to-peer context of Holochain.  Syn uses Holochain's infrastructure for data integrity and peer-to-peer networking to store regular "commits" of the shared content's state, while coordinating batches of delta's that comprise those commits between nodes.  The approach is generalized for many different use-cases, where the app-developer need only define:
+This project makes it easy to build collaborative apps in the distributed peer-to-peer context of Holochain. Syn uses Holochain's infrastructure for data integrity and peer-to-peer networking to store regular "commits" of the shared content's state, while coordinating batches of delta's that comprise those commits between nodes. The approach is generalized for many different use-cases, where the app-developer need only define:
+
 1. A renderer for content state
 2. A patch-grammar for applying deltas to content
 3. A function to apply deltas to the content state
@@ -15,58 +17,49 @@ For more details read the [design documents](DESIGN.md), read the [article](http
 
 ## Installation
 
-1. Install the holochain dev environment: https://developer.holochain.org/docs/install/
+1. Install the `nix-shell`.
 2. Clone this repo: `git clone https://github.com/holochain/syn && cd ./syn`
-3. Enter the nix shell: `nix-shell`
+3. Enter the nix shell: `nix-shell`.
+4. Run `npm install`
 
 ## Building the DNA
 
 - Build the DNA (assumes you are still in the nix shell for correct rust/cargo versions from step above):
-  - Assemble the DNA:
 
-  ```bash
-  npm run build:happ
-  ```
+```bash
+npm run build:happ
+```
 
 ## UI
 
-We have provided a sample UI that implements collaborative text editing in a minimal editor. To run this UI in test mode you can spin up two test instances of the dna using the `hc` dev tool like this:
+We have provided a sample UI that implements collaborative text editing in a minimal editor. To run this UI in test mode:
 
 ```bash
-hc s gen -r=8888,8889 -a syn -n 2 network -b https://bootstrap-staging.holo.host quic
+npm run start
 ```
-Then you can run the UI with:
+
+And the same in another terminal:
 
 ```bash
-cd ui
-npm install
-npm run dev
+npm run start
 ```
-Now open two tabs in your browser pointing at `http://localhost:5000`.  In the second tab, change the `app_port` to `8889`. Then click 'Connect'. Now you should be able to see both agents and start editing text on either tab and see it appear on the other.
+
+Now open two browser tabs pointing to the locations that the output from those commands indicates.
+
+Now you should be able to see both agents and start editing text on either tab and see it appear on the other.
 
 ### Testing
 
-  ```bash
-  make test
-  ```
-
-#### Unit testing
-
-  The `make test-unit` command runs all the unit tests for zomes in cargo.
-
-  #### dna tryorama testing
-
-  The `make test-dna` command packages/installs a fresh DNA and @holochain/tryorama tests it.
-
-  ### Flushing 💩
-
-  The `make clean` command gets rid of all compiled output.
+```bash
+npm run test
+```
 
 ## License
+
 [![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
 
-  Copyright (C) 2020-2021, Holochain Foundation
+Copyright (C) 2020-2021, Holochain Foundation
 
 This program is free software: you can redistribute it and/or modify it under the terms of the license
-provided in the LICENSE file (CAL-1.0).  This program is distributed in the hope that it will be useful,
+provided in the LICENSE file (CAL-1.0). This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
