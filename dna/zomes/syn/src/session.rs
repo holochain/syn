@@ -75,8 +75,6 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
     })
 }
 
-#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-pub struct SessionList(Vec<EntryHashB64>);
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
@@ -106,6 +104,24 @@ pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
 
     debug!("get_sessions: sessions: {:?}", sessions);
     Ok(sessions)
+}
+
+#[hdk_extern]
+pub fn delete_session(session_hash: EntryHashB64) -> ExternResult<()> {
+    // TODO: add validation so that only the scribe can delete it
+    let path = get_sessions_path();
+    let links = get_links(path.hash()?, None)?.into_inner();
+
+    let session_hash = EntryHash::from(session_hash);
+    let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
+
+    match maybe_link {
+        Some(link) => {
+            delete_link(link.create_link_hash)?;
+            Ok(())
+        }
+        None => Err(SynError::HashNotFound)?,
+    }
 }
 
 /** Helpers */

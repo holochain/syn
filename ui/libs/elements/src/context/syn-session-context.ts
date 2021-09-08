@@ -7,7 +7,7 @@ import { Context, contextProvided, ContextProvider } from '@lit-labs/context';
 
 import { synSessionContext, synContext } from './contexts';
 
-export class SynSession extends ScopedElementsMixin(LitElement) {
+export class SynSessionContext extends ScopedElementsMixin(LitElement) {
   @property({ attribute: 'session-hash' })
   sessionHash!: EntryHashB64;
 
@@ -19,6 +19,7 @@ export class SynSession extends ScopedElementsMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+
     this.provider = new ContextProvider(
       this,
       synSessionContext,
@@ -27,13 +28,14 @@ export class SynSession extends ScopedElementsMixin(LitElement) {
   }
 
   update(changedValues: PropertyValues) {
+    super.update(changedValues);
     if (changedValues.has('sessionHash')) {
       this.provider.setValue(this.synStore.sessionStore(this.sessionHash));
     }
   }
 
   render() {
-    return html` <slot></slot>`;
+    return html`<slot></slot>`;
   }
 
   static get styles() {

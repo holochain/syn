@@ -88,6 +88,10 @@ export class SynClient {
     return this.decodeSessionInfo(sessionInfo);
   }
 
+  public async deleteSession(sessionHash: EntryHashB64): Promise<void> {
+    return this.callZome('delete_session', sessionHash);
+  }
+
   public getSessions(): Promise<Dictionary<Session>> {
     return this.callZome('get_sessions', null);
   }

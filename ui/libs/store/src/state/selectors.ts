@@ -71,7 +71,7 @@ export function selectAllCommits(
   sessionHash: EntryHashB64
 ): Array<[EntryHashB64, Commit]> {
   const session = synState.joinedSessions[sessionHash];
-
+console.log(synState)
   return session.commitHashes.map((hash) => [hash, synState.commits[hash]]);
 }
 

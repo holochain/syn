@@ -1,12 +1,12 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { SynStore } from '@syn/store';
-import { provide } from '@lit-labs/context';
+import { Context, ContextProvider } from '@lit-labs/context';
 import { DynamicStore } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';
-import { SynSession } from './syn-session';
+import { SynSessionContext } from './syn-session-context';
 
 /**
  * Context provider element to serve as a container for all the
@@ -18,14 +18,27 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
 
   _activeSession = new DynamicStore(this, () => this.store.activeSession);
 
+  provider!: ContextProvider<Context<SynStore<any, any> | undefined>>;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.provider = new ContextProvider(this, synContext, this.store);
+  }
+
+  update(changedValues: PropertyValues) {
+    super.update(changedValues);
+    if (changedValues.has('store')) {
+      this.provider.setValue(this.store);
+    }
+  }
+  
   render() {
     return html`
-      <syn-session
+      <syn-session-context
         .sessionHash=${this._activeSession.value?.sessionHash}
-        ${provide(synContext, this.store)}
       >
-        <slot></slot>
-      </syn-session>
+      <slot></slot>
+      </syn-session-context>
     `;
   }
 
@@ -39,7 +52,7 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
 
   static get scopedElements() {
     return {
-      'syn-session': SynSession,
+      'syn-session-context': SynSessionContext,
     };
   }
 }

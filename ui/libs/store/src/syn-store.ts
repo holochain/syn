@@ -23,7 +23,7 @@ import { newSession } from './internal/workflows/sessions/scribe';
 export interface SynStore<CONTENT, DELTA> {
   myPubKey: AgentPubKeyB64;
 
-  fetchAllSessions(): Promise<void>;
+  getAllSessions(): Promise<Dictionary<Session>>;
 
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
@@ -72,7 +72,7 @@ export function createSynStore<CONTENT, DELTA>(
 
   return {
     myPubKey,
-    fetchAllSessions: async () => {
+    getAllSessions: async () => {
       const sessions = await client.getSessions();
       workspace.store.update(state => {
         state.sessions = {
@@ -81,6 +81,8 @@ export function createSynStore<CONTENT, DELTA>(
         };
         return state;
       });
+
+      return sessions;
     },
     joinSession: async sessionHash => joinSession(workspace, sessionHash),
     activeSession,

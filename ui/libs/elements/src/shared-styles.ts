@@ -9,4 +9,8 @@ export const sharedStyles = css`
     display: flex;
     flex-direction: column;
   }
+
+  .placeholder {
+    color: rgba(0, 0, 0, 0.6);
+  }
 `;

@@ -1,15 +1,15 @@
-import { get } from "svelte/store";
-import { SynMessageType, SynSignal } from "@syn/zome-client";
+import { get } from 'svelte/store';
+import { SynMessageType, SynSignal } from '@syn/zome-client';
 
-import type { SynWorkspace } from "./workspace";
-import { handleSyncRequest } from "./workflows/sync/scribe";
-import { handleSyncResponse } from "./workflows/sync/folk";
-import { selectSessionWorkspace } from "../state/selectors";
-import { handleChangeRequest } from "./workflows/change/scribe";
-import { handleCommitNotice } from "./workflows/commit/folk";
-import { handleFolkLore } from "./workflows/folklore/folk";
-import { handleHeartbeat } from "./workflows/folklore/scribe";
-import { handleChangeNotice } from "./workflows/change/folk";
+import type { SynWorkspace } from './workspace';
+import { handleSyncRequest } from './workflows/sync/scribe';
+import { handleSyncResponse } from './workflows/sync/folk';
+import { selectSessionWorkspace } from '../state/selectors';
+import { handleChangeRequest } from './workflows/change/scribe';
+import { handleCommitNotice } from './workflows/commit/folk';
+import { handleFolkLore } from './workflows/folklore/folk';
+import { handleHeartbeat } from './workflows/folklore/scribe';
+import { handleChangeNotice } from './workflows/change/folk';
 
 export function handleSignal<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,

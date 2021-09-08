@@ -16,8 +16,9 @@
     return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0;
   }
 
+  let myTag = store.myPubKey.slice(-4);
+
   let editor;
-  $: myTag = $session ? $session.myTag : '';
   $: editor_content1 = $content.body.slice(0, getLoc(myTag));
   $: editor_content2 = $content.body.slice(getLoc(myTag));
 

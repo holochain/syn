@@ -1,4 +1,4 @@
-import type { ChangeBundle, FolkChanges } from '@syn/zome-client';
+import type { ChangeBundle, Content, FolkChanges } from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { cloneDeep } from 'lodash-es';
 import { get } from 'svelte/store';
@@ -13,7 +13,6 @@ import type {
   RequestedChange,
   SessionWorkspace,
 } from '../../../state/syn-state';
-import { applyChangeBundle } from '../../utils';
 import { joinSession } from '../sessions/folk';
 
 export function folkRequestChange<CONTENT, DELTA>(
@@ -24,10 +23,17 @@ export function folkRequestChange<CONTENT, DELTA>(
   workspace.store.update(state => {
     const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
 
+    const currentSessionIndex =
+      selectCurrentSessionIndex(sessionWorkspace) +
+      sessionWorkspace.requestedChanges.length;
+console.log('requestedChanges', currentSessionIndex, sessionWorkspace.requestedChanges.length)
     // TODO: don't do this if strategy === CRDT
-    sessionWorkspace.prerequestContent = cloneDeep(
-      sessionWorkspace.currentContent
-    );
+    if (!sessionWorkspace.prerequestContent) {
+      sessionWorkspace.prerequestContent = {
+        atSessionIndex: currentSessionIndex,
+        content: cloneDeep(sessionWorkspace.currentContent),
+      };
+    }
 
     for (const delta of deltas) {
       sessionWorkspace.currentContent = workspace.applyDeltaFn(
@@ -39,8 +45,7 @@ export function folkRequestChange<CONTENT, DELTA>(
     const newRequestedChanges: RequestedChange[] = [];
 
     const atDate = Date.now();
-    console.log(sessionWorkspace.uncommittedChanges);
-    const currentSessionIndex = selectCurrentSessionIndex(sessionWorkspace);
+
     for (let i = 0; i < deltas.length; i++) {
       newRequestedChanges.push({
         atDate,
@@ -124,15 +129,28 @@ export function handleChangeNotice<CONTENT, DELTA>(
     // If CRDT, we don't care about requested changes
     // If BlockOnConflict, we try to rebase and block if applyDelta returns conflict
 
-    session.currentContent = applyChangeBundle(
-      session.currentContent,
-      workspace.applyDeltaFn,
-      changes
-    );
+    // We don't want to reapply our own made changes
+    const myChanges = changes.authors[state.myPubKey];
+
+    let contentToApplyTo = session.currentContent;
+
+    if (
+      myChanges &&
+      session.prerequestContent &&
+      session.prerequestContent.atSessionIndex === changes.atSessionIndex
+    ) {
+      contentToApplyTo = session.prerequestContent?.content;
+    }
+
+    for (const delta of changes.deltas) {
+      session.currentContent = workspace.applyDeltaFn(contentToApplyTo, delta);
+    }
+
     session.uncommittedChanges.deltas = [
       ...session.uncommittedChanges.deltas,
-      changes.deltas,
+      ...changes.deltas,
     ];
+    console.log(selectCurrentSessionIndex(session));
 
     for (const [author, newFolkChanges] of Object.entries(
       session.uncommittedChanges.authors
@@ -154,16 +172,19 @@ export function handleChangeNotice<CONTENT, DELTA>(
       }
     }
 
-    const myChanges = changes.authors[state.myPubKey];
     if (myChanges) {
-      clearRequested(session, myChanges);
+      clearRequested(session, myChanges, session.currentContent);
     }
 
     return state;
   });
 }
 
-function clearRequested(session: SessionWorkspace, myChanges: FolkChanges) {
+function clearRequested(
+  session: SessionWorkspace,
+  myChanges: FolkChanges,
+  newContent: Content
+) {
   const leftRequestedChanges: RequestedChange[] = [];
 
   for (const requestedChange of session.requestedChanges) {
@@ -181,5 +202,10 @@ function clearRequested(session: SessionWorkspace, myChanges: FolkChanges) {
 
   if (session.requestedChanges.length === 0) {
     session.prerequestContent = undefined;
+  } else {
+    session.prerequestContent = {
+      atSessionIndex: selectCurrentSessionIndex(session),
+      content: newContent,
+    };
   }
 }

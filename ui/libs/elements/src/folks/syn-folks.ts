@@ -19,7 +19,7 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
   sessionStore!: SessionStore<any, any>;
 
   _folks = new DynamicStore(this, () => this.sessionStore?.folks);
-  
+
   render() {
     if (!this.sessionStore || !this._folks.value)
       return html`<span>There is no active session</span>`;

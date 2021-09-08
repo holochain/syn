@@ -102,10 +102,17 @@
   };
 
   let synStore;
-  createStore().then(store => {
-    store.newSession().then(() => {
+  createStore().then(async store => {
+    const sessions = await store.getAllSessions();
+
+    if (Object.keys(sessions).length === 0) {
+      store.newSession().then(() => {
+        synStore = store;
+      });
+    } else {
+      await store.joinSession(Object.keys(sessions)[0]);
       synStore = store;
-    });
+    }
   });
   $: synStore;
 
@@ -138,9 +145,10 @@
   </main>
 
   <div class="folks-tray">
-    Hi
     <syn-context store={synStore}>
+      <h3>Folks</h3>
       <syn-folks />
+      <h3>Active Sessions</h3>
       <syn-sessions />
     </syn-context>
   </div>

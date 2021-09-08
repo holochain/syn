@@ -1,4 +1,4 @@
-import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
+import { AgentPubKeyB64, deserializeHash } from '@holochain-open-dev/core-types';
 
 export type HSL = [number, number, number];
 
@@ -70,7 +70,7 @@ function clamp(value, min, max) {
 // used in `use:setColor` on new Folk components
 export function getFolkColors(pubKey: AgentPubKeyB64): FolkColors {
   // get a hex color from the folk's public key
-  const hexColor = '#' + arrayBufferToHex(pubKey).slice(-6);
+  const hexColor = '#' + arrayBufferToHex(deserializeHash(pubKey)).slice(-6);
   // extract the RGB components from the hex color notation.
   // Source: https://stackoverflow.com/questions/3732046
   const r = parseInt(hexColor.substr(1, 2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).

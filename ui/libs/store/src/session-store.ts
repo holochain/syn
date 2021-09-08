@@ -35,12 +35,25 @@ export function buildSessionStore<CONTENT, DELTA>(
     state => selectSessionWorkspace(state, sessionHash).folks
   );
 
+  const state = get(workspace.store);
+  const myPubKey = state.myPubKey;
+  const session = state.sessions[sessionHash];
+
   return {
     sessionHash: sessionHash,
-    session: get(workspace.store).sessions[sessionHash],
+    session,
     content,
     folks,
     requestChange: deltas => requestChange(workspace, sessionHash, deltas),
-    leave: async () => {}, // TODO
+    leave: async () => {
+      if (session.scribe === myPubKey) {
+        await workspace.client.deleteSession(sessionHash);
+        workspace.store.update(state => {
+          (state.joinedSessions[sessionHash] as any) = undefined;
+          delete state.joinedSessions[sessionHash];
+          return state;
+        });
+      }
+    },
   };
 }

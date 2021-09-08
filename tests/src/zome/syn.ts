@@ -437,5 +437,18 @@ export default orchestrator => {
     // TODO figure out why init doesn't happen immediately.
     let folks = await me.call('syn', 'get_folks');
     t.equal(folks.length, 3);
+
+
+    await me.call('syn', 'delete_session', sessionHash);
+
+    // check get_sessions utility zome call
+    sessions = await me.call('syn', 'get_sessions');
+    t.equal(Object.keys(sessions).length, 0);
+
+    await delay(500); 
+
+    // check get_sessions utility zome call
+    sessions = await alice.call('syn', 'get_sessions');
+    t.equal(Object.keys(sessions).length, 0);
   });
 };
