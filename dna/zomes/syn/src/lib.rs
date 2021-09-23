@@ -1,7 +1,7 @@
 use commit::CommitNotice;
 use delta::{ChangeBundle, ChangeRequest};
 use folks::{FolkLore, Heartbeat, register_as_folk};
-use hdk::prelude::holo_hash::EntryHashB64;
+use holo_hash::EntryHashB64;
 use hdk::prelude::*;
 
 mod commit;

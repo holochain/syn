@@ -13,4 +13,5 @@ serde = "1"
 chrono = { version = "0.4", features = ['serde']}
 derive_more = "0.99.9"
 thiserror = "1.0.20"
-hdk = "0.0.104"
+hdk = "0.0.107"
+holo_hash = {version = "0.0.7", features = ["encoding"]}

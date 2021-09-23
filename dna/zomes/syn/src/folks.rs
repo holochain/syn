@@ -1,4 +1,4 @@
-use hdk::prelude::holo_hash::*;
+use holo_hash::*;
 use hdk::prelude::*;
 
 use crate::{SignalPayload, SynMessage};
