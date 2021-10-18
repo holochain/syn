@@ -35,4 +35,4 @@ jobs:
       - name: test-holochain
         run: |
           cd $GITHUB_WORKSPACE
-          nix-shell . --run "cd tests && npm test"          
+          nix-shell . --run "npm ci && npm run test"          
