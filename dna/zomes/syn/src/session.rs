@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
-use hdk::prelude::holo_hash::*;
+use holo_hash::*;
 use hdk::prelude::*;
 
 use crate::commit::Commit;
