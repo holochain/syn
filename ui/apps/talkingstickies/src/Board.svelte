@@ -1,6 +1,5 @@
 <script>
-  import { createEventDispatcher, getContext } from 'svelte'
-  // import { content } from './stores.js'
+  import { getContext } from 'svelte'
   import StickyEditor from './StickyEditor.svelte'
   import PlusIcon from './icons/PlusIcon.svelte'
   import SpeakingIcon from './icons/SpeakingIcon.svelte'
@@ -11,8 +10,6 @@
   import { unnest } from '@syn/store';
 
   export let sortOption
-
-  const dispatch = createEventDispatcher()
 
   const { getStore } = getContext('store');
 

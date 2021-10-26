@@ -1,6 +1,7 @@
 <script>
   import Board from './Board.svelte'
   import Toolbar from './Toolbar.svelte'
+  import Sessions from './Sessions.svelte'
   import { scribeStr, content } from './stores.js'
   import { createStore } from './syn';
   import { setContext } from 'svelte';
@@ -82,7 +83,7 @@
 <div class='app'>
   {#if synStore}
     <Toolbar setSortOption={setSortOption} sortOption={sortOption} />
-    <Board
-      sortOption={sortOption} />
+    <Board sortOption={sortOption} />
+    <Sessions />
   {/if}
 </div>
