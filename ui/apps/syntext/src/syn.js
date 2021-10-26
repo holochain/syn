@@ -53,9 +53,12 @@ function undo(change) {
     case 'Meta':
       return { type: 'Meta', value: { setLoc: change.deleted } };
   }
-} 
+}
 
 export async function createStore() {
+
+  console.log('HC_PORT', process.env.HC_PORT)
+
   const appWebsocket = await AppWebsocket.connect(
     `ws://localhost:${process.env.HC_PORT}`
   );

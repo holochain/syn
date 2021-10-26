@@ -12,8 +12,6 @@
 
   export let sortOption
 
-  let agentPubkey = 'fkljdsf' // TODO
-
   const dispatch = createEventDispatcher()
 
   const { getStore } = getContext('store');
@@ -21,11 +19,7 @@
   const store = getStore();
   $: session = store.activeSession;
   $: content = unnest(store.activeSession, s => s.content);
-
-  console.log('^&* charimna of the broad')
-
-  $: console.log('^&* session', $session, 'session.requestChanges', $session.requestChange)
-  $: console.log('^&* content', $content)
+  $: agentPubkey = store.myPubKey
 
   $: stickies = $content.body.length === 0 ? [] : JSON.parse($content.body)
 
@@ -53,7 +47,6 @@
   }
 
   const addSticky = text => {
-    console.log('^&* adding sticky', text)
     $session.requestChange([
       {type: 'add-sticky', value: {
         id: uuidv1(),
@@ -63,7 +56,6 @@
         }
       }}
     ])
-    console.log('^&* finished adding sticky', text)
     creating = false
   }
 

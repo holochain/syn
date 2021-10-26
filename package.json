@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "start": "npm run build:happ && cross-env HC_PORT=$(port) concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"npm run dev -w syntext\"",
+    "start:tstickies": "npm run build:happ && cross-env HC_PORT=$(port) concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"npm run dev -w talkingstickies\"",
     "dev:libs": "concurrently -k \"npm run build:watch -w @syn/zome-client\" \"npm run build:watch -w @syn/store\" \"npm run build:watch -w @syn/elements\"",
     "test": "npm run build:happ && npm run build -w @syn/zome-client -w @syn/store && npm test -w @syn/tests",
     "start:happ": "hc s generate -r=$HC_PORT dna/workdir/happ/syn.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
