@@ -1,0 +1,7 @@
+---
+manifest_version: "1"
+name: tstickies
+ui:
+  bundled: "./tstickiesui.zip"
+happ_manifest:
+  bundled: "./syn.happ"

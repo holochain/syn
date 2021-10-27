@@ -94,10 +94,6 @@
       }
     }
 
-    console.log('VOTING', agentPubkey)
-    console.log('votes before', sticky.votes)
-    console.log('votes after', votes)
-
     $session.requestChange([
       {type: 'update-sticky', value: {
         ...sticky,

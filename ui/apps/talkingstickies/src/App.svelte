@@ -24,7 +24,7 @@
     if (Object.keys(sessions).length === 0) {
       console.log('Creating new session')
       store.newSession().then(res => {
-        console.log('res', res)
+        console.log('New session hash', res)
         synStore = store;
       });
     } else {

@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.0.3",
-    "@holochain/conductor-api": "0.2.0",
+    "@holochain/conductor-api": "0.2.1",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^2.2.0"
