@@ -1,6 +1,6 @@
-# SynText
+# Talking Stickies
 
-A [syn](https://github.com/holochain/syn) sample app for collaborative text editing.
+A [syn](https://github.com/holochain/syn) sample app for collaborative sticky note editing.
 
 This is UI is built using [Svelte](https://svelte.dev) from the [standard template for Svelte apps](https://github.com/sveltejs/template).
 

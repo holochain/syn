@@ -56,9 +56,6 @@ function undo(change) {
 }
 
 export async function createStore() {
-
-  console.log('HC_PORT', process.env.HC_PORT)
-
   const appWebsocket = await AppWebsocket.connect(
     `ws://localhost:${process.env.HC_PORT}`
   );
