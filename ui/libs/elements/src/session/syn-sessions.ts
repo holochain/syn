@@ -1,7 +1,7 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
 import type { SynStore } from '@syn/store';
-import { DynamicStore } from 'lit-svelte-stores';
+import { StoreSubscriber } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
 import {
@@ -22,8 +22,8 @@ export class SynSessions extends ScopedElementsMixin(LitElement) {
   @state()
   syn!: SynStore<any, any>;
 
-  _allSessions = new DynamicStore(this, () => this.syn.knownSessions);
-  _joinedSessions = new DynamicStore(this, () => this.syn.joinedSessions);
+  _allSessions = new StoreSubscriber(this, () => this.syn.knownSessions);
+  _joinedSessions = new StoreSubscriber(this, () => this.syn.joinedSessions);
 
   @state()
   _loaded = false;

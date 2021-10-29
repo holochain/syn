@@ -5,6 +5,7 @@
   import History from './History.svelte';
   import { content, scribeStr } from './stores.js';
   import { SynContext, SynFolks, SynSessions } from '@syn/elements';
+  import { SynTextEditor } from '@syn/text-editor';
   import { createStore } from './syn';
   import { setContext } from 'svelte';
 
@@ -119,6 +120,7 @@
   customElements.define('syn-context', SynContext);
   customElements.define('syn-sessions', SynSessions);
   customElements.define('syn-folks', SynFolks);
+  customElements.define('syn-text-editor', SynTextEditor);
 
   setContext('store', {
     getStore: () => synStore,

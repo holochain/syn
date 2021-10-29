@@ -3,7 +3,7 @@ import { css, html, LitElement, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { SynStore } from '@syn/store';
 import { Context, ContextProvider } from '@lit-labs/context';
-import { DynamicStore } from 'lit-svelte-stores';
+import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';
 import { SynSessionContext } from './syn-session-context';
@@ -16,7 +16,7 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
   @property()
   store!: SynStore<any, any>;
 
-  _activeSession = new DynamicStore(this, () => this.store.activeSession);
+  _activeSession = new StoreSubscriber(this, () => this.store.activeSession);
 
   provider!: ContextProvider<Context<SynStore<any, any> | undefined>>;
 

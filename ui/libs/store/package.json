@@ -4,7 +4,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "scripts": {
-    "build": "tsc --incremental",
+    "build": "rimraf dist && tsc --incremental",
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
   },
   "type": "module",

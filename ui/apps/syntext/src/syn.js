@@ -1,6 +1,7 @@
 import { AdminWebsocket, AppWebsocket } from '@holochain/conductor-api';
 import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { createSynStore } from '@syn/store';
+import { applyTextEditorDelta } from '@syn/text-editor';
 
 // definition of how to apply a delta to the content
 // if the delta is destructive also returns what was
@@ -13,25 +14,16 @@ function applyDelta(content, delta) {
       content.title = delta.value;
       return content;
     }
-    case 'Add': {
-      const [loc, text] = delta.value;
-      console.log(content.body.slice(0, loc) + text + content.body.slice(loc));
-      content.body =
-        content.body.slice(0, loc) + text + content.body.slice(loc);
-      return content;
-    }
-    case 'Delete': {
-      const [start, end] = delta.value;
-      const deleted = content.body.slice(start, end);
-      content.body = content.body.slice(0, start) + content.body.slice(end);
-      return content;
-    }
     case 'Meta': {
       const [tag, loc] = delta.value.setLoc;
       const deleted = [tag, content.meta[tag]];
       content.meta[tag] = loc;
       return content;
     }
+    default:
+      // Body change
+      content.body = applyTextEditorDelta(content.body, delta);
+      return content;
   }
 }
 
@@ -53,7 +45,7 @@ function undo(change) {
     case 'Meta':
       return { type: 'Meta', value: { setLoc: change.deleted } };
   }
-} 
+}
 
 export async function createStore() {
   const appWebsocket = await AppWebsocket.connect(
