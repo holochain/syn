@@ -56,8 +56,10 @@ export default {
   },
   plugins: [
     replace({
+      '  COMB = ': '  window.COMB = ',
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
       'process.env.APP_HOST': JSON.stringify(process.env.APP_HOST),
+      delimiters: ['', ''],
     }),
     svelte({
       compilerOptions: {

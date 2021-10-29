@@ -115,7 +115,7 @@
   >
 </editor>
 
-<syn-text-editor selectContent={c => c.body} on:change-requested={d => $session.requestChange([d])}></syn-text-editor>
+<syn-text-editor style="height: 300px; width: 100%" content-path="body" on:change-requested={d => $session.requestChange([d])}></syn-text-editor>
 
 <style>
   editor {

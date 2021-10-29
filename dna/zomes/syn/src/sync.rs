@@ -55,7 +55,7 @@ pub struct StateForSync {
     pub uncommitted_changes: ChangeBundle,
 
     // Result of applying all these deltas to the current content
-    //pub current_content_hash: EntryHashB64,
+    // pub current_content_hash: EntryHashB64,
 }
 
 /// Input to the send sync response call

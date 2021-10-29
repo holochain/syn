@@ -4,63 +4,74 @@ import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { sharedStyles, synSessionContext } from '@syn/elements';
 import { contextProvided } from '@lit-labs/context';
 import type { SessionStore } from '@syn/store';
-import Quill from 'quill';
 import { StoreSubscriber } from 'lit-svelte-stores';
-import { derived, readable } from 'svelte/store';
+import type Quill from 'quill';
+import type { Sources } from 'quill';
+import { QuillSnow } from '@scoped-elements/quill';
+
 import { quillDeltasToTextEditorDelta } from './utils';
 
 export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
-  @property()
-  selectContent: (c: CONTENT) => string = c => c as unknown as string;
+  @property({ attribute: 'content-path' })
+  contentPath: string = '';
 
   @contextProvided({ context: synSessionContext })
   @state()
   sessionStore!: SessionStore<CONTENT, any>;
 
-  _content = new StoreSubscriber(this, () =>
-    this.sessionStore
-      ? derived(this.sessionStore.content, c => this.selectContent(c))
-      : readable('')
-  );
+  _content = new StoreSubscriber(this, () => this.sessionStore?.content);
 
-  _quill!: Quill;
+  onTextChanged(deltas: any, source: Sources) {
+    if (source !== 'user') return;
 
-  firstUpdated() {
-    this._quill = new Quill(
-      this.shadowRoot?.getElementById('editor') as Element,
-      {
-        modules: {},
-        theme: 'snow',
-      }
+    const ops = deltas.ops;
+    if (!ops || ops.length === 0) return;
+
+    const delta = quillDeltasToTextEditorDelta(ops);
+    this.dispatchEvent(
+      new CustomEvent('change-requested', {
+        detail: {
+          delta,
+        },
+        bubbles: true,
+        composed: true,
+      })
     );
+  }
 
-    this._quill.on('text-change', (deltas, _, source) => {
-      if (source !== 'user') return;
-
-      const ops = deltas.ops;
-      if (!ops || ops.length === 0) return;
-
-      const delta = quillDeltasToTextEditorDelta(ops);
-      this.dispatchEvent(
-        new CustomEvent('change-requested', {
-          detail: {
-            delta,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    });
+  get quill(): Quill {
+    return (this.shadowRoot?.getElementById('editor') as QuillSnow)?.quill;
   }
 
   updated(changedValues: PropertyValues) {
     super.updated(changedValues);
 
-    this._quill.setText(this._content.value);
+    this.quill.setText(this.getContent());
+  }
+
+  getContent(): string {
+    let content = this._content.value;
+    const components = this.contentPath.split('.');
+
+    for (const component of components) {
+      if (!content[component])
+        throw new Error('Could not find object with content-path');
+      content = content[component];
+    }
+    return content as any;
   }
 
   render() {
-    return html`<div id="editor"></div>`;
+    return html`<quill-snow
+      id="editor"
+      @text-changed=${e => this.onTextChanged(e.detail.deltas, e.detail.source)}
+    ></quill-snow>`;
+  }
+
+  static get scopedElements() {
+    return {
+      'quill-snow': QuillSnow,
+    };
   }
 
   static styles = [sharedStyles];

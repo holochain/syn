@@ -16,7 +16,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.3",
+    "@holochain-open-dev/cell-client": "^0.0.7",
     "@holochain-open-dev/core-types": "^0.1.1",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.1",
