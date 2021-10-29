@@ -30,8 +30,6 @@
     "@syn/store": "0.0.1",
     "@syn/text-editor": "0.0.1",
     "lit": "^2.0.2",
-    "lit-element": "^3.0.1",
-    "lit-html": "^2.0.1",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^2.2.0"
   }

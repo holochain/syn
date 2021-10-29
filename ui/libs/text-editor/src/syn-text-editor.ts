@@ -7,6 +7,7 @@ import type { SessionStore } from '@syn/store';
 import Quill from 'quill';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { derived, readable } from 'svelte/store';
+import { quillDeltasToTextEditorDelta } from './utils';
 
 export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   @property()
@@ -32,6 +33,24 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
         theme: 'snow',
       }
     );
+
+    this._quill.on('text-change', (deltas, _, source) => {
+      if (source !== 'user') return;
+
+      const ops = deltas.ops;
+      if (!ops || ops.length === 0) return;
+
+      const delta = quillDeltasToTextEditorDelta(ops);
+      this.dispatchEvent(
+        new CustomEvent('change-requested', {
+          detail: {
+            delta,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    });
   }
 
   updated(changedValues: PropertyValues) {

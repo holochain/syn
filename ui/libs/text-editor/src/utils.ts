@@ -1,7 +1,7 @@
 import { TextEditorDelta, TextEditorDeltaType } from './text-editor-delta';
 import type { DeltaOperation as QuillDelta } from 'quill';
 
-export function quillDeltaToTextEditorDelta(
+export function quillDeltasToTextEditorDelta(
   quillDeltas: QuillDelta[]
 ): TextEditorDelta {
   const hasRetain = quillDeltas[0].retain;

@@ -17,3 +17,4 @@ ui/node
 *.iml
 Cargo.lock
 *.tsbuildinfo
+.running
