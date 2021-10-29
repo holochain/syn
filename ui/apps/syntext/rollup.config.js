@@ -7,14 +7,10 @@ import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import builtins from 'rollup-plugin-node-builtins';
 import copy from 'copy';
-import os from 'os';
 
 const production = !process.env.ROLLUP_WATCH;
 
-const HC_PORT = process.env.HC_PORT || 8888;
-const PUBLIC_FOLDER = production
-  ? 'public'
-  : `${os.tmpdir()}/public-${HC_PORT}`;
+const PUBLIC_FOLDER = 'public';
 
 copy('public/*', PUBLIC_FOLDER, function (err, files) {
   if (err) throw err;
@@ -60,7 +56,6 @@ export default {
   },
   plugins: [
     replace({
-      'process.env.HC_PORT': JSON.stringify(process.env.HC_PORT),
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
       'process.env.APP_HOST': JSON.stringify(process.env.APP_HOST),
     }),

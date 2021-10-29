@@ -4,20 +4,22 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "scripts": {
-    "build": "rimraf dist && tsc",
-    "build:watch": "tsc -w"
+    "build": "tsc --incremental",
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
   },
   "type": "module",
   "devDependencies": {
     "@holochain/conductor-api": "0.2.1",
     "@types/lodash-es": "^4.17.4",
     "rimraf": "^3.0.2",
+    "run-singleton-cli": "^0.0.5",
     "svelte": "^3.38.2",
     "typescript": "^4.2.4"
   },
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.0.3",
     "@holochain-open-dev/core-types": "^0.1.1",
+    "@syn/zome-client": "0.0.1",
     "lodash-es": "^4.17.21"
   }
 }

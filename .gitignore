@@ -16,3 +16,4 @@ ui/node
 .rollup.cache
 *.iml
 Cargo.lock
+*.tsbuildinfo

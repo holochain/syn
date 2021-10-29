@@ -2,9 +2,9 @@
   "name": "syntext",
   "version": "0.0.1",
   "scripts": {
+    "start": "concurrently \"npm run build:watch\" \"wds --config wds.config.mjs\"",
     "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "start": "sirv $PUBLIC_FOLDER"
+    "build:watch": "run-singleton \"rollup -c -w\""
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^16.0.0",
@@ -27,6 +27,7 @@
     "@holochain-open-dev/cell-client": "^0.0.3",
     "@holochain/conductor-api": "0.2.0",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
+    "@web/dev-server": "^0.1.25",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^2.2.0"
   }
