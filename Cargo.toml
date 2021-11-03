@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "zomes/syn",
+  "dna/zomes/syn",
 ]
 
 [profile.dev]
