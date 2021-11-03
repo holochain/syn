@@ -22,6 +22,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   _content = new StoreSubscriber(this, () => this.sessionStore?.content);
 
   onTextChanged(deltas: any, source: Sources) {
+    console.log(deltas)
     if (source !== 'user') return;
 
     const ops = deltas.ops;
@@ -46,7 +47,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   updated(changedValues: PropertyValues) {
     super.updated(changedValues);
 
-    this.quill.setText(this.getContent());
+    if (this.quill) this.quill.setText(this.getContent());
   }
 
   getContent(): string {
@@ -54,7 +55,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     const components = this.contentPath.split('.');
 
     for (const component of components) {
-      if (!content[component])
+      if (!Object.keys(content).includes(component))
         throw new Error('Could not find object with content-path');
       content = content[component];
     }
@@ -64,7 +65,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   render() {
     return html`<quill-snow
       id="editor"
-      @text-changed=${e => this.onTextChanged(e.detail.deltas, e.detail.source)}
+      @text-change=${e => this.onTextChanged(e.detail.delta, e.detail.source)}
     ></quill-snow>`;
   }
 

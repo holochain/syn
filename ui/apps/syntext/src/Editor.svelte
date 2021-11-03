@@ -115,7 +115,7 @@
   >
 </editor>
 
-<syn-text-editor style="height: 300px; width: 100%" content-path="body" on:change-requested={d => $session.requestChange([d])}></syn-text-editor>
+<syn-text-editor style="height: 300px; width: 100%" content-path="body" on:change-requested={e => $session.requestChange([e.detail.delta])}></syn-text-editor>
 
 <style>
   editor {

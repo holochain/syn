@@ -134,27 +134,26 @@
 </svelte:head>
 
 {#if synStore}
-  <div class="toolbar">
-    <h1>SynText</h1>
-    <div class:noscribe>
-      <Title />
+  <syn-context store={synStore}>
+    <div class="toolbar">
+      <h1>SynText</h1>
+      <div class:noscribe>
+        <Title />
+      </div>
     </div>
-  </div>
-  <main>
-    <div class:noscribe>
-      <Editor />
-    </div>
-  </main>
+    <main>
+      <div class:noscribe>
+        <Editor />
+      </div>
+    </main>
 
-  <div class="folks-tray">
-    <syn-context store={synStore}>
+    <div class="folks-tray">
       <h3>Folks</h3>
       <syn-folks />
       <h3>Active Sessions</h3>
       <syn-sessions />
-    </syn-context>
-  </div>
-
+    </div>
+  </syn-context>
   <div
     class="tab"
     class:shown={tabShown}
