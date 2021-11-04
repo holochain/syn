@@ -13,6 +13,7 @@
     "@holochain/conductor-api": "0.2.3",
     "@types/lodash-es": "^4.17.4",
     "@types/quill": "^2.0.9",
+    "gh-pages": "^3.2.3",
     "rimraf": "^3.0.2",
     "run-singleton-cli": "^0.0.5",
     "typescript": "^4.2.4"
