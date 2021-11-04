@@ -1,0 +1,26 @@
+{
+  "name": "@syn/zome-client",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "rimraf dist && tsc --incremental",
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
+    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b zome-client"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.4",
+    "gh-pages": "^3.2.3",
+    "rimraf": "^3.0.2",
+    "run-singleton-cli": "^0.0.5",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "@holochain-open-dev/cell-client": "^0.0.9",
+    "@holochain-open-dev/core-types": "^0.1.1",
+    "@holochain/conductor-api": "^0.2.3",
+    "@msgpack/msgpack": "^2.7.0",
+    "lodash-es": "^4.17.21"
+  }
+}
