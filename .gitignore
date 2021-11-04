@@ -15,6 +15,5 @@ ui/node
 .idea
 .rollup.cache
 *.iml
-Cargo.lock
 *.tsbuildinfo
 .running

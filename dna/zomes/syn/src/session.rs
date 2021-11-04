@@ -78,7 +78,7 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
-    let links = get_links(path.hash()?, None)?.into_inner();
+    let links = get_links(path.hash()?, None)?;
 
     let sessions_get_inputs = links
         .into_iter()
@@ -110,7 +110,7 @@ pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
 pub fn delete_session(session_hash: EntryHashB64) -> ExternResult<()> {
     // TODO: add validation so that only the scribe can delete it
     let path = get_sessions_path();
-    let links = get_links(path.hash()?, None)?.into_inner();
+    let links = get_links(path.hash()?, None)?;
 
     let session_hash = EntryHash::from(session_hash);
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));

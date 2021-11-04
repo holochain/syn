@@ -111,6 +111,6 @@ async function spawnSyn(s, config: ConfigSeed) {
 
   return new HolochainClient(appWs, {
     cell_id: syn.cells[0].cellId,
-    cell_nick: syn.cells[0].cellNick,
+    role_id: syn.cells[0].cellRole,
   });
 }

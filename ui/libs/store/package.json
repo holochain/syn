@@ -5,7 +5,8 @@
   "module": "./dist/index.js",
   "scripts": {
     "build": "rimraf dist && tsc --incremental",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
+    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b store"
   },
   "type": "module",
   "devDependencies": {
@@ -17,7 +18,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.7",
+    "@holochain-open-dev/cell-client": "^0.0.9",
     "@holochain-open-dev/core-types": "^0.1.1",
     "@syn/zome-client": "0.0.1",
     "lodash-es": "^4.17.21"

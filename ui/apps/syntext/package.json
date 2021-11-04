@@ -23,7 +23,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.7",
+    "@holochain-open-dev/cell-client": "^0.0.9",
     "@holochain/conductor-api": "0.2.3",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@syn/elements": "0.0.1",

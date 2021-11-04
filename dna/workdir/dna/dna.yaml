@@ -5,4 +5,4 @@ uuid: ~
 properties: ~
 zomes:
   - name: syn
-    bundled: "../../target/wasm32-unknown-unknown/release/hc_zome_syn.wasm"
+    bundled: "../../../target/wasm32-unknown-unknown/release/hc_zome_syn.wasm"
