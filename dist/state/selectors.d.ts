@@ -1,0 +1,15 @@
+import type { ChangeBundle, Commit } from "@syn/zome-client";
+import type { AgentPubKeyB64, EntryHashB64, HeaderHashB64, Dictionary } from "@holochain-open-dev/core-types";
+import type { SessionWorkspace, SynState } from "./syn-state";
+export declare function amIScribe(synState: SynState, sessionHash: EntryHashB64): boolean;
+export declare function selectScribe(synState: SynState, sessionHash: EntryHashB64): AgentPubKeyB64;
+export declare function selectSessionWorkspace(synState: SynState, sessionHash: EntryHashB64): SessionWorkspace;
+export declare function selectLastCommitTime(state: SynState, sessionHash: EntryHashB64): number;
+export declare function selectLatestCommit(state: SynState, sessionHash: EntryHashB64): Commit | undefined;
+export declare function selectLatestCommitHash(session: SessionWorkspace): HeaderHashB64 | undefined;
+export declare function selectLatestCommittedContentHash(synState: SynState, sessionHash: EntryHashB64): EntryHashB64;
+export declare function selectAllCommits(synState: SynState, sessionHash: EntryHashB64): Array<[EntryHashB64, Commit]>;
+export declare function selectMissedCommits(synState: SynState, sessionHash: EntryHashB64, latestSeenSessionIndex: number): Dictionary<Commit>;
+export declare function selectMissedUncommittedChanges(synState: SynState, sessionHash: EntryHashB64, latestSeenSessionIndex: number): ChangeBundle;
+export declare function selectCurrentSessionIndex(sessionWorkspace: SessionWorkspace): number;
+export declare function selectFolksInSession(sessionWorkspace: SessionWorkspace): AgentPubKeyB64[];

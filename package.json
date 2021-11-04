@@ -1,41 +1,27 @@
 {
-  "name": "@syn/dev",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@syn/store",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "scripts": {
-    "start": "cross-env HC_PORT=$(port) concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"npm run dev -w syntext\"",
-    "dev:libs": "concurrently -k \"npm run build:watch -w @syn/zome-client\" \"npm run build:watch -w @syn/store\" \"npm run build:watch -w @syn/elements\"",
-    "test": "npm run build:happ && npm run build -w @syn/zome-client -w @syn/store && npm test -w @syn/tests",
-    "start:happ": "npm run build:happ && hc s generate -r=$HC_PORT dna/workdir/happ/syn.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
-    "build:happ": "npm run build:dna && hc app pack dna/workdir/happ",
-    "build:dna": "npm run build:zome && hc dna pack dna/workdir/dna",
-    "build:zome": "cd dna && CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
+    "build": "rimraf dist && tsc --incremental",
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
+    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b store"
   },
-  "workspaces": [
-    "tests",
-    "ui/apps/*",
-    "ui/libs/*"
-  ],
+  "type": "module",
   "devDependencies": {
-    "@babel/runtime": "^7.14.0",
-    "concurrently": "^6.2.1",
-    "cross-env": "^7.0.3",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "lint-staged": "^11.1.2",
-    "new-port-cli": "^1.0.0",
-    "prettier": "^2.3.2",
-    "repeating-cli": "^3.0.0",
-    "typescript": "4.2.4"
+    "@holochain/conductor-api": "0.2.3",
+    "@types/lodash-es": "^4.17.4",
+    "gh-pages": "^3.2.3",
+    "rimraf": "^3.0.2",
+    "run-singleton-cli": "^0.0.5",
+    "svelte": "^3.38.2",
+    "typescript": "^4.2.4"
   },
-  "eslintConfig": {
-    "extends": [
-      "@open-wc/eslint-config",
-      "eslint-config-prettier"
-    ]
-  },
-  "prettier": {
-    "singleQuote": true,
-    "arrowParens": "avoid"
+  "dependencies": {
+    "@holochain-open-dev/cell-client": "^0.0.9",
+    "@holochain-open-dev/core-types": "^0.1.1",
+    "@syn/zome-client": "0.0.1",
+    "lodash-es": "^4.17.21"
   }
 }

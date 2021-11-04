@@ -1,0 +1,35 @@
+import { applyCommits, orderCommits } from '../../utils';
+// Pick and join a session
+export async function joinSession(workspace, sessionHash) {
+    const session = await workspace.client.getSession(sessionHash);
+    const orderedCommitHashes = orderCommits(session.session.snapshotHash, session.commits);
+    const orderedCommits = orderedCommitHashes.map(hash => session.commits[hash]);
+    const currentContent = applyCommits(session.snapshot, workspace.applyDeltaFn, orderedCommits);
+    workspace.store.update(state => {
+        state.sessions[session.sessionHash] = session.session;
+        state.joinedSessions[session.sessionHash] = {
+            sessionHash: session.sessionHash,
+            commitHashes: orderedCommitHashes,
+            currentContent,
+            myFolkIndex: 0,
+            prerequestContent: undefined,
+            requestedChanges: [],
+            uncommittedChanges: {
+                atSessionIndex: 0,
+                authors: {},
+                deltas: [],
+            },
+            folks: {},
+        };
+        if (session.session.scribe !== state.myPubKey) {
+            workspace.client.sendSyncRequest({
+                scribe: session.session.scribe,
+                sessionHash: session.sessionHash,
+                lastSessionIndexSeen: 0,
+            });
+        }
+        state.activeSessionHash = session.sessionHash;
+        return state;
+    });
+}
+//# sourceMappingURL=folk.js.map

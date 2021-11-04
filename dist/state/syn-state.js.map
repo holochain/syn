@@ -1,0 +1,1 @@
+{"version":3,"file":"syn-state.js","sourceRoot":"","sources":["../../src/state/syn-state.ts"],"names":[],"mappings":"AAkEA,MAAM,UAAU,YAAY,CAAC,QAAwB;IACnD,MAAM,aAAa,GAAa;QAC9B,QAAQ;QACR,iBAAiB,EAAE,SAAS;QAC5B,QAAQ,EAAE,EAAE;QACZ,cAAc,EAAE,EAAE;QAClB,OAAO,EAAE,EAAE;QACX,SAAS,EAAE,EAAE;KACd,CAAC;IACF,OAAO,aAAa,CAAC;AACvB,CAAC"}
