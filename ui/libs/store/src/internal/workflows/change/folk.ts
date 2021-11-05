@@ -1,6 +1,6 @@
 import type { ChangeBundle, Content, FolkChanges } from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { cloneDeep } from 'lodash-es';
+import cloneDeep from 'lodash-es/cloneDeep';
 import { get } from 'svelte/store';
 
 import {

@@ -7,7 +7,7 @@ import type {
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
 import { Session, SynClient } from '@syn/zome-client';
-import { merge } from 'lodash-es';
+import merge from 'lodash-es/merge';
 
 import type { ApplyDeltaFn } from './apply-delta';
 import { initialState } from './state/syn-state';

@@ -1,20 +1,20 @@
-import type { StateForSync } from "@syn/zome-client";
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
-import { merge } from "lodash-es";
+import type { StateForSync } from '@syn/zome-client';
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import merge from 'lodash-es/merge';
 
 import {
   selectLatestCommittedContentHash,
   selectSessionWorkspace,
-} from "../../../state/selectors";
-import { orderCommits, applyCommits, applyChangeBundle } from "../../utils";
-import type { SynWorkspace } from "../../workspace";
+} from '../../../state/selectors';
+import { orderCommits, applyCommits, applyChangeBundle } from '../../utils';
+import type { SynWorkspace } from '../../workspace';
 
 export function handleSyncResponse<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
   stateForSync: StateForSync
 ) {
-  workspace.store.update((state) => {
+  workspace.store.update(state => {
     const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
 
     // Put the missed commits in the state
@@ -56,7 +56,7 @@ export function handleSyncResponse<CONTENT, DELTA>(
 
     // Apply all deltas
     const commitArray = missedCommitHashes.map(
-      (missedCommitHash) => stateForSync.missedCommits[missedCommitHash]
+      missedCommitHash => stateForSync.missedCommits[missedCommitHash]
     );
 
     let currentContent = applyCommits(

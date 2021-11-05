@@ -5,8 +5,7 @@
   "module": "./dist/index.js",
   "scripts": {
     "build": "rimraf dist && tsc --incremental",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
-    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b text-editor"
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
   },
   "type": "module",
   "devDependencies": {
@@ -23,8 +22,8 @@
     "@holochain-open-dev/core-types": "^0.1.1",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.1",
-    "@scoped-elements/material-web": "0.0.14",
-    "@scoped-elements/quill": "^0.0.1",
+    "@scoped-elements/material-web": "0.0.15",
+    "@scoped-elements/quill": "^0.0.3",
     "@syn/elements": "0.0.1",
     "@syn/store": "0.0.1",
     "lit": "^2.0.2",

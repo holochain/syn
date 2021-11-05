@@ -26,11 +26,11 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
 
     return html`
       <div class="column">
-        <syn-folk .pubKey=${this.syn.myPubKey} in-session></syn-folk>
+        <syn-folk .agentPubKey=${this.syn.myPubKey} in-session></syn-folk>
         ${Object.entries(this._folks.value).map(
           ([pubKey, folk]) =>
             html`<syn-folk
-              .pubKey=${pubKey}
+              .agentPubKey=${pubKey}
               .inSession=${folk.inSession}
               .isScribe=${this.sessionStore.session.scribe === pubKey}
             ></syn-folk>`

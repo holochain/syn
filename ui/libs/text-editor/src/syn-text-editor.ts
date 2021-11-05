@@ -13,7 +13,7 @@ import { quillDeltasToTextEditorDelta } from './utils';
 
 export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   @property({ attribute: 'content-path' })
-  contentPath: string = '';
+  contentPath: string | undefined;
 
   @contextProvided({ context: synSessionContext })
   @state()
@@ -22,7 +22,6 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   _content = new StoreSubscriber(this, () => this.sessionStore?.content);
 
   onTextChanged(deltas: any, source: Sources) {
-    console.log(deltas)
     if (source !== 'user') return;
 
     const ops = deltas.ops;
@@ -52,8 +51,9 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
 
   getContent(): string {
     let content = this._content.value;
-    const components = this.contentPath.split('.');
+    if (!this.contentPath) return content as unknown as string;
 
+    const components = this.contentPath.split('.');
     for (const component of components) {
       if (!Object.keys(content).includes(component))
         throw new Error('Could not find object with content-path');
@@ -64,7 +64,11 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
 
   render() {
     return html`<quill-snow
+      style="flex: 1;"
       id="editor"
+      .options=${{
+        placeholder: 'Write your note...',
+      }}
       @text-change=${e => this.onTextChanged(e.detail.delta, e.detail.source)}
     ></quill-snow>`;
   }

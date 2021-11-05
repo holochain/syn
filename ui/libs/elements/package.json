@@ -5,8 +5,7 @@
   "module": "./dist/index.js",
   "scripts": {
     "build": "rimraf dist && tsc --incremental",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
-    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b elements"
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
   },
   "type": "module",
   "devDependencies": {
@@ -20,9 +19,10 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.0.9",
     "@holochain-open-dev/core-types": "^0.1.1",
+    "@holochain-open-dev/profiles": "github:holochain-open-dev/profiles#ui-build",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.1",
-    "@scoped-elements/material-web": "0.0.14",
+    "@scoped-elements/material-web": "0.0.15",
     "@syn/store": "0.0.1",
     "lit": "^2.0.2",
     "lit-svelte-stores": "^0.1.3",

@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "rimraf dist && tsc --incremental",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\"",
-    "publish-to-branch": "npm run build && rimraf node_modules && gh-pages -d ./ -b zome-client"
+    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput --incremental\""
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.4",

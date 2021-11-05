@@ -13,4 +13,7 @@ export const sharedStyles = css`
   .placeholder {
     color: rgba(0, 0, 0, 0.6);
   }
+  :host {
+    display: flex;
+  }
 `;

@@ -6,7 +6,7 @@ import type {
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
 import { encode, decode } from '@msgpack/msgpack';
-import { isEqual } from 'lodash-es';
+import isEqual from 'lodash-es/isEqual';
 
 import type {
   ChangeBundle,
