@@ -1,28 +1,28 @@
 use commit::CommitNotice;
-use delta::{ChangeBundle, ChangeRequest};
-use folks::{FolkLore, Heartbeat, register_as_folk};
-use holo_hash::EntryHashB64;
+use change::{ChangeNotice, ChangeRequest};
+use folks::{register_as_folk, FolkLore, Heartbeat};
 use hdk::prelude::*;
+use holo_hash::EntryHashB64;
 
 mod commit;
-mod content;
-mod delta;
+mod change;
 mod error;
 mod folks;
 mod session;
+mod snapshot;
 mod sync;
 mod utils;
 
 use session::Session;
 
-use content::Content;
+use snapshot::Snapshot;
 use sync::{RequestSyncInput, StateForSync};
 
 use crate::commit::Commit;
 
 entry_defs![
     Path::entry_def(),
-    Content::entry_def(),
+    Snapshot::entry_def(),
     Commit::entry_def(),
     Session::entry_def()
 ];
@@ -49,9 +49,9 @@ enum SynMessage {
     SyncReq(RequestSyncInput), // content is who the request is from
     SyncResp(StateForSync),
     ChangeReq(ChangeRequest),
-    ChangeNotice(ChangeBundle),
+    ChangeNotice(ChangeNotice),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
-    FolkLore(FolkLore),     // signal to participants to update other participants info
+    FolkLore(FolkLore),   // signal to participants to update other participants info
     CommitNotice(CommitNotice), // signal for sennding commit and content hash after commit
 }
 

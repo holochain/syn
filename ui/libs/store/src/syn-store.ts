@@ -59,7 +59,7 @@ export function createSynStore<CONTENT, DELTA>(
     store,
     applyDeltaFn,
     client,
-    initialContent,
+    initialSnapshot: initialContent,
     config: fullConfig,
   };
 

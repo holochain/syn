@@ -4,8 +4,8 @@ import type {
 } from '@holochain-open-dev/core-types';
 import type { FolkLore } from '@syn/zome-client';
 
-import { amIScribe, selectSessionWorkspace } from '../../../state/selectors';
-import type { SessionWorkspace } from '../../../state/syn-state';
+import { amIScribe, selectSessionState } from '../../../state/selectors';
+import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { putJustSeenFolks } from './utils';
 
@@ -20,7 +20,7 @@ export function handleFolkLore<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionState(state, sessionHash) as SessionState;
     if ((folklore as { gone: AgentPubKeyB64[] }).gone) {
       putGoneFolks(session, (folklore as { gone: AgentPubKeyB64[] }).gone);
     } else {
@@ -35,7 +35,7 @@ export function handleFolkLore<CONTENT, DELTA>(
   });
 }
 
-function putGoneFolks(session: SessionWorkspace, goneFolks: AgentPubKeyB64[]) {
+function putGoneFolks(session: SessionState, goneFolks: AgentPubKeyB64[]) {
   for (const goneFolk of goneFolks) {
     if (!session.folks[goneFolk]) {
       session.folks[goneFolk] = {

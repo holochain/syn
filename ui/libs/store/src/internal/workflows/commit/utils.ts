@@ -1,28 +1,29 @@
-import type { Commit } from "@syn/zome-client";
+import type { Commit } from '@syn/zome-client';
 import type {
   EntryHashB64,
   HeaderHashB64,
-} from "@holochain-open-dev/core-types";
+} from '@holochain-open-dev/core-types';
 
-import type { SessionWorkspace, SynState } from "../../../state/syn-state";
+import type { SessionState, SynState } from '../../../state/syn-state';
 import {
-  selectLatestCommitHash,
-  selectLatestCommittedContentHash,
-  selectSessionWorkspace,
-} from "../../../state/selectors";
+  selectLatestSnapshotHash,
+  selectSessionState,
+} from '../../../state/selectors';
 
 export function buildCommitFromUncommitted(
   state: SynState,
   sessionHash: EntryHashB64,
-  newContentHash: EntryHashB64
+  newContentHash: EntryHashB64,
+  initialSnapshotHash: EntryHashB64
 ): Commit {
-  const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
-  const lastCommitHash = selectLatestCommitHash(session);
+  const session = selectSessionState(state, sessionHash) as SessionState;
+  const lastCommitHash = session.currentCommitHash;
   return {
     changes: session.uncommittedChanges,
-    newContentHash,
     previousCommitHashes: lastCommitHash ? [lastCommitHash] : [],
-    previousContentHash: selectLatestCommittedContentHash(state, sessionHash),
+    previousContentHash:
+      selectLatestSnapshotHash(state, sessionHash) || initialSnapshotHash,
+    newContentHash,
     createdAt: Date.now(),
     meta: {
       appSpecific: null,
@@ -38,14 +39,10 @@ export function putNewCommit(
   commit: Commit
 ) {
   state.commits[newCommitHash] = commit;
-  const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
-  session.commitHashes.push(newCommitHash);
-
-  const newSessionIndex =
-    commit.changes.atSessionIndex + commit.changes.deltas.length;
+  const session = selectSessionState(state, sessionHash) as SessionState;
+  session.currentCommitHash = newCommitHash;
 
   session.uncommittedChanges = {
-    atSessionIndex: newSessionIndex,
     authors: {},
     deltas: [],
   };

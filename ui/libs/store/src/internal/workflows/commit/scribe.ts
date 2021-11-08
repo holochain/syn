@@ -5,9 +5,9 @@ import { get } from 'svelte/store';
 import {
   amIScribe,
   selectFolksInSession,
-  selectSessionWorkspace,
+  selectSessionState,
 } from '../../../state/selectors';
-import type { SessionWorkspace } from '../../../state/syn-state';
+import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
@@ -20,18 +20,25 @@ export async function commitChanges<CONTENT, DELTA>(
     console.log("Trying to commit the changes but I'm not the scribe!");
     return state;
   }
-  let session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+  let session = selectSessionState(state, sessionHash) as SessionState;
 
-  const hash = await workspace.client.hashContent(session.currentContent);
+  const hash = await workspace.client.hashSnapshot(session.currentContent);
+  const initialSnapshotHash = await workspace.client.hashSnapshot(
+    workspace.initialSnapshot
+  );
 
-  const commit = buildCommitFromUncommitted(state, sessionHash, hash);
+  const commit = buildCommitFromUncommitted(
+    state,
+    sessionHash,
+    hash,
+    initialSnapshotHash
+  );
   const commitInput: CommitInput = {
     commit,
     participants: selectFolksInSession(session),
     sessionHash,
-    sessionSnapshot: state.sessions[sessionHash].snapshotHash,
   };
-  const newCommitHash = await workspace.client.commit(commitInput);
+  const newCommitHash = await workspace.client.commitChanges(commitInput);
 
   // TODO: what happens if we have a new change while committing?
 

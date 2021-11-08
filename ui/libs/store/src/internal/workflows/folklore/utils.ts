@@ -1,9 +1,9 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 
-import type { SessionWorkspace } from '../../../state/syn-state';
+import type { SessionState } from '../../../state/syn-state';
 
 export function putJustSeenFolks(
-  session: SessionWorkspace,
+  session: SessionState,
   myPubKey: AgentPubKeyB64,
   folks: AgentPubKeyB64[]
 ) {

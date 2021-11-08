@@ -2,12 +2,11 @@ import type {
   AgentPubKeyB64,
   EntryHashB64,
   HeaderHashB64,
-} from "@holochain-open-dev/core-types";
-import type { ChangeBundle } from "./delta";
+} from '@holochain-open-dev/core-types';
+import type { ChangeBundle } from './change';
 
 export interface CommitInput {
   sessionHash: EntryHashB64;
-  sessionSnapshot: EntryHashB64;
 
   commit: Commit;
 
@@ -19,7 +18,7 @@ export interface Commit {
 
   createdAt: number;
 
-  previousCommitHashes: Array<HeaderHashB64>;
+  previousCommitHashes: Array<EntryHashB64>;
 
   previousContentHash: EntryHashB64;
   newContentHash: EntryHashB64;

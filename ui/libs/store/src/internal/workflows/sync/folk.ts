@@ -2,11 +2,8 @@ import type { StateForSync } from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import merge from 'lodash-es/merge';
 
-import {
-  selectLatestCommittedContentHash,
-  selectSessionWorkspace,
-} from '../../../state/selectors';
-import { orderCommits, applyCommits, applyChangeBundle } from '../../utils';
+import { selectSessionState } from '../../../state/selectors';
+import { applyChangeBundle } from '../../utils';
 import type { SynWorkspace } from '../../workspace';
 
 export function handleSyncResponse<CONTENT, DELTA>(
@@ -15,35 +12,46 @@ export function handleSyncResponse<CONTENT, DELTA>(
   stateForSync: StateForSync
 ) {
   workspace.store.update(state => {
-    const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
-
-    // Put the missed commits in the state
-    const latestCommittedContentHash = selectLatestCommittedContentHash(
-      state,
-      sessionHash
-    );
-    const missedCommitHashes = orderCommits(
-      latestCommittedContentHash,
-      stateForSync.missedCommits
-    );
-
-    for (const missedCommitHash of missedCommitHashes) {
-      state.commits[missedCommitHash] =
-        stateForSync.missedCommits[missedCommitHash];
+    if (state.joiningSessions[sessionHash]) {
+      state.joinedSessions[sessionHash] = {
+        currentCommitHash: stateForSync.folkMissedLastCommit
+          ? stateForSync.folkMissedLastCommit.commitHash
+          : undefined,
+        sessionHash: sessionHash,
+        currentContent: workspace.initialSnapshot,
+        myFolkIndex: 0,
+        prerequestContent: undefined,
+        requestedChanges: [],
+        ephemeral: {},
+        uncommittedChanges: {
+          authors: {},
+          deltas: [],
+        },
+        folks: {},
+      };
+      state.joiningSessions[sessionHash] = false;
+      delete state.joiningSessions[sessionHash];
     }
-    sessionWorkspace.commitHashes = [
-      ...sessionWorkspace.commitHashes,
-      ...missedCommitHashes,
-    ];
+
+    const sessionState = selectSessionState(state, sessionHash);
+
+    // Put the missed commit in the state
+    const missedCommit = stateForSync.folkMissedLastCommit;
+
+    if (missedCommit) {
+      state.commits[missedCommit.commitHash] = missedCommit.commit;
+      state.snapshots[missedCommit.commit.newContentHash] =
+        missedCommit.commitInitialSnapshot;
+      sessionState.currentCommitHash = missedCommit.commitHash;
+      sessionState.uncommittedChanges = {
+        authors: {},
+        deltas: [],
+      };
+      sessionState.currentContent = missedCommit.commitInitialSnapshot;
+    }
 
     // Put the uncommitted changes in the state
-    const uncommittedChanges = sessionWorkspace.uncommittedChanges;
-    const lastSeenIndex =
-      uncommittedChanges.atSessionIndex + uncommittedChanges.deltas.length;
-    if (lastSeenIndex !== stateForSync.uncommittedChanges.atSessionIndex)
-      throw new Error(
-        `I requested changes from session index ${lastSeenIndex} and received changes from ${stateForSync.uncommittedChanges.atSessionIndex}`
-      );
+    const uncommittedChanges = sessionState.uncommittedChanges;
 
     uncommittedChanges.deltas = [
       ...uncommittedChanges.deltas,
@@ -55,20 +63,13 @@ export function handleSyncResponse<CONTENT, DELTA>(
     );
 
     // Apply all deltas
-    const commitArray = missedCommitHashes.map(
-      missedCommitHash => stateForSync.missedCommits[missedCommitHash]
-    );
-
-    let currentContent = applyCommits(
-      sessionWorkspace.currentContent,
-      workspace.applyDeltaFn,
-      commitArray
-    );
-    sessionWorkspace.currentContent = applyChangeBundle(
-      currentContent,
+    sessionState.currentContent = applyChangeBundle(
+      sessionState.currentContent,
       workspace.applyDeltaFn,
       stateForSync.uncommittedChanges
     );
+
+    sessionState.ephemeral = stateForSync.ephemeralChanges;
     return state;
   });
 }

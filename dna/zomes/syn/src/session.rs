@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
-use holo_hash::*;
 use hdk::prelude::*;
+use holo_hash::*;
 
-use crate::commit::Commit;
-use crate::content::{get_snapshot, Content};
 use crate::error::{SynError, SynResult};
-use crate::utils::get_links_and_load_type;
+use crate::utils::element_to_entry;
 
 /// Session
 /// This entry holds the record of who the scribe is and a hash
@@ -17,8 +15,8 @@ use crate::utils::get_links_and_load_type;
 #[derive(Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Session {
-    pub snapshot_hash: EntryHashB64, // hash of the starting state for this session
-    pub scribe: AgentPubKeyB64,      // scribe
+    pub initial_commit_hash: Option<EntryHashB64>, // hash of the starting state for this session
+    pub scribe: AgentPubKeyB64,                    // scribe
     #[serde(with = "ts_milliseconds")]
     pub created_at: DateTime<Utc>,
 }
@@ -29,28 +27,27 @@ pub struct Session {
 pub struct SessionInfo {
     pub session_hash: EntryHashB64,
     pub session: Session,
-    // All content changes that have been made in this session
-    pub commits: HashMap<HeaderHashB64, Commit>,
-    // sessions start from actual content to build from
-    pub snapshot: Content,
 }
 
 #[hdk_extern]
-fn get_session(session: EntryHashB64) -> ExternResult<SessionInfo> {
-    Ok(build_session_info(session.into())?)
+fn get_session(session: EntryHashB64) -> ExternResult<Session> {
+    let element =
+        get(EntryHash::from(session), GetOptions::default())?.ok_or(SynError::HashNotFound)?;
+
+    let (_, session) = element_to_entry::<Session>(element)?;
+
+    Ok(session)
 }
 
 /// Input to the new_session call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NewSessionInput {
-    pub snapshot_hash: EntryHashB64,
+    pub initial_commit_hash: Option<EntryHashB64>,
 }
 
 #[hdk_extern]
 fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
-    let content = get_snapshot(input.snapshot_hash.clone())?.ok_or(SynError::HashNotFound)?;
-
     // get my pubkey
     let me = agent_info()?.agent_latest_pubkey;
 
@@ -59,7 +56,7 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
         DateTime::try_from(now).or(Err(WasmError::Guest("Could not get timestamp".into())))?;
 
     let session = Session {
-        snapshot_hash: input.snapshot_hash.clone(),
+        initial_commit_hash: input.initial_commit_hash,
         // scribe is author
         scribe: me.into(),
         created_at,
@@ -70,8 +67,6 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
     Ok(SessionInfo {
         session_hash: session_hash.into(),
         session,
-        commits: HashMap::new(), // no commits yet
-        snapshot: content,
     })
 }
 
@@ -90,15 +85,8 @@ pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
 
     for session in sessions_vec {
         if let Some(element) = session {
-            let session: Session = element
-                .entry()
-                .to_app_option()?
-                .ok_or(SynError::HashNotFound)?;
-            let session_hash = element
-                .header()
-                .entry_hash()
-                .ok_or(SynError::HashNotFound)?;
-            sessions.insert(EntryHashB64::from(session_hash.clone()), session);
+            let (session_hash, session) = element_to_entry::<Session>(element)?;
+            sessions.insert(session_hash, session);
         }
     }
 
@@ -140,48 +128,4 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     create_link(session_anchor_hash, session_hash, ())?;
 
     Ok(header_hash)
-}
-
-/// builds out the session info from a given session hash.
-/// return error if hash not found rather than option because we
-/// shouldn't be calling this function on a hash that doesn't exist
-fn build_session_info(session_hash: EntryHash) -> SynResult<SessionInfo> {
-    let element =
-        get(session_hash.clone(), GetOptions::content())?.ok_or(SynError::HashNotFound)?;
-    let session: Session = element
-        .entry()
-        .to_app_option()?
-        .ok_or(SynError::HashNotFound)?;
-
-    let snapshot_hash = session.snapshot_hash.clone();
-
-    let snapshot_element = get(
-        EntryHash::from(snapshot_hash.clone()),
-        GetOptions::content(),
-    )?
-    .ok_or(SynError::HashNotFound)?;
-    let snapshot: Content = snapshot_element
-        .entry()
-        .to_app_option()?
-        .ok_or(SynError::HashNotFound)?;
-
-    let commits = get_links_and_load_type::<Commit>(snapshot_hash.clone().into(), None)?;
-
-    return Ok(SessionInfo {
-        session_hash: session_hash.clone().into(),
-        session,
-        commits: index_by_header_hash(commits),
-        snapshot,
-    });
-}
-
-fn index_by_header_hash(
-    commits: Vec<(HeaderHash, EntryHash, Commit)>,
-) -> HashMap<HeaderHashB64, Commit> {
-    let mut indexed: HashMap<HeaderHashB64, Commit> = HashMap::new();
-    for commit in commits {
-        indexed.insert(commit.0.into(), commit.2);
-    }
-
-    indexed
 }

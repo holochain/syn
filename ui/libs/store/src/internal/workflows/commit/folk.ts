@@ -1,45 +1,55 @@
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
-import type { CommitNotice } from "@syn/zome-client";
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type { CommitNotice } from '@syn/zome-client';
 import {
   amIScribe,
-  selectLatestCommittedContentHash,
-  selectSessionWorkspace,
-} from "../../../state/selectors";
-import type { SessionWorkspace } from "../../../state/syn-state";
+  selectLastDeltaSeen,
+  selectLatestSnapshotHash,
+  selectSessionState,
+} from '../../../state/selectors';
+import type { SessionState } from '../../../state/syn-state';
 
-import type { SynWorkspace } from "../../workspace";
-import { buildCommitFromUncommitted, putNewCommit } from "./utils";
+import type { SynWorkspace } from '../../workspace';
+import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
-export function handleCommitNotice<CONTENT, DELTA>(
+export async function handleCommitNotice<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
   commitNotice: CommitNotice
 ) {
-  workspace.store.update((state) => {
+  // TODO: move this away from here
+  const initialSnapshotHash = await workspace.client.hashSnapshot(
+    workspace.initialSnapshot
+  );
+  workspace.store.update(state => {
     if (amIScribe(state, sessionHash)) {
       console.log("Received a commit notice but I'm the scribe!");
       return state;
     }
 
-    const latestCommittedContentHash = selectLatestCommittedContentHash(
+    const latestCommittedContentHash = selectLatestSnapshotHash(
       state,
       sessionHash
     );
-    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+    const sessionState = selectSessionState(state, sessionHash) as SessionState;
 
     if (
       latestCommittedContentHash === commitNotice.previousContentHash &&
       commitNotice.committedDeltasCount ===
-        session.uncommittedChanges.deltas.length
+        sessionState.uncommittedChanges.deltas.length
     ) {
       const commit = buildCommitFromUncommitted(
         state,
         sessionHash,
-        commitNotice.newContentHash
+        commitNotice.newContentHash,
+        initialSnapshotHash
       );
       putNewCommit(state, sessionHash, commitNotice.commitHash, commit);
     } else {
-      // TODO: resync
+      workspace.client.sendSyncRequest({
+        lastDeltaSeen: selectLastDeltaSeen(sessionState),
+        scribe: state.sessions[sessionHash].scribe,
+        sessionHash,
+      });
     }
 
     return state;

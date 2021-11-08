@@ -5,6 +5,7 @@ import {
   Content,
   delay,
   Delta,
+  initialContent,
   serializeHash,
   Signal,
   synDna,
@@ -61,25 +62,19 @@ export default orchestrator => {
       encode({ title: '', body: '' })
     );
     // create initial session
-    let sessionInfo = await me.call('syn', 'new_session', {
-      snapshotHash,
-    });
+    let sessionInfo = await me.call('syn', 'new_session', {});
 
-    let sessionSnapshot: Content = decode(sessionInfo.snapshot) as Content;
+    // First ever session so content should be default content
+    let sessionSnapshot: Content = initialContent;
 
     // I created the session, so I should be the scribe
     t.deepEqual(sessionInfo.session.scribe, me_pubkey);
-    // First ever session so content should be default content
-    t.deepEqual(sessionSnapshot, {
-      title: '',
-      body: '',
-    });
     let sessionHash = sessionInfo.sessionHash;
 
-    // check the hash_content zome call.
-    let hash = await me.call('syn', 'hash_content', sessionInfo.snapshot);
-    // There haven't been any commits: must be the same
-    t.deepEqual(sessionInfo.session.snapshotHash, hash);
+    // check the hash_snapshot zome call.
+    let hash = await me.call('syn', 'hash_snapshot', encode(sessionSnapshot));
+    // There haven't been any commits
+    t.deepEqual(sessionInfo.session.initialCommitHash, null);
 
     // check get_sessions utility zome call
     sessions = await me.call('syn', 'get_sessions');
@@ -98,15 +93,7 @@ export default orchestrator => {
       'get_session',
       sessionHash
     );
-    t.deepEqual(sessionInfo, returnedSessionInfo);
-
-    // check that initial snapshot was created by using the get_snapshot zome call
-    const returned_content = await me.call(
-      'syn',
-      'get_snapshot',
-      sessionInfo.session.snapshotHash
-    );
-    t.deepEqual(decode(returned_content), sessionSnapshot);
+    t.deepEqual(sessionInfo.session, returnedSessionInfo);
 
     await delay(1000);
 
@@ -114,12 +101,8 @@ export default orchestrator => {
     let aliceSessionInfo = await alice.call('syn', 'get_session', sessionHash);
 
     // alice should get my session
-    t.deepEqual(aliceSessionInfo.sessionHash, sessionHash);
-    t.deepEqual(aliceSessionInfo.session.scribe, me_pubkey);
-    t.deepEqual(decode(aliceSessionInfo.snapshot), {
-      title: '',
-      body: '',
-    });
+    t.deepEqual(aliceSessionInfo.scribe, me_pubkey);
+    t.deepEqual(aliceSessionInfo.initialCommitHash, null);
 
     // set up the pending deltas array
     let pendingDeltas: TextDelta[] = [
@@ -130,7 +113,7 @@ export default orchestrator => {
     let new_content = applyDeltas(sessionSnapshot, pendingDeltas);
     const new_content_hash_1 = await me.call(
       'syn',
-      'hash_content',
+      'hash_snapshot',
       encode(new_content)
     );
 
@@ -165,23 +148,21 @@ export default orchestrator => {
 
     // add a content change
     let commit1 = {
-      sessionHash: sessionInfo.sessionHash,
-      sessionSnapshot: sessionInfo.session.snapshotHash,
+      sessionHash: sessionHash,
       commit: {
         changes: {
-          atSessionIndex: 0,
           deltas,
           authors: {
             [me_pubkey]: {
               atFolkIndex: 0,
-              sessionChanges: [0, 1],
+              commitChanges: [0, 1],
             },
           },
         },
         createdAt: Date.now(),
         previousCommitHashes: [],
         // this is the first change so same hash as snapshot
-        previousContentHash: sessionInfo.session.snapshotHash,
+        previousContentHash: snapshotHash,
         newContentHash: new_content_hash_1,
         meta: {
           witnesses: [bob_pubkey, alice_pubkey],
@@ -190,8 +171,8 @@ export default orchestrator => {
       },
       participants: [],
     };
-    let commit_header_hash1 = await me.call('syn', 'commit', commit1);
-    t.equal(commit_header_hash1.length, 53); // is a hash
+    let commit_hash1 = await me.call('syn', 'commit_changes', commit1);
+    t.equal(commit_hash1.length, 53); // is a hash
 
     // add a second content change
     pendingDeltas = [
@@ -204,28 +185,26 @@ export default orchestrator => {
     new_content = applyDeltas(new_content, pendingDeltas);
     const new_content_hash_2 = await me.call(
       'syn',
-      'hash_content',
+      'hash_snapshot',
       encode(new_content)
     );
 
     deltas = pendingDeltas.map(d => encode(d));
 
     let commit2 = {
-      sessionHash: sessionInfo.sessionHash,
-      sessionSnapshot: sessionInfo.session.snapshotHash,
+      sessionHash: sessionHash,
       commit: {
         changes: {
-          atSessionIndex: 2,
           deltas,
           authors: {
             [me_pubkey]: {
               atFolkIndex: 2,
-              sessionChanges: [2, 3, 4, 5, 6],
+              commitChanges: [0, 1, 2, 3, 4],
             },
           },
         },
         createdAt: Date.now(),
-        previousCommitHashes: [commit_header_hash1],
+        previousCommitHashes: [commit_hash1],
         previousContentHash: new_content_hash_1, // this is the second change so previous commit's hash
         newContentHash: new_content_hash_2,
         meta: {
@@ -235,7 +214,7 @@ export default orchestrator => {
       },
       participants: [],
     };
-    let commit_header_hash2 = await me.call('syn', 'commit', commit2);
+    let commit_hash2 = await me.call('syn', 'commit_changes', commit2);
     // clear the pendingDeltas
     pendingDeltas = [];
 
@@ -245,47 +224,17 @@ export default orchestrator => {
     aliceSessionInfo = await alice.call('syn', 'get_session', sessionHash);
 
     // alice should get my session
-    t.deepEqual(aliceSessionInfo.sessionHash, sessionHash);
-    t.deepEqual(aliceSessionInfo.session.scribe, me_pubkey);
-    t.deepEqual(decode(aliceSessionInfo.snapshot), {
-      title: '',
-      body: '',
-    });
+    t.deepEqual(aliceSessionInfo.scribe, me_pubkey);
     await alice.call('syn', 'send_sync_request', {
       scribe: me_pubkey,
-      sessionHash: aliceSessionInfo.sessionHash,
-      lastSessionIndexSeen: 0,
+      sessionHash: sessionHash,
+      lastDeltaSeen: null,
     });
 
-    // check that deltas and snapshot content returned add up to the current real content
     await delay(2000); // make time for integrating new data
 
-    let deltasFromSessionInfo = [
-      aliceSessionInfo.commits[commit_header_hash1],
-      aliceSessionInfo.commits[commit_header_hash2],
-    ].reduce((acc, next) => [...acc, ...next.changes.deltas], [] as String[]);
-
-    const receivedDeltas = deltasFromSessionInfo.map(d => decode(d));
-
-    const aliceContent = applyDeltas(
-      decode(aliceSessionInfo.snapshot) as Content,
-      receivedDeltas
-    );
-    t.deepEqual(
-      aliceContent,
-      { title: 'foo title', body: 'baz monkey new' } // content after two commits
-    );
-
-    // confirm that the session_info's content hash matches the content_hash
-    // generated by applying deltas
-    hash = await alice.call('syn', 'hash_content', encode(aliceContent));
-    t.deepEqual(
-      aliceSessionInfo.commits[commit_header_hash2].newContentHash,
-      hash
-    );
-
     // I should receive alice's request for the state as she joins the session
-    t.equal(me_signals[0].sessionHash, aliceSessionInfo.sessionHash);
+    t.equal(me_signals[0].sessionHash, sessionHash);
     t.equal(me_signals[0].message.type, 'SyncReq');
     t.equal(me_signals[0].message.payload.folk, alice_pubkey);
 
@@ -300,30 +249,31 @@ export default orchestrator => {
     new_content = applyDeltas(new_content, pendingDeltas);
     const new_content_hash_3 = await me.call(
       'syn',
-      'hash_content',
+      'hash_snapshot',
       encode(new_content)
     );
 
-    const state = {
-      missedCommits: {
-        [commit_header_hash1]: commit1.commit,
-        [commit_header_hash2]: commit2.commit,
+    let state = {
+      folkMissedLastCommit: {
+        commitHash: commit_hash2,
+        commit: commit2.commit,
+        commitInitialSnapshot: encode(new_content),
       },
       uncommittedChanges: {
-        atSessionIndex: 7,
-        deltas,
+        deltas: pendingDeltas.map(d => encode(d)),
         authors: {
           [me_pubkey]: {
             atFolkIndex: 7,
-            sessionChanges: [7, 8],
+            commitChanges: [0, 1],
           },
         },
       },
-      //currentContentHash: new_content_hash_3,
+      ephemeralChanges: {},
     };
+
     await me.call('syn', 'send_sync_response', {
       participant: alice_pubkey,
-      sessionHash,
+      sessionHash: sessionHash,
       state,
     });
 
@@ -336,10 +286,10 @@ export default orchestrator => {
     // bob joins session
     const bobSessionInfo = await alice.call('syn', 'get_session', sessionHash);
     // bob should get my session
-    t.deepEqual(bobSessionInfo.session.scribe, me_pubkey);
+    t.deepEqual(bobSessionInfo.scribe, me_pubkey);
     await bob.call('syn', 'send_sync_request', {
       scribe: me_pubkey,
-      sessionHash: aliceSessionInfo.sessionHash,
+      sessionHash: sessionHash,
       lastSessionIndexSeen: 0,
     });
 
@@ -347,19 +297,30 @@ export default orchestrator => {
     const alice_delta: Delta = { type: 'Title', value: 'Alice in Wonderland' };
     let delta = encode(alice_delta);
     let changeRequest = {
-      sessionHash: aliceSessionInfo.sessionHash,
-      scribe: aliceSessionInfo.session.scribe,
-      atSessionIndex: 9,
-      atFolkIndex: 0,
-      deltas: [delta],
+      sessionHash: sessionHash,
+      scribe: aliceSessionInfo.scribe,
+
+      lastDeltaSeen: {
+        commitHash: commit_hash2,
+        deltaIndexInCommit: 2,
+      },
+
+      ephemeralChange: null,
+      deltaChanges: {
+        atFolkIndex: 0,
+        deltas: [delta],
+      },
     };
     await alice.call('syn', 'send_change_request', changeRequest);
     await delay(500); // make time for signal to arrive
     const sig = me_signals[2];
     t.equal(sig.message.type, 'ChangeReq');
 
-    t.equal(sig.message.payload.atFolkIndex, 0);
-    t.deepEqual(new Uint8Array(sig.message.payload.deltas[0]), delta);
+    t.equal(sig.message.payload.deltaChanges.atFolkIndex, 0);
+    t.deepEqual(
+      new Uint8Array(sig.message.payload.deltaChanges.deltas[0]),
+      delta
+    );
 
     let my_deltas = [
       { type: 'Add', value: [0, 'Whoops!\n'] },
@@ -368,12 +329,11 @@ export default orchestrator => {
     deltas = my_deltas.map(d => encode(d));
 
     const changeBundle = {
-      atSessionIndex: 9,
       deltas,
       authors: {
         [me_pubkey]: {
           atFolkIndex: 9,
-          sessionChanges: [9],
+          commitChanges: [9],
         },
       },
     };
@@ -382,15 +342,23 @@ export default orchestrator => {
     await me.call('syn', 'send_change', {
       participants: [alice_pubkey, bob_pubkey],
       sessionHash,
-      changes: changeBundle,
+
+      lastDeltaSeen: {
+        commitHash: commit_hash2,
+        deltaIndexInCommit: 2,
+      },
+      deltaChanges: changeBundle,
+      ephemeralChanges: {
+        hi: encode(30),
+      },
     });
     await delay(500); // make time for signal to arrive
     let a_sig = alice_signals[1];
     let b_sig = bob_signals[0];
     t.equal(a_sig.message.type, 'ChangeNotice');
     t.equal(b_sig.message.type, 'ChangeNotice');
-    t.deepEqual(a_sig.message.payload.deltas, changeBundle.deltas); // delta_matches
-    t.deepEqual(b_sig.message.payload.deltas, changeBundle.deltas); // delta_matches
+    t.deepEqual(a_sig.message.payload.deltaChanges.deltas, changeBundle.deltas); // delta_matches
+    t.deepEqual(b_sig.message.payload.deltaChanges.deltas, changeBundle.deltas); // delta_matches
 
     await alice.call('syn', 'send_heartbeat', {
       scribe: me_pubkey,
@@ -426,8 +394,8 @@ export default orchestrator => {
     // alice asks for a sync request
     await alice.call('syn', 'send_sync_request', {
       scribe: me_pubkey,
-      sessionHash: aliceSessionInfo.sessionHash,
-      lastSessionIndexSeen: 0,
+      sessionHash: sessionHash,
+      lastDeltaSeen: null,
     });
     await delay(500); // make time for signal to arrive
     me_sig = me_signals[4];
@@ -438,14 +406,13 @@ export default orchestrator => {
     let folks = await me.call('syn', 'get_folks');
     t.equal(folks.length, 3);
 
-
     await me.call('syn', 'delete_session', sessionHash);
 
     // check get_sessions utility zome call
     sessions = await me.call('syn', 'get_sessions');
     t.equal(Object.keys(sessions).length, 0);
 
-    await delay(500); 
+    await delay(500);
 
     // check get_sessions utility zome call
     sessions = await alice.call('syn', 'get_sessions');

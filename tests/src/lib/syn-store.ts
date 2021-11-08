@@ -50,40 +50,55 @@ export const oFn = orchestrator => {
     await bobSyn.joinSession(sessionHash);
     const bobSessionStore = aliceSyn.sessionStore(sessionHash);
 
-    aliceSessionStore.requestChange([{ type: 'Title', value: 'A new title' }]);
+    aliceSessionStore.requestChanges({
+      deltas: [{ type: 'Title', value: 'A new title' }],
+    });
 
     await delay(2000);
 
     let currentContent = get(bobSessionStore.content);
     t.equal(currentContent.title, 'A new title');
 
-    aliceSessionStore.requestChange([
-      { type: 'Title', value: 'Another thing' },
-    ]);
+    aliceSessionStore.requestChanges({
+      deltas: [{ type: 'Title', value: 'Another thing' }],
+      ephemeral: {
+        hi: 2,
+      },
+    });
 
     await delay(1000);
+    let currentEphemeral = get(aliceSessionStore.ephemeral);
+    t.deepEqual(currentEphemeral, { hi: 2 });
 
     currentContent = get(bobSessionStore.content);
     t.equal(currentContent.title, 'Another thing');
 
-    bobSessionStore.requestChange([
-      { type: 'Title', value: 'Bob is the boss' },
-    ]);
+    bobSessionStore.requestChanges({
+      deltas: [{ type: 'Title', value: 'Bob is the boss' }],
+    });
 
     await delay(1000);
 
     currentContent = get(aliceSessionStore.content);
     t.equal(currentContent.title, 'Bob is the boss');
 
-    bobSessionStore.requestChange([
-      { type: 'Add', loc: 0, text: 'Hi ' },
-      { type: 'Add', loc: 3, text: 'there' },
-    ]);
+    bobSessionStore.requestChanges({
+      deltas: [
+        { type: 'Add', loc: 0, text: 'Hi ' },
+        { type: 'Add', loc: 3, text: 'there' },
+      ],
+      ephemeral: {
+        hi: 3,
+      },
+    });
 
     await delay(1000);
 
     currentContent = get(aliceSessionStore.content);
     t.equal(currentContent.body, 'Hi there');
+
+    currentEphemeral = get(aliceSessionStore.ephemeral);
+    t.deepEqual(currentEphemeral, { hi: 3 });
 
     await aliceSyn.close();
     await bobSyn.close();

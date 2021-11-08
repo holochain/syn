@@ -3,52 +3,61 @@ import type {
   Delta,
   ChangeBundle,
   FolkChanges,
-} from "@syn/zome-client";
+  EphemeralChanges,
+} from '@syn/zome-client';
 import type {
   EntryHashB64,
   AgentPubKeyB64,
-} from "@holochain-open-dev/core-types";
+} from '@holochain-open-dev/core-types';
 
-import type { ApplyDeltaFn } from "../../../apply-delta";
+import type { ApplyDeltaFn } from '../../../apply-delta';
 import {
   amIScribe,
-  selectCurrentSessionIndex,
   selectFolksInSession,
-  selectSessionWorkspace,
-} from "../../../state/selectors";
-import type { SessionWorkspace } from "../../../state/syn-state";
-import type { SynWorkspace } from "../../workspace";
-import { putJustSeenFolks } from "../folklore/utils";
-import { commitChanges } from "../commit/scribe";
+  selectLastDeltaSeen,
+  selectSessionState,
+} from '../../../state/selectors';
+import type { SessionState } from '../../../state/syn-state';
+import type { SynWorkspace } from '../../workspace';
+import { putJustSeenFolks } from '../folklore/utils';
+import { commitChanges } from '../commit/scribe';
 
 export function scribeRequestChange<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
-  deltas: DELTA[]
+  deltas: DELTA[],
+  ephemeralChanges: EphemeralChanges | undefined
 ) {
-  workspace.store.update((state) => {
-    const session = selectSessionWorkspace(state, sessionHash);
+  workspace.store.update(state => {
+    const sessionState = selectSessionState(state, sessionHash);
     const changeBundle = putDeltas(
       workspace.applyDeltaFn,
-      session,
+      sessionState,
       state.myPubKey,
-      session.myFolkIndex,
+      sessionState.myFolkIndex,
       deltas
     );
 
+    sessionState.ephemeral = {
+      ...sessionState.ephemeral,
+      ...ephemeralChanges,
+    };
+
     workspace.client.sendChange({
-      participants: selectFolksInSession(session),
+      participants: selectFolksInSession(sessionState),
       sessionHash,
-      changes: changeBundle,
+      lastDeltaSeen: selectLastDeltaSeen(sessionState),
+      deltaChanges: changeBundle,
+      ephemeralChanges: ephemeralChanges,
     });
 
     triggerCommitIfNecessary(
       workspace,
       sessionHash,
-      session.uncommittedChanges.deltas.length
+      sessionState.uncommittedChanges.deltas.length
     );
-    
-    session.myFolkIndex += deltas.length;
+
+    sessionState.myFolkIndex += deltas.length;
     return state;
   });
 }
@@ -58,7 +67,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
   sessionHash: EntryHashB64,
   changeRequest: ChangeRequest
 ) {
-  workspace.store.update((state) => {
+  workspace.store.update(state => {
     if (!amIScribe(state, sessionHash)) {
       console.warn(
         `Received a change request but I'm not the scribe for this session`
@@ -66,48 +75,52 @@ export function handleChangeRequest<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionWorkspace(state, sessionHash);
+    const sessionState = selectSessionState(state, sessionHash);
 
-    putJustSeenFolks(session, state.myPubKey, [changeRequest.folk]);
+    putJustSeenFolks(sessionState, state.myPubKey, [changeRequest.folk]);
 
-    const currentSessionIndex = selectCurrentSessionIndex(session);
+    const lastDeltaSeen = selectLastDeltaSeen(sessionState);
 
-    if (currentSessionIndex !== changeRequest.atSessionIndex) {
-      console.warn("Scribe is receiving change out of order!");
-      console.warn(
-        `nextIndex: ${currentSessionIndex}, changeIndex:${changeRequest.atSessionIndex} for deltas:`,
-        changeRequest.deltas
-      );
-
-      if (changeRequest.atSessionIndex < currentSessionIndex) {
-        // change is too late, nextIndex has moved on
-        // TODO: rebase? notify sender?
-        return state;
-      } else {
-        // change is in the future, possibly some other change was dropped or is slow in arriving
-        // TODO: wait a bit?  Ask sender for other changes?
-        return state;
-      }
+    if (
+      lastDeltaSeen.commitHash !== changeRequest.lastDeltaSeen.commitHash ||
+      changeRequest.lastDeltaSeen.deltaIndexInCommit !==
+        lastDeltaSeen.deltaIndexInCommit
+    ) {
+      console.warn('Scribe is receiving change out of order!');
+      // change is too late, nextIndex has moved on
+      // TODO: rebase? notify sender?
+      return state;
     }
 
-    const changeBundle = putDeltas(
-      workspace.applyDeltaFn,
-      session,
-      changeRequest.folk,
-      changeRequest.atFolkIndex,
-      changeRequest.deltas
-    );
+    let changeBundle: ChangeBundle | undefined;
+
+    if (changeRequest.deltaChanges) {
+      changeBundle = putDeltas(
+        workspace.applyDeltaFn,
+        sessionState,
+        changeRequest.folk,
+        changeRequest.deltaChanges.atFolkIndex,
+        changeRequest.deltaChanges.deltas
+      );
+    }
+
+    sessionState.ephemeral = {
+      ...sessionState.ephemeral,
+      ...changeRequest.ephemeralChanges,
+    };
 
     workspace.client.sendChange({
-      changes: changeBundle,
-      participants: selectFolksInSession(session),
+      deltaChanges: changeBundle,
+      ephemeralChanges: changeRequest.ephemeralChanges,
+      lastDeltaSeen,
+      participants: selectFolksInSession(sessionState),
       sessionHash,
     });
 
     triggerCommitIfNecessary(
       workspace,
       sessionHash,
-      session.uncommittedChanges.deltas.length
+      sessionState.uncommittedChanges.deltas.length
     );
 
     return state;
@@ -131,12 +144,12 @@ function triggerCommitIfNecessary<CONTENT, DELTA>(
 
 function putDeltas<CONTENT, DELTA>(
   applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
-  session: SessionWorkspace,
+  session: SessionState,
   author: AgentPubKeyB64,
   atFolkIndex: number,
   deltas: Delta[]
 ): ChangeBundle {
-  const previousSessionIndex = selectCurrentSessionIndex(session);
+  const currentCommitIndex = session.uncommittedChanges.deltas.length;
 
   // Immediately update the contents of the session
   session.uncommittedChanges.deltas = [
@@ -153,19 +166,18 @@ function putDeltas<CONTENT, DELTA>(
   // Build the change bundle
   const authorChanges: number[] = [];
   for (
-    let i = previousSessionIndex;
-    i < previousSessionIndex + deltas.length;
+    let i = currentCommitIndex;
+    i < currentCommitIndex + deltas.length;
     i++
   ) {
     authorChanges.push(i);
   }
   const folkChanges: FolkChanges = {
     atFolkIndex,
-    sessionChanges: authorChanges,
+    commitChanges: authorChanges,
   };
 
   return {
-    atSessionIndex: previousSessionIndex,
     deltas,
     authors: {
       [author]: folkChanges,

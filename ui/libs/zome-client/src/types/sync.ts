@@ -1,16 +1,15 @@
-import type { ChangeBundle } from "./delta";
+import type { ChangeBundle, EphemeralChanges, LastDeltaSeen } from './change';
 import type {
   EntryHashB64,
   AgentPubKeyB64,
-  Dictionary,
-} from "@holochain-open-dev/core-types";
-import type { Commit } from "./commit";
+} from '@holochain-open-dev/core-types';
+import type { Commit, Content } from './commit';
 
 // Sent by the folk
 export interface SendSyncRequestInput {
   sessionHash: EntryHashB64;
   scribe: AgentPubKeyB64;
-  lastSessionIndexSeen: number;
+  lastDeltaSeen: LastDeltaSeen | undefined;
 }
 
 // Received by the scribe
@@ -18,14 +17,22 @@ export interface RequestSyncInput {
   folk: AgentPubKeyB64;
 
   scribe: AgentPubKeyB64;
-  lastSessionIndexSeen: number;
+  lastDeltaSeen: LastDeltaSeen;
+}
+
+export interface MissedCommit {
+  commitHash: EntryHashB64;
+  commit: Commit;
+  commitInitialSnapshot: Content;
 }
 
 export interface StateForSync {
   // Will contain the newer commits since `lastSessionIndexSeen`
-  missedCommits: Dictionary<Commit>;
+  folkMissedLastCommit: MissedCommit | undefined;
 
   uncommittedChanges: ChangeBundle;
+
+  ephemeralChanges: EphemeralChanges;
 
   //currentContentHash: EntryHashB64;
 }

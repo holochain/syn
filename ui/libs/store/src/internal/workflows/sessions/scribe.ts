@@ -5,30 +5,35 @@ import type { SynWorkspace } from '../../workspace';
 // Pick and join a session
 export async function newSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
-  fromSnapshot?: EntryHashB64
+  fromCommit?: EntryHashB64
 ): Promise<EntryHashB64> {
-  let currentContent = workspace.initialContent;
-  if (fromSnapshot) {
-    currentContent = await workspace.client.getSnapshot(fromSnapshot);
+  let currentContent = workspace.initialSnapshot;
+
+  if (fromCommit) {
+    let currentCommit = await workspace.client.getCommit(fromCommit);
+
+    currentContent = await workspace.client.getSnapshot(
+      currentCommit.newContentHash
+    );
   } else {
-    fromSnapshot = await workspace.client.putSnapshot(workspace.initialContent);
+    await workspace.client.putSnapshot(workspace.initialSnapshot);
   }
   const session = await workspace.client.newSession({
-    snapshotHash: fromSnapshot,
+    initialCommitHash: fromCommit,
   });
 
   workspace.store.update(state => {
     state.sessions[session.sessionHash] = session.session;
 
     state.joinedSessions[session.sessionHash] = {
+      currentCommitHash: fromCommit,
       sessionHash: session.sessionHash,
-      commitHashes: [],
       currentContent,
       myFolkIndex: 0,
+      ephemeral: {},
       prerequestContent: undefined,
       requestedChanges: [],
       uncommittedChanges: {
-        atSessionIndex: 0,
         authors: {},
         deltas: [],
       },

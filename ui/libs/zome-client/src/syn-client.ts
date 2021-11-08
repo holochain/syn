@@ -1,7 +1,6 @@
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import type {
   EntryHashB64,
-  HeaderHashB64,
   Dictionary,
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
@@ -10,9 +9,10 @@ import isEqual from 'lodash-es/isEqual';
 
 import type {
   ChangeBundle,
+  EphemeralChanges,
   SendChangeInput,
   SendChangeRequestInput,
-} from './types/delta';
+} from './types/change';
 import type { Commit, CommitInput, Content } from './types/commit';
 import type { SendFolkLoreInput } from './types/folks';
 import type { SendHeartbeatInput } from './types/heartbeat';
@@ -58,7 +58,7 @@ export class SynClient {
   }
 
   /** Commits */
-  public commit(commitInput: CommitInput): Promise<HeaderHashB64> {
+  public commitChanges(commitInput: CommitInput): Promise<EntryHashB64> {
     const commit = {
       ...commitInput,
       commit: {
@@ -67,25 +67,28 @@ export class SynClient {
       },
     };
 
-    return this.callZome('commit', commit);
+    return this.callZome('commit_changes', commit);
+  }
+
+  public async getCommit(commitHash: EntryHashB64): Promise<Commit> {
+    const commit = await this.callZome('get_commit', commitHash);
+    return this.decodeCommit(commit);
   }
 
   /** Hash */
-  public hashContent(content: Content): Promise<EntryHashB64> {
-    return this.callZome('hash_content', encode(content));
+  public hashSnapshot(content: Content): Promise<EntryHashB64> {
+    return this.callZome('hash_snapshot', encode(content));
   }
 
   /** Session */
-  public async getSession(sessionHash: EntryHashB64): Promise<SessionInfo> {
-    const sessionInfo = await this.callZome('get_session', sessionHash);
-    return this.decodeSessionInfo(sessionInfo);
+  public async getSession(sessionHash: EntryHashB64): Promise<Session> {
+    return this.callZome('get_session', sessionHash);
   }
 
   public async newSession(
     newSessionInput: NewSessionInput
   ): Promise<SessionInfo> {
-    const sessionInfo = await this.callZome('new_session', newSessionInput);
-    return this.decodeSessionInfo(sessionInfo);
+    return this.callZome('new_session', newSessionInput);
   }
 
   public async deleteSession(sessionHash: EntryHashB64): Promise<void> {
@@ -117,9 +120,9 @@ export class SynClient {
   ): Promise<void> {
     const missedCommits: Dictionary<any> = {};
 
-    for (const hash of Object.keys(syncResponseInput.state.missedCommits)) {
-      missedCommits[hash] = this.encodeCommit(
-        syncResponseInput.state.missedCommits[hash]
+    if (syncResponseInput.state.folkMissedLastCommit) {
+      syncResponseInput.state.folkMissedLastCommit.commit = this.encodeCommit(
+        syncResponseInput.state.folkMissedLastCommit.commit
       );
     }
 
@@ -141,10 +144,16 @@ export class SynClient {
   public sendChangeRequest(
     changeRequestInput: SendChangeRequestInput
   ): Promise<void> {
-    const input = {
-      ...changeRequestInput,
-      deltas: changeRequestInput.deltas.map(d => encode(d)),
-    };
+    const input = { ...changeRequestInput };
+    if (input.deltaChanges) {
+      input.deltaChanges = {
+        ...input.deltaChanges,
+        deltas: input.deltaChanges.deltas.map(d => encode(d)),
+      };
+    }
+    if (input.ephemeralChanges) {
+      input.ephemeralChanges = this.encodeEphemeral(input.ephemeralChanges);
+    }
 
     return this.callZome('send_change_request', input);
   }
@@ -152,8 +161,13 @@ export class SynClient {
   public sendChange(sendChangeInput: SendChangeInput): Promise<void> {
     const input = {
       ...sendChangeInput,
-      changes: this.encodeChangeBundle(sendChangeInput.changes),
     };
+    if (input.deltaChanges) {
+      input.deltaChanges = this.encodeChangeBundle(input.deltaChanges);
+    }
+    if (input.ephemeralChanges) {
+      input.ephemeralChanges = this.encodeEphemeral(input.ephemeralChanges);
+    }
     return this.callZome('send_change', input);
   }
 
@@ -165,20 +179,6 @@ export class SynClient {
   /** Helpers */
   private async callZome(fnName: string, payload: any): Promise<any> {
     return this.cellClient.callZome(this.zomeName, fnName, payload);
-  }
-
-  private decodeSessionInfo(sessionInfo: any): SessionInfo {
-    const commits = {};
-
-    for (const [hash, commit] of Object.entries(sessionInfo.commits)) {
-      commits[hash] = this.decodeCommit(commit);
-    }
-
-    return {
-      ...sessionInfo,
-      commits,
-      snapshot: decode(sessionInfo.snapshot),
-    };
   }
 
   private encodeCommit(commit: Commit) {
@@ -202,5 +202,24 @@ export class SynClient {
         deltas: commit.changes.deltas.map(d => decode(d)),
       },
     };
+  }
+
+  private encodeEphemeral(
+    ephemeralChanges: EphemeralChanges
+  ): Dictionary<Uint8Array> {
+    const changes = {};
+    for (const key of Object.keys(ephemeralChanges)) {
+      changes[key] = encode(ephemeralChanges[key]);
+    }
+    return changes;
+  }
+  decodeEphemeral(
+    ephemeralChanges: Dictionary<Uint8Array>
+  ): EphemeralChanges {
+    const changes = {};
+    for (const key of Object.keys(ephemeralChanges)) {
+      changes[key] = decode(ephemeralChanges[key]);
+    }
+    return changes;
   }
 }

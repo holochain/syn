@@ -8,19 +8,32 @@ import type { SynWorkspace } from './internal/workspace';
 
 export type { SessionFolk };
 
-import { selectSessionWorkspace } from './state/selectors';
-import { requestChange } from './internal/workflows/change';
+import { selectSessionState } from './state/selectors';
+import { requestChanges } from './internal/workflows/change';
 
 export interface SessionStore<CONTENT, DELTA> {
   sessionHash: EntryHashB64;
   session: Session;
 
   content: Readable<CONTENT>;
+  ephemeral: Readable<Dictionary<any>>;
   folks: Readable<Dictionary<SessionFolk>>;
 
-  requestChange(deltas: DELTA[]): void;
+  requestChanges(changes: RequestChanges<DELTA>): void;
   leave(): Promise<void>;
 }
+
+export type RequestChanges<DELTA> =
+  | {
+      deltas: DELTA[];
+    }
+  | {
+      ephemeral: Dictionary<any>;
+    }
+  | {
+      deltas: DELTA[];
+      ephemeral: Dictionary<any>;
+    };
 
 export function buildSessionStore<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -28,11 +41,15 @@ export function buildSessionStore<CONTENT, DELTA>(
 ): SessionStore<CONTENT, DELTA> {
   const content = derived(
     workspace.store,
-    state => selectSessionWorkspace(state, sessionHash).currentContent
+    state => selectSessionState(state, sessionHash).currentContent
+  );
+  const ephemeral = derived(
+    workspace.store,
+    state => selectSessionState(state, sessionHash).ephemeral
   );
   const folks = derived(
     workspace.store,
-    state => selectSessionWorkspace(state, sessionHash).folks
+    state => selectSessionState(state, sessionHash).folks
   );
 
   const state = get(workspace.store);
@@ -44,7 +61,14 @@ export function buildSessionStore<CONTENT, DELTA>(
     session,
     content,
     folks,
-    requestChange: deltas => requestChange(workspace, sessionHash, deltas),
+    ephemeral,
+    requestChanges: ({
+      deltas,
+      ephemeral,
+    }: {
+      deltas: DELTA[];
+      ephemeral: Dictionary<any>;
+    }) => requestChanges(workspace, sessionHash, deltas, ephemeral),
     leave: async () => {
       if (session.scribe === myPubKey) {
         await workspace.client.deleteSession(sessionHash);

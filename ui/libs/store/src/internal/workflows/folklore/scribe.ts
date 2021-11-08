@@ -4,11 +4,11 @@ import type {
 } from "@holochain-open-dev/core-types";
 
 import {
-  selectSessionWorkspace,
+  selectSessionState,
   selectFolksInSession,
   amIScribe,
 } from "../../../state/selectors";
-import type { SessionWorkspace } from "../../../state/syn-state";
+import type { SessionState } from "../../../state/syn-state";
 import type { SynWorkspace } from "../../workspace";
 import { putJustSeenFolks } from "./utils";
 
@@ -17,7 +17,7 @@ export function notifyGoneFolks<CONTENT, DELTA>(
   sessionHash: EntryHashB64
 ) {
   workspace.store.update((state) => {
-    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionState(state, sessionHash) as SessionState;
     const gone = updateGoneFolks(session, workspace.config.outOfSessionTimeout);
 
     if (gone.length > 0) {
@@ -42,7 +42,7 @@ export function handleHeartbeat<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+    const session = selectSessionState(state, sessionHash) as SessionState;
     putJustSeenFolks(session, state.myPubKey, [fromFolk]);
 
     return state;
@@ -50,7 +50,7 @@ export function handleHeartbeat<CONTENT, DELTA>(
 }
 
 function updateGoneFolks(
-  sessionWorkspace: SessionWorkspace,
+  sessionWorkspace: SessionState,
   outOfSessionTimeout: number
 ): AgentPubKeyB64[] {
   const gone: AgentPubKeyB64[] = [];

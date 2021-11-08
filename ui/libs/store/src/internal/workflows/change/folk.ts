@@ -1,43 +1,45 @@
-import type { ChangeBundle, Content, FolkChanges } from '@syn/zome-client';
+import type {
+  ChangeNotice,
+  Content,
+  EphemeralChanges,
+  FolkChanges,
+} from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import cloneDeep from 'lodash-es/cloneDeep';
+import isEqual from 'lodash-es/isEqual';
 import { get } from 'svelte/store';
 
 import {
   amIScribe,
-  selectCurrentSessionIndex,
-  selectSessionWorkspace,
+  selectLastDeltaSeen,
+  selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
-import type {
-  RequestedChange,
-  SessionWorkspace,
-} from '../../../state/syn-state';
+import type { RequestedChange, SessionState } from '../../../state/syn-state';
 import { joinSession } from '../sessions/folk';
 
 export function folkRequestChange<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
-  deltas: DELTA[]
+  deltas: DELTA[],
+  ephemeralChanges: EphemeralChanges | undefined
 ) {
   workspace.store.update(state => {
-    const sessionWorkspace = selectSessionWorkspace(state, sessionHash);
+    const sessionState = selectSessionState(state, sessionHash);
 
-    const currentSessionIndex =
-      selectCurrentSessionIndex(sessionWorkspace) +
-      sessionWorkspace.requestedChanges.length;
-console.log('requestedChanges', currentSessionIndex, sessionWorkspace.requestedChanges.length)
+    const lastDeltaSeen = selectLastDeltaSeen(sessionState);
+
     // TODO: don't do this if strategy === CRDT
-    if (!sessionWorkspace.prerequestContent) {
-      sessionWorkspace.prerequestContent = {
-        atSessionIndex: currentSessionIndex,
-        content: cloneDeep(sessionWorkspace.currentContent),
+    if (!sessionState.prerequestContent) {
+      sessionState.prerequestContent = {
+        lastDeltaSeen,
+        content: cloneDeep(sessionState.currentContent),
       };
     }
 
     for (const delta of deltas) {
-      sessionWorkspace.currentContent = workspace.applyDeltaFn(
-        sessionWorkspace.currentContent,
+      sessionState.currentContent = workspace.applyDeltaFn(
+        sessionState.currentContent,
         delta
       );
     }
@@ -48,27 +50,35 @@ console.log('requestedChanges', currentSessionIndex, sessionWorkspace.requestedC
 
     for (let i = 0; i < deltas.length; i++) {
       newRequestedChanges.push({
+        lastDeltaSeen,
         atDate,
-        atFolkIndex: sessionWorkspace.myFolkIndex + i,
-        atSessionIndex: currentSessionIndex + i,
+        atFolkIndex: sessionState.myFolkIndex + i,
         delta: deltas[i],
       });
     }
 
-    sessionWorkspace.requestedChanges = [
-      ...sessionWorkspace.requestedChanges,
+    sessionState.requestedChanges = [
+      ...sessionState.requestedChanges,
       ...newRequestedChanges,
     ];
 
+    sessionState.ephemeral = {
+      ...sessionState.ephemeral,
+      ...ephemeralChanges,
+    };
+
     workspace.client.sendChangeRequest({
-      atFolkIndex: sessionWorkspace.myFolkIndex,
-      atSessionIndex: currentSessionIndex,
-      deltas,
+      lastDeltaSeen,
+      ephemeralChanges,
+      deltaChanges: {
+        atFolkIndex: sessionState.myFolkIndex,
+        deltas,
+      },
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
 
-    sessionWorkspace.myFolkIndex += deltas.length;
+    sessionState.myFolkIndex += deltas.length;
 
     return state;
   });
@@ -83,7 +93,7 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     return;
   }
 
-  let session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+  let session = selectSessionState(state, sessionHash) as SessionState;
 
   console.log(session.requestedChanges);
   if (
@@ -97,9 +107,9 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     await joinSession(workspace, sessionHash);
 
     state = get(workspace.store);
-    session = selectSessionWorkspace(state, sessionHash) as SessionWorkspace;
+    session = selectSessionState(state, sessionHash) as SessionState;
     await workspace.client.sendSyncRequest({
-      lastSessionIndexSeen: selectCurrentSessionIndex(session),
+      lastDeltaSeen: selectLastDeltaSeen(session),
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
@@ -110,7 +120,7 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
 export function handleChangeNotice<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64,
-  changes: ChangeBundle
+  changeNotice: ChangeNotice
 ) {
   workspace.store.update(state => {
     if (amIScribe(state, sessionHash)) {
@@ -120,10 +130,18 @@ export function handleChangeNotice<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionWorkspace(
-      state,
-      sessionHash
-    ) as SessionWorkspace;
+    const sessionState = selectSessionState(state, sessionHash) as SessionState;
+
+    if (changeNotice.ephemeralChanges) {
+      sessionState.ephemeral = {
+        ...sessionState.ephemeral,
+        ...changeNotice.ephemeralChanges,
+      };
+    }
+
+    if (!changeNotice.deltaChanges) return state;
+
+    const changes = changeNotice.deltaChanges;
 
     // TODO
     // If CRDT, we don't care about requested changes
@@ -132,48 +150,53 @@ export function handleChangeNotice<CONTENT, DELTA>(
     // We don't want to reapply our own made changes
     const myChanges = changes.authors[state.myPubKey];
 
-    let contentToApplyTo = session.currentContent;
+    let contentToApplyTo = sessionState.currentContent;
 
     if (
       myChanges &&
-      session.prerequestContent &&
-      session.prerequestContent.atSessionIndex === changes.atSessionIndex
+      sessionState.prerequestContent &&
+      isEqual(
+        sessionState.prerequestContent.lastDeltaSeen,
+        changeNotice.lastDeltaSeen
+      )
     ) {
-      contentToApplyTo = session.prerequestContent?.content;
+      contentToApplyTo = sessionState.prerequestContent?.content;
     }
 
     for (const delta of changes.deltas) {
-      session.currentContent = workspace.applyDeltaFn(contentToApplyTo, delta);
+      sessionState.currentContent = workspace.applyDeltaFn(
+        contentToApplyTo,
+        delta
+      );
     }
 
-    session.uncommittedChanges.deltas = [
-      ...session.uncommittedChanges.deltas,
+    sessionState.uncommittedChanges.deltas = [
+      ...sessionState.uncommittedChanges.deltas,
       ...changes.deltas,
     ];
-    console.log(selectCurrentSessionIndex(session));
 
     for (const [author, newFolkChanges] of Object.entries(
-      session.uncommittedChanges.authors
+      sessionState.uncommittedChanges.authors
     )) {
-      if (!session.uncommittedChanges.authors[author]) {
-        session.uncommittedChanges.authors[author] = newFolkChanges;
+      if (!sessionState.uncommittedChanges.authors[author]) {
+        sessionState.uncommittedChanges.authors[author] = newFolkChanges;
       } else {
-        const folkChanges = session.uncommittedChanges.authors[author];
+        const folkChanges = sessionState.uncommittedChanges.authors[author];
         if (
-          folkChanges.atFolkIndex + folkChanges.sessionChanges.length !==
+          folkChanges.atFolkIndex + folkChanges.commitChanges.length !==
           newFolkChanges.atFolkIndex
         ) {
           // We missed changes from this folk?
         }
-        folkChanges.sessionChanges = [
-          ...folkChanges.sessionChanges,
-          ...newFolkChanges.sessionChanges,
+        folkChanges.commitChanges = [
+          ...folkChanges.commitChanges,
+          ...newFolkChanges.commitChanges,
         ];
       }
     }
 
     if (myChanges) {
-      clearRequested(session, myChanges, session.currentContent);
+      clearRequested(sessionState, myChanges, sessionState.currentContent);
     }
 
     return state;
@@ -181,30 +204,30 @@ export function handleChangeNotice<CONTENT, DELTA>(
 }
 
 function clearRequested(
-  session: SessionWorkspace,
+  sessionState: SessionState,
   myChanges: FolkChanges,
   newContent: Content
 ) {
   const leftRequestedChanges: RequestedChange[] = [];
 
-  for (const requestedChange of session.requestedChanges) {
+  for (const requestedChange of sessionState.requestedChanges) {
     if (
       !(
         requestedChange.atFolkIndex >= myChanges.atFolkIndex &&
         requestedChange.atFolkIndex <
-          myChanges.atFolkIndex + myChanges.sessionChanges.length
+          myChanges.atFolkIndex + myChanges.commitChanges.length
       )
     ) {
       leftRequestedChanges.push(requestedChange);
     }
   }
-  session.requestedChanges = leftRequestedChanges;
+  sessionState.requestedChanges = leftRequestedChanges;
 
-  if (session.requestedChanges.length === 0) {
-    session.prerequestContent = undefined;
+  if (sessionState.requestedChanges.length === 0) {
+    sessionState.prerequestContent = undefined;
   } else {
-    session.prerequestContent = {
-      atSessionIndex: selectCurrentSessionIndex(session),
+    sessionState.prerequestContent = {
+      lastDeltaSeen: selectLastDeltaSeen(sessionState),
       content: newContent,
     };
   }

@@ -20,10 +20,10 @@ export interface CommitStrategy {
 
 export function defaultConfig(): SynConfig {
   return {
-    hearbeatInterval: 30 * 1000,
+    hearbeatInterval: 2 * 1000,
     outOfSessionTimeout: 8 * 1000,
     requestTimeout: 1000,
-    commitStrategy: { CommitEveryNDeltas: 20000, CommitEveryNMs: 2 * 100000 * 60 }, // TODO: reduce ms
+    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 5 }, // TODO: reduce ms
     syncStrategy: SyncStrategy.BlockOnConflict,
   };
 }

@@ -1,12 +1,10 @@
 import type {
   AgentPubKeyB64,
   EntryHashB64,
-  Dictionary,
-} from "@holochain-open-dev/core-types";
-import type { Content, Commit } from "./commit";
+} from '@holochain-open-dev/core-types';
 
 export interface Session {
-  snapshotHash: EntryHashB64;
+  initialCommitHash: EntryHashB64 | undefined;
   scribe: AgentPubKeyB64;
   createdAt: number;
 }
@@ -14,10 +12,8 @@ export interface Session {
 export interface SessionInfo {
   sessionHash: EntryHashB64;
   session: Session;
-  commits: Dictionary<Commit>;
-  snapshot: Content;
 }
 
 export interface NewSessionInput {
-  snapshotHash: EntryHashB64;
+  initialCommitHash: EntryHashB64 | undefined;
 }

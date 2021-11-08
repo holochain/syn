@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use holo_hash::*;
 use hdk::prelude::*;
+use holo_hash::*;
 
 use crate::{SignalPayload, SynMessage};
 
@@ -15,7 +15,7 @@ pub struct Delta(SerializedBytes);
 #[serde(rename_all = "camelCase")]
 pub struct FolkChanges {
     pub at_folk_index: usize,
-    pub session_changes: Vec<usize>,
+    pub commit_changes: Vec<usize>,
 }
 
 /// Change struct that is sent by the scribe to participants
@@ -27,9 +27,8 @@ pub struct FolkChanges {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeBundle {
-    pub at_session_index: usize,
     pub deltas: Vec<Delta>,
-    // AgentPubKeyB64 -> folkIndex -> sessionIndex
+    // AgentPubKeyB64 -> folkIndex -> deltaIndexInCommit
     pub authors: HashMap<AgentPubKeyB64, FolkChanges>,
 }
 
@@ -39,9 +38,27 @@ pub struct ChangeBundle {
 pub struct SendChangeRequestInput {
     pub session_hash: EntryHashB64,
     pub scribe: AgentPubKeyB64,
+
+    pub last_delta_seen: LastDeltaSeen,
+
+    pub delta_changes: Option<DeltaChanges>,
+    pub ephemeral_changes: Option<EphemeralChanges>,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct DeltaChanges {
     pub at_folk_index: usize,
-    pub at_session_index: usize,
     pub deltas: Vec<Delta>,
+}
+
+pub type EphemeralChanges = BTreeMap<String, SerializedBytes>;
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LastDeltaSeen {
+    pub commit_hash: Option<EntryHashB64>,
+    pub delta_index_in_commit: usize,
 }
 
 /// Input to the send change call
@@ -50,9 +67,11 @@ pub struct SendChangeRequestInput {
 pub struct ChangeRequest {
     pub folk: AgentPubKeyB64,
     pub scribe: AgentPubKeyB64,
-    pub at_folk_index: usize,
-    pub at_session_index: usize,
-    pub deltas: Vec<Delta>,
+
+    pub last_delta_seen: LastDeltaSeen,
+
+    pub delta_changes: Option<DeltaChanges>,
+    pub ephemeral_changes: Option<EphemeralChanges>,
 }
 
 #[hdk_extern]
@@ -61,11 +80,11 @@ fn send_change_request(input: SendChangeRequestInput) -> ExternResult<()> {
 
     let me = AgentPubKeyB64::from(agent_info()?.agent_initial_pubkey);
     let request = ChangeRequest {
-        at_folk_index: input.at_folk_index,
-        at_session_index: input.at_session_index,
-        deltas: input.deltas,
         folk: me,
         scribe: input.scribe,
+        last_delta_seen: input.last_delta_seen,
+        delta_changes: input.delta_changes,
+        ephemeral_changes: input.ephemeral_changes,
     };
 
     // send response signal to the participant
@@ -84,8 +103,23 @@ fn send_change_request(input: SendChangeRequestInput) -> ExternResult<()> {
 #[serde(rename_all = "camelCase")]
 pub struct SendChangeInput {
     pub participants: Vec<AgentPubKeyB64>,
-    pub changes: ChangeBundle,
     pub session_hash: EntryHashB64,
+
+    pub last_delta_seen: LastDeltaSeen,
+
+    pub delta_changes: Option<ChangeBundle>,
+
+    pub ephemeral_changes: Option<EphemeralChanges>,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangeNotice {
+    pub last_delta_seen: LastDeltaSeen,
+
+    pub delta_changes: Option<ChangeBundle>,
+
+    pub ephemeral_changes: Option<EphemeralChanges>,
 }
 
 #[hdk_extern]
@@ -95,7 +129,11 @@ fn send_change(input: SendChangeInput) -> ExternResult<()> {
     remote_signal(
         ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::ChangeNotice(input.changes),
+            SynMessage::ChangeNotice(ChangeNotice {
+                last_delta_seen: input.last_delta_seen,
+                delta_changes: input.delta_changes,
+                ephemeral_changes: input.ephemeral_changes,
+            }),
         ))?,
         participants,
     )?;

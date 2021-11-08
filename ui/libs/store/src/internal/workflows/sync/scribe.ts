@@ -1,16 +1,19 @@
-import type { RequestSyncInput, StateForSync } from "@syn/zome-client";
-import type { EntryHashB64 } from "@holochain-open-dev/core-types";
+import type {
+  MissedCommit,
+  RequestSyncInput,
+  StateForSync,
+} from '@syn/zome-client';
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import {
   amIScribe,
   selectFolksInSession,
-  selectMissedCommits,
   selectMissedUncommittedChanges,
-  selectSessionWorkspace,
-} from "../../../state/selectors";
-import type { SynWorkspace } from "../../workspace";
-import { putJustSeenFolks } from "../folklore/utils";
-import type { SessionWorkspace } from "../../../state/syn-state";
+  selectSessionState,
+} from '../../../state/selectors';
+import type { SynWorkspace } from '../../workspace';
+import { putJustSeenFolks } from '../folklore/utils';
+import type { SessionState } from '../../../state/syn-state';
 
 /**
  * Scribe is managing the session, a folk comes in:
@@ -19,8 +22,8 @@ import type { SessionWorkspace } from "../../../state/syn-state";
  *     "Hey scribe! So I think I'm out of date and I don't know all the latest changes.
  *      This is the latest changes I've seen... Help me please?"
  * - Scribe: `SyncResponse`
- *     "Oh sure! Here is the commits you missed since you were gone, and here are the
- *      uncommitted changes on top of them. From now on I'll update you whenever a change happens."
+ *     "Oh sure! Here is the last commit we are working from, and here are the
+ *      uncommitted changes on top of it. From now on I'll update you whenever a change happens."
  *
  */
 
@@ -29,30 +32,46 @@ export function handleSyncRequest<CONTENT, DELTA>(
   sessionHash: EntryHashB64,
   requestSyncInput: RequestSyncInput
 ): void {
-  workspace.store.update((synState) => {
+  workspace.store.update(synState => {
     if (!amIScribe(synState, sessionHash)) {
       console.log("syncReq received but I'm not the scribe!");
       return synState;
     }
 
-    const session = selectSessionWorkspace(synState, sessionHash) as SessionWorkspace;
-
-    putJustSeenFolks(session, synState.myPubKey, [requestSyncInput.folk]);
-
-    const missedCommits = selectMissedCommits(
+    const sessionState = selectSessionState(
       synState,
-      sessionHash,
-      requestSyncInput.lastSessionIndexSeen
-    );
+      sessionHash
+    ) as SessionState;
+
+    putJustSeenFolks(sessionState, synState.myPubKey, [requestSyncInput.folk]);
+
+    let missedCommit: MissedCommit | undefined;
+
+    if (
+      (!requestSyncInput.lastDeltaSeen ||
+        requestSyncInput.lastDeltaSeen.commitHash !==
+          sessionState.currentCommitHash) &&
+      sessionState.currentCommitHash
+    ) {
+      const commit = synState.commits[sessionState.currentCommitHash];
+
+      missedCommit = {
+        commit,
+        commitHash: sessionState.currentCommitHash,
+        commitInitialSnapshot: synState.snapshots[commit.newContentHash],
+      };
+    }
+
     const uncommittedChanges = selectMissedUncommittedChanges(
       synState,
       sessionHash,
-      requestSyncInput.lastSessionIndexSeen
+      requestSyncInput.lastDeltaSeen
     );
 
     const syncState: StateForSync = {
       uncommittedChanges,
-      missedCommits,
+      folkMissedLastCommit: missedCommit,
+      ephemeralChanges: sessionState.ephemeral,
       //currentContentHash:
     };
 
@@ -62,7 +81,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
       sessionHash,
     });
 
-    const participants = selectFolksInSession(session);
+    const participants = selectFolksInSession(sessionState);
 
     workspace.client.sendFolkLore({
       participants,

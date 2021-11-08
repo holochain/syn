@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use crate::snapshot::Snapshot;
 
-use holo_hash::*;
 use hdk::prelude::*;
+use holo_hash::*;
 
+use crate::change::{ChangeBundle, EphemeralChanges, LastDeltaSeen};
 use crate::commit::Commit;
-use crate::delta::ChangeBundle;
 use crate::{SignalPayload, SynMessage};
 
 /// Input to the send sync req call
@@ -12,8 +12,8 @@ use crate::{SignalPayload, SynMessage};
 #[serde(rename_all = "camelCase")]
 pub struct SendSyncRequestInput {
     pub scribe: AgentPubKeyB64,
-    pub last_session_index_seen: usize,
     pub session_hash: EntryHashB64,
+    pub last_delta_seen: Option<LastDeltaSeen>,
 }
 
 /// Input to the send sync req call
@@ -22,7 +22,7 @@ pub struct SendSyncRequestInput {
 pub struct RequestSyncInput {
     pub scribe: AgentPubKeyB64,
     pub folk: AgentPubKeyB64,
-    pub last_session_index_seen: usize,
+    pub last_delta_seen: Option<LastDeltaSeen>,
 }
 
 #[hdk_extern]
@@ -33,7 +33,7 @@ fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
     let request_sync = RequestSyncInput {
         scribe: input.scribe,
         folk: me,
-        last_session_index_seen: input.last_session_index_seen,
+        last_delta_seen: input.last_delta_seen,
     };
 
     remote_signal(
@@ -48,14 +48,21 @@ fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct MissedCommit {
+    commit_hash: EntryHashB64,
+    commit: Commit,
+    commit_initial_snapshot: Snapshot,
+}
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct StateForSync {
-    // missed commits if there have been committed and we didn't get them with get_session
-    pub missed_commits: HashMap<HeaderHashB64, Commit>,
+    pub folk_missed_last_commit: Option<MissedCommit>,
 
     pub uncommitted_changes: ChangeBundle,
-
+    pub ephemeral_changes: EphemeralChanges,
     // Result of applying all these deltas to the current content
-    // pub current_content_hash: EntryHashB64,
+    // pub current_content_hash: EntryHashB64
 }
 
 /// Input to the send sync response call

@@ -1,16 +1,18 @@
 use std::usize;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
-use holo_hash::*;
 use hdk::prelude::*;
+use holo_hash::*;
 
-use crate::delta::ChangeBundle;
+use crate::change::ChangeBundle;
+use crate::error::SynError;
+use crate::utils::element_to_entry;
 use crate::{SignalPayload, SynMessage};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitNotice {
-    pub commit_hash: HeaderHashB64,
+    pub commit_hash: EntryHashB64,
     pub committed_deltas_count: usize,
 
     pub previous_content_hash: EntryHashB64,
@@ -34,7 +36,7 @@ pub struct ChangeMeta {
 pub struct Commit {
     pub changes: ChangeBundle,
 
-    pub previous_commit_hashes: Vec<HeaderHashB64>,
+    pub previous_commit_hashes: Vec<EntryHashB64>,
     #[serde(with = "ts_milliseconds")]
     pub created_at: DateTime<Utc>,
 
@@ -51,7 +53,6 @@ pub struct Commit {
 #[serde(rename_all = "camelCase")]
 pub struct CommitInput {
     pub session_hash: EntryHashB64,
-    pub session_snapshot: EntryHashB64,
 
     pub commit: Commit,
 
@@ -59,29 +60,32 @@ pub struct CommitInput {
 }
 
 #[hdk_extern]
-fn commit(input: CommitInput) -> ExternResult<HeaderHashB64> {
-    let commit = input.commit;
+fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
+    let commit = input.commit.clone();
     let delta_count = commit.changes.deltas.len();
 
-    let header_hash = create_entry(&commit)?;
-    let change_hash = hash_entry(&commit)?;
+    create_entry(&commit)?;
+    let commit_hash = hash_entry(&commit)?;
 
     let bytes: SerializedBytes = EntryHash::from(input.session_hash.clone()).try_into()?;
     let tag = LinkTag::from(bytes.bytes().to_vec());
-    create_link(
-        EntryHash::from(input.session_snapshot),
-        change_hash.clone(),
-        tag,
-    )?;
 
-    let header_hash_b64 = HeaderHashB64::from(header_hash);
+    for previous_commit_hash in input.commit.previous_commit_hashes {
+        create_link(
+            EntryHash::from(previous_commit_hash),
+            commit_hash.clone(),
+            tag.clone(),
+        )?;
+    }
+
+    let commit_hash_b64 = EntryHashB64::from(commit_hash);
 
     if input.participants.len() > 0 {
         let commit_info = CommitNotice {
             committed_deltas_count: delta_count,
             new_content_hash: commit.new_content_hash,
             previous_content_hash: commit.previous_content_hash,
-            commit_hash: header_hash_b64.clone(),
+            commit_hash: commit_hash_b64.clone(),
             meta: commit.meta,
         };
         let payload = ExternIO::encode(SignalPayload::new(
@@ -96,5 +100,15 @@ fn commit(input: CommitInput) -> ExternResult<HeaderHashB64> {
             .collect();
         remote_signal(payload, participants)?;
     }
-    Ok(header_hash_b64)
+    Ok(commit_hash_b64)
+}
+
+#[hdk_extern]
+pub fn get_commit(commit_hash: EntryHashB64) -> ExternResult<Commit> {
+    let element =
+        get(EntryHash::from(commit_hash), GetOptions::default())?.ok_or(SynError::HashNotFound)?;
+
+    let (_, commit) = element_to_entry::<Commit>(element)?;
+
+    Ok(commit)
 }
