@@ -1,4 +1,4 @@
-import { derived, Readable, writable } from 'svelte/store';
+import { derived, get, Readable, writable } from 'svelte/store';
 import type {
   AgentPubKeyB64,
   Dictionary,
@@ -18,84 +18,109 @@ import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
-import { newSession } from './internal/workflows/sessions/scribe';
+import { leaveSession, newSession } from './internal/workflows/sessions/scribe';
 
-export interface SynStore<CONTENT, DELTA> {
+export class SynStore<CONTENT, DELTA> {
+  /** Private fields */
+  #workspace: SynWorkspace<CONTENT, DELTA>;
+  #cancelBackgroundTasks: () => void;
+
+  /** Public accessors */
   myPubKey: AgentPubKeyB64;
-
-  getAllSessions(): Promise<Dictionary<Session>>;
-
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
-  sessionStore: (sessionHash: EntryHashB64) => SessionStore<CONTENT, DELTA>;
 
-  newSession(fromSnapshot?: EntryHashB64): Promise<EntryHashB64>;
-  joinSession(sessionHash: EntryHashB64): Promise<void>;
+  constructor(
+    cellClient: CellClient,
+    initialContent: CONTENT,
+    applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
+    config?: RecursivePartial<SynConfig>
+  ) {
+    const fullConfig = merge(config, defaultConfig());
 
-  close: () => Promise<void>;
-}
+    this.myPubKey = serializeHash(cellClient.cellId[1]);
+    const state: SynState = initialState(this.myPubKey);
 
-export function createSynStore<CONTENT, DELTA>(
-  cellClient: CellClient,
-  initialContent: CONTENT,
-  applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
-  config?: RecursivePartial<SynConfig>
-): SynStore<CONTENT, DELTA> {
-  let workspace: SynWorkspace<CONTENT, DELTA> = undefined as any;
+    const store = writable(state);
 
-  const fullConfig = merge(config, defaultConfig());
+    const client = new SynClient(cellClient, signal =>
+      handleSignal(this.#workspace, signal)
+    );
 
-  const myPubKey = serializeHash(cellClient.cellId[1]);
-  const state: SynState = initialState(myPubKey);
+    this.#workspace = {
+      store,
+      applyDeltaFn,
+      client,
+      initialSnapshot: initialContent,
+      config: fullConfig,
+    };
 
-  const store = writable(state);
+    this.activeSession = derived(this.#workspace.store, state => {
+      if (state.activeSessionHash)
+        return buildSessionStore(this.#workspace, state.activeSessionHash);
+    });
 
-  const client = new SynClient(cellClient, signal =>
-    handleSignal(workspace, signal)
-  );
+    const { cancel } = initBackgroundTasks(this.#workspace);
+    this.#cancelBackgroundTasks = cancel;
 
-  workspace = {
-    store,
-    applyDeltaFn,
-    client,
-    initialSnapshot: initialContent,
-    config: fullConfig,
-  };
-
-  const { cancel } = initBackgroundTasks(workspace);
-
-  const activeSession = derived(store, state => {
-    if (state.activeSessionHash)
-      return buildSessionStore(workspace, state.activeSessionHash);
-  });
-
-  return {
-    myPubKey,
-    getAllSessions: async () => {
-      const sessions = await client.getSessions();
-      workspace.store.update(state => {
-        state.sessions = {
-          ...state.sessions,
-          ...sessions,
-        };
-        return state;
-      });
-
-      return sessions;
-    },
-    joinSession: async sessionHash => joinSession(workspace, sessionHash),
-    activeSession,
-    joinedSessions: derived(workspace.store, state =>
+    this.joinedSessions = derived(this.#workspace.store, state =>
       Object.keys(state.joinedSessions)
-    ),
-    knownSessions: derived(workspace.store, state => state.sessions),
-    sessionStore: sessionHash => buildSessionStore(workspace, sessionHash),
-    newSession: async (fromSnapshot?: EntryHashB64) =>
-      newSession(workspace, fromSnapshot),
-    close: async () => {
-      client.close();
-      cancel();
-    },
-  };
+    );
+    this.knownSessions = derived(
+      this.#workspace.store,
+      state => state.sessions
+    );
+  }
+
+  async getAllSessions() {
+    const sessions = await this.#workspace.client.getSessions();
+    this.#workspace.store.update(state => {
+      state.sessions = {
+        ...state.sessions,
+        ...sessions,
+      };
+      return state;
+    });
+
+    return sessions;
+  }
+
+  async joinSession(sessionHash: EntryHashB64) {
+    return joinSession(this.#workspace, sessionHash);
+  }
+
+  sessionStore(sessionHash: EntryHashB64) {
+    return buildSessionStore(this.#workspace, sessionHash);
+  }
+
+  async newSession(fromSnapshot?: EntryHashB64) {
+    return newSession(this.#workspace, fromSnapshot);
+  }
+
+  async getCommitTips() {
+    const commitTips = await this.#workspace.client.getCommitTips();
+
+    this.#workspace.store.update(state => {
+      for (const key of Object.keys(commitTips)) {
+        state.commits[key] = commitTips[key];
+      }
+
+      return state;
+    });
+
+    return commitTips;
+  }
+
+  async close() {
+    const joinedSessionHashes = get(this.joinedSessions);
+
+    // Sequential to avoid concurrent writes
+    for (const hash of joinedSessionHashes) {
+      await leaveSession(this.#workspace, hash);
+    }
+
+    this.#workspace.client.close();
+    this.#cancelBackgroundTasks();
+  }
 }

@@ -1,4 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { get } from 'svelte/store';
+import { amIScribe, selectSessionState } from '../../../state/selectors';
 
 import type { SynWorkspace } from '../../workspace';
 
@@ -46,4 +48,35 @@ export async function newSession<CONTENT, DELTA>(
   });
 
   return session.sessionHash;
+}
+
+export async function leaveSession<CONTENT, DELTA>(
+  workspace: SynWorkspace<CONTENT, DELTA>,
+  sessionHash: EntryHashB64
+) {
+  let state = get(workspace.store);
+
+  if (amIScribe(state, sessionHash)) {
+    await closeSession(workspace, sessionHash);
+  }
+
+  workspace.store.update(state => {
+    (state.joinedSessions[sessionHash] as any) = undefined;
+    delete state.joinedSessions[sessionHash];
+    return state;
+  });
+}
+
+async function closeSession<CONTENT, DELTA>(
+  workspace: SynWorkspace<CONTENT, DELTA>,
+  sessionHash: EntryHashB64
+) {
+  let state = get(workspace.store);
+
+  const sessionState = selectSessionState(state, sessionHash);
+
+  await workspace.client.closeSession({
+    sessionHash,
+    lastCommitHash: sessionState.currentCommitHash,
+  });
 }

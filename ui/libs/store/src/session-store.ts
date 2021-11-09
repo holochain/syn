@@ -10,6 +10,7 @@ export type { SessionFolk };
 
 import { selectSessionState } from './state/selectors';
 import { requestChanges } from './internal/workflows/change';
+import { leaveSession } from './internal/workflows/sessions/scribe';
 
 export interface SessionStore<CONTENT, DELTA> {
   sessionHash: EntryHashB64;
@@ -53,7 +54,6 @@ export function buildSessionStore<CONTENT, DELTA>(
   );
 
   const state = get(workspace.store);
-  const myPubKey = state.myPubKey;
   const session = state.sessions[sessionHash];
 
   return {
@@ -69,15 +69,6 @@ export function buildSessionStore<CONTENT, DELTA>(
       deltas: DELTA[];
       ephemeral: Dictionary<any>;
     }) => requestChanges(workspace, sessionHash, deltas, ephemeral),
-    leave: async () => {
-      if (session.scribe === myPubKey) {
-        await workspace.client.deleteSession(sessionHash);
-        workspace.store.update(state => {
-          (state.joinedSessions[sessionHash] as any) = undefined;
-          delete state.joinedSessions[sessionHash];
-          return state;
-        });
-      }
-    },
+    leave: async () => leaveSession(workspace, sessionHash),
   };
 }

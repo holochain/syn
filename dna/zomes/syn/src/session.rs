@@ -4,6 +4,7 @@ use chrono::{serde::ts_milliseconds, DateTime, Utc};
 use hdk::prelude::*;
 use holo_hash::*;
 
+use crate::commit::{add_commit_tip, remove_commit_tip};
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
 
@@ -94,13 +95,31 @@ pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     Ok(sessions)
 }
 
+/// Input to the new_session call
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CloseSessionInput {
+    pub session_hash: EntryHashB64,
+    pub last_commit_hash: Option<EntryHashB64>,
+}
+
 #[hdk_extern]
-pub fn delete_session(session_hash: EntryHashB64) -> ExternResult<()> {
+pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     // TODO: add validation so that only the scribe can delete it
     let path = get_sessions_path();
     let links = get_links(path.hash()?, None)?;
 
-    let session_hash = EntryHash::from(session_hash);
+    let session = get_session(input.session_hash.clone())?;
+
+    let session_hash = EntryHash::from(input.session_hash);
+
+    if let Some(next_commit_tip) = input.last_commit_hash {
+        add_commit_tip(next_commit_tip)?;
+        if let Some(initial_commit) = session.initial_commit_hash {
+            remove_commit_tip(initial_commit)?;
+        }
+    }
+
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
 
     match maybe_link {

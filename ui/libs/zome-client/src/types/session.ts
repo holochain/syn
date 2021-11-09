@@ -17,3 +17,8 @@ export interface SessionInfo {
 export interface NewSessionInput {
   initialCommitHash: EntryHashB64 | undefined;
 }
+
+export interface CloseSessionInput {
+  sessionHash: EntryHashB64;
+  lastCommitHash: EntryHashB64 | undefined;
+}

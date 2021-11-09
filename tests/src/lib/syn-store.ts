@@ -8,7 +8,7 @@ import {
 import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
-import { createSynStore } from '@syn/store';
+import { SynStore } from '@syn/store';
 
 import { applyDelta, delay, initialContent, synDna } from '../common';
 
@@ -31,12 +31,12 @@ export const oFn = orchestrator => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = createSynStore(aliceClient, initialContent, applyDelta, {
+    const aliceSyn = new SynStore(aliceClient, initialContent, applyDelta, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
     });
-    const bobSyn = createSynStore(bobClient, initialContent, applyDelta);
+    const bobSyn = new SynStore(bobClient, initialContent, applyDelta);
 
     const sessionHash = await aliceSyn.newSession();
 

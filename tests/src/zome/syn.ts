@@ -406,7 +406,13 @@ export default orchestrator => {
     let folks = await me.call('syn', 'get_folks');
     t.equal(folks.length, 3);
 
-    await me.call('syn', 'delete_session', sessionHash);
+    let commitTips = await alice.call('syn', 'get_commit_tips');
+    t.equal(Object.keys(commitTips).length, 0);
+
+    await me.call('syn', 'close_session', {
+      lastCommitHash: commit_hash2,
+      sessionHash,
+    });
 
     // check get_sessions utility zome call
     sessions = await me.call('syn', 'get_sessions');
@@ -417,5 +423,13 @@ export default orchestrator => {
     // check get_sessions utility zome call
     sessions = await alice.call('syn', 'get_sessions');
     t.equal(Object.keys(sessions).length, 0);
+
+    commitTips = await alice.call('syn', 'get_commit_tips');
+    t.equal(Object.keys(commitTips).length, 1);
+    t.equal(Object.keys(commitTips)[0], commit_hash2);
+    t.equal(
+      (Object.values(commitTips)[0] as any).createdAt,
+      commit2.commit.createdAt
+    );
   });
 };

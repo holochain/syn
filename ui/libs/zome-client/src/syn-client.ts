@@ -16,7 +16,12 @@ import type {
 import type { Commit, CommitInput, Content } from './types/commit';
 import type { SendFolkLoreInput } from './types/folks';
 import type { SendHeartbeatInput } from './types/heartbeat';
-import type { NewSessionInput, Session, SessionInfo } from './types/session';
+import type {
+  CloseSessionInput,
+  NewSessionInput,
+  Session,
+  SessionInfo,
+} from './types/session';
 import type { SendSyncRequestInput, SendSyncResponseInput } from './types/sync';
 import { allMessageTypes, SynSignal } from './types/signal';
 import { deepDecodeUint8Arrays } from './utils';
@@ -75,6 +80,16 @@ export class SynClient {
     return this.decodeCommit(commit);
   }
 
+  public async getCommitTips(): Promise<Dictionary<Commit>> {
+    const commits = await this.callZome('get_commit_tips', null);
+
+    for (const key of Object.keys(commits)) {
+      commits[key] = this.decodeCommit(commits[key]);
+    }
+
+    return commits;
+  }
+
   /** Hash */
   public hashSnapshot(content: Content): Promise<EntryHashB64> {
     return this.callZome('hash_snapshot', encode(content));
@@ -91,8 +106,8 @@ export class SynClient {
     return this.callZome('new_session', newSessionInput);
   }
 
-  public async deleteSession(sessionHash: EntryHashB64): Promise<void> {
-    return this.callZome('delete_session', sessionHash);
+  public async closeSession(input: CloseSessionInput): Promise<void> {
+    return this.callZome('close_session', input);
   }
 
   public getSessions(): Promise<Dictionary<Session>> {
@@ -213,9 +228,7 @@ export class SynClient {
     }
     return changes;
   }
-  decodeEphemeral(
-    ephemeralChanges: Dictionary<Uint8Array>
-  ): EphemeralChanges {
+  decodeEphemeral(ephemeralChanges: Dictionary<Uint8Array>): EphemeralChanges {
     const changes = {};
     for (const key of Object.keys(ephemeralChanges)) {
       changes[key] = decode(ephemeralChanges[key]);

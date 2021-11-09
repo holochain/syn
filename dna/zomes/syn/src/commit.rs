@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::usize;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
@@ -5,7 +6,7 @@ use hdk::prelude::*;
 use holo_hash::*;
 
 use crate::change::ChangeBundle;
-use crate::error::SynError;
+use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
 use crate::{SignalPayload, SynMessage};
 
@@ -111,4 +112,49 @@ pub fn get_commit(commit_hash: EntryHashB64) -> ExternResult<Commit> {
     let (_, commit) = element_to_entry::<Commit>(element)?;
 
     Ok(commit)
+}
+
+pub fn add_commit_tip(commit_hash: EntryHashB64) -> ExternResult<()> {
+    let path = commit_tips();
+    path.ensure()?;
+
+    create_link(path.hash()?, EntryHash::from(commit_hash), ())?; Ok(())
+}
+
+pub fn remove_commit_tip(commit_hash: EntryHashB64) -> ExternResult<()> {
+    let links = get_links(commit_tips().hash()?, None)?;
+    let entry_hash = EntryHash::from(commit_hash);
+
+    for link in links {
+        if link.target.eq(&entry_hash) {
+            delete_link(link.create_link_hash)?;
+        }
+    }
+    Ok(())
+}
+
+#[hdk_extern]
+pub fn get_commit_tips(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
+    let links = get_links(commit_tips().hash()?, None)?;
+
+    let get_inputs = links
+        .into_iter()
+        .map(|link| GetInput::new(link.target.into(), GetOptions::default()))
+        .collect();
+
+    let elements = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
+
+    let commits: BTreeMap<EntryHashB64, Commit> = elements
+        .into_iter()
+        .filter_map(|e| e)
+        .map(|e| element_to_entry::<Commit>(e))
+        .collect::<SynResult<Vec<(EntryHashB64, Commit)>>>()?
+        .into_iter()
+        .collect();
+
+    Ok(commits)
+}
+
+fn commit_tips() -> Path {
+    Path::from("commit_tips")
 }
