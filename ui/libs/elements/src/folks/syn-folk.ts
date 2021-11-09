@@ -1,19 +1,33 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { css, html, LitElement } from 'lit';
-import { property } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { AgentAvatar } from '@holochain-open-dev/profiles';
+import { contextProvided } from '@lit-labs/context';
+import { synSessionContext } from '../context/contexts';
+import type { SessionStore } from '@syn/store';
+import { StoreSubscriber } from 'lit-svelte-stores';
 
 export class SynFolk extends ScopedElementsMixin(LitElement) {
   @property()
   agentPubKey!: AgentPubKeyB64;
 
-  @property({ attribute: 'in-session' })
-  inSession: boolean = false;
+  @contextProvided({ context: synSessionContext, multiple: true })
+  @state()
+  sessionStore!: SessionStore<any, any>;
 
-  @property({ attribute: 'is-scribe' })
-  isScribe: boolean = false;
+  _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
+
+  get folk() {
+    return this._folks.value[this.agentPubKey];
+  }
+  get inSession() {
+    return this.folk.inSession;
+  }
+  get isScribe() {
+    return this.sessionStore.session.scribe === this.agentPubKey;
+  }
 
   render() {
     return html`

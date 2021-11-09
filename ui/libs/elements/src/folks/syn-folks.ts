@@ -1,11 +1,11 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
-import type { SessionStore, SynStore } from '@syn/store';
+import type { SynStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
 
-import { synContext, synSessionContext } from '../context/contexts';
+import { synContext } from '../context/contexts';
 import { SynFolk } from './syn-folk';
 import { sharedStyles } from '../shared-styles';
 
@@ -14,26 +14,18 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
   @state()
   syn!: SynStore<any, any>;
 
-  @contextProvided({ context: synSessionContext, multiple: true })
-  @state()
-  sessionStore!: SessionStore<any, any>;
-
-  _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
+  _activeSession = new StoreSubscriber(this, () => this.syn.activeSession);
+  _folks = new StoreSubscriber(this, () => this._activeSession.value?.folks);
 
   render() {
-    if (!this.sessionStore || !this._folks.value)
+    if (!this.syn || !this._activeSession.value)
       return html`<span>There is no active session</span>`;
 
     return html`
       <div class="column">
-        <syn-folk .agentPubKey=${this.syn.myPubKey} in-session></syn-folk>
-        ${Object.entries(this._folks.value).map(
-          ([pubKey, folk]) =>
-            html`<syn-folk
-              .agentPubKey=${pubKey}
-              .inSession=${folk.inSession}
-              .isScribe=${this.sessionStore.session.scribe === pubKey}
-            ></syn-folk>`
+        <syn-folk .agentPubKey=${this.syn.myPubKey}></syn-folk>
+        ${Object.keys(this._folks.value).map(
+          pubKey => html`<syn-folk .agentPubKey=${pubKey}></syn-folk>`
         )}
       </div>
     `;
