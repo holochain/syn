@@ -3,6 +3,7 @@ import type {
   EntryHashB64,
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
+import cloneDeep from 'lodash-es/cloneDeep';
 
 import type { SessionState, SynState } from '../../../state/syn-state';
 import {
@@ -41,6 +42,7 @@ export function putNewCommit(
   state.commits[newCommitHash] = commit;
   const session = selectSessionState(state, sessionHash) as SessionState;
   session.currentCommitHash = newCommitHash;
+  state.snapshots[commit.newContentHash] = cloneDeep(session.currentContent);
 
   session.uncommittedChanges = {
     authors: {},

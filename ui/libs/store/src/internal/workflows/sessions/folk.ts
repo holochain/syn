@@ -9,21 +9,23 @@ export async function joinSession<CONTENT, DELTA>(
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
 
-  workspace.store.update(state => {
-    state.sessions[sessionHash] = session;
+  return new Promise(resolve => {
+    workspace.store.update(state => {
+      state.sessions[sessionHash] = session;
 
-    state.joiningSessions[sessionHash] = true;
+      state.joiningSessions[sessionHash] = resolve;
 
-    if (session.scribe !== state.myPubKey) {
-      workspace.client.sendSyncRequest({
-        scribe: session.scribe,
-        sessionHash: sessionHash,
-        lastDeltaSeen: undefined,
-      });
-    }
+      if (session.scribe !== state.myPubKey) {
+        workspace.client.sendSyncRequest({
+          scribe: session.scribe,
+          sessionHash: sessionHash,
+          lastDeltaSeen: undefined,
+        });
+      }
 
-    state.activeSessionHash = sessionHash;
+      state.activeSessionHash = sessionHash;
 
-    return state;
+      return state;
+    });
   });
 }

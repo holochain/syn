@@ -4,7 +4,7 @@ import { SynMessageType, SynSignal } from '@syn/zome-client';
 import type { SynWorkspace } from './workspace';
 import { handleSyncRequest } from './workflows/sync/scribe';
 import { handleSyncResponse } from './workflows/sync/folk';
-import { selectSessionState } from '../state/selectors';
+import { areWeJoiningSession, selectSessionState } from '../state/selectors';
 import { handleChangeRequest } from './workflows/change/scribe';
 import { handleCommitNotice } from './workflows/commit/folk';
 import { handleFolkLore } from './workflows/folklore/folk';
@@ -16,7 +16,10 @@ export function handleSignal<CONTENT, DELTA>(
   signal: SynSignal
 ) {
   const currentState = get(workspace.store);
-  if (!selectSessionState(currentState, signal.sessionHash)) {
+  if (
+    !selectSessionState(currentState, signal.sessionHash) &&
+    !areWeJoiningSession(currentState, signal.sessionHash)
+  ) {
     console.warn(`We are getting a signal for a sesion we don't know about`);
     return;
   }

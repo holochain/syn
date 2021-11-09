@@ -87,7 +87,9 @@ export class SynStore<CONTENT, DELTA> {
   }
 
   async joinSession(sessionHash: EntryHashB64) {
-    return joinSession(this.#workspace, sessionHash);
+    await joinSession(this.#workspace, sessionHash);
+
+    return buildSessionStore(this.#workspace, sessionHash);
   }
 
   sessionStore(sessionHash: EntryHashB64) {
@@ -95,7 +97,8 @@ export class SynStore<CONTENT, DELTA> {
   }
 
   async newSession(fromSnapshot?: EntryHashB64) {
-    return newSession(this.#workspace, fromSnapshot);
+    const sessionHash = await newSession(this.#workspace, fromSnapshot);
+    return buildSessionStore(this.#workspace, sessionHash);
   }
 
   async getCommitTips() {

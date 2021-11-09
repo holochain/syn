@@ -11,12 +11,14 @@ export function handleSyncResponse<CONTENT, DELTA>(
   sessionHash: EntryHashB64,
   stateForSync: StateForSync
 ) {
+  let resolveJoining: (() => void) | undefined = undefined;
   workspace.store.update(state => {
     if (state.joiningSessions[sessionHash]) {
+      const currentCommitHash = stateForSync.folkMissedLastCommit
+        ? stateForSync.folkMissedLastCommit.commitHash
+        : undefined;
       state.joinedSessions[sessionHash] = {
-        currentCommitHash: stateForSync.folkMissedLastCommit
-          ? stateForSync.folkMissedLastCommit.commitHash
-          : undefined,
+        currentCommitHash,
         sessionHash: sessionHash,
         currentContent: workspace.initialSnapshot,
         myFolkIndex: 0,
@@ -29,7 +31,8 @@ export function handleSyncResponse<CONTENT, DELTA>(
         },
         folks: {},
       };
-      state.joiningSessions[sessionHash] = false;
+
+      resolveJoining = state.joiningSessions[sessionHash];
       delete state.joiningSessions[sessionHash];
     }
 
@@ -72,4 +75,5 @@ export function handleSyncResponse<CONTENT, DELTA>(
     sessionState.ephemeral = stateForSync.ephemeralChanges;
     return state;
   });
+  if (resolveJoining) (resolveJoining as any)();
 }

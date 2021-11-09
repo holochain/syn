@@ -37,6 +37,13 @@ export function selectSessionState(
   return synState.joinedSessions[sessionHash];
 }
 
+export function areWeJoiningSession(
+  synState: SynState,
+  sessionHash: EntryHashB64
+): boolean {
+  return !!synState.joiningSessions[sessionHash];
+}
+
 export function selectLatestSnapshotHash(
   synState: SynState,
   sessionHash: EntryHashB64

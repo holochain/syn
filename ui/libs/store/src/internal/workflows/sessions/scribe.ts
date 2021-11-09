@@ -1,7 +1,9 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { get } from 'svelte/store';
-import { amIScribe, selectSessionState } from '../../../state/selectors';
+import type { Commit } from '@syn/zome-client';
+import cloneDeep from 'lodash-es/cloneDeep';
 
+import { amIScribe, selectSessionState } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
@@ -10,12 +12,13 @@ export async function newSession<CONTENT, DELTA>(
   fromCommit?: EntryHashB64
 ): Promise<EntryHashB64> {
   let currentContent = workspace.initialSnapshot;
+  let currentCommit: Commit | undefined;
 
   if (fromCommit) {
-    let currentCommit = await workspace.client.getCommit(fromCommit);
+    currentCommit = await workspace.client.getCommit(fromCommit);
 
     currentContent = await workspace.client.getSnapshot(
-      currentCommit.newContentHash
+      (currentCommit as Commit).newContentHash
     );
   } else {
     await workspace.client.putSnapshot(workspace.initialSnapshot);
@@ -41,6 +44,11 @@ export async function newSession<CONTENT, DELTA>(
       },
       folks: {},
     };
+    if (fromCommit && currentCommit) {
+      state.snapshots[currentCommit?.newContentHash] =
+        cloneDeep(currentContent);
+      state.commits[fromCommit] = currentCommit;
+    }
 
     state.activeSessionHash = session.sessionHash;
 

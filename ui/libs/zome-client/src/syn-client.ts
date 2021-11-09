@@ -133,25 +133,29 @@ export class SynClient {
   public sendSyncResponse(
     syncResponseInput: SendSyncResponseInput
   ): Promise<void> {
-    const missedCommits: Dictionary<any> = {};
-
-    if (syncResponseInput.state.folkMissedLastCommit) {
-      syncResponseInput.state.folkMissedLastCommit.commit = this.encodeCommit(
-        syncResponseInput.state.folkMissedLastCommit.commit
-      );
-    }
-
     const input = {
       ...syncResponseInput,
-      state: {
-        ...syncResponseInput.state,
-        missedCommits,
-        uncommittedChanges: this.encodeChangeBundle(
-          syncResponseInput.state.uncommittedChanges
-        ),
-      },
     };
 
+    if (input.state.folkMissedLastCommit) {
+      input.state.folkMissedLastCommit.commit = this.encodeCommit(
+        input.state.folkMissedLastCommit.commit
+      );
+      input.state.folkMissedLastCommit.commitInitialSnapshot = encode(
+        input.state.folkMissedLastCommit.commitInitialSnapshot
+      );
+    }
+    if (input.state.uncommittedChanges) {
+      input.state.uncommittedChanges = this.encodeChangeBundle(
+        syncResponseInput.state.uncommittedChanges
+      );
+    }
+    if (input.state.ephemeralChanges) {
+      input.state.ephemeralChanges = this.encodeEphemeral(
+        input.state.ephemeralChanges
+      );
+    }
+    console.log(input);
     return this.callZome('send_sync_response', input);
   }
 

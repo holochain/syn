@@ -26,7 +26,7 @@ export interface SynState {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
   sessions: Dictionary<Session>; // Segmented by EntryHashB64
-  joiningSessions: Dictionary<boolean>;
+  joiningSessions: Dictionary<() => void>;
   joinedSessions: Dictionary<SessionState>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64

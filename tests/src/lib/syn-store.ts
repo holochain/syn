@@ -38,17 +38,15 @@ export const oFn = orchestrator => {
     });
     const bobSyn = new SynStore(bobClient, initialContent, applyDelta);
 
-    const sessionHash = await aliceSyn.newSession();
-
-    const aliceSessionStore = aliceSyn.sessionStore(sessionHash);
+    const aliceSessionStore = await aliceSyn.newSession();
+    const sessionHash = aliceSessionStore.sessionHash;
 
     t.ok(aliceSessionStore.sessionHash);
     t.equal(aliceSessionStore.session.scribe, aliceSyn.myPubKey);
 
     await delay(2000);
 
-    await bobSyn.joinSession(sessionHash);
-    const bobSessionStore = aliceSyn.sessionStore(sessionHash);
+    const bobSessionStore = await bobSyn.joinSession(sessionHash);
 
     aliceSessionStore.requestChanges({
       deltas: [{ type: 'Title', value: 'A new title' }],
@@ -95,6 +93,9 @@ export const oFn = orchestrator => {
     await delay(1000);
 
     currentContent = get(aliceSessionStore.content);
+    t.equal(currentContent.body, 'Hi there');
+
+    currentContent = get(bobSessionStore.content);
     t.equal(currentContent.body, 'Hi there');
 
     currentEphemeral = get(aliceSessionStore.ephemeral);
