@@ -10,16 +10,26 @@ import type { Sources } from 'quill';
 import { QuillSnow } from '@scoped-elements/quill';
 
 import { quillDeltasToTextEditorDelta } from './utils';
+import type { TextEditorDelta } from './text-editor-delta';
 
 export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   @property({ attribute: 'content-path' })
   contentPath: string | undefined;
+
+  @property({ attribute: 'debounce-ms' })
+  debounceMs: number = 200;
 
   @contextProvided({ context: synSessionContext })
   @state()
   sessionStore!: SessionStore<CONTENT, any>;
 
   _content = new StoreSubscriber(this, () => this.sessionStore?.content);
+
+  _deltasNotEmmitted: TextEditorDelta[] = [];
+
+  firstUpdated() {
+    setInterval(() => this.emitDeltas(), this.debounceMs);
+  }
 
   onTextChanged(deltas: any, source: Sources) {
     if (source !== 'user') return;
@@ -28,15 +38,22 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     if (!ops || ops.length === 0) return;
 
     const delta = quillDeltasToTextEditorDelta(ops);
-    this.dispatchEvent(
-      new CustomEvent('change-requested', {
-        detail: {
-          delta,
-        },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    this._deltasNotEmmitted.push(delta);
+  }
+
+  emitDeltas() {
+    if (this._deltasNotEmmitted.length > 0) {
+      this.dispatchEvent(
+        new CustomEvent('changes-requested', {
+          detail: {
+            deltas: this._deltasNotEmmitted,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      this._deltasNotEmmitted = [];
+    }
   }
 
   get quill(): Quill {

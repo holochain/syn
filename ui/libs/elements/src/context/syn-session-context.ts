@@ -23,14 +23,20 @@ export class SynSessionContext extends ScopedElementsMixin(LitElement) {
     this.provider = new ContextProvider(
       this,
       synSessionContext,
-      this.synStore.sessionStore(this.sessionHash)
+      this.sessionHash
+        ? this.synStore.sessionStore(this.sessionHash)
+        : undefined
     );
   }
 
   update(changedValues: PropertyValues) {
     super.update(changedValues);
     if (changedValues.has('sessionHash')) {
-      this.provider.setValue(this.synStore.sessionStore(this.sessionHash));
+      this.provider.setValue(
+        this.sessionHash
+          ? this.synStore.sessionStore(this.sessionHash)
+          : undefined
+      );
     }
   }
 

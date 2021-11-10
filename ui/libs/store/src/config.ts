@@ -23,7 +23,7 @@ export function defaultConfig(): SynConfig {
     hearbeatInterval: 2 * 1000,
     outOfSessionTimeout: 8 * 1000,
     requestTimeout: 1000,
-    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 5 }, // TODO: reduce ms
+    commitStrategy: { CommitEveryNDeltas: 50, CommitEveryNMs: 1000 * 30 }, // TODO: reduce ms
     syncStrategy: SyncStrategy.BlockOnConflict,
   };
 }

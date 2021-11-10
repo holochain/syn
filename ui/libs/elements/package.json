@@ -24,7 +24,7 @@
     "@holochain-open-dev/profiles": "github:holochain-open-dev/profiles#ui-build",
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.1",
-    "@scoped-elements/cytoscape": "^0.0.1",
+    "@scoped-elements/cytoscape": "file:~/projects/scoped-elements/cytoscape",
     "@scoped-elements/material-web": "0.0.15",
     "@syn/store": "0.0.1",
     "lit": "^2.0.2",

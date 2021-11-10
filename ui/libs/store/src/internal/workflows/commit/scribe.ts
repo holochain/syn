@@ -22,7 +22,7 @@ export async function commitChanges<CONTENT, DELTA>(
   }
   let session = selectSessionState(state, sessionHash) as SessionState;
 
-  const hash = await workspace.client.hashSnapshot(session.currentContent);
+  const hash = await workspace.client.putSnapshot(session.currentContent);
   const initialSnapshotHash = await workspace.client.hashSnapshot(
     workspace.initialSnapshot
   );

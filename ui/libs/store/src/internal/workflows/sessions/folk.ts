@@ -9,11 +9,20 @@ export async function joinSession<CONTENT, DELTA>(
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
+    const joiningResolve = () => {
+      workspace.store.update(state => {
+        state.activeSessionHash = sessionHash;
+        return state;
+      });
+
+      resolve();
+    };
+
     workspace.store.update(state => {
       state.sessions[sessionHash] = session;
 
-      state.joiningSessions[sessionHash] = resolve;
+      state.joiningSessions[sessionHash] = joiningResolve;
 
       if (session.scribe !== state.myPubKey) {
         workspace.client.sendSyncRequest({
@@ -23,9 +32,11 @@ export async function joinSession<CONTENT, DELTA>(
         });
       }
 
-      state.activeSessionHash = sessionHash;
-
       return state;
     });
+
+    setTimeout(() => {
+      reject('Could not connect to the scribe of the session');
+    }, 3000);
   });
 }

@@ -31,6 +31,7 @@ export class SynStore<CONTENT, DELTA> {
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
   allCommits: Readable<Dictionary<Commit>>;
+  snapshots: Readable<Dictionary<CONTENT>>;
 
   constructor(
     cellClient: CellClient,
@@ -73,6 +74,7 @@ export class SynStore<CONTENT, DELTA> {
       state => state.sessions
     );
     this.allCommits = derived(this.#workspace.store, state => state.commits);
+    this.snapshots = derived(this.#workspace.store, state => state.snapshots);
   }
 
   async getAllSessions() {
@@ -111,6 +113,15 @@ export class SynStore<CONTENT, DELTA> {
         state.commits[key] = commitTips[key];
       }
 
+      return state;
+    });
+  }
+
+  async fetchSnapshot(snapshotHash: EntryHashB64) {
+    const snapshot = await this.#workspace.client.getSnapshot(snapshotHash);
+
+    this.#workspace.store.update(state => {
+      state.snapshots[snapshotHash] = snapshot;
       return state;
     });
   }

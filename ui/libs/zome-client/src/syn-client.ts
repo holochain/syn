@@ -57,8 +57,11 @@ export class SynClient {
     return this.callZome('put_snapshot', encode(content));
   }
 
-  public async getSnapshot(snapshotHash: EntryHashB64): Promise<Content> {
+  public async getSnapshot(
+    snapshotHash: EntryHashB64
+  ): Promise<Content | undefined> {
     const content = await this.callZome('get_snapshot', snapshotHash);
+    if (!content) return content;
     return decode(content);
   }
 

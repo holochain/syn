@@ -19,11 +19,10 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
 
   _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
 
-  get folk() {
-    return this._folks.value[this.agentPubKey];
-  }
   get inSession() {
-    return this.folk.inSession;
+    if (!this._folks.value) return false;
+    if (!this._folks.value[this.agentPubKey]) return false;
+    return this._folks.value[this.agentPubKey].inSession;
   }
   get isScribe() {
     return this.sessionStore.session.scribe === this.agentPubKey;

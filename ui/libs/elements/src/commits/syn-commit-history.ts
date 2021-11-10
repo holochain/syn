@@ -33,11 +33,24 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
     if (this._loading)
       return html`<mwc-circular-progress></mwc-circular-progress>`;
 
-    const { nodes, edges } = getCommitGraph(this._allCommits.value);
+    const elements = getCommitGraph(this._allCommits.value);
     return html`<cytoscape-dagre
       style="flex: 1;"
-      .nodes=${nodes}
-      .edges=${edges}
+      .fixed=${true}
+      .options=${{
+        style: [
+          {
+            selector: 'edge',
+            style: {
+              'target-arrow-shape': 'triangle',
+            },
+          },
+        ],
+      }}
+      .elements=${elements}
+      .dagreOptions=${{
+        rankDir: 'BT',
+      }}
       @node-selected=${(e: CustomEvent) =>
         this.dispatchEvent(
           new CustomEvent('commit-selected', {
@@ -61,22 +74,20 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   static styles = [sharedStyles];
 }
 
-function getCommitGraph(commits: Dictionary<Commit>): {
-  nodes: NodeDefinition[];
-  edges: EdgeDefinition[];
-} {
-  const nodes: NodeDefinition[] = [];
-  const edges: EdgeDefinition[] = [];
+function getCommitGraph(
+  commits: Dictionary<Commit>
+): Array<NodeDefinition | EdgeDefinition> {
+  const elements: Array<NodeDefinition | EdgeDefinition> = [];
 
   for (const [commitHash, commit] of Object.entries(commits)) {
-    nodes.push({
+    elements.push({
       data: {
         id: commitHash,
       },
     });
 
     for (const parentCommitHash of commit.previousCommitHashes) {
-      edges.push({
+      elements.push({
         data: {
           id: `${parentCommitHash}->${commitHash}`,
           source: parentCommitHash,
@@ -86,8 +97,5 @@ function getCommitGraph(commits: Dictionary<Commit>): {
     }
   }
 
-  return {
-    nodes,
-    edges,
-  };
+  return elements;
 }
