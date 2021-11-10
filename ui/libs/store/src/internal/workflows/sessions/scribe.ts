@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 import type { Commit } from '@syn/zome-client';
 import cloneDeep from 'lodash-es/cloneDeep';
 
-import { amIScribe, selectSessionState } from '../../../state/selectors';
+import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
@@ -79,12 +79,7 @@ async function closeSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64
 ) {
-  let state = get(workspace.store);
-
-  const sessionState = selectSessionState(state, sessionHash);
-
   await workspace.client.closeSession({
     sessionHash,
-    lastCommitHash: sessionState.currentCommitHash,
   });
 }

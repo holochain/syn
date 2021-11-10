@@ -6,7 +6,7 @@ import type {
 } from '@holochain-open-dev/core-types';
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
-import { Session, SynClient } from '@syn/zome-client';
+import { Commit, Session, SynClient } from '@syn/zome-client';
 import merge from 'lodash-es/merge';
 
 import type { ApplyDeltaFn } from './apply-delta';
@@ -30,6 +30,7 @@ export class SynStore<CONTENT, DELTA> {
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
+  allCommits: Readable<Dictionary<Commit>>;
 
   constructor(
     cellClient: CellClient,
@@ -71,6 +72,7 @@ export class SynStore<CONTENT, DELTA> {
       this.#workspace.store,
       state => state.sessions
     );
+    this.allCommits = derived(this.#workspace.store, state => state.commits);
   }
 
   async getAllSessions() {
@@ -101,8 +103,8 @@ export class SynStore<CONTENT, DELTA> {
     return buildSessionStore(this.#workspace, sessionHash);
   }
 
-  async getCommitTips() {
-    const commitTips = await this.#workspace.client.getCommitTips();
+  async fetchCommitHistory() {
+    const commitTips = await this.#workspace.client.getAllCommits();
 
     this.#workspace.store.update(state => {
       for (const key of Object.keys(commitTips)) {
@@ -111,8 +113,6 @@ export class SynStore<CONTENT, DELTA> {
 
       return state;
     });
-
-    return commitTips;
   }
 
   async close() {

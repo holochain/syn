@@ -80,8 +80,8 @@ export class SynClient {
     return this.decodeCommit(commit);
   }
 
-  public async getCommitTips(): Promise<Dictionary<Commit>> {
-    const commits = await this.callZome('get_commit_tips', null);
+  public async getAllCommits(): Promise<Dictionary<Commit>> {
+    const commits = await this.callZome('get_all_commits', null);
 
     for (const key of Object.keys(commits)) {
       commits[key] = this.decodeCommit(commits[key]);

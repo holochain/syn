@@ -406,9 +406,6 @@ export default orchestrator => {
     let folks = await me.call('syn', 'get_folks');
     t.equal(folks.length, 3);
 
-    let commitTips = await alice.call('syn', 'get_commit_tips');
-    t.equal(Object.keys(commitTips).length, 0);
-
     await me.call('syn', 'close_session', {
       lastCommitHash: commit_hash2,
       sessionHash,
@@ -424,11 +421,11 @@ export default orchestrator => {
     sessions = await alice.call('syn', 'get_sessions');
     t.equal(Object.keys(sessions).length, 0);
 
-    commitTips = await alice.call('syn', 'get_commit_tips');
-    t.equal(Object.keys(commitTips).length, 1);
-    t.equal(Object.keys(commitTips)[0], commit_hash2);
+    let commitTips = await alice.call('syn', 'get_all_commits');
+    t.equal(Object.keys(commitTips).length, 2);
+    t.equal(Object.keys(commitTips)[1], commit_hash2);
     t.equal(
-      (Object.values(commitTips)[0] as any).createdAt,
+      (Object.values(commitTips)[1] as any).createdAt,
       commit2.commit.createdAt
     );
   });

@@ -81,6 +81,8 @@ fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
 
     let commit_hash_b64 = EntryHashB64::from(commit_hash);
 
+    add_commit(commit_hash_b64.clone())?;
+
     if input.participants.len() > 0 {
         let commit_info = CommitNotice {
             committed_deltas_count: delta_count,
@@ -114,28 +116,17 @@ pub fn get_commit(commit_hash: EntryHashB64) -> ExternResult<Commit> {
     Ok(commit)
 }
 
-pub fn add_commit_tip(commit_hash: EntryHashB64) -> ExternResult<()> {
-    let path = commit_tips();
+fn add_commit(commit_hash: EntryHashB64) -> ExternResult<()> {
+    let path = all_commits_path();
     path.ensure()?;
 
-    create_link(path.hash()?, EntryHash::from(commit_hash), ())?; Ok(())
-}
-
-pub fn remove_commit_tip(commit_hash: EntryHashB64) -> ExternResult<()> {
-    let links = get_links(commit_tips().hash()?, None)?;
-    let entry_hash = EntryHash::from(commit_hash);
-
-    for link in links {
-        if link.target.eq(&entry_hash) {
-            delete_link(link.create_link_hash)?;
-        }
-    }
+    create_link(path.hash()?, EntryHash::from(commit_hash), ())?;
     Ok(())
 }
 
 #[hdk_extern]
-pub fn get_commit_tips(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
-    let links = get_links(commit_tips().hash()?, None)?;
+pub fn get_all_commits(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
+    let links = get_links(all_commits_path().hash()?, None)?;
 
     let get_inputs = links
         .into_iter()
@@ -155,6 +146,6 @@ pub fn get_commit_tips(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
     Ok(commits)
 }
 
-fn commit_tips() -> Path {
-    Path::from("commit_tips")
+fn all_commits_path() -> Path {
+    Path::from("all_commits")
 }

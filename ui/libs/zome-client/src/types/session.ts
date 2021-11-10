@@ -20,5 +20,4 @@ export interface NewSessionInput {
 
 export interface CloseSessionInput {
   sessionHash: EntryHashB64;
-  lastCommitHash: EntryHashB64 | undefined;
 }
