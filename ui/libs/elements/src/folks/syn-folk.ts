@@ -25,7 +25,7 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
     return this._folks.value[this.agentPubKey].inSession;
   }
   get isScribe() {
-    return this.sessionStore.session.scribe === this.agentPubKey;
+    return this.sessionStore?.session.scribe === this.agentPubKey;
   }
 
   render() {

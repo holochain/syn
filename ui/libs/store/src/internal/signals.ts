@@ -10,16 +10,25 @@ import { handleCommitNotice } from './workflows/commit/folk';
 import { handleFolkLore } from './workflows/folklore/folk';
 import { handleHeartbeat } from './workflows/folklore/scribe';
 import { handleChangeNotice } from './workflows/change/folk';
+import type { SynState } from '../state/syn-state';
+
+function shouldWeHandle(state: SynState, signal: SynSignal): boolean {
+  console.log('ñalkjñflsajdf',state, signal)
+  if (selectSessionState(state, signal.sessionHash)) return true;
+  if (
+    areWeJoiningSession(state, signal.sessionHash) &&
+    signal.message.type === SynMessageType.SyncResp
+  )
+    return true;
+  return false;
+}
 
 export function handleSignal<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   signal: SynSignal
 ) {
   const currentState = get(workspace.store);
-  if (
-    !selectSessionState(currentState, signal.sessionHash) &&
-    !areWeJoiningSession(currentState, signal.sessionHash)
-  ) {
+  if (!shouldWeHandle(currentState, signal)) {
     console.warn(`We are getting a signal for a sesion we don't know about`);
     return;
   }

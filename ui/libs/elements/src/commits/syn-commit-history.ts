@@ -1,12 +1,12 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
-import { state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
 import { CircularProgress } from '@scoped-elements/material-web';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
-import type { Dictionary } from '@holochain-open-dev/core-types';
+import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import type { SynStore } from '@syn/store';
 import type { Commit } from '@syn/zome-client';
@@ -22,11 +22,31 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   @state()
   _loading = true;
 
+  @property()
+  selectedCommitHash: EntryHashB64 | undefined;
+
   _allCommits = new StoreSubscriber(this, () => this._synStore.allCommits);
 
   async firstUpdated() {
     await this._synStore.fetchCommitHistory();
     this._loading = false;
+  }
+
+  onNodeSelected(nodeId: string) {
+    this.selectedCommitHash = nodeId;
+    this.dispatchEvent(
+      new CustomEvent('commit-selected', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          commitHash: nodeId,
+        },
+      })
+    );
+  }
+
+  get selectedNodeIds() {
+    return this.selectedCommitHash ? [this.selectedCommitHash] : [];
   }
 
   render() {
@@ -38,29 +58,19 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
       style="flex: 1;"
       .fixed=${true}
       .options=${{
-        style: [
-          {
-            selector: 'edge',
-            style: {
-              'target-arrow-shape': 'triangle',
-            },
-          },
-        ],
+        style: `
+          edge {
+            target-arrow-shape: triangle;
+            width: 2;
+          }
+        `,
       }}
+      .selectedNodesIds=${this.selectedNodeIds}
       .elements=${elements}
       .dagreOptions=${{
         rankDir: 'BT',
       }}
-      @node-selected=${(e: CustomEvent) =>
-        this.dispatchEvent(
-          new CustomEvent('commit-selected', {
-            bubbles: true,
-            composed: true,
-            detail: {
-              commitHash: e.detail.id(),
-            },
-          })
-        )}
+      @node-selected=${(e: CustomEvent) => this.onNodeSelected(e.detail.id())}
     ></cytoscape-dagre>`;
   }
 

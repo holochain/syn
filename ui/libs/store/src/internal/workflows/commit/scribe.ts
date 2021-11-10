@@ -16,13 +16,17 @@ export async function commitChanges<CONTENT, DELTA>(
   sessionHash: EntryHashB64
 ) {
   const state = get(workspace.store);
+
+  const session = selectSessionState(state, sessionHash) as SessionState;
+  if (session.uncommittedChanges.deltas.length === 0) return;
+
   if (!amIScribe(state, sessionHash)) {
     console.log("Trying to commit the changes but I'm not the scribe!");
     return state;
   }
-  let session = selectSessionState(state, sessionHash) as SessionState;
 
   const hash = await workspace.client.putSnapshot(session.currentContent);
+
   const initialSnapshotHash = await workspace.client.hashSnapshot(
     workspace.initialSnapshot
   );
@@ -33,6 +37,7 @@ export async function commitChanges<CONTENT, DELTA>(
     hash,
     initialSnapshotHash
   );
+
   const commitInput: CommitInput = {
     commit,
     participants: selectFolksInSession(session),

@@ -36,6 +36,10 @@ export async function joinSession<CONTENT, DELTA>(
     });
 
     setTimeout(() => {
+      workspace.store.update(state => {
+        delete state.joiningSessions[sessionHash];
+        return state;
+      });
       reject('Could not connect to the scribe of the session');
     }, 3000);
   });

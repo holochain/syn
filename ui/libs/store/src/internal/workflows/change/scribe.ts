@@ -28,6 +28,7 @@ export function scribeRequestChange<CONTENT, DELTA>(
   deltas: DELTA[],
   ephemeralChanges: EphemeralChanges | undefined
 ) {
+  console.log('hey', ephemeralChanges)
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
     const changeBundle = putDeltas(
@@ -108,7 +109,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
       ...sessionState.ephemeral,
       ...changeRequest.ephemeralChanges,
     };
-
+    
     workspace.client.sendChange({
       deltaChanges: changeBundle,
       ephemeralChanges: changeRequest.ephemeralChanges,
@@ -176,11 +177,14 @@ function putDeltas<CONTENT, DELTA>(
     atFolkIndex,
     commitChanges: authorChanges,
   };
+  const authors = {
+    [author]: folkChanges,
+  };
+
+  session.uncommittedChanges.authors = authors;
 
   return {
     deltas,
-    authors: {
-      [author]: folkChanges,
-    },
+    authors,
   };
 }

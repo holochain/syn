@@ -106,11 +106,12 @@ export class SynStore<CONTENT, DELTA> {
   }
 
   async fetchCommitHistory() {
-    const commitTips = await this.#workspace.client.getAllCommits();
+    const commits = await this.#workspace.client.getAllCommits();
+    console.log('synState', commits)
 
     this.#workspace.store.update(state => {
-      for (const key of Object.keys(commitTips)) {
-        state.commits[key] = commitTips[key];
+      for (const key of Object.keys(commits)) {
+        state.commits[key] = commits[key];
       }
 
       return state;
@@ -118,6 +119,10 @@ export class SynStore<CONTENT, DELTA> {
   }
 
   async fetchSnapshot(snapshotHash: EntryHashB64) {
+    const state = get(this.#workspace.store);
+
+    if (state.snapshots[snapshotHash]) return;
+
     const snapshot = await this.#workspace.client.getSnapshot(snapshotHash);
 
     this.#workspace.store.update(state => {

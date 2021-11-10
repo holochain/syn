@@ -18,7 +18,7 @@ export class SynFolks extends ScopedElementsMixin(LitElement) {
   _folks = new StoreSubscriber(this, () => this._activeSession.value?.folks);
 
   render() {
-    if (!this.syn || !this._activeSession.value)
+    if (!this.syn || !this._folks.value)
       return html`<span>There is no active session</span>`;
 
     return html`

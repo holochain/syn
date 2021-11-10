@@ -42,22 +42,22 @@ export function buildSessionStore<CONTENT, DELTA>(
 ): SessionStore<CONTENT, DELTA> {
   const content = derived(
     workspace.store,
-    state => selectSessionState(state, sessionHash).currentContent
+    state => selectSessionState(state, sessionHash)?.currentContent
   );
   const ephemeral = derived(
     workspace.store,
-    state => selectSessionState(state, sessionHash).ephemeral
+    state => selectSessionState(state, sessionHash)?.ephemeral
   );
   const folks = derived(
     workspace.store,
-    state => selectSessionState(state, sessionHash).folks
+    state => selectSessionState(state, sessionHash)?.folks
   );
 
   const state = get(workspace.store);
   const session = state.sessions[sessionHash];
 
   return {
-    sessionHash: sessionHash,
+    sessionHash,
     session,
     content,
     folks,

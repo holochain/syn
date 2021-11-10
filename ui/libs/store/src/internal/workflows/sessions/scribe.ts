@@ -5,6 +5,7 @@ import cloneDeep from 'lodash-es/cloneDeep';
 
 import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
+import { commitChanges } from '../commit/scribe';
 
 // Pick and join a session
 export async function newSession<CONTENT, DELTA>(
@@ -71,6 +72,8 @@ export async function leaveSession<CONTENT, DELTA>(
   workspace.store.update(state => {
     (state.joinedSessions[sessionHash] as any) = undefined;
     delete state.joinedSessions[sessionHash];
+    if (state.activeSessionHash === sessionHash)
+      state.activeSessionHash = undefined;
     return state;
   });
 }
@@ -79,6 +82,7 @@ async function closeSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64
 ) {
+  await commitChanges(workspace, sessionHash);
   await workspace.client.closeSession({
     sessionHash,
   });

@@ -46,7 +46,7 @@ export class SynSessions extends ScopedElementsMixin(LitElement) {
     return html`
       <div class="column" style="align-items: center">
         <div class="row" style="align-items: center; margin-bottom: 4px;">
-          <syn-folk .pubKey=${session.scribe} in-session></syn-folk>
+          <syn-folk .agentPubKey=${session.scribe}></syn-folk>
 
           <span style="margin-left: 4px;"
             >${new Date(session.createdAt).toLocaleTimeString([], {
