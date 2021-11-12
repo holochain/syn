@@ -31,7 +31,7 @@ export async function handleCommitNotice<CONTENT, DELTA>(
       sessionHash
     );
     const sessionState = selectSessionState(state, sessionHash) as SessionState;
-
+    console.log('eing', sessionState, sessionHash);
     if (
       latestCommittedContentHash === commitNotice.previousContentHash &&
       commitNotice.committedDeltasCount ===

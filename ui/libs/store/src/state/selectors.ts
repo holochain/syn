@@ -49,9 +49,10 @@ export function selectLatestSnapshotHash(
   sessionHash: EntryHashB64
 ): EntryHashB64 | undefined {
   const session = selectSessionState(synState, sessionHash);
-  if (!session.currentCommitHash) return undefined;
+  if (!session || !session.currentCommitHash) return undefined;
   return synState.commits[session.currentCommitHash].newContentHash;
 }
+
 export function selectMissedUncommittedChanges(
   synState: SynState,
   sessionHash: EntryHashB64,

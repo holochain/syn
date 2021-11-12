@@ -10,7 +10,7 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.0.9",
+    "@holochain-open-dev/cell-client": "^0.1.1",
     "@msgpack/msgpack": "^2.7.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
@@ -24,7 +24,7 @@
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@holochain/tryorama": "github:holochain/tryorama#update-to-114",
+    "@holochain/tryorama": "0.4.6",
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.14.2",
     "ava": "^3.15.0"

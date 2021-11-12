@@ -421,12 +421,9 @@ export default orchestrator => {
     sessions = await alice.call('syn', 'get_sessions');
     t.equal(Object.keys(sessions).length, 0);
 
-    let commitTips = await alice.call('syn', 'get_all_commits');
-    t.equal(Object.keys(commitTips).length, 2);
-    t.equal(Object.keys(commitTips)[1], commit_hash2);
-    t.equal(
-      (Object.values(commitTips)[1] as any).createdAt,
-      commit2.commit.createdAt
-    );
+    let allCommits = await alice.call('syn', 'get_all_commits');
+    t.equal(Object.keys(allCommits).length, 2);
+    t.equal(allCommits[commit_hash1].createdAt, commit1.commit.createdAt);
+    t.equal(allCommits[commit_hash2].createdAt, commit2.commit.createdAt);
   });
 };

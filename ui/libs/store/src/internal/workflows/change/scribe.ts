@@ -21,6 +21,7 @@ import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { putJustSeenFolks } from '../folklore/utils';
 import { commitChanges } from '../commit/scribe';
+import merge from 'lodash-es/merge';
 
 export function scribeRequestChange<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -28,9 +29,9 @@ export function scribeRequestChange<CONTENT, DELTA>(
   deltas: DELTA[],
   ephemeralChanges: EphemeralChanges | undefined
 ) {
-  console.log('hey', ephemeralChanges)
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
+
     const changeBundle = putDeltas(
       workspace.applyDeltaFn,
       sessionState,
@@ -83,7 +84,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
     const lastDeltaSeen = selectLastDeltaSeen(sessionState);
 
     if (
-      lastDeltaSeen.commitHash !== changeRequest.lastDeltaSeen.commitHash ||
+      lastDeltaSeen.commitHash != changeRequest.lastDeltaSeen.commitHash ||
       changeRequest.lastDeltaSeen.deltaIndexInCommit !==
         lastDeltaSeen.deltaIndexInCommit
     ) {
@@ -109,7 +110,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
       ...sessionState.ephemeral,
       ...changeRequest.ephemeralChanges,
     };
-    
+
     workspace.client.sendChange({
       deltaChanges: changeBundle,
       ephemeralChanges: changeRequest.ephemeralChanges,
@@ -181,7 +182,10 @@ function putDeltas<CONTENT, DELTA>(
     [author]: folkChanges,
   };
 
-  session.uncommittedChanges.authors = authors;
+  session.uncommittedChanges.authors = merge(
+    session.uncommittedChanges.authors,
+    authors
+  );
 
   return {
     deltas,

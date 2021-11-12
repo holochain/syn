@@ -74,7 +74,7 @@ export class SynClient {
         changes: this.encodeChangeBundle(commitInput.commit.changes),
       },
     };
-    console.log('commitInput', commit);
+
     return this.callZome('commit_changes', commit);
   }
 

@@ -49,25 +49,6 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
 
   firstUpdated() {
     setInterval(() => this.emitDeltas(), this.debounceMs);
-    /* 
-    setTimeout(() => {
-      this.quill.on('selection-change', (range, _oldRange, source) => {
-        console.log('hey', source, _oldRange, range);
-        if (source !== 'user' || !range) return;
-
-        this.dispatchEvent(
-          new CustomEvent('changes-requested', {
-            detail: {
-              ephemeral: {
-                [this.synStore.myPubKey]: range.index,
-              },
-            },
-            bubbles: true,
-            composed: true,
-          })
-        );
-      });
-    }); */
   }
 
   emitDeltas() {
@@ -87,49 +68,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
       this._deltasNotEmmitted = [];
     }
   }
-
-  /* 
-  onTextChanged(deltas: any, source: Sources) {
-    if (source !== 'user') return;
-
-    const ops = deltas.ops;
-    if (!ops || ops.length === 0) return;
-
-    const delta = quillDeltasToTextEditorDelta(ops);
-    this._deltasNotEmmitted.push(delta);
-  }
-
-
-  get quill(): Quill {
-    return (this.shadowRoot?.getElementById('editor') as QuillSnow)?.quill;
-  } */
-
-  /* 
-  updateQuill() {
-    if (this.getContent()) {
-      this.quill.setText(this.getContent());
-    }
-    if (this._ephemeral.value) {
-      console.log('eph', this._ephemeral.value);
-      const cursors = this.quill.getModule('cursors');
-
-      for (const [agentPubKey, position] of Object.entries(
-        this._ephemeral.value
-      )) {
-        const range = {
-          index: position,
-          length: 0,
-        };
-        cursors.createCursor({
-          id: agentPubKey,
-          name: '',
-          range,
-        });
-        cursors.moveCursor(agentPubKey, range);
-      }
-    }
-  } */
-
+  
   getContent(): string {
     let content = this._content.value;
     if (!this.contentPath) return content as unknown as string;
@@ -151,11 +90,11 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     });
   }
 
-  onTextDeleted(from: number, to: number) {
+  onTextDeleted(from: number, characterCount: number) {
     this._deltasNotEmmitted.push({
       type: TextEditorDeltaType.Delete,
       position: from,
-      characterCount: to - from,
+      characterCount
     });
   }
 
@@ -186,7 +125,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
       .text=${this._content.value}
       .additionalCursors=${this.remoteCursors()}
       @text-inserted=${e => this.onTextInserted(e.detail.from, e.detail.text)}
-      @text-deleted=${e => this.onTextDeleted(e.detail.from, e.detail.to)}
+      @text-deleted=${e => this.onTextDeleted(e.detail.from, e.detail.characterCount)}
       @selection-changed=${e => this.onSelectionChanged(e.detail.ranges)}
     ></codemirror-markdown>`;
   }

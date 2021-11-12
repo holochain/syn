@@ -13,7 +13,6 @@ import { handleChangeNotice } from './workflows/change/folk';
 import type { SynState } from '../state/syn-state';
 
 function shouldWeHandle(state: SynState, signal: SynSignal): boolean {
-  console.log('ñalkjñflsajdf',state, signal)
   if (selectSessionState(state, signal.sessionHash)) return true;
   if (
     areWeJoiningSession(state, signal.sessionHash) &&
@@ -28,8 +27,9 @@ export function handleSignal<CONTENT, DELTA>(
   signal: SynSignal
 ) {
   const currentState = get(workspace.store);
+
   if (!shouldWeHandle(currentState, signal)) {
-    console.warn(`We are getting a signal for a sesion we don't know about`);
+    console.warn(`We are getting a signal for a session we don't know about`);
     return;
   }
 

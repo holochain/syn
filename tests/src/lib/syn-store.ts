@@ -36,7 +36,11 @@ export const oFn = orchestrator => {
         CommitEveryNDeltas: 3,
       },
     });
-    const bobSyn = new SynStore(bobClient, initialContent, applyDelta);
+    const bobSyn = new SynStore(bobClient, initialContent, applyDelta, {
+      commitStrategy: {
+        CommitEveryNDeltas: 3,
+      },
+    });
 
     const aliceSessionStore = await aliceSyn.newSession();
     const sessionHash = aliceSessionStore.sessionHash;

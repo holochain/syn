@@ -12,7 +12,7 @@ export async function newSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   fromCommit?: EntryHashB64
 ): Promise<EntryHashB64> {
-  let currentContent = workspace.initialSnapshot;
+  let currentContent = cloneDeep(workspace.initialSnapshot);
   let currentCommit: Commit | undefined;
 
   if (fromCommit) {

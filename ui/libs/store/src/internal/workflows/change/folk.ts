@@ -6,7 +6,6 @@ import type {
 } from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import cloneDeep from 'lodash-es/cloneDeep';
-import isEqual from 'lodash-es/isEqual';
 import { get } from 'svelte/store';
 
 import {
@@ -95,7 +94,6 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
 
   let session = selectSessionState(state, sessionHash) as SessionState;
 
-  console.log(session.requestedChanges);
   if (
     session.requestedChanges.length > 0 &&
     Date.now() - session.requestedChanges[0].atDate >
@@ -152,13 +150,16 @@ export function handleChangeNotice<CONTENT, DELTA>(
 
     let contentToApplyTo = sessionState.currentContent;
 
+    const isLastDeltaSeenEqualToPrerequest =
+      sessionState.prerequestContent?.lastDeltaSeen.commitHash ==
+        changeNotice.lastDeltaSeen.commitHash &&
+      changeNotice.lastDeltaSeen.deltaIndexInCommit ===
+        sessionState.prerequestContent?.lastDeltaSeen.deltaIndexInCommit;
+
     if (
       myChanges &&
       sessionState.prerequestContent &&
-      isEqual(
-        sessionState.prerequestContent.lastDeltaSeen,
-        changeNotice.lastDeltaSeen
-      )
+      isLastDeltaSeenEqualToPrerequest
     ) {
       contentToApplyTo = sessionState.prerequestContent?.content;
     }

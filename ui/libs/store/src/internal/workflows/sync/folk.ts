@@ -5,6 +5,7 @@ import merge from 'lodash-es/merge';
 import { selectSessionState } from '../../../state/selectors';
 import { applyChangeBundle } from '../../utils';
 import type { SynWorkspace } from '../../workspace';
+import cloneDeep from 'lodash-es/cloneDeep';
 
 export function handleSyncResponse<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -20,7 +21,7 @@ export function handleSyncResponse<CONTENT, DELTA>(
       state.joinedSessions[sessionHash] = {
         currentCommitHash,
         sessionHash: sessionHash,
-        currentContent: workspace.initialSnapshot,
+        currentContent: cloneDeep(workspace.initialSnapshot),
         myFolkIndex: 0,
         prerequestContent: undefined,
         requestedChanges: [],

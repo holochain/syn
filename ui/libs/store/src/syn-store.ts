@@ -19,6 +19,7 @@ import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { leaveSession, newSession } from './internal/workflows/sessions/scribe';
+import cloneDeep from 'lodash-es/cloneDeep';
 
 export class SynStore<CONTENT, DELTA> {
   /** Private fields */
@@ -54,7 +55,7 @@ export class SynStore<CONTENT, DELTA> {
       store,
       applyDeltaFn,
       client,
-      initialSnapshot: initialContent,
+      initialSnapshot: cloneDeep(initialContent),
       config: fullConfig,
     };
 
@@ -107,7 +108,6 @@ export class SynStore<CONTENT, DELTA> {
 
   async fetchCommitHistory() {
     const commits = await this.#workspace.client.getAllCommits();
-    console.log('synState', commits)
 
     this.#workspace.store.update(state => {
       for (const key of Object.keys(commits)) {
