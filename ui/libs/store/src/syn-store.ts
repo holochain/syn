@@ -1,9 +1,5 @@
 import { derived, get, Readable, writable } from 'svelte/store';
-import type {
-  AgentPubKeyB64,
-  Dictionary,
-  EntryHashB64,
-} from '@holochain-open-dev/core-types';
+import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
 import { Commit, Session, SynClient } from '@syn/zome-client';
@@ -28,7 +24,6 @@ export class SynStore<CONTENT, DELTA> {
   #cancelBackgroundTasks: () => void;
 
   /** Public accessors */
-  myPubKey: AgentPubKeyB64;
   activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
@@ -43,8 +38,9 @@ export class SynStore<CONTENT, DELTA> {
   ) {
     const fullConfig = merge(config, defaultConfig());
 
-    this.myPubKey = serializeHash(cellClient.cellId[1]);
-    const state: SynState = initialState(this.myPubKey);
+    const myPubKey = serializeHash(cellClient.cellId[1]);
+
+    const state: SynState = initialState(myPubKey);
 
     const store = writable(state);
 
@@ -59,6 +55,7 @@ export class SynStore<CONTENT, DELTA> {
       initialSnapshot: cloneDeep(initialContent),
       config: fullConfig,
       listeners: [],
+      myPubKey,
     };
 
     this.activeSession = derived(this.#workspace.store, state => {
@@ -78,6 +75,10 @@ export class SynStore<CONTENT, DELTA> {
     );
     this.allCommits = derived(this.#workspace.store, state => state.commits);
     this.snapshots = derived(this.#workspace.store, state => state.snapshots);
+  }
+
+  get myPubKey() {
+    return this.#workspace.myPubKey;
   }
 
   get config() {

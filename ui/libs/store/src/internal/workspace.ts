@@ -4,7 +4,7 @@ import type { SynState } from '../state/syn-state';
 import type { Writable } from 'svelte/store';
 import type { ApplyDeltaFn } from '../apply-delta';
 import type { SynConfig } from '../config';
-import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type { AgentPubKeyB64, EntryHashB64 } from '@holochain-open-dev/core-types';
 
 export interface SynWorkspace<CONTENT, DELTA> {
   client: SynClient;
@@ -13,6 +13,7 @@ export interface SynWorkspace<CONTENT, DELTA> {
   applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>;
   config: SynConfig;
   listeners: Array<SynEventListener>;
+  myPubKey: AgentPubKeyB64;
 }
 
 export interface SynEventListener {

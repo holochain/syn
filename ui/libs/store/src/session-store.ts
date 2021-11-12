@@ -9,6 +9,7 @@ import { selectSessionState } from './state/selectors';
 import { requestChanges } from './internal/workflows/change';
 import { leaveSession } from './internal/workflows/sessions';
 import type { CloseSessionResult } from './internal/workflows/sessions/scribe';
+import { pickBy } from 'lodash-es';
 
 export interface SessionStore<CONTENT, DELTA> {
   sessionHash: EntryHashB64;
@@ -52,9 +53,11 @@ export function buildSessionStore<CONTENT, DELTA>(
     workspace.store,
     state => selectSessionState(state, sessionHash)?.ephemeral
   );
-  const folks = derived(
-    workspace.store,
-    state => selectSessionState(state, sessionHash)?.folks
+  const folks = derived(workspace.store, state =>
+    pickBy(
+      selectSessionState(state, sessionHash)?.folks,
+      (_, key) => key !== workspace.myPubKey
+    )
   );
 
   const state = get(workspace.store);
