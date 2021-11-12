@@ -22,3 +22,8 @@ export interface CloseSessionInput {
   sessionHash: EntryHashB64;
   participants: AgentPubKeyB64[];
 }
+
+export interface NotifyLeaveSessionInput {
+  sessionHash: EntryHashB64;
+  scribe: AgentPubKeyB64;
+}

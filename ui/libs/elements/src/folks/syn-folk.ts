@@ -24,11 +24,14 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
 
   _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
 
-  get inSession() {
+  get inTouch() {
     if (this.agentPubKey === this.synStore.myPubKey) return true;
     if (!this._folks.value) return false;
     if (!this._folks.value[this.agentPubKey]) return false;
-    return this._folks.value[this.agentPubKey].inSession;
+    return (
+      Date.now() - this._folks.value[this.agentPubKey].lastSeen <
+      this.synStore.config.hearbeatInterval * 2
+    );
   }
 
   get isScribe() {
@@ -45,7 +48,7 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
       >
         <agent-avatar
           class="${classMap({
-            'out-of-session': !this.inSession,
+            'out-of-session': !this.inTouch,
           })}"
           .agentPubKey=${this.agentPubKey}
         ></agent-avatar>

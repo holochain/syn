@@ -14,15 +14,16 @@ import { buildCommitFromUncommitted, putNewCommit } from './utils';
 export async function commitChanges<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64
-) {
+): Promise<EntryHashB64 | undefined> {
   const state = get(workspace.store);
 
   const session = selectSessionState(state, sessionHash) as SessionState;
-  if (!session || session.uncommittedChanges.deltas.length === 0) return;
+  if (!session || session.uncommittedChanges.deltas.length === 0)
+    return undefined;
 
   if (!amIScribe(state, sessionHash)) {
     console.log("Trying to commit the changes but I'm not the scribe!");
-    return state;
+    return undefined;
   }
 
   const hash = await workspace.client.putSnapshot(session.currentContent);
@@ -40,7 +41,7 @@ export async function commitChanges<CONTENT, DELTA>(
 
   const commitInput: CommitInput = {
     commit,
-    participants: selectFolksInSession(session),
+    participants: selectFolksInSession(workspace, session),
     sessionHash,
   };
   const newCommitHash = await workspace.client.commitChanges(commitInput);
@@ -51,4 +52,6 @@ export async function commitChanges<CONTENT, DELTA>(
     putNewCommit(state, sessionHash, newCommitHash, commit);
     return state;
   });
+
+  return newCommitHash;
 }

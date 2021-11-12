@@ -1,10 +1,12 @@
-import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type {
+  AgentPubKeyB64,
+  EntryHashB64,
+} from '@holochain-open-dev/core-types';
 import { get } from 'svelte/store';
 import type { Commit } from '@syn/zome-client';
 import cloneDeep from 'lodash-es/cloneDeep';
 
 import {
-  amIScribe,
   selectFolksInSession,
   selectSessionState,
 } from '../../../state/selectors';
@@ -63,35 +65,39 @@ export async function newSession<CONTENT, DELTA>(
   return session.sessionHash;
 }
 
-export async function leaveSession<CONTENT, DELTA>(
+export async function handleLeaveSessionNotice<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
-  sessionHash: EntryHashB64
-) {
-  let state = get(workspace.store);
-
+  sessionHash: EntryHashB64,
+  folk: AgentPubKeyB64
+): Promise<void> {
   workspace.store.update(state => {
-    (state.joinedSessions[sessionHash] as any) = undefined;
-    delete state.joinedSessions[sessionHash];
-    if (state.activeSessionHash === sessionHash)
-      state.activeSessionHash = undefined;
+    const sessionState = selectSessionState(state, sessionHash);
+
+    delete sessionState.folks[folk];
+
+    workspace.client.sendFolkLore({
+      folkLore: sessionState.folks,
+      participants: selectFolksInSession(workspace, sessionState),
+      sessionHash,
+    });
+
     return state;
   });
-
-  if (amIScribe(state, sessionHash)) {
-    await closeSession(workspace, sessionHash);
-  }
 }
 
+export interface CloseSessionResult {
+  closingCommitHash: EntryHashB64 | undefined;
+}
 export async function closeSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64
-) {
-  await commitChanges(workspace, sessionHash);
+): Promise<CloseSessionResult> {
+  const closingCommitHash = await commitChanges(workspace, sessionHash);
 
   const state = get(workspace.store);
 
   const session = selectSessionState(state, sessionHash);
-  const participants = session ? selectFolksInSession(session) : [];
+  const participants = session ? selectFolksInSession(workspace, session) : [];
 
   await workspace.client.closeSession({
     sessionHash,
@@ -100,6 +106,13 @@ export async function closeSession<CONTENT, DELTA>(
 
   workspace.store.update(state => {
     delete state.sessions[sessionHash];
+
+    (state.joinedSessions[sessionHash] as any) = undefined;
+    delete state.joinedSessions[sessionHash];
+    if (state.activeSessionHash === sessionHash)
+      state.activeSessionHash = undefined;
     return state;
   });
+
+  return { closingCommitHash };
 }

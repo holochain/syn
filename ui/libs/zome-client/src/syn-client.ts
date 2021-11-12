@@ -19,6 +19,7 @@ import type { SendHeartbeatInput } from './types/heartbeat';
 import type {
   CloseSessionInput,
   NewSessionInput,
+  NotifyLeaveSessionInput,
   Session,
   SessionInfo,
 } from './types/session';
@@ -52,6 +53,29 @@ export class SynClient {
     return this.unsubscribe();
   }
 
+  /** Session */
+  public async getSession(sessionHash: EntryHashB64): Promise<Session> {
+    return this.callZome('get_session', sessionHash);
+  }
+
+  public async newSession(
+    newSessionInput: NewSessionInput
+  ): Promise<SessionInfo> {
+    return this.callZome('new_session', newSessionInput);
+  }
+
+  public async closeSession(input: CloseSessionInput): Promise<void> {
+    return this.callZome('close_session', input);
+  }
+
+  public getSessions(): Promise<Dictionary<Session>> {
+    return this.callZome('get_sessions', null);
+  }
+
+  public notifyLeaveSession(input: NotifyLeaveSessionInput): Promise<void> {
+    return this.callZome('notify_leave_session', input);
+  }
+
   /** Content */
   public putSnapshot(content: Content): Promise<EntryHashB64> {
     return this.callZome('put_snapshot', encode(content));
@@ -63,6 +87,10 @@ export class SynClient {
     const content = await this.callZome('get_snapshot', snapshotHash);
     if (!content) return content;
     return decode(content);
+  }
+
+  public hashSnapshot(content: Content): Promise<EntryHashB64> {
+    return this.callZome('hash_snapshot', encode(content));
   }
 
   /** Commits */
@@ -93,31 +121,8 @@ export class SynClient {
     return commits;
   }
 
-  /** Hash */
-  public hashSnapshot(content: Content): Promise<EntryHashB64> {
-    return this.callZome('hash_snapshot', encode(content));
-  }
-
-  /** Session */
-  public async getSession(sessionHash: EntryHashB64): Promise<Session> {
-    return this.callZome('get_session', sessionHash);
-  }
-
-  public async newSession(
-    newSessionInput: NewSessionInput
-  ): Promise<SessionInfo> {
-    return this.callZome('new_session', newSessionInput);
-  }
-
-  public async closeSession(input: CloseSessionInput): Promise<void> {
-    return this.callZome('close_session', input);
-  }
-
-  public getSessions(): Promise<Dictionary<Session>> {
-    return this.callZome('get_sessions', null);
-  }
-
   /** Folks */
+
   public getFolks(): Promise<Array<AgentPubKeyB64>> {
     return this.callZome('get_folks', null);
   }

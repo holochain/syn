@@ -9,6 +9,7 @@ import type {
   Delta,
   Session,
   LastDeltaSeen,
+  FolkInfo,
 } from '@syn/zome-client';
 
 /**
@@ -39,11 +40,6 @@ export interface RequestedChange {
   delta: Delta;
 }
 
-export interface SessionFolk {
-  lastSeen: number;
-  inSession: boolean;
-}
-
 export interface SessionState {
   sessionHash: EntryHashB64;
 
@@ -69,7 +65,8 @@ export interface SessionState {
   uncommittedChanges: ChangeBundle;
 
   // AgentPubKeyB64 -> lastSeen
-  folks: Dictionary<SessionFolk>;
+  folks: Dictionary<FolkInfo>;
+
 }
 
 export function initialState(myPubKey: AgentPubKeyB64): SynState {

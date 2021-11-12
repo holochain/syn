@@ -4,7 +4,7 @@ import { get } from "svelte/store";
 import { amIScribe, selectScribe } from "../../../state/selectors";
 import type { SynWorkspace } from "../../workspace";
 
-import { notifyGoneFolks } from "./scribe";
+import { notifyFolkLore } from "./scribe";
 
 export function heartbeat<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -13,7 +13,7 @@ export function heartbeat<CONTENT, DELTA>(
   const state = get(workspace.store);
 
   if (amIScribe(state, sessionHash))
-    return notifyGoneFolks(workspace, sessionHash);
+    return notifyFolkLore(workspace, sessionHash);
   else {
     // I'm not the scribe so send them a heartbeat
     return workspace.client.sendHeartbeat({

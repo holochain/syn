@@ -4,6 +4,7 @@ import type { ChangeNotice, ChangeRequest } from './change';
 import type { FolkLore } from './folks';
 import type { Heartbeat } from './heartbeat';
 import type { RequestSyncInput, StateForSync } from './sync';
+import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 
 export enum SynMessageType {
   SyncReq = 'SyncReq',
@@ -14,6 +15,7 @@ export enum SynMessageType {
   Heartbeat = 'Heartbeat',
   FolkLore = 'FolkLore',
   SessionClosed = 'SessionClosed',
+  LeaveSessionNotice = 'LeaveSessionNotice',
 }
 
 export const allMessageTypes = [
@@ -24,6 +26,8 @@ export const allMessageTypes = [
   SynMessageType.CommitNotice,
   SynMessageType.Heartbeat,
   SynMessageType.FolkLore,
+  SynMessageType.SessionClosed,
+  SynMessageType.LeaveSessionNotice,
 ];
 
 export type SynSignal = {
@@ -44,4 +48,5 @@ export type SynMessage =
   | MessageBody<SynMessageType.CommitNotice, CommitNotice>
   | MessageBody<SynMessageType.Heartbeat, Heartbeat>
   | MessageBody<SynMessageType.FolkLore, FolkLore>
+  | MessageBody<SynMessageType.LeaveSessionNotice, AgentPubKeyB64>
   | MessageBody<SynMessageType.SessionClosed, void>;

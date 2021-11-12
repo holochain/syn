@@ -1,15 +1,17 @@
-use holo_hash::*;
+use std::collections::BTreeMap;
+
 use hdk::prelude::*;
+use holo_hash::*;
 
 use crate::{SignalPayload, SynMessage};
 
-/// Input to the send folklore call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
-pub enum FolkLore {
-    Participants(Vec<AgentPubKeyB64>),
-    Gone(Vec<AgentPubKeyB64>),
+pub struct FolkInfo {
+    last_seen: u64,
 }
+
+pub type FolkLore = BTreeMap<AgentPubKeyB64, FolkInfo>;
 
 /// Input to the send folklore call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -17,7 +19,7 @@ pub enum FolkLore {
 pub struct SendFolkLoreInput {
     pub session_hash: EntryHashB64,
     pub participants: Vec<AgentPubKeyB64>,
-    pub data: FolkLore,
+    pub folk_lore: FolkLore,
 }
 
 #[hdk_extern]
@@ -25,7 +27,7 @@ fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
     remote_signal(
         ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::FolkLore(input.data),
+            SynMessage::FolkLore(input.folk_lore),
         ))?,
         input.participants.into_iter().map(|a| a.into()).collect(),
     )?;

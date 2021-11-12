@@ -134,6 +134,26 @@ pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     Ok(())
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyLeaveSessionInput {
+    pub session_hash: EntryHashB64,
+    pub scribe: AgentPubKeyB64,
+}
+
+#[hdk_extern]
+pub fn notify_leave_session(input: NotifyLeaveSessionInput) -> ExternResult<()> {
+    remote_signal(
+        ExternIO::encode(SignalPayload::new(
+            input.session_hash,
+            SynMessage::LeaveSessionNotice(agent_info()?.agent_latest_pubkey.into()),
+        ))?,
+        vec![input.scribe.into()],
+    )?;
+
+    Ok(())
+}
+
 /** Helpers */
 
 fn get_sessions_path() -> Path {

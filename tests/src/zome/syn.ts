@@ -371,12 +371,19 @@ export default orchestrator => {
     t.deepEqual(me_sig.message.payload.data, 'Hello');
     t.deepEqual(me_sig.message.payload.fromFolk, alice_pubkey);
 
+    const folkLore = {
+      [alice_pubkey]: {
+        lastSeen: Date.now(),
+      },
+      [bob_pubkey]: {
+        lastSeen: Date.now(),
+      },
+    };
+
     await me.call('syn', 'send_folk_lore', {
       participants: [alice_pubkey, bob_pubkey],
       sessionHash,
-      data: {
-        participants: [alice_pubkey, bob_pubkey],
-      },
+      folkLore,
     });
     await delay(500); // make time for signal to arrive
 
@@ -384,12 +391,8 @@ export default orchestrator => {
     b_sig = bob_signals[1];
     t.equal(a_sig.message.type, 'FolkLore');
     t.equal(b_sig.message.type, 'FolkLore');
-    t.deepEqual(a_sig.message.payload, {
-      participants: [alice_pubkey, bob_pubkey],
-    });
-    t.deepEqual(b_sig.message.payload, {
-      participants: [alice_pubkey, bob_pubkey],
-    });
+    t.deepEqual(a_sig.message.payload, folkLore);
+    t.deepEqual(b_sig.message.payload, folkLore);
 
     // alice asks for a sync request
     await alice.call('syn', 'send_sync_request', {
@@ -407,7 +410,7 @@ export default orchestrator => {
     t.equal(folks.length, 3);
 
     await me.call('syn', 'close_session', {
-      lastCommitHash: commit_hash2,
+      participants: [alice_pubkey, bob_pubkey],
       sessionHash,
     });
 

@@ -1,11 +1,11 @@
-use commit::CommitNotice;
 use change::{ChangeNotice, ChangeRequest};
+use commit::CommitNotice;
 use folks::{register_as_folk, FolkLore, Heartbeat};
+use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
-use holo_hash::EntryHashB64;
 
-mod commit;
 mod change;
+mod commit;
 mod error;
 mod folks;
 mod session;
@@ -54,6 +54,7 @@ enum SynMessage {
     FolkLore(FolkLore),   // signal to participants to update other participants info
     CommitNotice(CommitNotice), // signal for sending commit and content hash after commit
     SessionClosed,
+    LeaveSessionNotice(AgentPubKeyB64),
 }
 
 #[hdk_extern]

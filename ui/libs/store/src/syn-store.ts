@@ -18,12 +18,9 @@ import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
-import {
-  closeSession,
-  leaveSession,
-  newSession,
-} from './internal/workflows/sessions/scribe';
+import { closeSession, newSession } from './internal/workflows/sessions/scribe';
 import cloneDeep from 'lodash-es/cloneDeep';
+import { leaveSession } from './internal/workflows/sessions';
 
 export class SynStore<CONTENT, DELTA> {
   /** Private fields */
@@ -61,6 +58,7 @@ export class SynStore<CONTENT, DELTA> {
       client,
       initialSnapshot: cloneDeep(initialContent),
       config: fullConfig,
+      listeners: [],
     };
 
     this.activeSession = derived(this.#workspace.store, state => {
@@ -80,6 +78,10 @@ export class SynStore<CONTENT, DELTA> {
     );
     this.allCommits = derived(this.#workspace.store, state => state.commits);
     this.snapshots = derived(this.#workspace.store, state => state.snapshots);
+  }
+
+  get config() {
+    return this.#workspace.config;
   }
 
   async getAllSessions() {

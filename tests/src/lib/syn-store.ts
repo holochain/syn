@@ -105,8 +105,15 @@ export const oFn = orchestrator => {
     currentEphemeral = get(aliceSessionStore.ephemeral);
     t.deepEqual(currentEphemeral, { hi: 3 });
 
-    await aliceSyn.close();
     await bobSyn.close();
+
+    await delay(1000);
+
+    const folks = get(aliceSessionStore.folks);
+
+    t.equal(Object.keys(folks).length, 0);
+
+    await aliceSyn.close();
   });
 };
 

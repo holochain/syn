@@ -4,6 +4,7 @@ import type {
   EntryHashB64,
 } from '@holochain-open-dev/core-types';
 import type { SessionState, SynState } from './syn-state';
+import type { SynWorkspace } from '../internal/workspace';
 
 export function amIScribe(
   synState: SynState,
@@ -91,9 +92,13 @@ export function selectLastDeltaSeen(sessionState: SessionState): LastDeltaSeen {
 }
 
 export function selectFolksInSession(
-  sessionWorkspace: SessionState
+  workspace: SynWorkspace<any, any>,
+  sessionState: SessionState
 ): AgentPubKeyB64[] {
-  return Object.entries(sessionWorkspace.folks)
-    .filter(([_, info]) => info.inSession)
+  return Object.entries(sessionState.folks)
+    .filter(
+      ([_, info]) =>
+        Date.now() - info.lastSeen < workspace.config.outOfSessionTimeout
+    )
     .map(([f, _]) => f);
 }

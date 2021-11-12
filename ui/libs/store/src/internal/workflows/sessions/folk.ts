@@ -1,6 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { amIScribe } from '../../../state/selectors';
 
+import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
@@ -58,6 +58,7 @@ export async function handleSessionClosed<CONTENT, DELTA>(
       return synState;
     }
 
+    delete synState.sessions[sessionHash];
     delete synState.joinedSessions[sessionHash];
 
     if (synState.activeSessionHash === sessionHash) {
@@ -65,5 +66,31 @@ export async function handleSessionClosed<CONTENT, DELTA>(
     }
 
     return synState;
+  });
+  for (const listener of workspace.listeners) {
+    if (
+      listener.event === 'session-closed' &&
+      listener.sessionHash === sessionHash
+    ) {
+      listener.listener();
+    }
+  }
+}
+
+export async function folkLeaveSession<CONTENT, DELTA>(
+  workspace: SynWorkspace<CONTENT, DELTA>,
+  sessionHash: EntryHashB64
+) {
+  workspace.store.update(state => {
+    (state.joinedSessions[sessionHash] as any) = undefined;
+    delete state.joinedSessions[sessionHash];
+    if (state.activeSessionHash === sessionHash)
+      state.activeSessionHash = undefined;
+
+    workspace.client.notifyLeaveSession({
+      sessionHash,
+      scribe: state.sessions[sessionHash].scribe,
+    });
+    return state;
   });
 }

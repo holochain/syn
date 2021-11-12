@@ -12,7 +12,6 @@ import {
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
-import { putJustSeenFolks } from '../folklore/utils';
 import type { SessionState } from '../../../state/syn-state';
 
 /**
@@ -43,7 +42,9 @@ export function handleSyncRequest<CONTENT, DELTA>(
       sessionHash
     ) as SessionState;
 
-    putJustSeenFolks(sessionState, synState.myPubKey, [requestSyncInput.folk]);
+    sessionState.folks[requestSyncInput.folk] = {
+      lastSeen: Date.now(),
+    };
 
     let missedCommit: MissedCommit | undefined;
 
@@ -81,12 +82,12 @@ export function handleSyncRequest<CONTENT, DELTA>(
       sessionHash,
     });
 
-    const participants = selectFolksInSession(sessionState);
+    const participants = selectFolksInSession(workspace, sessionState);
 
     workspace.client.sendFolkLore({
       participants,
       sessionHash,
-      data: { participants },
+      folkLore: sessionState.folks,
     });
     return synState;
   });

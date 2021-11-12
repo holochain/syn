@@ -1,7 +1,4 @@
-import type {
-  EntryHashB64,
-  AgentPubKeyB64,
-} from '@holochain-open-dev/core-types';
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { FolkLore } from '@syn/zome-client';
 
 import {
@@ -11,7 +8,6 @@ import {
 } from '../../../state/selectors';
 import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
-import { putJustSeenFolks } from './utils';
 
 export function handleFolkLore<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
@@ -26,28 +22,13 @@ export function handleFolkLore<CONTENT, DELTA>(
 
     const session = selectSession(state, sessionHash);
     const sessionState = selectSessionState(state, sessionHash) as SessionState;
-    if ((folklore as { gone: AgentPubKeyB64[] }).gone) {
-      putGoneFolks(sessionState, (folklore as { gone: AgentPubKeyB64[] }).gone);
-    } else {
-      putJustSeenFolks(sessionState, state.myPubKey, [
-        ...(folklore as { participants: AgentPubKeyB64[] }).participants,
-        session.scribe,
-      ]);
-    }
+    sessionState.folks = {
+      ...folklore,
+      [session.scribe]: {
+        lastSeen: Date.now(),
+      },
+    };
 
     return state;
   });
-}
-
-function putGoneFolks(session: SessionState, goneFolks: AgentPubKeyB64[]) {
-  for (const goneFolk of goneFolks) {
-    if (!session.folks[goneFolk]) {
-      session.folks[goneFolk] = {
-        inSession: false,
-        lastSeen: 0, // First time we are seeing this folk
-      };
-    } else {
-      session.folks[goneFolk].inSession = false;
-    }
-  }
 }

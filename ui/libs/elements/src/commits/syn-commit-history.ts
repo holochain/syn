@@ -66,7 +66,7 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
         style: `
           edge {
             target-arrow-shape: triangle;
-            width: 2;
+            width: 2px;
           }
         `,
       }}
@@ -91,8 +91,10 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
       `;
 
     return html`<mwc-card style="flex: 1;">
-      <div class="column" style="margin: 16px; flex: 1;">
-        <span class="title">Commit History</span>
+      <div class="column" style="flex: 1;">
+        <span class="title" style="margin: 16px; margin-bottom: 4px;"
+          >Commit History</span
+        >
         ${this.renderContent()}
       </div>
     </mwc-card>`;

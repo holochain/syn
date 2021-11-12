@@ -19,7 +19,6 @@ import {
 } from '../../../state/selectors';
 import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
-import { putJustSeenFolks } from '../folklore/utils';
 import { commitChanges } from '../commit/scribe';
 import merge from 'lodash-es/merge';
 
@@ -46,7 +45,7 @@ export function scribeRequestChange<CONTENT, DELTA>(
     };
 
     workspace.client.sendChange({
-      participants: selectFolksInSession(sessionState),
+      participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
       lastDeltaSeen: selectLastDeltaSeen(sessionState),
       deltaChanges: changeBundle,
@@ -79,7 +78,9 @@ export function handleChangeRequest<CONTENT, DELTA>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    putJustSeenFolks(sessionState, state.myPubKey, [changeRequest.folk]);
+    sessionState.folks[changeRequest.folk] = {
+      lastSeen: Date.now(),
+    };
 
     const lastDeltaSeen = selectLastDeltaSeen(sessionState);
 
@@ -115,7 +116,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
       deltaChanges: changeBundle,
       ephemeralChanges: changeRequest.ephemeralChanges,
       lastDeltaSeen,
-      participants: selectFolksInSession(sessionState),
+      participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
     });
 

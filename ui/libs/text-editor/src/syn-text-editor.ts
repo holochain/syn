@@ -138,16 +138,26 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   render() {
     if (this._content.value === undefined) return html``;
 
-    return html`<codemirror-markdown
-      style="flex: 1;"
-      id="editor"
-      .text=${this._content.value}
-      .additionalCursors=${this.remoteCursors()}
-      @text-inserted=${e => this.onTextInserted(e.detail.from, e.detail.text)}
-      @text-deleted=${e =>
-        this.onTextDeleted(e.detail.from, e.detail.characterCount)}
-      @selection-changed=${e => this.onSelectionChanged(e.detail.ranges)}
-    ></codemirror-markdown>`;
+    return html`
+      <div class="flex-scrollable-parent" style="background-color: rgb(40, 44, 52);">
+        <div class="flex-scrollable-container">
+          <div class="flex-scrollable-y">
+            <codemirror-markdown
+              style="flex: 1; "
+              id="editor"
+              .text=${this._content.value}
+              .additionalCursors=${this.remoteCursors()}
+              @text-inserted=${e =>
+                this.onTextInserted(e.detail.from, e.detail.text)}
+              @text-deleted=${e =>
+                this.onTextDeleted(e.detail.from, e.detail.characterCount)}
+              @selection-changed=${e =>
+                this.onSelectionChanged(e.detail.ranges)}
+            ></codemirror-markdown>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   static styles = [sharedStyles];
