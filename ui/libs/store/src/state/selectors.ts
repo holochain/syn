@@ -1,4 +1,4 @@
-import type { ChangeBundle, LastDeltaSeen } from '@syn/zome-client';
+import type { ChangeBundle, LastDeltaSeen, Session } from '@syn/zome-client';
 import type {
   AgentPubKeyB64,
   EntryHashB64,
@@ -28,6 +28,13 @@ export function selectLastCommitTime(
   if (session.currentCommitHash)
     return synState.commits[session.currentCommitHash].createdAt;
   return synState.sessions[sessionHash].createdAt;
+}
+
+export function selectSession(
+  synState: SynState,
+  sessionHash: EntryHashB64
+): Session {
+  return synState.sessions[sessionHash];
 }
 
 export function selectSessionState(

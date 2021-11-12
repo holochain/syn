@@ -3,7 +3,11 @@ import { get } from 'svelte/store';
 import type { Commit } from '@syn/zome-client';
 import cloneDeep from 'lodash-es/cloneDeep';
 
-import { amIScribe } from '../../../state/selectors';
+import {
+  amIScribe,
+  selectFolksInSession,
+  selectSessionState,
+} from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
 
@@ -65,10 +69,6 @@ export async function leaveSession<CONTENT, DELTA>(
 ) {
   let state = get(workspace.store);
 
-  if (amIScribe(state, sessionHash)) {
-    await closeSession(workspace, sessionHash);
-  }
-
   workspace.store.update(state => {
     (state.joinedSessions[sessionHash] as any) = undefined;
     delete state.joinedSessions[sessionHash];
@@ -76,14 +76,30 @@ export async function leaveSession<CONTENT, DELTA>(
       state.activeSessionHash = undefined;
     return state;
   });
+
+  if (amIScribe(state, sessionHash)) {
+    await closeSession(workspace, sessionHash);
+  }
 }
 
-async function closeSession<CONTENT, DELTA>(
+export async function closeSession<CONTENT, DELTA>(
   workspace: SynWorkspace<CONTENT, DELTA>,
   sessionHash: EntryHashB64
 ) {
   await commitChanges(workspace, sessionHash);
+
+  const state = get(workspace.store);
+
+  const session = selectSessionState(state, sessionHash);
+  const participants = session ? selectFolksInSession(session) : [];
+
   await workspace.client.closeSession({
     sessionHash,
+    participants,
+  });
+
+  workspace.store.update(state => {
+    delete state.sessions[sessionHash];
+    return state;
   });
 }

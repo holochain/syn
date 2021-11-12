@@ -1,4 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { amIScribe } from '../../../state/selectors';
 
 import type { SynWorkspace } from '../../workspace';
 
@@ -42,5 +43,27 @@ export async function joinSession<CONTENT, DELTA>(
       });
       reject('Could not connect to the scribe of the session');
     }, 3000);
+  });
+}
+
+export async function handleSessionClosed<CONTENT, DELTA>(
+  workspace: SynWorkspace<CONTENT, DELTA>,
+  sessionHash: EntryHashB64
+) {
+  workspace.store.update(synState => {
+    if (amIScribe(synState, sessionHash)) {
+      console.log(
+        "SessionClosed received but I'm the scribe! Not closing the session"
+      );
+      return synState;
+    }
+
+    delete synState.joinedSessions[sessionHash];
+
+    if (synState.activeSessionHash === sessionHash) {
+      synState.activeSessionHash = undefined;
+    }
+
+    return synState;
   });
 }

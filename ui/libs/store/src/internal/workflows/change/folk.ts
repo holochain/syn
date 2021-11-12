@@ -165,11 +165,9 @@ export function handleChangeNotice<CONTENT, DELTA>(
     }
 
     for (const delta of changes.deltas) {
-      sessionState.currentContent = workspace.applyDeltaFn(
-        contentToApplyTo,
-        delta
-      );
+      contentToApplyTo = workspace.applyDeltaFn(contentToApplyTo, delta);
     }
+    sessionState.currentContent = contentToApplyTo;
 
     sessionState.uncommittedChanges.deltas = [
       ...sessionState.uncommittedChanges.deltas,

@@ -3,7 +3,7 @@ import { html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
 import { property, state } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
-import { CircularProgress } from '@scoped-elements/material-web';
+import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
@@ -49,11 +49,16 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
     return this.selectedCommitHash ? [this.selectedCommitHash] : [];
   }
 
-  render() {
-    if (this._loading)
-      return html`<mwc-circular-progress></mwc-circular-progress>`;
-
+  renderContent() {
     const elements = getCommitGraph(this._allCommits.value);
+    if (elements.length === 0)
+      return html` <div
+        class="row"
+        style="flex: 1; align-items: center; justify-content: center;"
+      >
+        <span class="placeholder"> There are no commits yet </span>
+      </div>`;
+
     return html`<cytoscape-dagre
       style="flex: 1;"
       .fixed=${true}
@@ -74,10 +79,30 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
     ></cytoscape-dagre>`;
   }
 
+  render() {
+    if (this._loading)
+      return html`
+        <div
+          class="row"
+          style="flex: 1; align-items: center; justify-content: center;"
+        >
+          <mwc-circular-progress indeterminate></mwc-circular-progress>
+        </div>
+      `;
+
+    return html`<mwc-card style="flex: 1;">
+      <div class="column" style="margin: 16px; flex: 1;">
+        <span class="title">Commit History</span>
+        ${this.renderContent()}
+      </div>
+    </mwc-card>`;
+  }
+
   static get scopedElements() {
     return {
       'cytoscape-dagre': CytoscapeDagre,
       'mwc-circular-progress': CircularProgress,
+      'mwc-card': Card,
     };
   }
 

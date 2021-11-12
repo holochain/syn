@@ -18,7 +18,7 @@ export async function commitChanges<CONTENT, DELTA>(
   const state = get(workspace.store);
 
   const session = selectSessionState(state, sessionHash) as SessionState;
-  if (session.uncommittedChanges.deltas.length === 0) return;
+  if (!session || session.uncommittedChanges.deltas.length === 0) return;
 
   if (!amIScribe(state, sessionHash)) {
     console.log("Trying to commit the changes but I'm not the scribe!");

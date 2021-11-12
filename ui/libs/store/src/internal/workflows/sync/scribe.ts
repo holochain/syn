@@ -86,7 +86,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
     workspace.client.sendFolkLore({
       participants,
       sessionHash,
-      data: { participants: [...participants, synState.myPubKey] },
+      data: { participants },
     });
     return synState;
   });

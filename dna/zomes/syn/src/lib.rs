@@ -52,7 +52,8 @@ enum SynMessage {
     ChangeNotice(ChangeNotice),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
     FolkLore(FolkLore),   // signal to participants to update other participants info
-    CommitNotice(CommitNotice), // signal for sennding commit and content hash after commit
+    CommitNotice(CommitNotice), // signal for sending commit and content hash after commit
+    SessionClosed,
 }
 
 #[hdk_extern]

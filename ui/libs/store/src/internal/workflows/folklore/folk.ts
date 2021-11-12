@@ -4,7 +4,11 @@ import type {
 } from '@holochain-open-dev/core-types';
 import type { FolkLore } from '@syn/zome-client';
 
-import { amIScribe, selectSessionState } from '../../../state/selectors';
+import {
+  amIScribe,
+  selectSession,
+  selectSessionState,
+} from '../../../state/selectors';
 import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { putJustSeenFolks } from './utils';
@@ -20,15 +24,15 @@ export function handleFolkLore<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionState(state, sessionHash) as SessionState;
+    const session = selectSession(state, sessionHash);
+    const sessionState = selectSessionState(state, sessionHash) as SessionState;
     if ((folklore as { gone: AgentPubKeyB64[] }).gone) {
-      putGoneFolks(session, (folklore as { gone: AgentPubKeyB64[] }).gone);
+      putGoneFolks(sessionState, (folklore as { gone: AgentPubKeyB64[] }).gone);
     } else {
-      putJustSeenFolks(
-        session,
-        state.myPubKey,
-        (folklore as { participants: AgentPubKeyB64[] }).participants
-      );
+      putJustSeenFolks(sessionState, state.myPubKey, [
+        ...(folklore as { participants: AgentPubKeyB64[] }).participants,
+        session.scribe,
+      ]);
     }
 
     return state;

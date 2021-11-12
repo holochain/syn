@@ -26,6 +26,8 @@ export function initBackgroundTasks<CONTENT, DELTA>(
     }
   }, workspace.config.requestTimeout / 2);
   intervals.push(checkRequestInterval);
+
+  
   const CommitEveryNMs: number | undefined = (
     workspace.config.commitStrategy as { CommitEveryNMs: number }
   ).CommitEveryNMs;

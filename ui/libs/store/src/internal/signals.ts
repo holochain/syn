@@ -11,6 +11,7 @@ import { handleFolkLore } from './workflows/folklore/folk';
 import { handleHeartbeat } from './workflows/folklore/scribe';
 import { handleChangeNotice } from './workflows/change/folk';
 import type { SynState } from '../state/syn-state';
+import { handleSessionClosed } from './workflows/sessions/folk';
 
 function shouldWeHandle(state: SynState, signal: SynSignal): boolean {
   if (selectSessionState(state, signal.sessionHash)) return true;
@@ -76,5 +77,7 @@ export function handleSignal<CONTENT, DELTA>(
         signal.sessionHash,
         signal.message.payload.fromFolk
       );
+    case SynMessageType.SessionClosed:
+      return handleSessionClosed(workspace, signal.sessionHash);
   }
 }

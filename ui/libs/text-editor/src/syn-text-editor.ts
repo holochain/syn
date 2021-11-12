@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { CodemirrorMarkdown } from '@scoped-elements/codemirror';
@@ -45,30 +45,47 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   );
 
   _deltasNotEmmitted: TextEditorDelta[] = [];
-  _cursorPosition: number | undefined = 0;
+  _lastCursorPosition = 0;
+  _cursorPosition = 0;
 
   firstUpdated() {
     setInterval(() => this.emitDeltas(), this.debounceMs);
   }
 
-  emitDeltas() {
-    if (this._deltasNotEmmitted.length > 0) {
-      this.dispatchEvent(
-        new CustomEvent('changes-requested', {
-          detail: {
-            deltas: this._deltasNotEmmitted,
-            ephemeral: {
-              [this.synStore.myPubKey]: this._cursorPosition,
-            },
-          },
-          bubbles: true,
-          composed: true,
-        })
+  updated(cv: PropertyValues) {
+    super.updated(cv);
+
+    if (cv.has('sessionStore') && this.sessionStore) {
+      this.sessionStore.folks.subscribe(
+        folks =>
+          folks && this.profilesStore.fetchAgentsProfiles(Object.keys(folks))
       );
-      this._deltasNotEmmitted = [];
     }
   }
-  
+
+  emitDeltas() {
+    if (
+      this._deltasNotEmmitted.length === 0 &&
+      this._cursorPosition === this._lastCursorPosition
+    )
+      return;
+
+    this.dispatchEvent(
+      new CustomEvent('changes-requested', {
+        detail: {
+          deltas: this._deltasNotEmmitted,
+          ephemeral: {
+            [this.synStore.myPubKey]: this._cursorPosition,
+          },
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this._deltasNotEmmitted = [];
+    this._lastCursorPosition = this._cursorPosition;
+  }
+
   getContent(): string {
     let content = this._content.value;
     if (!this.contentPath) return content as unknown as string;
@@ -94,7 +111,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     this._deltasNotEmmitted.push({
       type: TextEditorDeltaType.Delete,
       position: from,
-      characterCount
+      characterCount,
     });
   }
 
@@ -109,7 +126,7 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
-        const name = this._allProfiles.value[agentPubKey].nickname;
+        const name = this._allProfiles.value[agentPubKey]?.nickname;
         return {
           position,
           color: `${r} ${g} ${b}`,
@@ -119,13 +136,16 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
+    if (this._content.value === undefined) return html``;
+
     return html`<codemirror-markdown
       style="flex: 1;"
       id="editor"
       .text=${this._content.value}
       .additionalCursors=${this.remoteCursors()}
       @text-inserted=${e => this.onTextInserted(e.detail.from, e.detail.text)}
-      @text-deleted=${e => this.onTextDeleted(e.detail.from, e.detail.characterCount)}
+      @text-deleted=${e =>
+        this.onTextDeleted(e.detail.from, e.detail.characterCount)}
       @selection-changed=${e => this.onSelectionChanged(e.detail.ranges)}
     ></codemirror-markdown>`;
   }

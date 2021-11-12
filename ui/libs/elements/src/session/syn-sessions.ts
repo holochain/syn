@@ -9,13 +9,15 @@ import {
   ListItem,
   Button,
   CircularProgress,
+  Card,
 } from '@scoped-elements/material-web';
+import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type { Session } from '@syn/zome-client';
+import { AgentAvatar } from '@holochain-open-dev/profiles';
+import { SlRelativeTime } from '@scoped-elements/shoelace';
 
 import { synContext } from '../context/contexts';
 import { sharedStyles } from '../shared-styles';
-import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { SynFolk } from '../folks/syn-folk';
-import type { Session } from '@syn/zome-client';
 
 export class SynSessions extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, multiple: true })
@@ -44,16 +46,18 @@ export class SynSessions extends ScopedElementsMixin(LitElement) {
 
   renderSession(sessionHash: EntryHashB64, session: Session) {
     return html`
-      <div class="column" style="align-items: center">
-        <div class="row" style="align-items: center; margin-bottom: 4px;">
-          <syn-folk .agentPubKey=${session.scribe}></syn-folk>
+      <div class="row" style="flex: 1; align-items: center">
+        <mwc-list-item graphic="avatar" style="flex: 1;">
+          <agent-avatar
+            slot="graphic"
+            .agentPubKey=${session.scribe}
+          ></agent-avatar>
 
-          <span style="margin-left: 4px;"
-            >${new Date(session.createdAt).toLocaleTimeString([], {
-              second: undefined,
-            })}</span
-          >
-        </div>
+          <sl-relative-time
+            .date=${new Date(session.createdAt)}
+            style="margin-left: 4px;"
+          ></sl-relative-time>
+        </mwc-list-item>
 
         ${this._joinedSessions.value.includes(sessionHash)
           ? html`<span class="placeholder">Already Joined</span>`
@@ -68,15 +72,46 @@ export class SynSessions extends ScopedElementsMixin(LitElement) {
 
   render() {
     if (!this._loaded)
-      return html`<mwc-circular-progress
-        indeterminate
-      ></mwc-circular-progress>`;
+      return html`
+        <div
+          class="row"
+          style="flex: 1; align-items: center; justify-content: center;"
+        >
+          <mwc-circular-progress indeterminate></mwc-circular-progress>
+        </div>
+      `;
     return html`
-      <mwc-list activatable>
-        ${Object.entries(this._allSessions.value).map(
-          ([sessionHash, session]) => this.renderSession(sessionHash, session)
-        )}
-      </mwc-list>
+      <mwc-card style="flex: 1;">
+        <div class="column" style="flex: 1;">
+          <span class="title" style="margin: 16px; margin-bottom: 0;">Live Sessions</span>
+
+          ${Object.keys(this._allSessions.value).length === 0
+            ? html`
+                <div
+                  class="row"
+                  style="flex: 1; align-items: center; justify-content: center;"
+                >
+                  <span class="placeholder"
+                    >There are no live sessions at the moment</span
+                  >
+                </div>
+              `
+            : html`
+                <div class="flex-scrollable-parent">
+                  <div class="flex-scrollable-container">
+                    <div class="flex-scrollable-y">
+                      <mwc-list>
+                        ${Object.entries(this._allSessions.value).map(
+                          ([sessionHash, session]) =>
+                            this.renderSession(sessionHash, session)
+                        )}
+                      </mwc-list>
+                    </div>
+                  </div>
+                </div>
+              `}
+        </div>
+      </mwc-card>
     `;
   }
 
@@ -84,8 +119,10 @@ export class SynSessions extends ScopedElementsMixin(LitElement) {
     return {
       'mwc-list': List,
       'mwc-list-item': ListItem,
+      'mwc-card': Card,
+      'sl-relative-time': SlRelativeTime,
       'mwc-button': Button,
-      'syn-folk': SynFolk,
+      'agent-avatar': AgentAvatar,
       'mwc-circular-progress': CircularProgress,
     };
   }

@@ -13,6 +13,7 @@ export enum SynMessageType {
   CommitNotice = 'CommitNotice',
   Heartbeat = 'Heartbeat',
   FolkLore = 'FolkLore',
+  SessionClosed = 'SessionClosed',
 }
 
 export const allMessageTypes = [
@@ -42,4 +43,5 @@ export type SynMessage =
   | MessageBody<SynMessageType.ChangeNotice, ChangeNotice>
   | MessageBody<SynMessageType.CommitNotice, CommitNotice>
   | MessageBody<SynMessageType.Heartbeat, Heartbeat>
-  | MessageBody<SynMessageType.FolkLore, FolkLore>;
+  | MessageBody<SynMessageType.FolkLore, FolkLore>
+  | MessageBody<SynMessageType.SessionClosed, void>;

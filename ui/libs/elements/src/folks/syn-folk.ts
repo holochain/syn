@@ -5,13 +5,18 @@ import { property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { AgentAvatar } from '@holochain-open-dev/profiles';
 import { contextProvided } from '@lit-labs/context';
-import { synSessionContext } from '../context/contexts';
-import type { SessionStore } from '@syn/store';
+import type { SessionStore, SynStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
+
+import { synContext, synSessionContext } from '../context/contexts';
 
 export class SynFolk extends ScopedElementsMixin(LitElement) {
   @property()
   agentPubKey!: AgentPubKeyB64;
+
+  @contextProvided({ context: synContext, multiple: true })
+  @state()
+  synStore!: SynStore<any, any>;
 
   @contextProvided({ context: synSessionContext, multiple: true })
   @state()
@@ -20,10 +25,12 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
   _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
 
   get inSession() {
+    if (this.agentPubKey === this.synStore.myPubKey) return true;
     if (!this._folks.value) return false;
     if (!this._folks.value[this.agentPubKey]) return false;
     return this._folks.value[this.agentPubKey].inSession;
   }
+
   get isScribe() {
     return this.sessionStore?.session.scribe === this.agentPubKey;
   }

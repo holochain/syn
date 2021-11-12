@@ -20,4 +20,5 @@ export interface NewSessionInput {
 
 export interface CloseSessionInput {
   sessionHash: EntryHashB64;
+  participants: AgentPubKeyB64[];
 }

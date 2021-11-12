@@ -6,6 +6,7 @@ use holo_hash::*;
 
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
+use crate::{SignalPayload, SynMessage};
 
 /// Session
 /// This entry holds the record of who the scribe is and a hash
@@ -99,6 +100,7 @@ pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
 #[serde(rename_all = "camelCase")]
 pub struct CloseSessionInput {
     pub session_hash: EntryHashB64,
+    pub participants: Vec<AgentPubKeyB64>,
 }
 
 #[hdk_extern]
@@ -107,17 +109,29 @@ pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     let path = get_sessions_path();
     let links = get_links(path.hash()?, None)?;
 
-    let session_hash = EntryHash::from(input.session_hash);
+    let session_hash = EntryHash::from(input.session_hash.clone());
 
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
 
     match maybe_link {
         Some(link) => {
             delete_link(link.create_link_hash)?;
-            Ok(())
         }
         None => Err(SynError::HashNotFound)?,
     }
+
+    let participants: Vec<AgentPubKey> = input.participants.into_iter().map(|a| a.into()).collect();
+
+    // send response signal to the participant
+    remote_signal(
+        ExternIO::encode(SignalPayload::new(
+            input.session_hash,
+            SynMessage::SessionClosed,
+        ))?,
+        participants,
+    )?;
+
+    Ok(())
 }
 
 /** Helpers */

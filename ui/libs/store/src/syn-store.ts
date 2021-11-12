@@ -18,7 +18,11 @@ import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
-import { leaveSession, newSession } from './internal/workflows/sessions/scribe';
+import {
+  closeSession,
+  leaveSession,
+  newSession,
+} from './internal/workflows/sessions/scribe';
 import cloneDeep from 'lodash-es/cloneDeep';
 
 export class SynStore<CONTENT, DELTA> {
@@ -80,13 +84,29 @@ export class SynStore<CONTENT, DELTA> {
 
   async getAllSessions() {
     const sessions = await this.#workspace.client.getSessions();
+
+    const state = get(this.#workspace.store);
+
+    const sessionsToClose = Object.entries(sessions)
+      .filter(
+        ([hash, session]) =>
+          session.scribe === this.myPubKey && !state.joinedSessions[hash]
+      )
+      .map(([hash, _]) => hash);
+
     this.#workspace.store.update(state => {
-      state.sessions = {
-        ...state.sessions,
-        ...sessions,
-      };
+      for (const [hash, session] of Object.entries(sessions)) {
+        if (!sessionsToClose.includes(hash)) {
+          state.sessions[hash] = session;
+        }
+      }
+
       return state;
     });
+
+    for (const sessionHash of sessionsToClose) {
+      await closeSession(this.#workspace, sessionHash);
+    }
 
     return sessions;
   }
