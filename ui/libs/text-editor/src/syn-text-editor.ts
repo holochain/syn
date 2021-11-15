@@ -74,13 +74,10 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
 
     this.synSlice.requestChanges({
       deltas: this._deltasNotEmmitted,
-      ephemeral: [
-        {
-          agent: this.synStore.myPubKey,
-          position: this._cursorPosition,
-        },
+      ephemeral: {
         ...moveCursors(this._deltasNotEmmitted, this._ephemeral.value),
-      ],
+        [this.synStore.myPubKey]: this._cursorPosition,
+      },
     });
 
     this._deltasNotEmmitted = [];

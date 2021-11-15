@@ -1,7 +1,4 @@
-import type {
-  AgentPubKeyB64,
-  Dictionary,
-} from '@holochain-open-dev/core-types';
+import type { Dictionary } from '@holochain-open-dev/core-types';
 import type { SynEngine } from '@syn/store';
 
 export enum TextEditorDeltaType {
@@ -21,18 +18,13 @@ export type TextEditorDelta =
       characterCount: number;
     };
 
-export interface SetCursorPosition {
-  agent: AgentPubKeyB64;
-  position: number;
-}
-
-export type TextEditorEphemeralState = Dictionary<number>;
+export type CursorPositions = Dictionary<number>;
 
 export type TextEditorEngine = SynEngine<
   string,
   TextEditorDelta,
-  TextEditorEphemeralState,
-  SetCursorPosition
+  CursorPositions,
+  CursorPositions
 >;
 
 export const textEditorEngine: TextEditorEngine = {
@@ -56,13 +48,10 @@ export const textEditorEngine: TextEditorEngine = {
   ephemeral: {
     initialState: {},
 
-    applyEphemeral(
-      state: TextEditorEphemeralState,
-      ephemeral: SetCursorPosition
-    ) {
+    applyEphemeral(state: CursorPositions, ephemeral: CursorPositions) {
       return {
         ...state,
-        [ephemeral.agent]: ephemeral.position,
+        ...ephemeral,
       };
     },
   },
