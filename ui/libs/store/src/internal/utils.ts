@@ -4,8 +4,7 @@ import type {
   HeaderHashB64,
 } from "@holochain-open-dev/core-types";
 import type { ChangeBundle, Commit } from "@syn/zome-client";
-
-import type { ApplyDeltaFn } from "../apply-delta";
+import type { EngineApplyDeltaFn, EngineContent, SynEngine } from "../engine";
 
 export function orderCommits(
   initialContentHash: EntryHashB64,
@@ -33,23 +32,12 @@ export function orderCommits(
   return orderedCommits;
 }
 
-export function applyCommits<CONTENT, DELTA>(
-  initialContent: CONTENT,
-  applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
-  commits: Array<Commit>
-): CONTENT {
-  let content = initialContent;
-  for (const commit of commits) {
-    content = applyChangeBundle(content, applyDeltaFn, commit.changes);
-  }
-  return content;
-}
 
-export function applyChangeBundle<CONTENT, DELTA>(
-  initialContent: CONTENT,
-  applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
+export function applyChangeBundle<E extends SynEngine<any, any>>(
+  initialContent: EngineContent<E>,
+  applyDeltaFn: EngineApplyDeltaFn<E>,
   changeBundle: ChangeBundle
-): CONTENT {
+): EngineContent<E> {
   let content = initialContent;
   for (const delta of changeBundle.deltas) {
     content = applyDeltaFn(content, delta);

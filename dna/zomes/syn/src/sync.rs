@@ -3,7 +3,7 @@ use crate::snapshot::Snapshot;
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::change::{ChangeBundle, EphemeralChanges, LastDeltaSeen};
+use crate::change::{ChangeBundle, EphemeralState, LastDeltaSeen};
 use crate::commit::Commit;
 use crate::{SignalPayload, SynMessage};
 
@@ -60,7 +60,7 @@ pub struct StateForSync {
     pub folk_missed_last_commit: Option<MissedCommit>,
 
     pub uncommitted_changes: ChangeBundle,
-    pub ephemeral_changes: EphemeralChanges,
+    pub ephemeral_state: EphemeralState,
     // Result of applying all these deltas to the current content
     // pub current_content_hash: EntryHashB64
 }

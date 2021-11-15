@@ -1,13 +1,14 @@
 import type { EntryHashB64 } from "@holochain-open-dev/core-types";
 import { get } from "svelte/store";
+import type { SynEngine } from "../../../engine";
 
 import { amIScribe, selectScribe } from "../../../state/selectors";
 import type { SynWorkspace } from "../../workspace";
 
 import { notifyFolkLore } from "./scribe";
 
-export function heartbeat<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function heartbeat<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ) {
   const state = get(workspace.store);

@@ -5,64 +5,65 @@ import type {
 } from '@holochain-open-dev/core-types';
 import type { SessionState, SynState } from './syn-state';
 import type { SynWorkspace } from '../internal/workspace';
+import type { SynEngine } from '../engine';
 
-export function amIScribe(
-  synState: SynState,
+export function amIScribe<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): boolean {
   return selectScribe(synState, sessionHash) === synState.myPubKey;
 }
 
-export function selectScribe(
-  synState: SynState,
+export function selectScribe<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): AgentPubKeyB64 {
   const session = synState.sessions[sessionHash];
   return session.scribe;
 }
 
-export function selectLastCommitTime(
-  synState: SynState,
+export function selectLastCommitTime<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): number {
   const session = synState.joinedSessions[sessionHash];
-  if (session.currentCommitHash)
-    return synState.commits[session.currentCommitHash].createdAt;
+  if (session.lastCommitHash)
+    return synState.commits[session.lastCommitHash].createdAt;
   return synState.sessions[sessionHash].createdAt;
 }
 
-export function selectSession(
-  synState: SynState,
+export function selectSession<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): Session {
   return synState.sessions[sessionHash];
 }
 
-export function selectSessionState(
-  synState: SynState,
+export function selectSessionState<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
-): SessionState {
+): SessionState<E> {
   return synState.joinedSessions[sessionHash];
 }
 
-export function areWeJoiningSession(
-  synState: SynState,
+export function areWeJoiningSession<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): boolean {
   return !!synState.joiningSessions[sessionHash];
 }
 
-export function selectLatestSnapshotHash(
-  synState: SynState,
+export function selectLatestSnapshotHash<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64
 ): EntryHashB64 | undefined {
   const session = selectSessionState(synState, sessionHash);
-  if (!session || !session.currentCommitHash) return undefined;
-  return synState.commits[session.currentCommitHash].newContentHash;
+  if (!session || !session.lastCommitHash) return undefined;
+  return synState.commits[session.lastCommitHash].newContentHash;
 }
 
-export function selectMissedUncommittedChanges(
-  synState: SynState,
+export function selectMissedUncommittedChanges<E extends SynEngine<any, any>>(
+  synState: SynState<E>,
   sessionHash: EntryHashB64,
   lastDeltaSeen: LastDeltaSeen | undefined
 ): ChangeBundle {
@@ -70,7 +71,7 @@ export function selectMissedUncommittedChanges(
 
   if (
     !lastDeltaSeen ||
-    lastDeltaSeen.commitHash !== sessionState.currentCommitHash
+    lastDeltaSeen.commitHash !== sessionState.lastCommitHash
   ) {
     return sessionState.uncommittedChanges;
   } else {
@@ -84,16 +85,18 @@ export function selectMissedUncommittedChanges(
   }
 }
 
-export function selectLastDeltaSeen(sessionState: SessionState): LastDeltaSeen {
+export function selectLastDeltaSeen<E extends SynEngine<any, any>>(
+  sessionState: SessionState<E>
+): LastDeltaSeen {
   return {
-    commitHash: sessionState.currentCommitHash,
+    commitHash: sessionState.lastCommitHash,
     deltaIndexInCommit: sessionState.uncommittedChanges.deltas.length,
   };
 }
 
-export function selectFolksInSession(
-  workspace: SynWorkspace<any, any>,
-  sessionState: SessionState
+export function selectFolksInSession<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
+  sessionState: SessionState<E>
 ): AgentPubKeyB64[] {
   return Object.entries(sessionState.folks)
     .filter(

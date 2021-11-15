@@ -5,7 +5,6 @@ import { serializeHash } from '@holochain-open-dev/core-types';
 import { Commit, Session, SynClient } from '@syn/zome-client';
 import merge from 'lodash-es/merge';
 
-import type { ApplyDeltaFn } from './apply-delta';
 import { initialState } from './state/syn-state';
 import type { SynState } from './state/syn-state';
 import type { SynWorkspace } from './internal/workspace';
@@ -15,32 +14,31 @@ import { initBackgroundTasks } from './internal/tasks';
 import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { closeSession, newSession } from './internal/workflows/sessions/scribe';
-import cloneDeep from 'lodash-es/cloneDeep';
 import { leaveSession } from './internal/workflows/sessions';
+import type { SynEngine } from './engine';
 
-export class SynStore<CONTENT, DELTA> {
+export class SynStore<E extends SynEngine<any, any> > {
   /** Private fields */
-  #workspace: SynWorkspace<CONTENT, DELTA>;
+  #workspace: SynWorkspace<E>;
   #cancelBackgroundTasks: () => void;
 
   /** Public accessors */
-  activeSession: Readable<SessionStore<CONTENT, DELTA> | undefined>;
+  activeSession: Readable<SessionStore<E> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
   allCommits: Readable<Dictionary<Commit>>;
-  snapshots: Readable<Dictionary<CONTENT>>;
+  snapshots: Readable<Dictionary<E['initialContent']>>;
 
   constructor(
     cellClient: CellClient,
-    initialContent: CONTENT,
-    applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
+    engine: E,
     config?: RecursivePartial<SynConfig>
   ) {
     const fullConfig = merge(config, defaultConfig());
 
     const myPubKey = serializeHash(cellClient.cellId[1]);
 
-    const state: SynState = initialState(myPubKey);
+    const state: SynState<E> = initialState(myPubKey);
 
     const store = writable(state);
 
@@ -50,9 +48,8 @@ export class SynStore<CONTENT, DELTA> {
 
     this.#workspace = {
       store,
-      applyDeltaFn,
+      engine,
       client,
-      initialSnapshot: cloneDeep(initialContent),
       config: fullConfig,
       listeners: [],
       myPubKey,

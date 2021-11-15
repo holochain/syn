@@ -13,32 +13,34 @@ import {
   getFolkColors,
 } from '@syn/elements';
 import { contextProvided } from '@lit-labs/context';
-import type { SessionStore, SynStore } from '@syn/store';
+import type { SessionStore, SynSlice, SynStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
-import { TextEditorDelta, TextEditorDeltaType } from './text-editor-delta';
+import { TextEditorDeltaType, TextEditorEngine } from './engine';
+import type { TextEditorDelta } from './engine';
+import { moveCursors } from './utils';
 
-export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
-  @property({ attribute: 'content-path' })
-  contentPath: string | undefined;
+export class SynTextEditor extends ScopedElementsMixin(LitElement) {
+  @property()
+  synSlice!: SynSlice<TextEditorEngine>;
 
   @property({ attribute: 'debounce-ms' })
   debounceMs: number = 200;
 
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  synStore!: SynStore<CONTENT, any>;
+  synStore!: SynStore<any>;
 
   @contextProvided({ context: synSessionContext, multiple: true })
   @state()
-  sessionStore!: SessionStore<CONTENT, any>;
+  sessionStore!: SessionStore<any>;
 
   @contextProvided({ context: profilesStoreContext, multiple: true })
   @state()
   profilesStore!: ProfilesStore;
 
-  _content = new StoreSubscriber(this, () => this.sessionStore?.content);
-  _ephemeral = new StoreSubscriber(this, () => this.sessionStore?.ephemeral);
+  _content = new StoreSubscriber(this, () => this.synSlice?.content);
+  _ephemeral = new StoreSubscriber(this, () => this.synSlice?.ephemeral);
   _allProfiles = new StoreSubscriber(
     this,
     () => this.profilesStore?.knownProfiles
@@ -70,33 +72,19 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     )
       return;
 
-    this.dispatchEvent(
-      new CustomEvent('changes-requested', {
-        detail: {
-          deltas: this._deltasNotEmmitted,
-          ephemeral: {
-            [this.synStore.myPubKey]: this._cursorPosition,
-          },
+    this.synSlice.requestChanges({
+      deltas: this._deltasNotEmmitted,
+      ephemeral: [
+        {
+          agent: this.synStore.myPubKey,
+          position: this._cursorPosition,
         },
-        bubbles: true,
-        composed: true,
-      })
-    );
+        ...moveCursors(this._deltasNotEmmitted, this._ephemeral.value),
+      ],
+    });
+
     this._deltasNotEmmitted = [];
     this._lastCursorPosition = this._cursorPosition;
-  }
-
-  getContent(): string {
-    let content = this._content.value;
-    if (!this.contentPath) return content as unknown as string;
-
-    const components = this.contentPath.split('.');
-    for (const component of components) {
-      if (!Object.keys(content).includes(component))
-        throw new Error('Could not find object with content-path');
-      content = content[component];
-    }
-    return content as any;
   }
 
   onTextInserted(from: number, text: string) {
@@ -139,7 +127,10 @@ export class SynTextEditor<CONTENT> extends ScopedElementsMixin(LitElement) {
     if (this._content.value === undefined) return html``;
 
     return html`
-      <div class="flex-scrollable-parent" style="background-color: rgb(40, 44, 52);">
+      <div
+        class="flex-scrollable-parent"
+        style="background-color: rgb(40, 44, 52);"
+      >
         <div class="flex-scrollable-container">
           <div class="flex-scrollable-y">
             <codemirror-markdown

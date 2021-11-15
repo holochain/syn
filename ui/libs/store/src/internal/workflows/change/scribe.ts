@@ -1,6 +1,5 @@
 import type {
   ChangeRequest,
-  Delta,
   ChangeBundle,
   FolkChanges,
   EphemeralChanges,
@@ -10,7 +9,6 @@ import type {
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
 
-import type { ApplyDeltaFn } from '../../../apply-delta';
 import {
   amIScribe,
   selectFolksInSession,
@@ -21,28 +19,29 @@ import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
 import merge from 'lodash-es/merge';
+import type { EngineDelta, SynEngine } from '../../../engine';
 
-export function scribeRequestChange<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function scribeRequestChange<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
-  deltas: DELTA[],
+  deltas: Array<EngineDelta<E>>,
   ephemeralChanges: EphemeralChanges | undefined
 ) {
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
     const changeBundle = putDeltas(
-      workspace.applyDeltaFn,
+      workspace.engine,
       sessionState,
       state.myPubKey,
       sessionState.myFolkIndex,
       deltas
     );
 
-    sessionState.ephemeral = {
-      ...sessionState.ephemeral,
-      ...ephemeralChanges,
-    };
+    sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
+      sessionState.ephemeral,
+      ephemeralChanges
+    );
 
     workspace.client.sendChange({
       participants: selectFolksInSession(workspace, sessionState),
@@ -63,8 +62,8 @@ export function scribeRequestChange<CONTENT, DELTA>(
   });
 }
 
-export function handleChangeRequest<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function handleChangeRequest<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   changeRequest: ChangeRequest
 ) {
@@ -99,7 +98,7 @@ export function handleChangeRequest<CONTENT, DELTA>(
 
     if (changeRequest.deltaChanges) {
       changeBundle = putDeltas(
-        workspace.applyDeltaFn,
+        workspace.engine,
         sessionState,
         changeRequest.folk,
         changeRequest.deltaChanges.atFolkIndex,
@@ -107,10 +106,12 @@ export function handleChangeRequest<CONTENT, DELTA>(
       );
     }
 
-    sessionState.ephemeral = {
-      ...sessionState.ephemeral,
-      ...changeRequest.ephemeralChanges,
-    };
+    if (changeRequest.ephemeralChanges) {
+      sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
+        sessionState.ephemeral,
+        changeRequest.ephemeralChanges
+      );
+    }
 
     workspace.client.sendChange({
       deltaChanges: changeBundle,
@@ -130,8 +131,8 @@ export function handleChangeRequest<CONTENT, DELTA>(
   });
 }
 
-function triggerCommitIfNecessary<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+function triggerCommitIfNecessary<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   uncommittedChangesCount
 ) {
@@ -145,12 +146,12 @@ function triggerCommitIfNecessary<CONTENT, DELTA>(
   }
 }
 
-function putDeltas<CONTENT, DELTA>(
-  applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>,
-  session: SessionState,
+function putDeltas<E extends SynEngine<any, any>>(
+  engine: E,
+  session: SessionState<E>,
   author: AgentPubKeyB64,
   atFolkIndex: number,
-  deltas: Delta[]
+  deltas: Array<EngineDelta<E>>
 ): ChangeBundle {
   const currentCommitIndex = session.uncommittedChanges.deltas.length;
 
@@ -162,7 +163,7 @@ function putDeltas<CONTENT, DELTA>(
 
   let currentContent = session.currentContent;
   for (const delta of deltas) {
-    currentContent = applyDeltaFn(currentContent, delta);
+    currentContent = engine.applyDelta(currentContent, delta);
   }
   session.currentContent = currentContent;
 

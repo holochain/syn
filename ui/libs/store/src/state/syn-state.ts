@@ -11,6 +11,7 @@ import type {
   LastDeltaSeen,
   FolkInfo,
 } from '@syn/zome-client';
+import type { EngineContent, EngineEphemeralState, SynEngine } from '../engine';
 
 /**
  * deltas: []
@@ -23,12 +24,12 @@ import type {
  * atSessionIndex: 4
  */
 
-export interface SynState {
+export interface SynState<E extends SynEngine<any, any>> {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
   sessions: Dictionary<Session>; // Segmented by EntryHashB64
   joiningSessions: Dictionary<() => void>;
-  joinedSessions: Dictionary<SessionState>; // Segmented by EntryHashB64
+  joinedSessions: Dictionary<SessionState<E>>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64
 }
@@ -40,22 +41,23 @@ export interface RequestedChange {
   delta: Delta;
 }
 
-export interface SessionState {
+export interface SessionState<E extends SynEngine<any, any>> {
   sessionHash: EntryHashB64;
 
-  currentCommitHash: EntryHashB64 | undefined;
+  lastCommitHash: EntryHashB64 | undefined;
 
   myFolkIndex: number;
 
-  currentContent: any;
-  ephemeral: any;
+  currentContent: EngineContent<E>;
+  ephemeral: EngineEphemeralState<E>;
   //currentContentHash: EntryHashB64;
 
   // Content before the request to the scribe was made
   prerequestContent:
     | {
         lastDeltaSeen: LastDeltaSeen;
-        content: any;
+        content: EngineContent<E>;
+        ephemeral: EngineEphemeralState<E>;
       }
     | undefined;
 
@@ -66,11 +68,12 @@ export interface SessionState {
 
   // AgentPubKeyB64 -> lastSeen
   folks: Dictionary<FolkInfo>;
-
 }
 
-export function initialState(myPubKey: AgentPubKeyB64): SynState {
-  const internalStore: SynState = {
+export function initialState<E extends SynEngine<any, any>>(
+  myPubKey: AgentPubKeyB64
+): SynState<E> {
+  const internalStore: SynState<E> = {
     myPubKey,
     activeSessionHash: undefined,
     sessions: {},

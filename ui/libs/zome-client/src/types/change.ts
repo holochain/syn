@@ -33,7 +33,8 @@ export interface DeltaChanges {
   deltas: Array<Delta>;
 }
 
-export type EphemeralChanges = Dictionary<any>;
+export type EphemeralChanges = any;
+export type EphemeralState = any;
 
 export interface LastDeltaSeen {
   commitHash: EntryHashB64 | undefined;
@@ -43,7 +44,7 @@ export interface LastDeltaSeen {
 export interface ChangeRequest {
   folk: AgentPubKeyB64;
   scribe: AgentPubKeyB64;
-  
+
   lastDeltaSeen: LastDeltaSeen;
 
   deltaChanges: DeltaChanges | undefined;

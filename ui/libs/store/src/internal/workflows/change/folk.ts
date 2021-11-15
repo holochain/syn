@@ -1,9 +1,4 @@
-import type {
-  ChangeNotice,
-  Content,
-  EphemeralChanges,
-  FolkChanges,
-} from '@syn/zome-client';
+import type { ChangeNotice, FolkChanges } from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import cloneDeep from 'lodash-es/cloneDeep';
 import { get } from 'svelte/store';
@@ -16,12 +11,19 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import type { RequestedChange, SessionState } from '../../../state/syn-state';
 import { joinSession } from '../sessions/folk';
+import type {
+  EngineContent,
+  EngineDelta,
+  EngineEphemeralChanges,
+  EngineEphemeralState,
+  SynEngine,
+} from '../../../engine';
 
-export function folkRequestChange<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function folkRequestChange<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
-  deltas: DELTA[],
-  ephemeralChanges: EphemeralChanges | undefined
+  deltas: Array<EngineDelta<E>>,
+  ephemeralChanges: EngineEphemeralChanges<E> | undefined
 ) {
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
@@ -33,11 +35,12 @@ export function folkRequestChange<CONTENT, DELTA>(
       sessionState.prerequestContent = {
         lastDeltaSeen,
         content: cloneDeep(sessionState.currentContent),
+        ephemeral: cloneDeep(sessionState.ephemeral),
       };
     }
 
     for (const delta of deltas) {
-      sessionState.currentContent = workspace.applyDeltaFn(
+      sessionState.currentContent = workspace.engine.applyDelta(
         sessionState.currentContent,
         delta
       );
@@ -60,11 +63,10 @@ export function folkRequestChange<CONTENT, DELTA>(
       ...sessionState.requestedChanges,
       ...newRequestedChanges,
     ];
-
-    sessionState.ephemeral = {
-      ...sessionState.ephemeral,
-      ...ephemeralChanges,
-    };
+    sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
+      sessionState.ephemeral,
+      ephemeralChanges
+    );
 
     workspace.client.sendChangeRequest({
       lastDeltaSeen,
@@ -83,8 +85,8 @@ export function folkRequestChange<CONTENT, DELTA>(
   });
 }
 
-export async function checkRequestedChanges<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function checkRequestedChanges<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ) {
   let state = get(workspace.store);
@@ -92,7 +94,7 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     return;
   }
 
-  let session = selectSessionState(state, sessionHash) as SessionState;
+  let session = selectSessionState(state, sessionHash);
 
   if (
     session.requestedChanges.length > 0 &&
@@ -105,7 +107,8 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
     await joinSession(workspace, sessionHash);
 
     state = get(workspace.store);
-    session = selectSessionState(state, sessionHash) as SessionState;
+    session = selectSessionState(state, sessionHash);
+
     await workspace.client.sendSyncRequest({
       lastDeltaSeen: selectLastDeltaSeen(session),
       scribe: state.sessions[sessionHash].scribe,
@@ -115,8 +118,8 @@ export async function checkRequestedChanges<CONTENT, DELTA>(
 }
 
 // Folk
-export function handleChangeNotice<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function handleChangeNotice<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   changeNotice: ChangeNotice
 ) {
@@ -128,13 +131,13 @@ export function handleChangeNotice<CONTENT, DELTA>(
       return state;
     }
 
-    const sessionState = selectSessionState(state, sessionHash) as SessionState;
+    const sessionState = selectSessionState(state, sessionHash);
 
     if (changeNotice.ephemeralChanges) {
-      sessionState.ephemeral = {
-        ...sessionState.ephemeral,
-        ...changeNotice.ephemeralChanges,
-      };
+      sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
+        sessionState.ephemeral,
+        changeNotice.ephemeralChanges
+      );
     }
 
     if (!changeNotice.deltaChanges) return state;
@@ -149,6 +152,7 @@ export function handleChangeNotice<CONTENT, DELTA>(
     const myChanges = changes.authors[state.myPubKey];
 
     let contentToApplyTo = sessionState.currentContent;
+    let ephemeralToApplyTo = sessionState.ephemeral;
 
     const isLastDeltaSeenEqualToPrerequest =
       sessionState.prerequestContent?.lastDeltaSeen.commitHash ==
@@ -162,12 +166,17 @@ export function handleChangeNotice<CONTENT, DELTA>(
       isLastDeltaSeenEqualToPrerequest
     ) {
       contentToApplyTo = sessionState.prerequestContent?.content;
+      ephemeralToApplyTo = sessionState.prerequestContent.ephemeral;
     }
 
     for (const delta of changes.deltas) {
-      contentToApplyTo = workspace.applyDeltaFn(contentToApplyTo, delta);
+       contentToApplyTo = workspace.engine.applyDelta(
+        contentToApplyTo,
+        delta
+      );
     }
     sessionState.currentContent = contentToApplyTo;
+    sessionState.ephemeral = ephemeralToApplyTo;
 
     sessionState.uncommittedChanges.deltas = [
       ...sessionState.uncommittedChanges.deltas,
@@ -195,17 +204,23 @@ export function handleChangeNotice<CONTENT, DELTA>(
     }
 
     if (myChanges) {
-      clearRequested(sessionState, myChanges, sessionState.currentContent);
+      clearRequested(
+        sessionState,
+        myChanges,
+        sessionState.currentContent,
+        sessionState.ephemeral
+      );
     }
 
     return state;
   });
 }
 
-function clearRequested(
-  sessionState: SessionState,
+function clearRequested<E extends SynEngine<any, any>>(
+  sessionState: SessionState<E>,
   myChanges: FolkChanges,
-  newContent: Content
+  newContent: EngineContent<E>,
+  newEphemeral: EngineEphemeralState<E>
 ) {
   const leftRequestedChanges: RequestedChange[] = [];
 
@@ -228,6 +243,7 @@ function clearRequested(
     sessionState.prerequestContent = {
       lastDeltaSeen: selectLastDeltaSeen(sessionState),
       content: newContent,
+      ephemeral: newEphemeral,
     };
   }
 }

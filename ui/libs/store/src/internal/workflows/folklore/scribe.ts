@@ -2,21 +2,21 @@ import type {
   EntryHashB64,
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
+import type { SynEngine } from '../../../engine';
 
 import {
   selectSessionState,
   selectFolksInSession,
   amIScribe,
 } from '../../../state/selectors';
-import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 
-export function notifyFolkLore<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function notifyFolkLore<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(state => {
-    const session = selectSessionState(state, sessionHash) as SessionState;
+    const session = selectSessionState(state, sessionHash);
 
     workspace.client.sendFolkLore({
       folkLore: session.folks,
@@ -27,8 +27,8 @@ export function notifyFolkLore<CONTENT, DELTA>(
   });
 }
 
-export function handleHeartbeat<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function handleHeartbeat<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   fromFolk: AgentPubKeyB64
 ) {
@@ -38,7 +38,7 @@ export function handleHeartbeat<CONTENT, DELTA>(
       return state;
     }
 
-    const session = selectSessionState(state, sessionHash) as SessionState;
+    const session = selectSessionState(state, sessionHash);
 
     session.folks[fromFolk] = {
       lastSeen: Date.now(),

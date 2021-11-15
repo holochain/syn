@@ -1,11 +1,12 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import type { SynEngine } from '../../../engine';
 
 import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
-export async function joinSession<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function joinSession<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
@@ -46,8 +47,8 @@ export async function joinSession<CONTENT, DELTA>(
   });
 }
 
-export async function handleSessionClosed<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function handleSessionClosed<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(synState => {
@@ -77,8 +78,8 @@ export async function handleSessionClosed<CONTENT, DELTA>(
   }
 }
 
-export async function folkLeaveSession<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function folkLeaveSession<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(state => {

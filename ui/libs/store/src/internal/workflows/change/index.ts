@@ -1,6 +1,10 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { EphemeralChanges } from '@syn/zome-client';
 import { get } from 'svelte/store';
+import type {
+  EngineDelta,
+  EngineEphemeralChanges,
+  SynEngine,
+} from '../../../engine';
 
 import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
@@ -8,11 +12,11 @@ import { folkRequestChange } from './folk';
 import { scribeRequestChange } from './scribe';
 
 // Folk or scribe
-export function requestChanges<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function requestChanges<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
-  deltas: DELTA[],
-  ephemeralChanges: EphemeralChanges
+  deltas: Array<EngineDelta<E>>,
+  ephemeralChanges: EngineEphemeralChanges<E>
 ): void {
   const state = get(workspace.store);
 

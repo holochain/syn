@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use hdk::prelude::*;
 use holo_hash::*;
@@ -29,7 +29,7 @@ pub struct FolkChanges {
 pub struct ChangeBundle {
     pub deltas: Vec<Delta>,
     // AgentPubKeyB64 -> folkIndex -> deltaIndexInCommit
-    pub authors: HashMap<AgentPubKeyB64, FolkChanges>,
+    pub authors: BTreeMap<AgentPubKeyB64, FolkChanges>,
 }
 
 /// Input to the send change call
@@ -52,7 +52,8 @@ pub struct DeltaChanges {
     pub deltas: Vec<Delta>,
 }
 
-pub type EphemeralChanges = BTreeMap<String, SerializedBytes>;
+pub type EphemeralChanges = SerializedBytes;
+pub type EphemeralState = SerializedBytes;
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]

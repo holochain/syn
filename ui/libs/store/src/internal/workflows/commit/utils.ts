@@ -5,20 +5,22 @@ import type {
 } from '@holochain-open-dev/core-types';
 import cloneDeep from 'lodash-es/cloneDeep';
 
-import type { SessionState, SynState } from '../../../state/syn-state';
+import type { SynState } from '../../../state/syn-state';
 import {
   selectLatestSnapshotHash,
   selectSessionState,
 } from '../../../state/selectors';
+import type { SynEngine } from '../../../engine';
 
-export function buildCommitFromUncommitted(
-  state: SynState,
+export function buildCommitFromUncommitted<E extends SynEngine<any, any>>(
+  state: SynState<E>,
   sessionHash: EntryHashB64,
   newContentHash: EntryHashB64,
   initialSnapshotHash: EntryHashB64
 ): Commit {
-  const session = selectSessionState(state, sessionHash) as SessionState;
-  const lastCommitHash = session.currentCommitHash;
+  const session = selectSessionState(state, sessionHash);
+
+  const lastCommitHash = session.lastCommitHash;
   return {
     changes: session.uncommittedChanges,
     previousCommitHashes: lastCommitHash ? [lastCommitHash] : [],
@@ -33,15 +35,16 @@ export function buildCommitFromUncommitted(
   };
 }
 
-export function putNewCommit(
-  state: SynState,
+export function putNewCommit<E extends SynEngine<any, any>>(
+  state: SynState<E>,
   sessionHash: EntryHashB64,
   newCommitHash: HeaderHashB64,
   commit: Commit
 ) {
   state.commits[newCommitHash] = commit;
-  const session = selectSessionState(state, sessionHash) as SessionState;
-  session.currentCommitHash = newCommitHash;
+  const session = selectSessionState(state, sessionHash);
+
+  session.lastCommitHash = newCommitHash;
   state.snapshots[commit.newContentHash] = cloneDeep(session.currentContent);
 
   session.uncommittedChanges = {

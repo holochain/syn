@@ -12,13 +12,14 @@ import {
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
+import type { SynEngine } from '../../../engine';
 
 // Pick and join a session
-export async function newSession<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function newSession<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   fromCommit?: EntryHashB64
 ): Promise<EntryHashB64> {
-  let currentContent = cloneDeep(workspace.initialSnapshot);
+  let currentContent = cloneDeep(workspace.engine.initialContent);
   let currentCommit: Commit | undefined;
 
   if (fromCommit) {
@@ -28,7 +29,7 @@ export async function newSession<CONTENT, DELTA>(
       (currentCommit as Commit).newContentHash
     );
   } else {
-    await workspace.client.putSnapshot(workspace.initialSnapshot);
+    await workspace.client.putSnapshot(workspace.engine.initialContent);
   }
   const session = await workspace.client.newSession({
     initialCommitHash: fromCommit,
@@ -38,11 +39,11 @@ export async function newSession<CONTENT, DELTA>(
     state.sessions[session.sessionHash] = session.session;
 
     state.joinedSessions[session.sessionHash] = {
-      currentCommitHash: fromCommit,
+      lastCommitHash: fromCommit,
       sessionHash: session.sessionHash,
       currentContent,
       myFolkIndex: 0,
-      ephemeral: {},
+      ephemeral: workspace.engine.ephemeral?.initialState,
       prerequestContent: undefined,
       requestedChanges: [],
       uncommittedChanges: {
@@ -65,8 +66,8 @@ export async function newSession<CONTENT, DELTA>(
   return session.sessionHash;
 }
 
-export async function handleLeaveSessionNotice<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function handleLeaveSessionNotice<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   folk: AgentPubKeyB64
 ): Promise<void> {
@@ -88,8 +89,8 @@ export async function handleLeaveSessionNotice<CONTENT, DELTA>(
 export interface CloseSessionResult {
   closingCommitHash: EntryHashB64 | undefined;
 }
-export async function closeSession<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function closeSession<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ): Promise<CloseSessionResult> {
   const closingCommitHash = await commitChanges(workspace, sessionHash);

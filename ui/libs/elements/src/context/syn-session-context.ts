@@ -13,9 +13,9 @@ export class SynSessionContext extends ScopedElementsMixin(LitElement) {
 
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  synStore!: SynStore<any, any>;
+  synStore!: SynStore<any>;
 
-  provider!: ContextProvider<Context<SessionStore<any, any> | undefined>>;
+  provider!: ContextProvider<Context<SessionStore<any> | undefined>>;
 
   connectedCallback() {
     super.connectedCallback();

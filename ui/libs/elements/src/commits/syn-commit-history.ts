@@ -17,7 +17,7 @@ import { synContext } from '../context/contexts';
 export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  _synStore!: SynStore<any, any>;
+  _synStore!: SynStore<any>;
 
   @state()
   _loading = true;

@@ -16,11 +16,11 @@ export class SynFolk extends ScopedElementsMixin(LitElement) {
 
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  synStore!: SynStore<any, any>;
+  synStore!: SynStore<any>;
 
   @contextProvided({ context: synSessionContext, multiple: true })
   @state()
-  sessionStore!: SessionStore<any, any>;
+  sessionStore!: SessionStore<any>;
 
   _folks = new StoreSubscriber(this, () => this.sessionStore?.folks);
 

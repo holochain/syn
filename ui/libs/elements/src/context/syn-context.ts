@@ -14,11 +14,11 @@ import { SynSessionContext } from './syn-session-context';
  */
 export class SynContext extends ScopedElementsMixin(LitElement) {
   @property()
-  store!: SynStore<any, any>;
+  store!: SynStore<any>;
 
   _activeSession = new StoreSubscriber(this, () => this.store.activeSession);
 
-  provider!: ContextProvider<Context<SynStore<any, any> | undefined>>;
+  provider!: ContextProvider<Context<SynStore<any> | undefined>>;
 
   connectedCallback() {
     super.connectedCallback();

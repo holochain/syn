@@ -9,7 +9,6 @@ import isEqual from 'lodash-es/isEqual';
 
 import type {
   ChangeBundle,
-  EphemeralChanges,
   SendChangeInput,
   SendChangeRequestInput,
 } from './types/change';
@@ -158,12 +157,8 @@ export class SynClient {
         syncResponseInput.state.uncommittedChanges
       );
     }
-    if (input.state.ephemeralChanges) {
-      input.state.ephemeralChanges = this.encodeEphemeral(
-        input.state.ephemeralChanges
-      );
-    }
-    console.log(input);
+    input.state.ephemeralState = encode(input.state.ephemeralState);
+
     return this.callZome('send_sync_response', input);
   }
 
@@ -179,7 +174,7 @@ export class SynClient {
       };
     }
     if (input.ephemeralChanges) {
-      input.ephemeralChanges = this.encodeEphemeral(input.ephemeralChanges);
+      input.ephemeralChanges = encode(input.ephemeralChanges);
     }
 
     return this.callZome('send_change_request', input);
@@ -193,7 +188,7 @@ export class SynClient {
       input.deltaChanges = this.encodeChangeBundle(input.deltaChanges);
     }
     if (input.ephemeralChanges) {
-      input.ephemeralChanges = this.encodeEphemeral(input.ephemeralChanges);
+      input.ephemeralChanges = encode(input.ephemeralChanges);
     }
     return this.callZome('send_change', input);
   }
@@ -230,22 +225,5 @@ export class SynClient {
         deltas: commit.changes.deltas.map(d => decode(d)),
       },
     };
-  }
-
-  private encodeEphemeral(
-    ephemeralChanges: EphemeralChanges
-  ): Dictionary<Uint8Array> {
-    const changes = {};
-    for (const key of Object.keys(ephemeralChanges)) {
-      changes[key] = encode(ephemeralChanges[key]);
-    }
-    return changes;
-  }
-  decodeEphemeral(ephemeralChanges: Dictionary<Uint8Array>): EphemeralChanges {
-    const changes = {};
-    for (const key of Object.keys(ephemeralChanges)) {
-      changes[key] = decode(ephemeralChanges[key]);
-    }
-    return changes;
   }
 }

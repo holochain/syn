@@ -1,3 +1,4 @@
+
 export interface SynConfig {
   hearbeatInterval: number;
   requestTimeout: number;

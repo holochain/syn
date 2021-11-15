@@ -9,45 +9,49 @@ import { selectSessionState } from './state/selectors';
 import { requestChanges } from './internal/workflows/change';
 import { leaveSession } from './internal/workflows/sessions';
 import type { CloseSessionResult } from './internal/workflows/sessions/scribe';
-import { pickBy } from 'lodash-es';
+import pickBy from 'lodash-es/pickBy';
+import type {
+  EngineContent,
+  EngineDelta,
+  EngineEphemeralChanges,
+  EngineEphemeralState,
+  SynEngine,
+} from './engine';
 
-export interface SessionStore<CONTENT, DELTA> {
+export interface SynSlice<E extends SynEngine<any, any>> {
+  content: Readable<EngineContent<E>>;
+  requestChanges(changes: ChangesRequested<E>): void;
+
+  ephemeral: Readable<EngineEphemeralState<E>>;
+}
+
+export interface ChangesRequested<E extends SynEngine<any, any>> {
+  deltas: Array<EngineDelta<E>>;
+  ephemeral?: EngineEphemeralChanges<E>;
+}
+
+export interface SessionStore<E extends SynEngine<any, any>>
+  extends SynSlice<E> {
   sessionHash: EntryHashB64;
   session: Session;
-
-  content: Readable<CONTENT>;
-  ephemeral: Readable<Dictionary<any>>;
   folks: Readable<Dictionary<FolkInfo>>;
   lastCommitHash: Readable<EntryHashB64 | undefined>;
 
-  requestChanges(changes: RequestChanges<DELTA>): void;
   leave(): Promise<CloseSessionResult | undefined>;
   onClose(listener: () => void): void;
 }
 
-export type RequestChanges<DELTA> =
-  | {
-      deltas: DELTA[];
-    }
-  | {
-      ephemeral: Dictionary<any>;
-    }
-  | {
-      deltas: DELTA[];
-      ephemeral: Dictionary<any>;
-    };
-
-export function buildSessionStore<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function buildSessionStore<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
-): SessionStore<CONTENT, DELTA> {
+): SessionStore<E> {
   const content = derived(
     workspace.store,
     state => selectSessionState(state, sessionHash)?.currentContent
   );
   const lastCommitHash = derived(
     workspace.store,
-    state => selectSessionState(state, sessionHash)?.currentCommitHash
+    state => selectSessionState(state, sessionHash)?.lastCommitHash
   );
   const ephemeral = derived(
     workspace.store,
@@ -66,16 +70,16 @@ export function buildSessionStore<CONTENT, DELTA>(
   return {
     sessionHash,
     session,
-    content,
     lastCommitHash,
     folks,
+    content,
     ephemeral,
     requestChanges: ({
       deltas,
       ephemeral,
     }: {
-      deltas: DELTA[];
-      ephemeral: Dictionary<any>;
+      deltas: Array<EngineDelta<E>>;
+      ephemeral: EngineEphemeralChanges<E>;
     }) => requestChanges(workspace, sessionHash, deltas, ephemeral),
     leave: async () => leaveSession(workspace, sessionHash),
     onClose: (listener: () => void) =>

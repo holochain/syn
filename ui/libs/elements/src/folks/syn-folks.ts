@@ -12,7 +12,7 @@ import { sharedStyles } from '../shared-styles';
 export class SynFolks extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  syn!: SynStore<any, any>;
+  syn!: SynStore<any>;
 
   _activeSession = new StoreSubscriber(this, () => this.syn.activeSession);
   _folks = new StoreSubscriber(this, () => this._activeSession.value?.folks);

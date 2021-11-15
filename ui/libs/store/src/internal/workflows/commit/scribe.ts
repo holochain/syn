@@ -1,23 +1,23 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitInput } from '@syn/zome-client';
 import { get } from 'svelte/store';
+import type { SynEngine } from '../../../engine';
 
 import {
   amIScribe,
   selectFolksInSession,
   selectSessionState,
 } from '../../../state/selectors';
-import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
-export async function commitChanges<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export async function commitChanges<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64
 ): Promise<EntryHashB64 | undefined> {
   const state = get(workspace.store);
 
-  const session = selectSessionState(state, sessionHash) as SessionState;
+  const session = selectSessionState(state, sessionHash);
   if (!session || session.uncommittedChanges.deltas.length === 0)
     return undefined;
 
@@ -29,7 +29,7 @@ export async function commitChanges<CONTENT, DELTA>(
   const hash = await workspace.client.putSnapshot(session.currentContent);
 
   const initialSnapshotHash = await workspace.client.hashSnapshot(
-    workspace.initialSnapshot
+    workspace.engine.initialContent
   );
 
   const commit = buildCommitFromUncommitted(

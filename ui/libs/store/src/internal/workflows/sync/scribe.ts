@@ -12,7 +12,7 @@ import {
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
-import type { SessionState } from '../../../state/syn-state';
+import type { SynEngine } from '../../../engine';
 
 /**
  * Scribe is managing the session, a folk comes in:
@@ -26,8 +26,8 @@ import type { SessionState } from '../../../state/syn-state';
  *
  */
 
-export function handleSyncRequest<CONTENT, DELTA>(
-  workspace: SynWorkspace<CONTENT, DELTA>,
+export function handleSyncRequest<E extends SynEngine<any, any>>(
+  workspace: SynWorkspace<E>,
   sessionHash: EntryHashB64,
   requestSyncInput: RequestSyncInput
 ): void {
@@ -37,10 +37,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
       return synState;
     }
 
-    const sessionState = selectSessionState(
-      synState,
-      sessionHash
-    ) as SessionState;
+    const sessionState = selectSessionState(synState, sessionHash);
 
     sessionState.folks[requestSyncInput.folk] = {
       lastSeen: Date.now(),
@@ -51,14 +48,14 @@ export function handleSyncRequest<CONTENT, DELTA>(
     if (
       (!requestSyncInput.lastDeltaSeen ||
         requestSyncInput.lastDeltaSeen.commitHash !==
-          sessionState.currentCommitHash) &&
-      sessionState.currentCommitHash
+          sessionState.lastCommitHash) &&
+      sessionState.lastCommitHash
     ) {
-      const commit = synState.commits[sessionState.currentCommitHash];
+      const commit = synState.commits[sessionState.lastCommitHash];
 
       missedCommit = {
         commit,
-        commitHash: sessionState.currentCommitHash,
+        commitHash: sessionState.lastCommitHash,
         commitInitialSnapshot: synState.snapshots[commit.newContentHash],
       };
     }
@@ -72,7 +69,7 @@ export function handleSyncRequest<CONTENT, DELTA>(
     const syncState: StateForSync = {
       uncommittedChanges,
       folkMissedLastCommit: missedCommit,
-      ephemeralChanges: sessionState.ephemeral,
+      ephemeralState: sessionState.ephemeral,
       //currentContentHash:
     };
 

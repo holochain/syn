@@ -22,7 +22,7 @@ import { sharedStyles } from '../shared-styles';
 export class SynSessions extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, multiple: true })
   @state()
-  syn!: SynStore<any, any>;
+  syn!: SynStore<any>;
 
   _allSessions = new StoreSubscriber(this, () => this.syn.knownSessions);
   _joinedSessions = new StoreSubscriber(this, () => this.syn.joinedSessions);

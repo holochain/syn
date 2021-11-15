@@ -1,26 +1,30 @@
-import { TextEditorDelta, TextEditorDeltaType } from './text-editor-delta';
-import type { DeltaOperation as QuillDelta } from 'quill';
+import type { Dictionary } from '@holochain-open-dev/core-types';
+import {
+  SetCursorPosition,
+  TextEditorDelta,
+  TextEditorDeltaType,
+} from './engine';
 
-export function quillDeltasToTextEditorDelta(
-  quillDeltas: QuillDelta[]
-): TextEditorDelta {
-  const hasRetain = quillDeltas[0].retain;
+export function moveCursors(
+  deltas: TextEditorDelta[],
+  cursors: Dictionary<number>
+): Array<SetCursorPosition> {
+  const newCursors: Dictionary<number> = {};
 
-  const position = (hasRetain ? quillDeltas[0].retain : 0) as number;
-  const actualChange = hasRetain ? quillDeltas[1] : quillDeltas[0];
-
-  if (actualChange.insert) {
-    return {
-      type: TextEditorDeltaType.Insert,
-      text: actualChange.insert,
-      position,
-    };
-  } else if (actualChange.delete) {
-    return {
-      type: TextEditorDeltaType.Delete,
-      position,
-      characterCount: actualChange.delete,
-    };
+  for (const delta of deltas) {
+    for (const key of Object.keys(cursors)) {
+      if (delta.position > cursors[key]) {
+        if (delta.type === TextEditorDeltaType.Insert) {
+          newCursors[key] += cursors[key] + delta.text.length;
+        } else {
+          newCursors[key] += cursors[key] + delta.characterCount;
+        }
+      }
+    }
   }
-  throw new Error('Malformed quill delta');
+
+  return Object.entries(newCursors).map(([key, position]) => ({
+    agent: key,
+    position,
+  }));
 }

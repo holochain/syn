@@ -2,15 +2,17 @@ import type { SynClient } from '@syn/zome-client';
 
 import type { SynState } from '../state/syn-state';
 import type { Writable } from 'svelte/store';
-import type { ApplyDeltaFn } from '../apply-delta';
 import type { SynConfig } from '../config';
-import type { AgentPubKeyB64, EntryHashB64 } from '@holochain-open-dev/core-types';
+import type {
+  AgentPubKeyB64,
+  EntryHashB64,
+} from '@holochain-open-dev/core-types';
+import type { SynEngine } from '../engine';
 
-export interface SynWorkspace<CONTENT, DELTA> {
+export interface SynWorkspace<E extends SynEngine<any, any>> {
   client: SynClient;
-  store: Writable<SynState>;
-  initialSnapshot: CONTENT;
-  applyDeltaFn: ApplyDeltaFn<CONTENT, DELTA>;
+  store: Writable<SynState<E>>;
+  engine: E;
   config: SynConfig;
   listeners: Array<SynEventListener>;
   myPubKey: AgentPubKeyB64;

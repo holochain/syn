@@ -8,9 +8,17 @@ import {
 import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
-import { SynStore } from '@syn/store';
+import { SynEngine, SynStore } from '@syn/store';
 
-import { applyDelta, delay, initialContent, synDna } from '../common';
+import {
+  applyDelta,
+  Content,
+  delay,
+  initialContent,
+  synDna,
+  TextDelta,
+} from '../common';
+import { Dictionary } from 'lodash';
 
 const config = Config.gen();
 
@@ -31,12 +39,21 @@ export const oFn = orchestrator => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = new SynStore(aliceClient, initialContent, applyDelta, {
+    const synEngine: SynEngine<Content, TextDelta, Dictionary<number>> = {
+      initialContent,
+      applyDelta,
+      ephemeral: {
+        initialState: {} as any,
+        applyEphemeral: (s, c) => ({ ...s, ...c }),
+      },
+    };
+
+    const aliceSyn = new SynStore(aliceClient, synEngine, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
     });
-    const bobSyn = new SynStore(bobClient, initialContent, applyDelta, {
+    const bobSyn = new SynStore(bobClient, synEngine, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },

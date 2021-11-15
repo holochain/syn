@@ -268,7 +268,7 @@ export default orchestrator => {
           },
         },
       },
-      ephemeralChanges: {},
+      ephemeralState: encode({}),
     };
 
     await me.call('syn', 'send_sync_response', {
@@ -305,7 +305,7 @@ export default orchestrator => {
         deltaIndexInCommit: 2,
       },
 
-      ephemeralChange: null,
+      ephemeralChanges: encode(null),
       deltaChanges: {
         atFolkIndex: 0,
         deltas: [delta],
@@ -348,9 +348,9 @@ export default orchestrator => {
         deltaIndexInCommit: 2,
       },
       deltaChanges: changeBundle,
-      ephemeralChanges: {
-        hi: encode(30),
-      },
+      ephemeralChanges: encode({
+        hi: 30,
+      }),
     });
     await delay(500); // make time for signal to arrive
     let a_sig = alice_signals[1];
