@@ -12,7 +12,7 @@ import {
 } from '../common';
 import { encode, decode } from '@msgpack/msgpack';
 import { cloneDeepWith } from 'lodash-es';
-import { TextEditorDeltaType } from '@syn/text-editor';
+import { TextEditorDeltaType } from '../grammar';
 
 const config = Config.gen();
 

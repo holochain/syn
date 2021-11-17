@@ -12,6 +12,7 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.1.1",
     "@msgpack/msgpack": "^2.7.0",
+    "@syn/text-editor": "0.0.1",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
     "lodash-es": "^4.17.21",

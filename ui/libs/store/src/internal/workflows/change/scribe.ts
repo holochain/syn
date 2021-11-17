@@ -30,6 +30,8 @@ export function scribeRequestChange<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
+    const lastDeltaSeen = selectLastDeltaSeen(sessionState);
+
     const changeBundle = putDeltas(
       workspace.grammar,
       sessionState,
@@ -41,7 +43,7 @@ export function scribeRequestChange<G extends SynGrammar<any, any>>(
     workspace.client.sendChange({
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
-      lastDeltaSeen: selectLastDeltaSeen(sessionState),
+      lastDeltaSeen,
       deltaChanges: changeBundle,
     });
 
@@ -100,7 +102,7 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
       changeRequest.deltaChanges.deltas = changeRequest.deltaChanges.deltas.map(
         d => {
           for (const missedDelta of missedDeltas) {
-            d = transformDelta(d, missedDelta);
+            d = transformDelta(d, missedDelta.delta);
           }
           return d;
         }

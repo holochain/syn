@@ -95,26 +95,26 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    console.log('hi')
+    console.log(ranges);
     this._debouncingStore.requestChanges([
       {
         type: TextEditorDeltaType.ChangeSelection,
         position: ranges[0].from,
-        to: ranges[0].to
+        to: ranges[0].to,
       },
     ]);
   }
 
   remoteCursors() {
     if (!this._state.value) return [];
-    return Object.entries(this._state.value.cursors)
+    return Object.entries(this._state.value.selections)
       .filter(([pubKey, _]) => pubKey !== this.synStore.myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
         const name = this._allProfiles.value[agentPubKey]?.nickname;
         return {
-          position,
+          position: position.from,
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };
@@ -136,7 +136,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
               id="editor"
               .state=${{
                 text: this._state.value.text,
-                cursor: this._state.value.cursors[this.synStore.myPubKey],
+                selection: this._state.value.selections[this.synStore.myPubKey],
               }}
               .additionalCursors=${this.remoteCursors()}
               @text-inserted=${e =>

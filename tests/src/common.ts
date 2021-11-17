@@ -1,11 +1,7 @@
 import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import {
-  TextEditorDelta,
-  textEditorGrammar,
-  TextEditorState,
-} from '@syn/text-editor';
+import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
 import { SynGrammar } from '@syn/store';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -79,6 +75,14 @@ export const sampleGrammar: SynGrammar<Content, TextDelta> = {
     body: textEditorGrammar.initialState,
   },
   applyDelta,
+  transformDelta(toTransform, withOperation) {
+    if (toTransform.type === 'Title' || withOperation.type == 'Title')
+      return toTransform;
+    return (textEditorGrammar.transformDelta as any)(
+      toTransform,
+      withOperation
+    );
+  },
 };
 
 export function applyDeltas(

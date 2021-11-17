@@ -9,7 +9,7 @@ import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
 import { SynGrammar, SynStore } from '@syn/store';
-import { TextEditorDeltaType } from '@syn/text-editor';
+import { TextEditorDeltaType } from '../grammar';
 
 import {
   applyDelta,
@@ -93,27 +93,27 @@ export const oFn = orchestrator => {
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    t.equal(currentState.body, 'Hi there');
+    t.equal(currentState.body.text, 'Hi there');
 
     currentState = get(bobSessionStore.state);
-    t.equal(currentState.body, 'Hi there');
+    t.equal(currentState.body.text, 'Hi there');
 
     // Test concurrent
 
-    bobSessionStore.requestChanges([
-      { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
-    ]);
     aliceSessionStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 3, text: 'alice ' },
+    ]);
+    bobSessionStore.requestChanges([
+      { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
     ]);
 
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    t.equal(currentState.body, 'Hi alice bob there');
+    t.equal(currentState.body.text, 'Hi alice bob there');
 
     currentState = get(bobSessionStore.state);
-    t.equal(currentState.body, 'Hi alice bob there');
+    t.equal(currentState.body.text, 'Hi alice bob there');
 
     await bobSyn.close();
 

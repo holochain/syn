@@ -11,7 +11,7 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import type { RequestedChange, SessionState } from '../../../state/syn-state';
 import { joinSession } from '../sessions/folk';
-import type { GrammarState, GrammarDelta, SynGrammar } from '../../../grammar';
+import type { GrammarDelta, SynGrammar } from '../../../grammar';
 
 export function folkRequestChange<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
@@ -129,7 +129,6 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     // If CRDT, we don't care about requested changes
     // If BlockOnConflict, we try to rebase and block if applyDelta returns conflict
 
-    // We don't want to reapply our own made changes
     const myChanges = changes.authors[state.myPubKey];
 
     let contentToApplyTo = sessionState.currentContent;
@@ -140,12 +139,8 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
       changeNotice.lastDeltaSeen.deltaIndexInCommit ===
         sessionState.prerequestContent?.lastDeltaSeen.deltaIndexInCommit;
 
-    if (
-      myChanges &&
-      sessionState.prerequestContent &&
-      isLastDeltaSeenEqualToPrerequest
-    ) {
-      contentToApplyTo = sessionState.prerequestContent?.content;
+    if (sessionState.prerequestContent && isLastDeltaSeenEqualToPrerequest) {
+      contentToApplyTo = sessionState.prerequestContent.content;
     }
 
     for (const delta of changes.deltas) {
@@ -155,7 +150,6 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
         delta.author
       );
     }
-    sessionState.currentContent = contentToApplyTo;
 
     sessionState.uncommittedChanges.deltas = [
       ...sessionState.uncommittedChanges.deltas,
@@ -183,17 +177,25 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     }
 
     if (myChanges) {
-      clearRequested(sessionState, myChanges, sessionState.currentContent);
+      clearRequested(sessionState, myChanges);
     }
 
+    if (sessionState.requestedChanges.length === 0) {
+      sessionState.prerequestContent = undefined;
+      sessionState.currentContent = contentToApplyTo;
+    } else {
+      sessionState.prerequestContent = {
+        lastDeltaSeen: selectLastDeltaSeen(sessionState),
+        content: contentToApplyTo,
+      };
+    }
     return state;
   });
 }
 
 function clearRequested<G extends SynGrammar<any, any>>(
   sessionState: SessionState<G>,
-  myChanges: FolkChanges,
-  newContent: GrammarState<G>
+  myChanges: FolkChanges
 ) {
   const leftRequestedChanges: RequestedChange[] = [];
 
@@ -209,13 +211,4 @@ function clearRequested<G extends SynGrammar<any, any>>(
     }
   }
   sessionState.requestedChanges = leftRequestedChanges;
-
-  if (sessionState.requestedChanges.length === 0) {
-    sessionState.prerequestContent = undefined;
-  } else {
-    sessionState.prerequestContent = {
-      lastDeltaSeen: selectLastDeltaSeen(sessionState),
-      content: newContent,
-    };
-  }
 }
