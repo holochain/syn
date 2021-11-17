@@ -21,9 +21,13 @@ export function moveSelections(
         }
       } else if (delta.type === TextEditorDeltaType.Delete) {
         newCursors[key].from -= delta.characterCount;
+
+        if (newCursors[key].from < 0) newCursors[key].from = 0;
+
         const to = newCursors[key].to;
         if (to) {
           newCursors[key].to = to - delta.characterCount;
+          if ((newCursors[key].to as number) < 0) newCursors[key].to = 0;
         }
       }
     }

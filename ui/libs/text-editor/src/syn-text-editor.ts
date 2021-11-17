@@ -95,7 +95,6 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    console.log(ranges);
     this._debouncingStore.requestChanges([
       {
         type: TextEditorDeltaType.ChangeSelection,
