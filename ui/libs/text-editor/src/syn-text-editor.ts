@@ -14,9 +14,14 @@ import {
 } from '@syn/elements';
 import { contextProvided } from '@lit-labs/context';
 import type { SessionStore, SynSlice, SynStore } from '@syn/store';
+import { DebouncingStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
-import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
+import {
+  TextEditorDeltaType,
+  textEditorGrammar,
+  TextEditorGrammar,
+} from './grammar';
 import type { TextEditorDelta } from './grammar';
 
 export class SynTextEditor extends ScopedElementsMixin(LitElement) {
@@ -38,14 +43,15 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @state()
   profilesStore!: ProfilesStore;
 
-  _content = new StoreSubscriber(this, () => this.synSlice?.content);
+  _debouncingStore!: DebouncingStore<TextEditorGrammar>;
+
+  _state = new StoreSubscriber(this, () => this._debouncingStore?.state);
   _lastDelta: TextEditorDelta | undefined;
   _allProfiles = new StoreSubscriber(
     this,
     () => this.profilesStore?.knownProfiles
   );
 
-  _deltasNotEmmitted: TextEditorDelta[] = [];
   _lastCursorPosition = 0;
   _cursorPosition = 0;
 
@@ -60,34 +66,26 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   firstUpdated() {
-    setInterval(() => this.emitDeltas(), this.debounceMs);
-  }
-
-  emitDeltas() {
-    if (
-      this._deltasNotEmmitted.length === 0 &&
-      this._cursorPosition === this._lastCursorPosition
-    )
-      return;
-
-    this.synSlice.requestChanges(this._deltasNotEmmitted);
-
-    this._deltasNotEmmitted = [];
-    this._lastCursorPosition = this._cursorPosition;
+    this._debouncingStore = new DebouncingStore(
+      textEditorGrammar,
+      this.synStore.myPubKey,
+      this.synSlice,
+      500
+    );
   }
 
   onTextInserted(from: number, text: string) {
-    this.synSlice.requestChanges([
+    this._debouncingStore.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
-        text: text,
         position: from,
+        text: text,
       },
     ]);
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this.synSlice.requestChanges([
+    this._debouncingStore.requestChanges([
       {
         type: TextEditorDeltaType.Delete,
         position: from,
@@ -97,8 +95,8 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    console.log('onselectionchanges', ranges);
-    this.synSlice.requestChanges([
+    console.log('hi')
+    this._debouncingStore.requestChanges([
       {
         type: TextEditorDeltaType.MoveCursor,
         position: ranges[0].to,
@@ -107,8 +105,8 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   remoteCursors() {
-    if (!this._content.value) return [];
-    return Object.entries(this._content.value.cursors)
+    if (!this._state.value) return [];
+    return Object.entries(this._state.value.cursors)
       .filter(([pubKey, _]) => pubKey !== this.synStore.myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
@@ -123,7 +121,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    if (this._content.value === undefined) return html``;
+    if (this._state.value === undefined) return html``;
 
     return html`
       <div
@@ -135,10 +133,10 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
             <codemirror-markdown
               style="flex: 1; "
               id="editor"
-              .text=${this._content.value.text}
-              .cursorPosition=${this._content.value.cursors[
-                this.synStore.myPubKey
-              ]}
+              .state=${{
+                text: this._state.value.text,
+                cursor: this._state.value.cursors[this.synStore.myPubKey],
+              }}
               .additionalCursors=${this.remoteCursors()}
               @text-inserted=${e =>
                 this.onTextInserted(e.detail.from, e.detail.text)}

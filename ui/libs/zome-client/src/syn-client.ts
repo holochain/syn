@@ -218,7 +218,10 @@ export class SynClient {
       ...commit,
       changes: {
         authors: commit.changes.authors,
-        deltas: commit.changes.deltas.map(d => decode(d)),
+        deltas: commit.changes.deltas.map(d => ({
+          author: d.author,
+          delta: decode(d.delta),
+        })),
       },
     };
   }

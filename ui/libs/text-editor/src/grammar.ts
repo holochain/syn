@@ -3,6 +3,7 @@ import type {
   Dictionary,
 } from '@holochain-open-dev/core-types';
 import type { SynGrammar } from '@syn/store';
+import { moveCursors } from './utils';
 
 export enum TextEditorDeltaType {
   Insert = 'insert',
@@ -49,7 +50,7 @@ export const textEditorGrammar: TextEditorGrammar = {
         return {
           text,
           cursors: {
-            ...content.cursors,
+            ...moveCursors(delta, content.cursors),
             [author]: delta.position + delta.text.length,
           },
         };
@@ -60,18 +61,25 @@ export const textEditorGrammar: TextEditorGrammar = {
         return {
           text: textRemaining,
           cursors: {
-            ...content.cursors,
+            ...moveCursors(delta, content.cursors),
             [author]: delta.position,
           },
         };
-      case TextEditorDeltaType.MoveCursor:
-        return {
-          text: content.text,
-          cursors: {
+        case TextEditorDeltaType.MoveCursor:
+          return {
+            text: content.text,
+            cursors: {
             ...content.cursors,
             [author]: delta.position,
           },
         };
     }
+  },
+
+  persistedState(state) {
+    return {
+      text: state.text,
+      cursors: {},
+    };
   },
 };

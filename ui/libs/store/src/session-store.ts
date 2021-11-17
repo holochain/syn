@@ -17,7 +17,7 @@ import type {
 } from './internal/events/types';
 
 export interface SynSlice<G extends SynGrammar<any, any>> {
-  content: Readable<GrammarState<G>>;
+  state: Readable<GrammarState<G>>;
 
   requestChanges(deltas: Array<GrammarDelta<G>>): void;
 
@@ -59,7 +59,7 @@ export function buildSessionStore<G extends SynGrammar<any, any>>(
     session,
     lastCommitHash,
     folks,
-    content,
+    state: content,
     requestChanges: (deltas: Array<GrammarDelta<G>>) =>
       requestChanges(workspace, sessionHash, deltas),
     leave: async () => leaveSession(workspace, sessionHash),

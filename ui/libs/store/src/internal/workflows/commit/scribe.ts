@@ -26,7 +26,10 @@ export async function commitChanges<G extends SynGrammar<any, any>>(
     return undefined;
   }
 
-  const hash = await workspace.client.putSnapshot(session.currentContent);
+  const stateToPersist = workspace.grammar.persistedState
+    ? workspace.grammar.persistedState(session.currentContent)
+    : session.currentContent;
+  const hash = await workspace.client.putSnapshot(stateToPersist);
 
   const initialSnapshotHash = await workspace.client.hashSnapshot(
     workspace.grammar.initialState
