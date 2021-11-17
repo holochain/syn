@@ -1,12 +1,13 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
 import { amIScribe } from '../../../state/selectors';
+import { emitEvent } from '../../events/emit';
 import type { SynWorkspace } from '../../workspace';
 
 // Pick and join a session
-export async function joinSession<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function joinSession<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
@@ -47,8 +48,8 @@ export async function joinSession<E extends SynEngine<any, any>>(
   });
 }
 
-export async function handleSessionClosed<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function handleSessionClosed<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(synState => {
@@ -68,18 +69,15 @@ export async function handleSessionClosed<E extends SynEngine<any, any>>(
 
     return synState;
   });
-  for (const listener of workspace.listeners) {
-    if (
-      listener.event === 'session-closed' &&
-      listener.sessionHash === sessionHash
-    ) {
-      listener.listener();
-    }
-  }
+
+  emitEvent(workspace, sessionHash, {
+    type: 'session-closed',
+    payload: undefined,
+  });
 }
 
-export async function folkLeaveSession<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function folkLeaveSession<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(state => {

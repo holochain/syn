@@ -10,58 +10,45 @@ import { requestChanges } from './internal/workflows/change';
 import { leaveSession } from './internal/workflows/sessions';
 import type { CloseSessionResult } from './internal/workflows/sessions/scribe';
 import pickBy from 'lodash-es/pickBy';
+import type { GrammarState, GrammarDelta, SynGrammar } from './grammar';
 import type {
-  EngineContent,
-  EngineDelta,
-  EngineEphemeralChanges,
-  EngineEphemeralState,
-  SynEngine,
-} from './engine';
+  SessionEvent,
+  SessionEventListener,
+} from './internal/events/types';
 
-export interface SynSlice<E extends SynEngine<any, any>> {
-  content: Readable<EngineContent<E>>;
-  requestChanges(changes: ChangesRequested<E>): void;
+export interface SynSlice<G extends SynGrammar<any, any>> {
+  content: Readable<GrammarState<G>>;
 
-  ephemeral: Readable<EngineEphemeralState<E>>;
+  requestChanges(deltas: Array<GrammarDelta<G>>): void;
+
+  on<S extends SessionEvent>(
+    event: S['type'],
+    listener: SessionEventListener<S>
+  ): void;
 }
 
-export interface ChangesRequested<E extends SynEngine<any, any>> {
-  deltas: Array<EngineDelta<E>>;
-  ephemeral?: EngineEphemeralChanges<E>;
-}
-
-export interface SessionStore<E extends SynEngine<any, any>>
-  extends SynSlice<E> {
+export interface SessionStore<G extends SynGrammar<any, any>>
+  extends SynSlice<G> {
   sessionHash: EntryHashB64;
   session: Session;
   folks: Readable<Dictionary<FolkInfo>>;
   lastCommitHash: Readable<EntryHashB64 | undefined>;
 
   leave(): Promise<CloseSessionResult | undefined>;
-  onClose(listener: () => void): void;
 }
 
-export function buildSessionStore<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function buildSessionStore<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
-): SessionStore<E> {
-  const content = derived(
-    workspace.store,
-    state => selectSessionState(state, sessionHash)?.currentContent
+): SessionStore<G> {
+  const sessionState = derived(workspace.store, state =>
+    selectSessionState(state, sessionHash)
   );
-  const lastCommitHash = derived(
-    workspace.store,
-    state => selectSessionState(state, sessionHash)?.lastCommitHash
-  );
-  const ephemeral = derived(
-    workspace.store,
-    state => selectSessionState(state, sessionHash)?.ephemeral
-  );
-  const folks = derived(workspace.store, state =>
-    pickBy(
-      selectSessionState(state, sessionHash)?.folks,
-      (_, key) => key !== workspace.myPubKey
-    )
+  const content = derived(sessionState, state => state?.currentContent);
+  const lastCommitHash = derived(sessionState, state => state?.lastCommitHash);
+
+  const folks = derived(sessionState, state =>
+    pickBy(state?.folks, (_, key) => key !== workspace.myPubKey)
   );
 
   const state = get(workspace.store);
@@ -73,20 +60,18 @@ export function buildSessionStore<E extends SynEngine<any, any>>(
     lastCommitHash,
     folks,
     content,
-    ephemeral,
-    requestChanges: ({
-      deltas,
-      ephemeral,
-    }: {
-      deltas: Array<EngineDelta<E>>;
-      ephemeral: EngineEphemeralChanges<E>;
-    }) => requestChanges(workspace, sessionHash, deltas, ephemeral),
+    requestChanges: (deltas: Array<GrammarDelta<G>>) =>
+      requestChanges(workspace, sessionHash, deltas),
     leave: async () => leaveSession(workspace, sessionHash),
-    onClose: (listener: () => void) =>
+    on<S extends SessionEvent>(
+      event: S['type'],
+      listener: SessionEventListener<S>
+    ) {
       workspace.listeners.push({
-        event: 'session-closed',
+        event: event,
         sessionHash,
         listener,
-      }),
+      });
+    },
   };
 }

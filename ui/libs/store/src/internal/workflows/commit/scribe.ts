@@ -1,7 +1,7 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitInput } from '@syn/zome-client';
 import { get } from 'svelte/store';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
 import {
   amIScribe,
@@ -11,8 +11,8 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
-export async function commitChanges<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function commitChanges<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ): Promise<EntryHashB64 | undefined> {
   const state = get(workspace.store);
@@ -29,7 +29,7 @@ export async function commitChanges<E extends SynEngine<any, any>>(
   const hash = await workspace.client.putSnapshot(session.currentContent);
 
   const initialSnapshotHash = await workspace.client.hashSnapshot(
-    workspace.engine.initialContent
+    workspace.grammar.initialState
   );
 
   const commit = buildCommitFromUncommitted(

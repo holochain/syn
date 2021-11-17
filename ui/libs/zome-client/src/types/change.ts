@@ -11,9 +11,14 @@ export interface FolkChanges {
   commitChanges: Array<number>;
 }
 
+export interface AuthoredDelta {
+  author: AgentPubKeyB64;
+  delta: Delta;
+}
+
 export interface ChangeBundle {
   // Indexed by commit index
-  deltas: Array<Delta>;
+  deltas: Array<AuthoredDelta>;
   // AgentPubKeyB64 -> folkIndex -> sessionIndex
   authors: Dictionary<FolkChanges>;
 }
@@ -24,17 +29,13 @@ export interface SendChangeRequestInput {
   scribe: AgentPubKeyB64;
   lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: DeltaChanges | undefined;
-  ephemeralChanges: EphemeralChanges | undefined;
+  deltaChanges: DeltaChanges;
 }
 
 export interface DeltaChanges {
   atFolkIndex: number;
   deltas: Array<Delta>;
 }
-
-export type EphemeralChanges = any;
-export type EphemeralState = any;
 
 export interface LastDeltaSeen {
   commitHash: EntryHashB64 | undefined;
@@ -47,8 +48,7 @@ export interface ChangeRequest {
 
   lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: DeltaChanges | undefined;
-  ephemeralChanges: EphemeralChanges | undefined;
+  deltaChanges: DeltaChanges;
 }
 
 export interface SendChangeInput {
@@ -56,13 +56,11 @@ export interface SendChangeInput {
   sessionHash: EntryHashB64;
   lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: ChangeBundle | undefined;
-  ephemeralChanges: EphemeralChanges | undefined;
+  deltaChanges: ChangeBundle;
 }
 
 export interface ChangeNotice {
   lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: ChangeBundle | undefined;
-  ephemeralChanges: EphemeralChanges | undefined;
+  deltaChanges: ChangeBundle;
 }

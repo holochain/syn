@@ -1,13 +1,13 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { get } from 'svelte/store';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 import { amIScribe } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import { folkLeaveSession } from './folk';
 import { closeSession, CloseSessionResult } from './scribe';
 
-export async function leaveSession<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function leaveSession<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ): Promise<CloseSessionResult | undefined> {
   let state = get(workspace.store);

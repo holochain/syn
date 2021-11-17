@@ -24,7 +24,7 @@
     "@lit-labs/context": "github:holochain-open-dev/context#build",
     "@open-wc/scoped-elements": "^2.0.1",
     "@scoped-elements/material-web": "0.0.15",
-    "@scoped-elements/codemirror": "0.0.1",
+    "@scoped-elements/codemirror": "file:~/projects/scoped-elements/codemirror",
     "@syn/elements": "0.0.1",
     "@syn/store": "0.0.1",
     "lit": "^2.0.2",

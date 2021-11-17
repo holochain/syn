@@ -16,16 +16,15 @@ import { contextProvided } from '@lit-labs/context';
 import type { SessionStore, SynSlice, SynStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
-import { TextEditorDeltaType, TextEditorEngine } from './engine';
-import type { TextEditorDelta } from './engine';
-import { moveCursors } from './utils';
+import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
+import type { TextEditorDelta } from './grammar';
 
 export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @property()
-  synSlice!: SynSlice<TextEditorEngine>;
+  synSlice!: SynSlice<TextEditorGrammar>;
 
   @property({ attribute: 'debounce-ms' })
-  debounceMs: number = 200;
+  debounceMs: number = 500;
 
   @contextProvided({ context: synContext, multiple: true })
   @state()
@@ -40,7 +39,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   profilesStore!: ProfilesStore;
 
   _content = new StoreSubscriber(this, () => this.synSlice?.content);
-  _ephemeral = new StoreSubscriber(this, () => this.synSlice?.ephemeral);
+  _lastDelta: TextEditorDelta | undefined;
   _allProfiles = new StoreSubscriber(
     this,
     () => this.profilesStore?.knownProfiles
@@ -50,19 +49,18 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   _lastCursorPosition = 0;
   _cursorPosition = 0;
 
-  firstUpdated() {
-    setInterval(() => this.emitDeltas(), this.debounceMs);
-  }
-
   updated(cv: PropertyValues) {
     super.updated(cv);
-
     if (cv.has('sessionStore') && this.sessionStore) {
       this.sessionStore.folks.subscribe(
         folks =>
           folks && this.profilesStore.fetchAgentsProfiles(Object.keys(folks))
       );
     }
+  }
+
+  firstUpdated() {
+    setInterval(() => this.emitDeltas(), this.debounceMs);
   }
 
   emitDeltas() {
@@ -72,41 +70,45 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
     )
       return;
 
-    this.synSlice.requestChanges({
-      deltas: this._deltasNotEmmitted,
-      ephemeral: {
-        ...moveCursors(this._deltasNotEmmitted, this._ephemeral.value),
-        [this.synStore.myPubKey]: this._cursorPosition,
-      },
-    });
+    this.synSlice.requestChanges(this._deltasNotEmmitted);
 
     this._deltasNotEmmitted = [];
     this._lastCursorPosition = this._cursorPosition;
   }
 
   onTextInserted(from: number, text: string) {
-    this._deltasNotEmmitted.push({
-      type: TextEditorDeltaType.Insert,
-      text: text,
-      position: from,
-    });
+    this.synSlice.requestChanges([
+      {
+        type: TextEditorDeltaType.Insert,
+        text: text,
+        position: from,
+      },
+    ]);
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this._deltasNotEmmitted.push({
-      type: TextEditorDeltaType.Delete,
-      position: from,
-      characterCount,
-    });
+    this.synSlice.requestChanges([
+      {
+        type: TextEditorDeltaType.Delete,
+        position: from,
+        characterCount,
+      },
+    ]);
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    this._cursorPosition = ranges[0].to;
+    console.log('onselectionchanges', ranges);
+    this.synSlice.requestChanges([
+      {
+        type: TextEditorDeltaType.MoveCursor,
+        position: ranges[0].to,
+      },
+    ]);
   }
 
   remoteCursors() {
-    if (!this._ephemeral.value) return [];
-    return Object.entries(this._ephemeral.value as any)
+    if (!this._content.value) return [];
+    return Object.entries(this._content.value.cursors)
       .filter(([pubKey, _]) => pubKey !== this.synStore.myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
@@ -133,7 +135,10 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
             <codemirror-markdown
               style="flex: 1; "
               id="editor"
-              .text=${this._content.value}
+              .text=${this._content.value.text}
+              .cursorPosition=${this._content.value.cursors[
+                this.synStore.myPubKey
+              ]}
               .additionalCursors=${this.remoteCursors()}
               @text-inserted=${e =>
                 this.onTextInserted(e.detail.from, e.detail.text)}

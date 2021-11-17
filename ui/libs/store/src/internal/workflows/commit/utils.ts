@@ -10,10 +10,10 @@ import {
   selectLatestSnapshotHash,
   selectSessionState,
 } from '../../../state/selectors';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
-export function buildCommitFromUncommitted<E extends SynEngine<any, any>>(
-  state: SynState<E>,
+export function buildCommitFromUncommitted<G extends SynGrammar<any, any>>(
+  state: SynState<G>,
   sessionHash: EntryHashB64,
   newContentHash: EntryHashB64,
   initialSnapshotHash: EntryHashB64
@@ -35,8 +35,8 @@ export function buildCommitFromUncommitted<E extends SynEngine<any, any>>(
   };
 }
 
-export function putNewCommit<E extends SynEngine<any, any>>(
-  state: SynState<E>,
+export function putNewCommit<G extends SynGrammar<any, any>>(
+  state: SynState<G>,
   sessionHash: EntryHashB64,
   newCommitHash: HeaderHashB64,
   commit: Commit

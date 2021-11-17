@@ -1,6 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitNotice } from '@syn/zome-client';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 import {
   amIScribe,
   selectLastDeltaSeen,
@@ -11,14 +11,14 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
-export async function handleCommitNotice<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function handleCommitNotice<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   commitNotice: CommitNotice
 ) {
   // TODO: move this away from here
   const initialSnapshotHash = await workspace.client.hashSnapshot(
-    workspace.engine.initialContent
+    workspace.grammar.initialState
   );
   workspace.store.update(state => {
     if (amIScribe(state, sessionHash)) {

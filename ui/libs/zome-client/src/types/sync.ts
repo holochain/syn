@@ -1,4 +1,4 @@
-import type { ChangeBundle, EphemeralState, LastDeltaSeen } from './change';
+import type { ChangeBundle, LastDeltaSeen } from './change';
 import type {
   EntryHashB64,
   AgentPubKeyB64,
@@ -31,8 +31,6 @@ export interface StateForSync {
   folkMissedLastCommit: MissedCommit | undefined;
 
   uncommittedChanges: ChangeBundle;
-
-  ephemeralState: EphemeralState;
 
   //currentContentHash: EntryHashB64;
 }

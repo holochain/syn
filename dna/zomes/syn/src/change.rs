@@ -12,6 +12,12 @@ use crate::{SignalPayload, SynMessage};
 pub struct Delta(SerializedBytes);
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct AuthoredDelta {
+    pub delta: Delta,
+    pub author: AgentPubKeyB64,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FolkChanges {
     pub at_folk_index: usize,
@@ -27,7 +33,7 @@ pub struct FolkChanges {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeBundle {
-    pub deltas: Vec<Delta>,
+    pub deltas: Vec<AuthoredDelta>,
     // AgentPubKeyB64 -> folkIndex -> deltaIndexInCommit
     pub authors: BTreeMap<AgentPubKeyB64, FolkChanges>,
 }
@@ -41,8 +47,7 @@ pub struct SendChangeRequestInput {
 
     pub last_delta_seen: LastDeltaSeen,
 
-    pub delta_changes: Option<DeltaChanges>,
-    pub ephemeral_changes: Option<EphemeralChanges>,
+    pub delta_changes: DeltaChanges,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -51,9 +56,6 @@ pub struct DeltaChanges {
     pub at_folk_index: usize,
     pub deltas: Vec<Delta>,
 }
-
-pub type EphemeralChanges = SerializedBytes;
-pub type EphemeralState = SerializedBytes;
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -71,8 +73,7 @@ pub struct ChangeRequest {
 
     pub last_delta_seen: LastDeltaSeen,
 
-    pub delta_changes: Option<DeltaChanges>,
-    pub ephemeral_changes: Option<EphemeralChanges>,
+    pub delta_changes: DeltaChanges,
 }
 
 #[hdk_extern]
@@ -85,7 +86,6 @@ fn send_change_request(input: SendChangeRequestInput) -> ExternResult<()> {
         scribe: input.scribe,
         last_delta_seen: input.last_delta_seen,
         delta_changes: input.delta_changes,
-        ephemeral_changes: input.ephemeral_changes,
     };
 
     // send response signal to the participant
@@ -108,9 +108,7 @@ pub struct SendChangeInput {
 
     pub last_delta_seen: LastDeltaSeen,
 
-    pub delta_changes: Option<ChangeBundle>,
-
-    pub ephemeral_changes: Option<EphemeralChanges>,
+    pub delta_changes: ChangeBundle,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
@@ -118,9 +116,7 @@ pub struct SendChangeInput {
 pub struct ChangeNotice {
     pub last_delta_seen: LastDeltaSeen,
 
-    pub delta_changes: Option<ChangeBundle>,
-
-    pub ephemeral_changes: Option<EphemeralChanges>,
+    pub delta_changes: ChangeBundle,
 }
 
 #[hdk_extern]
@@ -133,7 +129,6 @@ fn send_change(input: SendChangeInput) -> ExternResult<()> {
             SynMessage::ChangeNotice(ChangeNotice {
                 last_delta_seen: input.last_delta_seen,
                 delta_changes: input.delta_changes,
-                ephemeral_changes: input.ephemeral_changes,
             }),
         ))?,
         participants,

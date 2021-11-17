@@ -8,7 +8,7 @@ import {
 import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
-import { SynEngine, SynStore } from '@syn/store';
+import { SynGrammar, SynStore } from '@syn/store';
 
 import {
   applyDelta,
@@ -39,21 +39,17 @@ export const oFn = orchestrator => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const synEngine: SynEngine<Content, TextDelta, Dictionary<number>> = {
-      initialContent,
+    const synGrammar: SynGrammar<Content, TextDelta> = {
+      initialState: initialContent,
       applyDelta,
-      ephemeral: {
-        initialState: {} as any,
-        applyEphemeral: (s, c) => ({ ...s, ...c }),
-      },
     };
 
-    const aliceSyn = new SynStore(aliceClient, synEngine, {
+    const aliceSyn = new SynStore(aliceClient, synGrammar, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
     });
-    const bobSyn = new SynStore(bobClient, synEngine, {
+    const bobSyn = new SynStore(bobClient, synGrammar, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
@@ -69,47 +65,35 @@ export const oFn = orchestrator => {
 
     const bobSessionStore = await bobSyn.joinSession(sessionHash);
 
-    aliceSessionStore.requestChanges({
-      deltas: [{ type: 'Title', value: 'A new title' }],
-    });
+    aliceSessionStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
     await delay(2000);
 
     let currentContent = get(bobSessionStore.content);
     t.equal(currentContent.title, 'A new title');
 
-    aliceSessionStore.requestChanges({
-      deltas: [{ type: 'Title', value: 'Another thing' }],
-      ephemeral: {
-        hi: 2,
-      },
-    });
+    aliceSessionStore.requestChanges([
+      { type: 'Title', value: 'Another thing' },
+    ]);
 
     await delay(1000);
-    let currentEphemeral = get(aliceSessionStore.ephemeral);
-    t.deepEqual(currentEphemeral, { hi: 2 });
 
     currentContent = get(bobSessionStore.content);
     t.equal(currentContent.title, 'Another thing');
 
-    bobSessionStore.requestChanges({
-      deltas: [{ type: 'Title', value: 'Bob is the boss' }],
-    });
+    bobSessionStore.requestChanges([
+      { type: 'Title', value: 'Bob is the boss' },
+    ]);
 
     await delay(1000);
 
     currentContent = get(aliceSessionStore.content);
     t.equal(currentContent.title, 'Bob is the boss');
 
-    bobSessionStore.requestChanges({
-      deltas: [
-        { type: 'Add', loc: 0, text: 'Hi ' },
-        { type: 'Add', loc: 3, text: 'there' },
-      ],
-      ephemeral: {
-        hi: 3,
-      },
-    });
+    bobSessionStore.requestChanges([
+      { type: 'Add', loc: 0, text: 'Hi ' },
+      { type: 'Add', loc: 3, text: 'there' },
+    ]);
 
     await delay(1000);
 
@@ -118,9 +102,6 @@ export const oFn = orchestrator => {
 
     currentContent = get(bobSessionStore.content);
     t.equal(currentContent.body, 'Hi there');
-
-    currentEphemeral = get(aliceSessionStore.ephemeral);
-    t.deepEqual(currentEphemeral, { hi: 3 });
 
     await bobSyn.close();
 

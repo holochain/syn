@@ -157,7 +157,6 @@ export class SynClient {
         syncResponseInput.state.uncommittedChanges
       );
     }
-    input.state.ephemeralState = encode(input.state.ephemeralState);
 
     return this.callZome('send_sync_response', input);
   }
@@ -173,9 +172,6 @@ export class SynClient {
         deltas: input.deltaChanges.deltas.map(d => encode(d)),
       };
     }
-    if (input.ephemeralChanges) {
-      input.ephemeralChanges = encode(input.ephemeralChanges);
-    }
 
     return this.callZome('send_change_request', input);
   }
@@ -186,9 +182,6 @@ export class SynClient {
     };
     if (input.deltaChanges) {
       input.deltaChanges = this.encodeChangeBundle(input.deltaChanges);
-    }
-    if (input.ephemeralChanges) {
-      input.ephemeralChanges = encode(input.ephemeralChanges);
     }
     return this.callZome('send_change', input);
   }
@@ -213,7 +206,10 @@ export class SynClient {
   private encodeChangeBundle(changes: ChangeBundle) {
     return {
       ...changes,
-      deltas: changes.deltas.map(d => encode(d)),
+      deltas: changes.deltas.map(d => ({
+        author: d.author,
+        delta: encode(d.delta),
+      })),
     };
   }
 

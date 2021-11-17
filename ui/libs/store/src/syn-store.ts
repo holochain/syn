@@ -15,30 +15,30 @@ import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { closeSession, newSession } from './internal/workflows/sessions/scribe';
 import { leaveSession } from './internal/workflows/sessions';
-import type { SynEngine } from './engine';
+import type { SynGrammar } from './grammar';
 
-export class SynStore<E extends SynEngine<any, any> > {
+export class SynStore<G extends SynGrammar<any, any>> {
   /** Private fields */
-  #workspace: SynWorkspace<E>;
+  #workspace: SynWorkspace<G>;
   #cancelBackgroundTasks: () => void;
 
   /** Public accessors */
-  activeSession: Readable<SessionStore<E> | undefined>;
+  activeSession: Readable<SessionStore<G> | undefined>;
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
   allCommits: Readable<Dictionary<Commit>>;
-  snapshots: Readable<Dictionary<E['initialContent']>>;
+  snapshots: Readable<Dictionary<G['initialState']>>;
 
   constructor(
     cellClient: CellClient,
-    engine: E,
+    grammar: G,
     config?: RecursivePartial<SynConfig>
   ) {
     const fullConfig = merge(config, defaultConfig());
 
     const myPubKey = serializeHash(cellClient.cellId[1]);
 
-    const state: SynState<E> = initialState(myPubKey);
+    const state: SynState<G> = initialState(myPubKey);
 
     const store = writable(state);
 
@@ -48,7 +48,7 @@ export class SynStore<E extends SynEngine<any, any> > {
 
     this.#workspace = {
       store,
-      engine,
+      grammar,
       client,
       config: fullConfig,
       listeners: [],

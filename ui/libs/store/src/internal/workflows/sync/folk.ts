@@ -6,10 +6,10 @@ import { selectSessionState } from '../../../state/selectors';
 import { applyChangeBundle } from '../../utils';
 import type { SynWorkspace } from '../../workspace';
 import cloneDeep from 'lodash-es/cloneDeep';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
-export function handleSyncResponse<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleSyncResponse<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   stateForSync: StateForSync
 ) {
@@ -22,11 +22,10 @@ export function handleSyncResponse<E extends SynEngine<any, any>>(
       state.joinedSessions[sessionHash] = {
         lastCommitHash: currentCommitHash,
         sessionHash: sessionHash,
-        currentContent: cloneDeep(workspace.engine.initialContent),
+        currentContent: cloneDeep(workspace.grammar.initialState),
         myFolkIndex: 0,
         prerequestContent: undefined,
         requestedChanges: [],
-        ephemeral: workspace.engine.ephemeral?.initialState,
         uncommittedChanges: {
           authors: {},
           deltas: [],
@@ -70,11 +69,10 @@ export function handleSyncResponse<E extends SynEngine<any, any>>(
     // Apply all deltas
     sessionState.currentContent = applyChangeBundle(
       sessionState.currentContent,
-      workspace.engine.applyDelta,
+      workspace.grammar.applyDelta,
       stateForSync.uncommittedChanges
     );
 
-    sessionState.ephemeral = stateForSync.ephemeralState;
     return state;
   });
   if (resolveJoining) (resolveJoining as any)();

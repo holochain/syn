@@ -151,7 +151,7 @@ export default orchestrator => {
       sessionHash: sessionHash,
       commit: {
         changes: {
-          deltas,
+          deltas: deltas.map(d => ({ author: me_pubkey, delta: d })),
           authors: {
             [me_pubkey]: {
               atFolkIndex: 0,
@@ -195,7 +195,7 @@ export default orchestrator => {
       sessionHash: sessionHash,
       commit: {
         changes: {
-          deltas,
+          deltas: deltas.map(d => ({ author: me_pubkey, delta: d })),
           authors: {
             [me_pubkey]: {
               atFolkIndex: 2,
@@ -260,7 +260,10 @@ export default orchestrator => {
         commitInitialSnapshot: encode(new_content),
       },
       uncommittedChanges: {
-        deltas: pendingDeltas.map(d => encode(d)),
+        deltas: pendingDeltas.map(d => ({
+          author: me_pubkey,
+          delta: encode(d),
+        })),
         authors: {
           [me_pubkey]: {
             atFolkIndex: 7,
@@ -268,7 +271,6 @@ export default orchestrator => {
           },
         },
       },
-      ephemeralState: encode({}),
     };
 
     await me.call('syn', 'send_sync_response', {
@@ -305,7 +307,6 @@ export default orchestrator => {
         deltaIndexInCommit: 2,
       },
 
-      ephemeralChanges: encode(null),
       deltaChanges: {
         atFolkIndex: 0,
         deltas: [delta],
@@ -323,13 +324,17 @@ export default orchestrator => {
     );
 
     let my_deltas = [
-      { type: 'Add', value: [0, 'Whoops!\n'] },
-      { type: 'Title', value: 'Alice in Wonderland' },
+      {
+        author: me_pubkey,
+        delta: encode({ type: 'Add', value: [0, 'Whoops!\n'] }),
+      },
+      {
+        author: me_pubkey,
+        delta: encode({ type: 'Title', value: 'Alice in Wonderland' }),
+      },
     ];
-    deltas = my_deltas.map(d => encode(d));
-
     const changeBundle = {
-      deltas,
+      deltas: my_deltas,
       authors: {
         [me_pubkey]: {
           atFolkIndex: 9,
@@ -348,9 +353,6 @@ export default orchestrator => {
         deltaIndexInCommit: 2,
       },
       deltaChanges: changeBundle,
-      ephemeralChanges: encode({
-        hi: 30,
-      }),
     });
     await delay(500); // make time for signal to arrive
     let a_sig = alice_signals[1];

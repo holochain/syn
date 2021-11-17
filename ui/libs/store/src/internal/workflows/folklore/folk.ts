@@ -1,6 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { FolkLore } from '@syn/zome-client';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
 import {
   amIScribe,
@@ -9,8 +9,8 @@ import {
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
-export function handleFolkLore<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleFolkLore<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   folklore: FolkLore
 ) {

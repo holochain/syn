@@ -2,7 +2,7 @@ import type {
   ChangeRequest,
   ChangeBundle,
   FolkChanges,
-  EphemeralChanges,
+  AuthoredDelta,
 } from '@syn/zome-client';
 import type {
   EntryHashB64,
@@ -19,28 +19,22 @@ import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
 import merge from 'lodash-es/merge';
-import type { EngineDelta, SynEngine } from '../../../engine';
+import type { GrammarDelta, SynGrammar } from '../../../grammar';
 
-export function scribeRequestChange<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function scribeRequestChange<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
-  deltas: Array<EngineDelta<E>>,
-  ephemeralChanges: EphemeralChanges | undefined
+  deltas: Array<GrammarDelta<G>>
 ) {
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
     const changeBundle = putDeltas(
-      workspace.engine,
+      workspace.grammar,
       sessionState,
       state.myPubKey,
       sessionState.myFolkIndex,
       deltas
-    );
-
-    sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
-      sessionState.ephemeral,
-      ephemeralChanges
     );
 
     workspace.client.sendChange({
@@ -48,7 +42,6 @@ export function scribeRequestChange<E extends SynEngine<any, any>>(
       sessionHash,
       lastDeltaSeen: selectLastDeltaSeen(sessionState),
       deltaChanges: changeBundle,
-      ephemeralChanges: ephemeralChanges,
     });
 
     triggerCommitIfNecessary(
@@ -62,8 +55,8 @@ export function scribeRequestChange<E extends SynEngine<any, any>>(
   });
 }
 
-export function handleChangeRequest<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleChangeRequest<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   changeRequest: ChangeRequest
 ) {
@@ -94,28 +87,16 @@ export function handleChangeRequest<E extends SynEngine<any, any>>(
       return state;
     }
 
-    let changeBundle: ChangeBundle | undefined;
-
-    if (changeRequest.deltaChanges) {
-      changeBundle = putDeltas(
-        workspace.engine,
-        sessionState,
-        changeRequest.folk,
-        changeRequest.deltaChanges.atFolkIndex,
-        changeRequest.deltaChanges.deltas
-      );
-    }
-
-    if (changeRequest.ephemeralChanges) {
-      sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
-        sessionState.ephemeral,
-        changeRequest.ephemeralChanges
-      );
-    }
+    let changeBundle = putDeltas(
+      workspace.grammar,
+      sessionState,
+      changeRequest.folk,
+      changeRequest.deltaChanges.atFolkIndex,
+      changeRequest.deltaChanges.deltas
+    );
 
     workspace.client.sendChange({
       deltaChanges: changeBundle,
-      ephemeralChanges: changeRequest.ephemeralChanges,
       lastDeltaSeen,
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
@@ -131,8 +112,8 @@ export function handleChangeRequest<E extends SynEngine<any, any>>(
   });
 }
 
-function triggerCommitIfNecessary<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+function triggerCommitIfNecessary<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   uncommittedChangesCount
 ) {
@@ -146,26 +127,34 @@ function triggerCommitIfNecessary<E extends SynEngine<any, any>>(
   }
 }
 
-function putDeltas<E extends SynEngine<any, any>>(
-  engine: E,
-  session: SessionState<E>,
+function putDeltas<G extends SynGrammar<any, any>>(
+  grammar: G,
+  sessionState: SessionState<G>,
   author: AgentPubKeyB64,
   atFolkIndex: number,
-  deltas: Array<EngineDelta<E>>
+  deltas: Array<GrammarDelta<G>>
 ): ChangeBundle {
-  const currentCommitIndex = session.uncommittedChanges.deltas.length;
+  const currentCommitIndex = sessionState.uncommittedChanges.deltas.length;
+  const authoredDeltas: Array<AuthoredDelta> = deltas.map(d => ({
+    author,
+    delta: d,
+  }));
 
   // Immediately update the contents of the session
-  session.uncommittedChanges.deltas = [
-    ...session.uncommittedChanges.deltas,
-    ...deltas,
+  sessionState.uncommittedChanges.deltas = [
+    ...sessionState.uncommittedChanges.deltas,
+    ...authoredDeltas,
   ];
 
-  let currentContent = session.currentContent;
-  for (const delta of deltas) {
-    currentContent = engine.applyDelta(currentContent, delta);
+  let currentContent = sessionState.currentContent;
+  for (const delta of authoredDeltas) {
+    currentContent = grammar.applyDelta(
+      currentContent,
+      delta.delta,
+      delta.author
+    );
   }
-  session.currentContent = currentContent;
+  sessionState.currentContent = currentContent;
 
   // Build the change bundle
   const authorChanges: number[] = [];
@@ -184,13 +173,13 @@ function putDeltas<E extends SynEngine<any, any>>(
     [author]: folkChanges,
   };
 
-  session.uncommittedChanges.authors = merge(
-    session.uncommittedChanges.authors,
+  sessionState.uncommittedChanges.authors = merge(
+    sessionState.uncommittedChanges.authors,
     authors
   );
 
   return {
-    deltas,
+    deltas: authoredDeltas,
     authors,
   };
 }

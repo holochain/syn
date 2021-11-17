@@ -11,7 +11,7 @@ import type {
   LastDeltaSeen,
   FolkInfo,
 } from '@syn/zome-client';
-import type { EngineContent, EngineEphemeralState, SynEngine } from '../engine';
+import type { GrammarState, SynGrammar } from '../grammar';
 
 /**
  * deltas: []
@@ -24,12 +24,12 @@ import type { EngineContent, EngineEphemeralState, SynEngine } from '../engine';
  * atSessionIndex: 4
  */
 
-export interface SynState<E extends SynEngine<any, any>> {
+export interface SynState<G extends SynGrammar<any, any>> {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
   sessions: Dictionary<Session>; // Segmented by EntryHashB64
   joiningSessions: Dictionary<() => void>;
-  joinedSessions: Dictionary<SessionState<E>>; // Segmented by EntryHashB64
+  joinedSessions: Dictionary<SessionState<G>>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64
 }
@@ -41,23 +41,21 @@ export interface RequestedChange {
   delta: Delta;
 }
 
-export interface SessionState<E extends SynEngine<any, any>> {
+export interface SessionState<G extends SynGrammar<any, any>> {
   sessionHash: EntryHashB64;
 
   lastCommitHash: EntryHashB64 | undefined;
 
   myFolkIndex: number;
 
-  currentContent: EngineContent<E>;
-  ephemeral: EngineEphemeralState<E>;
+  currentContent: GrammarState<G>;
   //currentContentHash: EntryHashB64;
 
   // Content before the request to the scribe was made
   prerequestContent:
     | {
         lastDeltaSeen: LastDeltaSeen;
-        content: EngineContent<E>;
-        ephemeral: EngineEphemeralState<E>;
+        content: GrammarState<G>;
       }
     | undefined;
 
@@ -70,10 +68,10 @@ export interface SessionState<E extends SynEngine<any, any>> {
   folks: Dictionary<FolkInfo>;
 }
 
-export function initialState<E extends SynEngine<any, any>>(
+export function initialState<G extends SynGrammar<any, any>>(
   myPubKey: AgentPubKeyB64
-): SynState<E> {
-  const internalStore: SynState<E> = {
+): SynState<G> {
+  const internalStore: SynState<G> = {
     myPubKey,
     activeSessionHash: undefined,
     sessions: {},

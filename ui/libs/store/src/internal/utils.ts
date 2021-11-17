@@ -2,9 +2,9 @@ import type {
   Dictionary,
   EntryHashB64,
   HeaderHashB64,
-} from "@holochain-open-dev/core-types";
-import type { ChangeBundle, Commit } from "@syn/zome-client";
-import type { EngineApplyDeltaFn, EngineContent, SynEngine } from "../engine";
+} from '@holochain-open-dev/core-types';
+import type { ChangeBundle, Commit } from '@syn/zome-client';
+import type { GrammarApplyDeltaFn, GrammarState, SynGrammar } from '../grammar';
 
 export function orderCommits(
   initialContentHash: EntryHashB64,
@@ -21,7 +21,7 @@ export function orderCommits(
 
   while (Object.keys(byPreviousContentHash).length > 0) {
     if (!byPreviousContentHash[contentHash])
-      throw new Error("We have a corrupted chain of commits");
+      throw new Error('We have a corrupted chain of commits');
 
     orderedCommits.push(byPreviousContentHash[contentHash] as string);
 
@@ -32,15 +32,14 @@ export function orderCommits(
   return orderedCommits;
 }
 
-
-export function applyChangeBundle<E extends SynEngine<any, any>>(
-  initialContent: EngineContent<E>,
-  applyDeltaFn: EngineApplyDeltaFn<E>,
+export function applyChangeBundle<G extends SynGrammar<any, any>>(
+  initialContent: GrammarState<G>,
+  applyDeltaFn: GrammarApplyDeltaFn<G>,
   changeBundle: ChangeBundle
-): EngineContent<E> {
+): GrammarState<G> {
   let content = initialContent;
   for (const delta of changeBundle.deltas) {
-    content = applyDeltaFn(content, delta);
+    content = applyDeltaFn(content, delta.delta, delta.author);
   }
   return content;
 }

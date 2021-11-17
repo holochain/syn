@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import type { SynEngine } from "../engine";
+import type { SynGrammar } from "../grammar";
 import { amIScribe, selectLastCommitTime } from "../state/selectors";
 import { checkRequestedChanges } from "./workflows/change/folk";
 import { commitChanges } from "./workflows/commit/scribe";
@@ -7,8 +7,8 @@ import { commitChanges } from "./workflows/commit/scribe";
 import { heartbeat } from "./workflows/folklore";
 import type { SynWorkspace } from "./workspace";
 
-export function initBackgroundTasks<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>
+export function initBackgroundTasks<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>
 ) {
   const intervals: any[] = [];
 

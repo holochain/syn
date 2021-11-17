@@ -2,7 +2,7 @@ import type {
   EntryHashB64,
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
 import {
   selectSessionState,
@@ -11,8 +11,8 @@ import {
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 
-export function notifyFolkLore<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function notifyFolkLore<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
   workspace.store.update(state => {
@@ -27,8 +27,8 @@ export function notifyFolkLore<E extends SynEngine<any, any>>(
   });
 }
 
-export function handleHeartbeat<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleHeartbeat<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   fromFolk: AgentPubKeyB64
 ) {

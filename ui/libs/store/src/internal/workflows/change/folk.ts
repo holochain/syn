@@ -11,19 +11,12 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import type { RequestedChange, SessionState } from '../../../state/syn-state';
 import { joinSession } from '../sessions/folk';
-import type {
-  EngineContent,
-  EngineDelta,
-  EngineEphemeralChanges,
-  EngineEphemeralState,
-  SynEngine,
-} from '../../../engine';
+import type { GrammarState, GrammarDelta, SynGrammar } from '../../../grammar';
 
-export function folkRequestChange<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function folkRequestChange<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
-  deltas: Array<EngineDelta<E>>,
-  ephemeralChanges: EngineEphemeralChanges<E> | undefined
+  deltas: Array<GrammarDelta<G>>
 ) {
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
@@ -35,14 +28,14 @@ export function folkRequestChange<E extends SynEngine<any, any>>(
       sessionState.prerequestContent = {
         lastDeltaSeen,
         content: cloneDeep(sessionState.currentContent),
-        ephemeral: cloneDeep(sessionState.ephemeral),
       };
     }
 
     for (const delta of deltas) {
-      sessionState.currentContent = workspace.engine.applyDelta(
+      sessionState.currentContent = workspace.grammar.applyDelta(
         sessionState.currentContent,
-        delta
+        delta,
+        state.myPubKey
       );
     }
 
@@ -63,14 +56,9 @@ export function folkRequestChange<E extends SynEngine<any, any>>(
       ...sessionState.requestedChanges,
       ...newRequestedChanges,
     ];
-    sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
-      sessionState.ephemeral,
-      ephemeralChanges
-    );
 
     workspace.client.sendChangeRequest({
       lastDeltaSeen,
-      ephemeralChanges,
       deltaChanges: {
         atFolkIndex: sessionState.myFolkIndex,
         deltas,
@@ -85,8 +73,8 @@ export function folkRequestChange<E extends SynEngine<any, any>>(
   });
 }
 
-export async function checkRequestedChanges<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export async function checkRequestedChanges<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
   let state = get(workspace.store);
@@ -118,8 +106,8 @@ export async function checkRequestedChanges<E extends SynEngine<any, any>>(
 }
 
 // Folk
-export function handleChangeNotice<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleChangeNotice<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   changeNotice: ChangeNotice
 ) {
@@ -133,13 +121,6 @@ export function handleChangeNotice<E extends SynEngine<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    if (changeNotice.ephemeralChanges) {
-      sessionState.ephemeral = workspace.engine.ephemeral?.applyEphemeral(
-        sessionState.ephemeral,
-        changeNotice.ephemeralChanges
-      );
-    }
-
     if (!changeNotice.deltaChanges) return state;
 
     const changes = changeNotice.deltaChanges;
@@ -152,7 +133,6 @@ export function handleChangeNotice<E extends SynEngine<any, any>>(
     const myChanges = changes.authors[state.myPubKey];
 
     let contentToApplyTo = sessionState.currentContent;
-    let ephemeralToApplyTo = sessionState.ephemeral;
 
     const isLastDeltaSeenEqualToPrerequest =
       sessionState.prerequestContent?.lastDeltaSeen.commitHash ==
@@ -166,17 +146,16 @@ export function handleChangeNotice<E extends SynEngine<any, any>>(
       isLastDeltaSeenEqualToPrerequest
     ) {
       contentToApplyTo = sessionState.prerequestContent?.content;
-      ephemeralToApplyTo = sessionState.prerequestContent.ephemeral;
     }
 
     for (const delta of changes.deltas) {
-       contentToApplyTo = workspace.engine.applyDelta(
+      contentToApplyTo = workspace.grammar.applyDelta(
         contentToApplyTo,
-        delta
+        delta.delta,
+        delta.author
       );
     }
     sessionState.currentContent = contentToApplyTo;
-    sessionState.ephemeral = ephemeralToApplyTo;
 
     sessionState.uncommittedChanges.deltas = [
       ...sessionState.uncommittedChanges.deltas,
@@ -204,23 +183,17 @@ export function handleChangeNotice<E extends SynEngine<any, any>>(
     }
 
     if (myChanges) {
-      clearRequested(
-        sessionState,
-        myChanges,
-        sessionState.currentContent,
-        sessionState.ephemeral
-      );
+      clearRequested(sessionState, myChanges, sessionState.currentContent);
     }
 
     return state;
   });
 }
 
-function clearRequested<E extends SynEngine<any, any>>(
-  sessionState: SessionState<E>,
+function clearRequested<G extends SynGrammar<any, any>>(
+  sessionState: SessionState<G>,
   myChanges: FolkChanges,
-  newContent: EngineContent<E>,
-  newEphemeral: EngineEphemeralState<E>
+  newContent: GrammarState<G>
 ) {
   const leftRequestedChanges: RequestedChange[] = [];
 
@@ -243,7 +216,6 @@ function clearRequested<E extends SynEngine<any, any>>(
     sessionState.prerequestContent = {
       lastDeltaSeen: selectLastDeltaSeen(sessionState),
       content: newContent,
-      ephemeral: newEphemeral,
     };
   }
 }

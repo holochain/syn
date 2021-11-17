@@ -13,10 +13,10 @@ import { handleChangeNotice } from './workflows/change/folk';
 import type { SynState } from '../state/syn-state';
 import { handleSessionClosed } from './workflows/sessions/folk';
 import { handleLeaveSessionNotice } from './workflows/sessions/scribe';
-import type { SynEngine } from '../engine';
+import type { SynGrammar } from '../grammar';
 
-function shouldWeHandle<E extends SynEngine<any, any>>(
-  state: SynState<E>,
+function shouldWeHandle<G extends SynGrammar<any, any>>(
+  state: SynState<G>,
   signal: SynSignal
 ): boolean {
   if (selectSessionState(state, signal.sessionHash)) return true;
@@ -28,8 +28,8 @@ function shouldWeHandle<E extends SynEngine<any, any>>(
   return false;
 }
 
-export function handleSignal<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleSignal<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   signal: SynSignal
 ) {
   const currentState = get(workspace.store);

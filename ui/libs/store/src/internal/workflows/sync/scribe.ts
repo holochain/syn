@@ -12,7 +12,7 @@ import {
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
-import type { SynEngine } from '../../../engine';
+import type { SynGrammar } from '../../../grammar';
 
 /**
  * Scribe is managing the session, a folk comes in:
@@ -26,8 +26,8 @@ import type { SynEngine } from '../../../engine';
  *
  */
 
-export function handleSyncRequest<E extends SynEngine<any, any>>(
-  workspace: SynWorkspace<E>,
+export function handleSyncRequest<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   requestSyncInput: RequestSyncInput
 ): void {
@@ -69,7 +69,6 @@ export function handleSyncRequest<E extends SynEngine<any, any>>(
     const syncState: StateForSync = {
       uncommittedChanges,
       folkMissedLastCommit: missedCommit,
-      ephemeralState: sessionState.ephemeral,
       //currentContentHash:
     };
 
