@@ -13,6 +13,7 @@ import {
   amIScribe,
   selectFolksInSession,
   selectLastDeltaSeen,
+  selectMissedDeltas,
   selectSessionState,
 } from '../../../state/selectors';
 import type { SessionState } from '../../../state/syn-state';
@@ -81,10 +82,29 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
       changeRequest.lastDeltaSeen.deltaIndexInCommit !==
         lastDeltaSeen.deltaIndexInCommit
     ) {
-      console.warn('Scribe is receiving change out of order!');
-      // change is too late, nextIndex has moved on
-      // TODO: rebase? notify sender?
-      return state;
+      const transformDelta = workspace.grammar.transformDelta;
+
+      if (!transformDelta) {
+        console.warn('Scribe is receiving change out of order!');
+        // change is too late, nextIndex has moved on
+        // TODO: rebase? notify sender?
+        return state;
+      }
+
+      const missedDeltas = selectMissedDeltas(
+        state,
+        sessionHash,
+        changeRequest.lastDeltaSeen
+      );
+
+      changeRequest.deltaChanges.deltas = changeRequest.deltaChanges.deltas.map(
+        d => {
+          for (const missedDelta of missedDeltas) {
+            d = transformDelta(d, missedDelta);
+          }
+          return d;
+        }
+      );
     }
 
     let changeBundle = putDeltas(

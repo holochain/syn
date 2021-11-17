@@ -8,7 +8,7 @@ import { moveCursors } from './utils';
 export enum TextEditorDeltaType {
   Insert = 'insert',
   Delete = 'delete',
-  MoveCursor = 'move_cursor',
+  ChangeSelection = 'change_selection',
 }
 
 export type TextEditorDelta =
@@ -22,7 +22,7 @@ export type TextEditorDelta =
       position: number;
       characterCount: number;
     }
-  | { type: TextEditorDeltaType.MoveCursor; position: number };
+  | { type: TextEditorDeltaType.ChangeSelection; position: number; to: number };
 
 export interface TextEditorState {
   text: string;
@@ -65,10 +65,10 @@ export const textEditorGrammar: TextEditorGrammar = {
             [author]: delta.position,
           },
         };
-        case TextEditorDeltaType.MoveCursor:
-          return {
-            text: content.text,
-            cursors: {
+      case TextEditorDeltaType.ChangeSelection:
+        return {
+          text: content.text,
+          cursors: {
             ...content.cursors,
             [author]: delta.position,
           },
@@ -76,7 +76,26 @@ export const textEditorGrammar: TextEditorGrammar = {
     }
   },
 
-  persistedState(state) {
+  transformDelta(toTransform, conflictingDelta): TextEditorDelta {
+    if (conflictingDelta.type === TextEditorDeltaType.ChangeSelection)
+      return toTransform;
+
+    if (toTransform.position < conflictingDelta.position) return toTransform;
+
+    if (conflictingDelta.type === TextEditorDeltaType.Insert) {
+      return {
+        ...toTransform,
+        position: toTransform.position + conflictingDelta.text.length,
+      };
+    } else {
+      return {
+        ...toTransform,
+        position: toTransform.position - conflictingDelta.characterCount,
+      };
+    }
+  },
+
+  selectPersistedState(state) {
     return {
       text: state.text,
       cursors: {},

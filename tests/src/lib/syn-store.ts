@@ -9,16 +9,16 @@ import { HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
 import { SynGrammar, SynStore } from '@syn/store';
+import { TextEditorDeltaType } from '@syn/text-editor';
 
 import {
   applyDelta,
   Content,
   delay,
-  initialContent,
+  sampleGrammar,
   synDna,
   TextDelta,
 } from '../common';
-import { Dictionary } from 'lodash';
 
 const config = Config.gen();
 
@@ -39,17 +39,12 @@ export const oFn = orchestrator => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const synGrammar: SynGrammar<Content, TextDelta> = {
-      initialState: initialContent,
-      applyDelta,
-    };
-
-    const aliceSyn = new SynStore(aliceClient, synGrammar, {
+    const aliceSyn = new SynStore(aliceClient, sampleGrammar, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
     });
-    const bobSyn = new SynStore(bobClient, synGrammar, {
+    const bobSyn = new SynStore(bobClient, sampleGrammar, {
       commitStrategy: {
         CommitEveryNDeltas: 3,
       },
@@ -69,8 +64,8 @@ export const oFn = orchestrator => {
 
     await delay(2000);
 
-    let currentContent = get(bobSessionStore.content);
-    t.equal(currentContent.title, 'A new title');
+    let currentState = get(bobSessionStore.state);
+    t.equal(currentState.title, 'A new title');
 
     aliceSessionStore.requestChanges([
       { type: 'Title', value: 'Another thing' },
@@ -78,8 +73,8 @@ export const oFn = orchestrator => {
 
     await delay(1000);
 
-    currentContent = get(bobSessionStore.content);
-    t.equal(currentContent.title, 'Another thing');
+    currentState = get(bobSessionStore.state);
+    t.equal(currentState.title, 'Another thing');
 
     bobSessionStore.requestChanges([
       { type: 'Title', value: 'Bob is the boss' },
@@ -87,21 +82,38 @@ export const oFn = orchestrator => {
 
     await delay(1000);
 
-    currentContent = get(aliceSessionStore.content);
-    t.equal(currentContent.title, 'Bob is the boss');
+    currentState = get(aliceSessionStore.state);
+    t.equal(currentState.title, 'Bob is the boss');
 
     bobSessionStore.requestChanges([
-      { type: 'Add', loc: 0, text: 'Hi ' },
-      { type: 'Add', loc: 3, text: 'there' },
+      { type: TextEditorDeltaType.Insert, position: 0, text: 'Hi ' },
+      { type: TextEditorDeltaType.Insert, position: 3, text: 'there' },
     ]);
 
     await delay(1000);
 
-    currentContent = get(aliceSessionStore.content);
-    t.equal(currentContent.body, 'Hi there');
+    currentState = get(aliceSessionStore.state);
+    t.equal(currentState.body, 'Hi there');
 
-    currentContent = get(bobSessionStore.content);
-    t.equal(currentContent.body, 'Hi there');
+    currentState = get(bobSessionStore.state);
+    t.equal(currentState.body, 'Hi there');
+
+    // Test concurrent
+
+    bobSessionStore.requestChanges([
+      { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
+    ]);
+    aliceSessionStore.requestChanges([
+      { type: TextEditorDeltaType.Insert, position: 3, text: 'alice ' },
+    ]);
+
+    await delay(1000);
+
+    currentState = get(aliceSessionStore.state);
+    t.equal(currentState.body, 'Hi alice bob there');
+
+    currentState = get(bobSessionStore.state);
+    t.equal(currentState.body, 'Hi alice bob there');
 
     await bobSyn.close();
 

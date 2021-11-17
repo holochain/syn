@@ -1,11 +1,10 @@
 import { Config, InstallAgentsHapps } from '@holochain/tryorama';
-import path from 'path';
 import {
   applyDeltas,
   Content,
   delay,
   Delta,
-  initialContent,
+  sampleGrammar,
   serializeHash,
   Signal,
   synDna,
@@ -13,6 +12,7 @@ import {
 } from '../common';
 import { encode, decode } from '@msgpack/msgpack';
 import { cloneDeepWith } from 'lodash-es';
+import { TextEditorDeltaType } from '@syn/text-editor';
 
 const config = Config.gen();
 
@@ -65,7 +65,7 @@ export default orchestrator => {
     let sessionInfo = await me.call('syn', 'new_session', {});
 
     // First ever session so content should be default content
-    let sessionSnapshot: Content = initialContent;
+    let sessionSnapshot: Content = sampleGrammar.initialState;
 
     // I created the session, so I should be the scribe
     t.deepEqual(sessionInfo.session.scribe, me_pubkey);
@@ -107,10 +107,10 @@ export default orchestrator => {
     // set up the pending deltas array
     let pendingDeltas: TextDelta[] = [
       { type: 'Title', value: 'foo title' },
-      { type: 'Add', loc: 0, text: 'bar content' },
+      { type: TextEditorDeltaType.Insert, position: 0, text: 'bar content' },
     ];
 
-    let new_content = applyDeltas(sessionSnapshot, pendingDeltas);
+    let new_content = applyDeltas(sessionSnapshot, pendingDeltas, me_pubkey);
     const new_content_hash_1 = await me.call(
       'syn',
       'hash_snapshot',
@@ -176,13 +176,13 @@ export default orchestrator => {
 
     // add a second content change
     pendingDeltas = [
-      { type: 'Delete', start: 0, end: 3 },
-      { type: 'Add', loc: 0, text: 'baz' },
-      { type: 'Add', loc: 11, text: ' new' }, // 'baz content new'
-      { type: 'Delete', start: 4, end: 11 }, // 'baz  new'
-      { type: 'Add', loc: 4, text: 'monkey' }, // 'baz monkey new'
+      { type: TextEditorDeltaType.Delete, position: 0, characterCount: 3 },
+      { type: TextEditorDeltaType.Insert, position: 0, text: 'baz' },
+      { type: TextEditorDeltaType.Insert, position: 11, text: ' new' }, // 'baz content new'
+      { type: TextEditorDeltaType.Delete, position: 4, characterCount: 11 }, // 'baz  new'
+      { type: TextEditorDeltaType.Insert, position: 4, text: 'monkey' }, // 'baz monkey new'
     ];
-    new_content = applyDeltas(new_content, pendingDeltas);
+    new_content = applyDeltas(new_content, pendingDeltas, me_pubkey);
     const new_content_hash_2 = await me.call(
       'syn',
       'hash_snapshot',
@@ -241,12 +241,16 @@ export default orchestrator => {
     // I add some pending deltas which I will then need to send to Alice as part of her Joining.
     pendingDeltas = [
       { type: 'Title', value: "I haven't committed yet" },
-      { type: 'Add', loc: 14, text: '\nBut made a new line! 🍑' },
+      {
+        type: TextEditorDeltaType.Insert,
+        position: 14,
+        text: '\nBut made a new line! 🍑',
+      },
     ];
 
     deltas = pendingDeltas.map(d => encode(d));
 
-    new_content = applyDeltas(new_content, pendingDeltas);
+    new_content = applyDeltas(new_content, pendingDeltas, me_pubkey);
     const new_content_hash_3 = await me.call(
       'syn',
       'hash_snapshot',

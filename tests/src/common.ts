@@ -1,10 +1,17 @@
-import { Base64 } from "js-base64";
-import path from 'path'
-import { fileURLToPath } from "url";
+import { Base64 } from 'js-base64';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import {
+  TextEditorDelta,
+  textEditorGrammar,
+  TextEditorState,
+} from '@syn/text-editor';
+import { SynGrammar } from '@syn/store';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const synDna = path.join(__dirname, "../../dna/workdir/dna/syn.dna");
+export const synDna = path.join(__dirname, '../../dna/workdir/dna/syn.dna');
 
 export type Add = [number, string];
 export type Delete = [number, number];
@@ -24,7 +31,7 @@ export type Signal = {
   };
 };
 
-export const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+export const delay = ms => new Promise(r => setTimeout(r, ms));
 
 export function serializeHash(hash: Uint8Array): string {
   return `u${Base64.fromUint8Array(hash, true)}`;
@@ -39,52 +46,48 @@ export function serializeHash(hash: Uint8Array): string {
 
 export interface Content {
   title: string;
-  body: string;
+  body: TextEditorState;
 }
-
-export const initialContent: Content = {
-  title: "",
-  body: "",
-};
 
 export type TextDelta =
   | {
-      type: "Title";
+      type: 'Title';
       value: string;
     }
-  | {
-      type: "Add";
-      text: string;
-      loc: number;
-    }
-  | {
-      type: "Delete";
-      start: number;
-      end: number;
-    };
+  | TextEditorDelta;
 
-export const applyDelta = (content: Content, delta: TextDelta): Content => {
+export const applyDelta = (
+  content: Content,
+  delta: TextDelta,
+  author: string
+): Content => {
   switch (delta.type) {
-    case "Title":
+    case 'Title':
       content.title = delta.value;
-      break;
-    case "Add":
-      content.body =
-        content.body.slice(0, delta.loc) +
-        delta.text +
-        content.body.slice(delta.loc);
-      break;
-    case "Delete":
-      content.body =
-        content.body.slice(0, delta.start) + content.body.slice(delta.end);
-      break;
+      return content;
+    default:
+      return {
+        ...content,
+        body: textEditorGrammar.applyDelta(content.body, delta, author),
+      };
   }
-  return content;
 };
 
-export function applyDeltas(content: Content, deltas: TextDelta[]): Content {
+export const sampleGrammar: SynGrammar<Content, TextDelta> = {
+  initialState: {
+    title: '',
+    body: textEditorGrammar.initialState,
+  },
+  applyDelta,
+};
+
+export function applyDeltas(
+  content: Content,
+  deltas: TextDelta[],
+  author: string
+): Content {
   for (const delta of deltas) {
-    content = applyDelta(content, delta);
+    content = applyDelta(content, delta, author);
   }
   return content;
 }

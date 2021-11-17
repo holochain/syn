@@ -1,4 +1,9 @@
-import type { ChangeBundle, LastDeltaSeen, Session } from '@syn/zome-client';
+import type {
+  AuthoredDelta,
+  ChangeBundle,
+  LastDeltaSeen,
+  Session,
+} from '@syn/zome-client';
 import type {
   AgentPubKeyB64,
   EntryHashB64,
@@ -83,6 +88,37 @@ export function selectMissedUncommittedChanges<G extends SynGrammar<any, any>>(
       authors: sessionState.uncommittedChanges.authors, // TODO: optimization of only sending the authors of the missed deltas?
     };
   }
+}
+
+export function selectMissedDeltas<G extends SynGrammar<any, any>>(
+  synState: SynState<G>,
+  sessionHash: EntryHashB64,
+  lastDeltaSeen: LastDeltaSeen
+): AuthoredDelta[] {
+  let deltas: AuthoredDelta[] = [];
+
+  const sessionState = selectSessionState(synState, sessionHash);
+
+  if (
+    lastDeltaSeen.commitHash != sessionState.lastCommitHash &&
+    sessionState.lastCommitHash
+  ) {
+    let nextCommitHash = lastDeltaSeen.commitHash;
+    while (nextCommitHash != sessionState.lastCommitHash) {
+      const commit = synState.commits[sessionState.lastCommitHash];
+      // TODO: change this
+      nextCommitHash = commit.previousCommitHashes[0];
+      deltas = deltas.concat(...commit.changes.deltas);
+    }
+  }
+
+  deltas = deltas.concat(
+    ...sessionState.uncommittedChanges.deltas.slice(
+      lastDeltaSeen.deltaIndexInCommit
+    )
+  );
+
+  return deltas;
 }
 
 export function selectLastDeltaSeen<G extends SynGrammar<any, any>>(

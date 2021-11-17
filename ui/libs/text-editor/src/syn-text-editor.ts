@@ -98,8 +98,9 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
     console.log('hi')
     this._debouncingStore.requestChanges([
       {
-        type: TextEditorDeltaType.MoveCursor,
-        position: ranges[0].to,
+        type: TextEditorDeltaType.ChangeSelection,
+        position: ranges[0].from,
+        to: ranges[0].to
       },
     ]);
   }

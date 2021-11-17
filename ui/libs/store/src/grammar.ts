@@ -5,7 +5,9 @@ export interface SynGrammar<STATE, DELTA> {
 
   applyDelta: (content: STATE, delta: DELTA, author: AgentPubKeyB64) => STATE;
 
-  persistedState?: (state: STATE) => STATE;
+  transformDelta?: (operationToTransform: DELTA, transformWithOperation: DELTA) => DELTA;
+
+  selectPersistedState?: (state: STATE) => STATE;
 }
 
 export type GrammarDelta<G extends SynGrammar<any, any>> = Parameters<
