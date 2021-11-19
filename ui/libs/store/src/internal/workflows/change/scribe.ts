@@ -22,7 +22,6 @@ import type { SynWorkspace } from '../../workspace';
 import { commitChanges, commitLock } from '../commit/scribe';
 import merge from 'lodash-es/merge';
 import type { GrammarDelta, SynGrammar } from '../../../grammar';
-import cloneDeep from 'lodash-es/cloneDeep';
 
 export async function scribeRequestChange<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
