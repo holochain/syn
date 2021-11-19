@@ -62,6 +62,13 @@ export interface SessionState<G extends SynGrammar<any, any>> {
   // Only my requested changes
   requestedChanges: Array<RequestedChange>;
 
+  nonRequestedChanges: Array<RequestedChange>;
+  nonRequestedChangesAtLastDeltaSeen: LastDeltaSeen | undefined;
+  nonRequestedChangesAtFolkIndex: number | undefined;
+
+  nonEmittedChangeBundle: ChangeBundle | undefined;
+  nonEmittedLastDeltaSeen: LastDeltaSeen | undefined;
+
   uncommittedChanges: ChangeBundle;
 
   // AgentPubKeyB64 -> lastSeen

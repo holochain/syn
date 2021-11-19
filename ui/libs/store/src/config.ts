@@ -1,7 +1,7 @@
-
 export interface SynConfig {
   hearbeatInterval: number;
   requestTimeout: number;
+  debounceInterval: number;
   outOfSessionTimeout: number;
   syncStrategy: SyncStrategy;
   commitStrategy: CommitStrategy;
@@ -23,8 +23,9 @@ export function defaultConfig(): SynConfig {
   return {
     hearbeatInterval: 2 * 1000,
     outOfSessionTimeout: 8 * 1000,
-    requestTimeout: 1000,
-    commitStrategy: { CommitEveryNDeltas: 50, CommitEveryNMs: 1000 * 30 }, // TODO: reduce ms
+    debounceInterval: 500,
+    requestTimeout: 4000,
+    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 30 }, // TODO: reduce ms
     syncStrategy: SyncStrategy.BlockOnConflict,
   };
 }

@@ -96,9 +96,7 @@ export class SynStore<G extends SynGrammar<any, any>> {
 
     this.#workspace.store.update(state => {
       for (const [hash, session] of Object.entries(sessions)) {
-        if (!sessionsToClose.includes(hash)) {
-          state.sessions[hash] = session;
-        }
+        state.sessions[hash] = session;
       }
 
       return state;
@@ -107,6 +105,14 @@ export class SynStore<G extends SynGrammar<any, any>> {
     for (const sessionHash of sessionsToClose) {
       await closeSession(this.#workspace, sessionHash);
     }
+
+    this.#workspace.store.update(state => {
+      for (const hash of sessionsToClose) {
+        delete state.sessions[hash];
+      }
+
+      return state;
+    });
 
     return sessions;
   }

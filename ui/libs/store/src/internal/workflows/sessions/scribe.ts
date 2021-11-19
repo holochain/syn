@@ -43,8 +43,13 @@ export async function newSession<G extends SynGrammar<any, any>>(
       sessionHash: session.sessionHash,
       currentContent,
       myFolkIndex: 0,
+      nonEmittedChangeBundle: undefined,
+      nonEmittedLastDeltaSeen: undefined,
+      nonRequestedChangesAtLastDeltaSeen: undefined,
+      nonRequestedChangesAtFolkIndex: undefined,
       prerequestContent: undefined,
       requestedChanges: [],
+      nonRequestedChanges: [],
       uncommittedChanges: {
         authors: {},
         deltas: [],
@@ -92,11 +97,15 @@ export async function closeSession<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ): Promise<CloseSessionResult> {
-  const closingCommitHash = await commitChanges(workspace, sessionHash);
-
   const state = get(workspace.store);
-
   const session = selectSessionState(state, sessionHash);
+
+  let closingCommitHash: EntryHashB64 | undefined;
+
+  if (session) {
+    closingCommitHash = await commitChanges(workspace, sessionHash);
+  }
+
   const participants = session ? selectFolksInSession(workspace, session) : [];
 
   await workspace.client.closeSession({

@@ -60,10 +60,11 @@ export function areWeJoiningSession<G extends SynGrammar<any, any>>(
 
 export function selectLatestSnapshotHash<G extends SynGrammar<any, any>>(
   synState: SynState<G>,
-  sessionHash: EntryHashB64
-): EntryHashB64 | undefined {
+  sessionHash: EntryHashB64,
+  initialSnapshotHash: EntryHashB64
+): EntryHashB64 {
   const session = selectSessionState(synState, sessionHash);
-  if (!session || !session.lastCommitHash) return undefined;
+  if (!session || !session.lastCommitHash) return initialSnapshotHash;
   return synState.commits[session.lastCommitHash].newContentHash;
 }
 
@@ -76,7 +77,7 @@ export function selectMissedUncommittedChanges<G extends SynGrammar<any, any>>(
 
   if (
     !lastDeltaSeen ||
-    lastDeltaSeen.commitHash !== sessionState.lastCommitHash
+    lastDeltaSeen.commitHash != sessionState.lastCommitHash
   ) {
     return sessionState.uncommittedChanges;
   } else {
@@ -103,20 +104,30 @@ export function selectMissedDeltas<G extends SynGrammar<any, any>>(
     lastDeltaSeen.commitHash != sessionState.lastCommitHash &&
     sessionState.lastCommitHash
   ) {
-    let nextCommitHash = lastDeltaSeen.commitHash;
-    while (nextCommitHash != sessionState.lastCommitHash) {
-      const commit = synState.commits[sessionState.lastCommitHash];
-      // TODO: change this
-      nextCommitHash = commit.previousCommitHashes[0];
-      deltas = deltas.concat(...commit.changes.deltas);
-    }
-  }
+    let commit = synState.commits[sessionState.lastCommitHash];
+    let nextCommitHash = commit.previousCommitHashes[0];
 
-  deltas = deltas.concat(
-    ...sessionState.uncommittedChanges.deltas.slice(
-      lastDeltaSeen.deltaIndexInCommit
-    )
-  );
+    while (nextCommitHash != lastDeltaSeen.commitHash) {
+      // TODO: change this
+      commit = synState.commits[nextCommitHash];
+      deltas = commit.changes.deltas.concat(...deltas);
+
+      nextCommitHash = commit.previousCommitHashes[0];
+    }
+
+    if (commit) {
+      deltas = commit.changes.deltas
+        .slice(lastDeltaSeen.deltaIndexInCommit)
+        .concat(...deltas);
+    }
+    deltas = deltas.concat(...sessionState.uncommittedChanges.deltas);
+  } else {
+    deltas = deltas.concat(
+      ...sessionState.uncommittedChanges.deltas.slice(
+        lastDeltaSeen.deltaIndexInCommit
+      )
+    );
+  }
 
   return deltas;
 }

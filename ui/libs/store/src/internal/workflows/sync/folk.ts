@@ -25,7 +25,12 @@ export function handleSyncResponse<G extends SynGrammar<any, any>>(
         currentContent: cloneDeep(workspace.grammar.initialState),
         myFolkIndex: 0,
         prerequestContent: undefined,
+        nonEmittedChangeBundle: undefined,
+        nonEmittedLastDeltaSeen: undefined,
+        nonRequestedChangesAtLastDeltaSeen: undefined,
+        nonRequestedChangesAtFolkIndex: undefined,
         requestedChanges: [],
+        nonRequestedChanges: [],
         uncommittedChanges: {
           authors: {},
           deltas: [],

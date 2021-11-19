@@ -4,6 +4,7 @@ import type {
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
 import type { ChangeBundle, Commit } from '@syn/zome-client';
+import cloneDeep from 'lodash-es/cloneDeep';
 import type { GrammarApplyDeltaFn, GrammarState, SynGrammar } from '../grammar';
 
 export function orderCommits(
@@ -39,7 +40,7 @@ export function applyChangeBundle<G extends SynGrammar<any, any>>(
 ): GrammarState<G> {
   let content = initialContent;
   for (const delta of changeBundle.deltas) {
-    content = applyDeltaFn(content, delta.delta, delta.author);
+    content = applyDeltaFn(cloneDeep(content), delta.delta, delta.author);
   }
   return content;
 }

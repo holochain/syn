@@ -243,7 +243,7 @@ export default orchestrator => {
       { type: 'Title', value: "I haven't committed yet" },
       {
         type: TextEditorDeltaType.Insert,
-        position: 14,
+        position: 10,
         text: '\nBut made a new line! 🍑',
       },
     ];

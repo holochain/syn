@@ -3,31 +3,28 @@ import type {
   Dictionary,
 } from '@holochain-open-dev/core-types';
 import type { SynGrammar } from '@syn/store';
+import cloneDeep from 'lodash-es/cloneDeep';
 
 export function moveSelections(
+  endText: string,
   delta: TextEditorDelta,
   cursors: Dictionary<AgentSelection>
 ): Dictionary<AgentSelection> {
   const newCursors: Dictionary<AgentSelection> = { ...cursors };
 
-  for (const key of Object.keys(cursors)) {
-    if (delta.position < newCursors[key].from) {
+  for (const key of Object.keys(newCursors)) {
+    if (delta.position < newCursors[key].position) {
       if (delta.type === TextEditorDeltaType.Insert) {
-        newCursors[key].from += delta.text.length;
-        const to = newCursors[key].to;
-        if (to) {
-          newCursors[key].to = to + delta.text.length;
-        }
+        newCursors[key].position += delta.text.length;
       } else if (delta.type === TextEditorDeltaType.Delete) {
-        newCursors[key].from -= delta.characterCount;
-        const to = newCursors[key].to;
-        if (to) {
-          newCursors[key].to = to - delta.characterCount;
-        }
+        newCursors[key].position -= delta.characterCount;
+
+        if (newCursors[key].position < 0) newCursors[key].position = 0;
+        if (newCursors[key].characterCount < endText.length)
+          newCursors[key].characterCount = endText.length;
       }
     }
   }
-
   return newCursors;
 }
 
@@ -48,11 +45,15 @@ export type TextEditorDelta =
       position: number;
       characterCount: number;
     }
-  | { type: TextEditorDeltaType.ChangeSelection; position: number; to: number };
+  | {
+      type: TextEditorDeltaType.ChangeSelection;
+      position: number;
+      characterCount: number;
+    };
 
 export interface AgentSelection {
-  from: number;
-  to?: number;
+  position: number;
+  characterCount: number;
 }
 
 export interface TextEditorState {
@@ -68,72 +69,20 @@ export const textEditorGrammar: TextEditorGrammar = {
     selections: {},
   },
   applyDelta(
-    content: TextEditorState,
+    state: TextEditorState,
     delta: TextEditorDelta,
     author: AgentPubKeyB64
   ) {
-    switch (delta.type) {
-      case TextEditorDeltaType.Insert:
-        const text =
-          content.text.slice(0, delta.position) +
-          delta.text +
-          content.text.slice(delta.position);
-        return {
-          text,
-          selections: {
-            ...moveSelections(delta, content.selections),
-            [author]: {
-              from: delta.position + delta.text.length,
-            },
-          },
-        };
-      case TextEditorDeltaType.Delete:
-        const textRemaining =
-          content.text.slice(0, delta.position) +
-          content.text.slice(delta.position + delta.characterCount);
-        return {
-          text: textRemaining,
-          selections: {
-            ...moveSelections(delta, content.selections),
-            [author]: {
-              from: delta.position,
-            },
-          },
-        };
-      case TextEditorDeltaType.ChangeSelection:
-        return {
-          text: content.text,
-          selections: {
-            ...content.selections,
-            [author]: {
-              from: delta.position,
-              to: delta.to,
-            },
-          },
-        };
-    }
+    return h(state, delta, author);
   },
 
   transformDelta(
     toTransform: TextEditorDelta,
     conflictingDelta: TextEditorDelta
   ): TextEditorDelta {
-    if (conflictingDelta.type === TextEditorDeltaType.ChangeSelection)
-      return toTransform;
-
-    if (toTransform.position < conflictingDelta.position) return toTransform;
-
-    if (conflictingDelta.type === TextEditorDeltaType.Insert) {
-      return {
-        ...toTransform,
-        position: toTransform.position + conflictingDelta.text.length,
-      };
-    } else {
-      return {
-        ...toTransform,
-        position: toTransform.position - conflictingDelta.characterCount,
-      };
-    }
+    const h = htransformDelta(toTransform, conflictingDelta);
+    //console.log('transform', toTransform, conflictingDelta, h);
+    return h;
   },
 
   selectPersistedState(state) {
@@ -143,3 +92,78 @@ export const textEditorGrammar: TextEditorGrammar = {
     };
   },
 };
+
+function htransformDelta(
+  toTransform: TextEditorDelta,
+  conflictingDelta: TextEditorDelta
+): TextEditorDelta {
+  if (conflictingDelta.type === TextEditorDeltaType.ChangeSelection)
+    return toTransform;
+
+  if (toTransform.position < conflictingDelta.position) return toTransform;
+
+  if (conflictingDelta.type === TextEditorDeltaType.Insert) {
+    return {
+      ...toTransform,
+      position: toTransform.position + conflictingDelta.text.length,
+    };
+  } else {
+    return {
+      ...toTransform,
+      position:
+        toTransform.position - conflictingDelta.characterCount >= 0
+          ? toTransform.position - conflictingDelta.characterCount
+          : 0,
+    };
+  }
+}
+
+function h(
+  state: TextEditorState,
+  delta: TextEditorDelta,
+  author: AgentPubKeyB64
+) {
+  switch (delta.type) {
+    case TextEditorDeltaType.Insert:
+      if (state.text.length + 1 < delta.position) throw new Error('Bad bad');
+      const text =
+        state.text.slice(0, delta.position) +
+        delta.text +
+        state.text.slice(delta.position);
+      return {
+        text,
+        selections: {
+          ...moveSelections(text, delta, cloneDeep(state.selections)),
+          [author]: {
+            position: delta.position + delta.text.length,
+            characterCount: 0,
+          },
+        },
+      };
+    case TextEditorDeltaType.Delete:
+      const textRemaining =
+        state.text.slice(0, delta.position) +
+        state.text.slice(delta.position + delta.characterCount);
+      return {
+        text: textRemaining,
+        selections: {
+          ...moveSelections(textRemaining, delta, cloneDeep(state.selections)),
+          [author]: {
+            position: delta.position,
+            characterCount: 0,
+          },
+        },
+      };
+    case TextEditorDeltaType.ChangeSelection:
+      return {
+        text: state.text,
+        selections: {
+          ...state.selections,
+          [author]: {
+            position: delta.position,
+            characterCount: delta.characterCount,
+          },
+        },
+      };
+  }
+}

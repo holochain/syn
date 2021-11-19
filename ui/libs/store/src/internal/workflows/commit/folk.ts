@@ -28,10 +28,10 @@ export async function handleCommitNotice<G extends SynGrammar<any, any>>(
 
     const latestCommittedContentHash = selectLatestSnapshotHash(
       state,
-      sessionHash
+      sessionHash,
+      initialSnapshotHash
     );
     const sessionState = selectSessionState(state, sessionHash);
-
     if (
       latestCommittedContentHash === commitNotice.previousContentHash &&
       commitNotice.committedDeltasCount ===
@@ -44,6 +44,13 @@ export async function handleCommitNotice<G extends SynGrammar<any, any>>(
         initialSnapshotHash
       );
       putNewCommit(state, sessionHash, commitNotice.commitHash, commit);
+
+      if (sessionState.prerequestContent) {
+        sessionState.prerequestContent.lastDeltaSeen = {
+          commitHash: commitNotice.commitHash,
+          deltaIndexInCommit: 0,
+        };
+      }
     } else {
       workspace.client.sendSyncRequest({
         lastDeltaSeen: selectLastDeltaSeen(sessionState),

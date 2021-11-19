@@ -1,11 +1,12 @@
-import { get } from "svelte/store";
-import type { SynGrammar } from "../grammar";
-import { amIScribe, selectLastCommitTime } from "../state/selectors";
-import { checkRequestedChanges } from "./workflows/change/folk";
-import { commitChanges } from "./workflows/commit/scribe";
+import { get } from 'svelte/store';
+import type { SynGrammar } from '../grammar';
+import { amIScribe, selectLastCommitTime } from '../state/selectors';
+import { checkRequestedChanges, requestChanges } from './workflows/change/folk';
+import { notifyChanges } from './workflows/change/scribe';
+import { commitChanges } from './workflows/commit/scribe';
 
-import { heartbeat } from "./workflows/folklore";
-import type { SynWorkspace } from "./workspace";
+import { heartbeat } from './workflows/folklore';
+import type { SynWorkspace } from './workspace';
 
 export function initBackgroundTasks<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>
@@ -28,7 +29,22 @@ export function initBackgroundTasks<G extends SynGrammar<any, any>>(
   }, workspace.config.requestTimeout / 2);
   intervals.push(checkRequestInterval);
 
-  
+  const requestChangesInterval = setInterval(() => {
+    const state = get(workspace.store);
+    for (const sessionHash of Object.keys(state.joinedSessions)) {
+      requestChanges(workspace, sessionHash);
+    }
+  }, workspace.config.debounceInterval);
+  intervals.push(requestChangesInterval);
+
+  const notifyChangesInterval = setInterval(() => {
+    const state = get(workspace.store);
+    for (const sessionHash of Object.keys(state.joinedSessions)) {
+      notifyChanges(workspace, sessionHash);
+    }
+  }, workspace.config.debounceInterval);
+  intervals.push(notifyChangesInterval);
+
   const CommitEveryNMs: number | undefined = (
     workspace.config.commitStrategy as { CommitEveryNMs: number }
   ).CommitEveryNMs;
@@ -49,6 +65,6 @@ export function initBackgroundTasks<G extends SynGrammar<any, any>>(
   }
 
   return {
-    cancel: () => intervals.forEach((i) => clearInterval(i)),
+    cancel: () => intervals.forEach(i => clearInterval(i)),
   };
 }

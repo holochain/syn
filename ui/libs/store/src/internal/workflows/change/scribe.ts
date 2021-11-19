@@ -3,6 +3,7 @@ import type {
   ChangeBundle,
   FolkChanges,
   AuthoredDelta,
+  LastDeltaSeen,
 } from '@syn/zome-client';
 import type {
   EntryHashB64,
@@ -40,18 +41,51 @@ export function scribeRequestChange<G extends SynGrammar<any, any>>(
       deltas
     );
 
-    workspace.client.sendChange({
-      participants: selectFolksInSession(workspace, sessionState),
-      sessionHash,
-      lastDeltaSeen,
-      deltaChanges: changeBundle,
-    });
+    if (!sessionState.nonEmittedChangeBundle) {
+      sessionState.nonEmittedChangeBundle = changeBundle;
+      sessionState.nonEmittedLastDeltaSeen = lastDeltaSeen;
+    } else {
+      const allAuthors = [
+        ...Object.keys(sessionState.nonEmittedChangeBundle.authors),
+        ...Object.keys(changeBundle.authors),
+      ];
 
-    triggerCommitIfNecessary(
-      workspace,
-      sessionHash,
-      sessionState.uncommittedChanges.deltas.length
-    );
+      for (const author of allAuthors) {
+        const nonEmittedForAuthor =
+          sessionState.nonEmittedChangeBundle.authors[author];
+        const changeBundleForAuthor = changeBundle[author];
+
+        let commitChanges: Array<number> = [];
+
+        if (nonEmittedForAuthor) {
+          commitChanges = nonEmittedForAuthor.commitChanges;
+        }
+        if (changeBundleForAuthor) {
+          commitChanges = [
+            ...commitChanges,
+            changeBundleForAuthor.commitChanges,
+          ];
+        }
+
+        sessionState.nonEmittedChangeBundle.authors[author] = {
+          atFolkIndex: nonEmittedForAuthor
+            ? nonEmittedForAuthor.atFolkIndex
+            : changeBundle.authors[author].atFolkIndex,
+          commitChanges,
+        };
+      }
+
+      sessionState.nonEmittedChangeBundle = {
+        authors: merge(
+          sessionState.nonEmittedChangeBundle.authors,
+          changeBundle.authors
+        ),
+        deltas: [
+          ...sessionState.nonEmittedChangeBundle.deltas,
+          ...changeBundle.deltas,
+        ],
+      };
+    }
 
     sessionState.myFolkIndex += deltas.length;
     return state;
@@ -92,13 +126,20 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
         // TODO: rebase? notify sender?
         return state;
       }
-
-      const missedDeltas = selectMissedDeltas(
+      
+      let missedDeltas = selectMissedDeltas(
         state,
         sessionHash,
         changeRequest.lastDeltaSeen
-      );
+        );
 
+      missedDeltas = missedDeltas.filter(d => d.author !== changeRequest.folk);
+/*       console.log(
+        'missedDeltas',
+        missedDeltas,
+        changeRequest.lastDeltaSeen,
+        lastDeltaSeen
+      ); */
       changeRequest.deltaChanges.deltas = changeRequest.deltaChanges.deltas.map(
         d => {
           for (const missedDelta of missedDeltas) {
@@ -117,19 +158,84 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
       changeRequest.deltaChanges.deltas
     );
 
+    if (!sessionState.nonEmittedChangeBundle) {
+      sessionState.nonEmittedChangeBundle = changeBundle;
+      sessionState.nonEmittedLastDeltaSeen = lastDeltaSeen;
+    } else {
+      const allAuthors = [
+        ...Object.keys(sessionState.nonEmittedChangeBundle.authors),
+        ...Object.keys(changeBundle.authors),
+      ];
+
+      for (const author of allAuthors) {
+        const nonEmittedForAuthor =
+          sessionState.nonEmittedChangeBundle.authors[author];
+        const changeBundleForAuthor = changeBundle[author];
+
+        let commitChanges: Array<number> = [];
+
+        if (nonEmittedForAuthor) {
+          commitChanges = nonEmittedForAuthor.commitChanges;
+        }
+        if (changeBundleForAuthor) {
+          commitChanges = [
+            ...commitChanges,
+            changeBundleForAuthor.commitChanges,
+          ];
+        }
+
+        sessionState.nonEmittedChangeBundle.authors[author] = {
+          atFolkIndex: nonEmittedForAuthor
+            ? nonEmittedForAuthor.atFolkIndex
+            : changeBundle.authors[author].atFolkIndex,
+          commitChanges,
+        };
+      }
+
+      sessionState.nonEmittedChangeBundle = {
+        authors: merge(
+          sessionState.nonEmittedChangeBundle.authors,
+          changeBundle.authors
+        ),
+        deltas: [
+          ...sessionState.nonEmittedChangeBundle.deltas,
+          ...changeBundle.deltas,
+        ],
+      };
+    }
+
+    return state;
+  });
+}
+
+export function notifyChanges<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
+  sessionHash: EntryHashB64
+) {
+  workspace.store.update(state => {
+    if (!amIScribe(state, sessionHash)) {
+      return state;
+    }
+
+    const sessionState = selectSessionState(state, sessionHash);
+
+    if (!sessionState.nonEmittedChangeBundle) return state;
+
     workspace.client.sendChange({
-      deltaChanges: changeBundle,
-      lastDeltaSeen,
+      deltaChanges: sessionState.nonEmittedChangeBundle,
+      lastDeltaSeen: sessionState.nonEmittedLastDeltaSeen as LastDeltaSeen,
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
     });
+
+    sessionState.nonEmittedChangeBundle = undefined;
+    sessionState.nonEmittedLastDeltaSeen = undefined;
 
     triggerCommitIfNecessary(
       workspace,
       sessionHash,
       sessionState.uncommittedChanges.deltas.length
     );
-
     return state;
   });
 }

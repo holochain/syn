@@ -1,4 +1,8 @@
-import type { ChangeNotice, FolkChanges } from '@syn/zome-client';
+import type {
+  ChangeNotice,
+  FolkChanges,
+  LastDeltaSeen,
+} from '@syn/zome-client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import cloneDeep from 'lodash-es/cloneDeep';
 import { get } from 'svelte/store';
@@ -6,6 +10,7 @@ import { get } from 'svelte/store';
 import {
   amIScribe,
   selectLastDeltaSeen,
+  selectSession,
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
@@ -21,7 +26,7 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
-    const lastDeltaSeen = selectLastDeltaSeen(sessionState);
+    let lastDeltaSeen = selectLastDeltaSeen(sessionState);
 
     // TODO: don't do this if strategy === CRDT
     if (!sessionState.prerequestContent) {
@@ -29,6 +34,12 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
         lastDeltaSeen,
         content: cloneDeep(sessionState.currentContent),
       };
+    } else {
+      if (sessionState.nonRequestedChangesAtLastDeltaSeen) {
+        lastDeltaSeen = sessionState.nonRequestedChangesAtLastDeltaSeen;
+      } else {
+        lastDeltaSeen = sessionState.prerequestContent.lastDeltaSeen;
+      }
     }
 
     for (const delta of deltas) {
@@ -52,22 +63,58 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
       });
     }
 
-    sessionState.requestedChanges = [
-      ...sessionState.requestedChanges,
+    sessionState.nonRequestedChanges = [
+      ...sessionState.nonRequestedChanges,
       ...newRequestedChanges,
     ];
 
+    if (!sessionState.nonRequestedChangesAtLastDeltaSeen) {
+      sessionState.nonRequestedChangesAtLastDeltaSeen = lastDeltaSeen;
+    }
+    if (sessionState.nonRequestedChangesAtFolkIndex == undefined) {
+      sessionState.nonRequestedChangesAtFolkIndex = sessionState.myFolkIndex;
+    }
+
+    sessionState.myFolkIndex += deltas.length;
+
+    return state;
+  });
+}
+
+export async function requestChanges<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
+  sessionHash: EntryHashB64
+) {
+  workspace.store.update(state => {
+    if (amIScribe(state, sessionHash)) return state;
+
+    const sessionState = selectSessionState(state, sessionHash);
+
+    if (
+      sessionState.nonRequestedChanges.length === 0 ||
+      sessionState.requestedChanges.length > 0
+    )
+      return state;
+
+    const deltas = sessionState.nonRequestedChanges.map(r => r.delta);
+
+    sessionState.requestedChanges = [
+      ...sessionState.requestedChanges,
+      ...sessionState.nonRequestedChanges,
+    ];
+    sessionState.nonRequestedChanges = [];
+
     workspace.client.sendChangeRequest({
-      lastDeltaSeen,
+      lastDeltaSeen:
+        sessionState.nonRequestedChangesAtLastDeltaSeen as LastDeltaSeen,
       deltaChanges: {
-        atFolkIndex: sessionState.myFolkIndex,
+        atFolkIndex: sessionState.nonRequestedChangesAtFolkIndex as number,
         deltas,
       },
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
-
-    sessionState.myFolkIndex += deltas.length;
+    sessionState.nonRequestedChangesAtFolkIndex = undefined;
 
     return state;
   });
@@ -121,8 +168,6 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    if (!changeNotice.deltaChanges) return state;
-
     const changes = changeNotice.deltaChanges;
 
     // TODO
@@ -138,9 +183,35 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
         changeNotice.lastDeltaSeen.commitHash &&
       changeNotice.lastDeltaSeen.deltaIndexInCommit ===
         sessionState.prerequestContent?.lastDeltaSeen.deltaIndexInCommit;
+    /* 
+    console.log(
+      'changenotice',
+      sessionState.prerequestContent,
+      changeNotice.lastDeltaSeen
+    ); */
+    if (sessionState.prerequestContent) {
+      if (isLastDeltaSeenEqualToPrerequest) {
+        console.log('changing the prerequestcontent');
+        contentToApplyTo = sessionState.prerequestContent.content;
+      } else {
+        // We are receiving a change out of order, sorry but gotta nuke
+        console.log(
+          'We are receiving a change out of order, sorry but gotta nuke',
+          sessionState.prerequestContent,
+          changeNotice
+        );
 
-    if (sessionState.prerequestContent && isLastDeltaSeenEqualToPrerequest) {
-      contentToApplyTo = sessionState.prerequestContent.content;
+        workspace.client.sendSyncRequest({
+          lastDeltaSeen: selectLastDeltaSeen(sessionState),
+          scribe: selectSession(state, sessionHash).scribe,
+          sessionHash,
+        });
+        sessionState.prerequestContent = undefined;
+        sessionState.requestedChanges = [];
+        sessionState.nonRequestedChanges = [];
+
+        return state;
+      }
     }
 
     for (const delta of changes.deltas) {
@@ -179,11 +250,18 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     if (myChanges) {
       clearRequested(sessionState, myChanges);
     }
-
-    if (sessionState.requestedChanges.length === 0) {
+    console.log('hey', sessionState, contentToApplyTo);
+    if (
+      sessionState.requestedChanges.length === 0 &&
+      sessionState.nonRequestedChanges.length === 0
+    ) {
+      console.log('hey2', sessionState, contentToApplyTo);
       sessionState.prerequestContent = undefined;
       sessionState.currentContent = contentToApplyTo;
+
+      sessionState.nonRequestedChangesAtLastDeltaSeen = undefined;
     } else {
+      console.log('hey3', sessionState, contentToApplyTo);
       sessionState.prerequestContent = {
         lastDeltaSeen: selectLastDeltaSeen(sessionState),
         content: contentToApplyTo,

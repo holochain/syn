@@ -24,8 +24,11 @@ export function buildCommitFromUncommitted<G extends SynGrammar<any, any>>(
   return {
     changes: session.uncommittedChanges,
     previousCommitHashes: lastCommitHash ? [lastCommitHash] : [],
-    previousContentHash:
-      selectLatestSnapshotHash(state, sessionHash) || initialSnapshotHash,
+    previousContentHash: selectLatestSnapshotHash(
+      state,
+      sessionHash,
+      initialSnapshotHash
+    ),
     newContentHash,
     createdAt: Date.now(),
     meta: {

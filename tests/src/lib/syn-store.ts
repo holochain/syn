@@ -19,15 +19,9 @@ import {
   synDna,
   TextDelta,
 } from '../common';
+import { spawnSyn } from './spawn';
 
 const config = Config.gen();
-
-console.log(synDna);
-
-const installation: InstallAgentsHapps = [
-  // one agent
-  [[synDna]], // contains 1 dna
-];
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
@@ -126,28 +120,3 @@ export const oFn = orchestrator => {
     await aliceSyn.close();
   });
 };
-
-let allPlayers: Player[] = [];
-
-async function spawnSyn(s, config: ConfigSeed) {
-  const [player]: Player[] = await s.players([config]);
-
-  player.setSignalHandler(signal => {
-    console.log('Received Signal for player:', signal.data.payload);
-  });
-
-  const [[syn]] = await player.installAgentsHapps(installation);
-  const url = (player as any)._conductor.appClient.client.socket.url;
-
-  const appWs = await AppWebsocket.connect(url);
-
-  allPlayers.push(player);
-  if (allPlayers.length > 1) {
-    await s.shareAllNodes(allPlayers);
-  }
-
-  return new HolochainClient(appWs, {
-    cell_id: syn.cells[0].cellId,
-    role_id: syn.cells[0].cellRole,
-  });
-}

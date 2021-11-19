@@ -14,14 +14,9 @@ import {
 } from '@syn/elements';
 import { contextProvided } from '@lit-labs/context';
 import type { SessionStore, SynSlice, SynStore } from '@syn/store';
-import { DebouncingStore } from '@syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
-import {
-  TextEditorDeltaType,
-  textEditorGrammar,
-  TextEditorGrammar,
-} from './grammar';
+import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
 import type { TextEditorDelta } from './grammar';
 
 export class SynTextEditor extends ScopedElementsMixin(LitElement) {
@@ -29,7 +24,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   synSlice!: SynSlice<TextEditorGrammar>;
 
   @property({ attribute: 'debounce-ms' })
-  debounceMs: number = 500;
+  debounceMs: number = 1000;
 
   @contextProvided({ context: synContext, multiple: true })
   @state()
@@ -43,9 +38,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @state()
   profilesStore!: ProfilesStore;
 
-  _debouncingStore!: DebouncingStore<TextEditorGrammar>;
-
-  _state = new StoreSubscriber(this, () => this._debouncingStore?.state);
+  _state = new StoreSubscriber(this, () => this.synSlice?.state);
   _lastDelta: TextEditorDelta | undefined;
   _allProfiles = new StoreSubscriber(
     this,
@@ -65,17 +58,8 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
     }
   }
 
-  firstUpdated() {
-    this._debouncingStore = new DebouncingStore(
-      textEditorGrammar,
-      this.synStore.myPubKey,
-      this.synSlice,
-      500
-    );
-  }
-
   onTextInserted(from: number, text: string) {
-    this._debouncingStore.requestChanges([
+    this.synSlice.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
         position: from,
@@ -85,7 +69,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this._debouncingStore.requestChanges([
+    this.synSlice.requestChanges([
       {
         type: TextEditorDeltaType.Delete,
         position: from,
@@ -95,11 +79,11 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    this._debouncingStore.requestChanges([
+    this.synSlice.requestChanges([
       {
         type: TextEditorDeltaType.ChangeSelection,
         position: ranges[0].from,
-        to: ranges[0].to,
+        characterCount: ranges[0].to - ranges[0].from,
       },
     ]);
   }
@@ -113,7 +97,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
 
         const name = this._allProfiles.value[agentPubKey]?.nickname;
         return {
-          position: position.from,
+          position: position.position,
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };
@@ -122,6 +106,15 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
 
   render() {
     if (this._state.value === undefined) return html``;
+
+    const mySelection = this._state.value.selections[this.synStore.myPubKey];
+
+    const selection = mySelection
+      ? {
+          from: mySelection.position,
+          to: mySelection.position + mySelection.characterCount,
+        }
+      : undefined;
 
     return html`
       <div
@@ -135,7 +128,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
               id="editor"
               .state=${{
                 text: this._state.value.text,
-                selection: this._state.value.selections[this.synStore.myPubKey],
+                selection,
               }}
               .additionalCursors=${this.remoteCursors()}
               @text-inserted=${e =>

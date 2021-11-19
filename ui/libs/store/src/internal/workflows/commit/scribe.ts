@@ -11,7 +11,34 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
+let commitLock: Promise<EntryHashB64 | undefined> | undefined;
+
 export async function commitChanges<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
+  sessionHash: EntryHashB64
+): Promise<EntryHashB64 | undefined> {
+  console.log('commit!');
+  const state = get(workspace.store);
+
+  if (!amIScribe(state, sessionHash)) {
+    console.log("Trying to commit the changes but I'm not the scribe!");
+    return undefined;
+  }
+
+  const sessionState = selectSessionState(state, sessionHash);
+
+  if (sessionState.nonEmittedChangeBundle) return undefined;
+
+  if (commitLock) {
+    await commitLock;
+  }
+
+  commitLock = createCommit(workspace, sessionHash);
+
+  return commitLock;
+}
+
+async function createCommit<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ): Promise<EntryHashB64 | undefined> {
@@ -20,11 +47,6 @@ export async function commitChanges<G extends SynGrammar<any, any>>(
   const session = selectSessionState(state, sessionHash);
   if (!session || session.uncommittedChanges.deltas.length === 0)
     return undefined;
-
-  if (!amIScribe(state, sessionHash)) {
-    console.log("Trying to commit the changes but I'm not the scribe!");
-    return undefined;
-  }
 
   const stateToPersist = workspace.grammar.selectPersistedState
     ? workspace.grammar.selectPersistedState(session.currentContent)
