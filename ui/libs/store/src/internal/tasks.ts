@@ -1,10 +1,10 @@
 import { get } from 'svelte/store';
 import type { SynGrammar } from '../grammar';
-import { amIScribe, selectLastCommitTime } from '../state/selectors';
 import { checkRequestedChanges, requestChanges } from './workflows/change/folk';
 import { notifyChanges } from './workflows/change/scribe';
+/* import { amIScribe, selectLastCommitTime } from '../state/selectors';
 import { commitChanges } from './workflows/commit/scribe';
-
+ */
 import { heartbeat } from './workflows/folklore';
 import type { SynWorkspace } from './workspace';
 
@@ -44,7 +44,7 @@ export function initBackgroundTasks<G extends SynGrammar<any, any>>(
     }
   }, workspace.config.debounceInterval);
   intervals.push(notifyChangesInterval);
-
+/* 
   const CommitEveryNMs: number | undefined = (
     workspace.config.commitStrategy as { CommitEveryNMs: number }
   ).CommitEveryNMs;
@@ -62,7 +62,7 @@ export function initBackgroundTasks<G extends SynGrammar<any, any>>(
       }
     }, CommitEveryNMs / 10);
     intervals.push(commitInterval);
-  }
+  } */
 
   return {
     cancel: () => intervals.forEach(i => clearInterval(i)),

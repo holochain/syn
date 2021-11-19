@@ -28,10 +28,8 @@ process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
 
-const aliceLine =
-  '123456789123456789123456789';
-const bobLine =
-  'abcdefghabcdefghabcdefghabcdefgh';
+const aliceLine = 'ñlkjlñkj';
+const bobLine = 'fgjhfgjhfg';
 
 function alicePosition(text: string) {
   return text.split('\n')[0].length;
@@ -45,7 +43,9 @@ export default (orchestrator: Orchestrator<any>) => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = new SynStore(aliceClient, sampleGrammar, {});
+    const aliceSyn = new SynStore(aliceClient, sampleGrammar, {
+      commitStrategy: { CommitEveryNDeltas: 3 }, // TODO: reduce ms
+    });
     const bobSyn = new SynStore(bobClient, sampleGrammar, {});
 
     const aliceSessionStore = await aliceSyn.newSession();
@@ -82,7 +82,6 @@ export default (orchestrator: Orchestrator<any>) => {
     async function simulateBo() {
       for (let i = 0; i < bobLine.length; i++) {
         let content = get(bobSessionStore.state).body.text;
-        console.log('prerequestcontent', content)
         bobSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
@@ -98,8 +97,16 @@ export default (orchestrator: Orchestrator<any>) => {
 
     await delay(4000);
 
-    const expectedText = `${aliceLine}
-${bobLine}`;
+    await Promise.all([simulateAlice(), simulateBo()]);
+    await delay(4000);
+
+    await Promise.all([simulateAlice(), simulateBo()]);
+    await delay(4000);
+
+
+    console.log('hi');
+    const expectedText = `${aliceLine}${aliceLine}${aliceLine}
+${bobLine}${bobLine}${bobLine}`;
 
     let currentState = get(aliceSessionStore.state);
     t.deepEqual(currentState.body.text, expectedText);

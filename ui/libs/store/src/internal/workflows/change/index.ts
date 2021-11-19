@@ -16,6 +16,6 @@ export function requestChanges<G extends SynGrammar<any, any>>(
   const state = get(workspace.store);
 
   if (amIScribe(state, sessionHash))
-    return scribeRequestChange(workspace, sessionHash, deltas);
+    scribeRequestChange(workspace, sessionHash, deltas);
   else return folkRequestChange(workspace, sessionHash, deltas);
 }

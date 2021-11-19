@@ -19,15 +19,18 @@ import {
 } from '../../../state/selectors';
 import type { SessionState } from '../../../state/syn-state';
 import type { SynWorkspace } from '../../workspace';
-import { commitChanges } from '../commit/scribe';
+import { commitChanges, commitLock } from '../commit/scribe';
 import merge from 'lodash-es/merge';
 import type { GrammarDelta, SynGrammar } from '../../../grammar';
+import cloneDeep from 'lodash-es/cloneDeep';
 
-export function scribeRequestChange<G extends SynGrammar<any, any>>(
+export async function scribeRequestChange<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   deltas: Array<GrammarDelta<G>>
 ) {
+  await commitLock;
+
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
@@ -92,11 +95,13 @@ export function scribeRequestChange<G extends SynGrammar<any, any>>(
   });
 }
 
-export function handleChangeRequest<G extends SynGrammar<any, any>>(
+export async function handleChangeRequest<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
   changeRequest: ChangeRequest
 ) {
+  await commitLock;
+
   workspace.store.update(state => {
     if (!amIScribe(state, sessionHash)) {
       console.warn(
@@ -126,15 +131,15 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
         // TODO: rebase? notify sender?
         return state;
       }
-      
+
       let missedDeltas = selectMissedDeltas(
         state,
         sessionHash,
         changeRequest.lastDeltaSeen
-        );
+      );
 
       missedDeltas = missedDeltas.filter(d => d.author !== changeRequest.folk);
-/*       console.log(
+      /*       console.log(
         'missedDeltas',
         missedDeltas,
         changeRequest.lastDeltaSeen,
@@ -208,10 +213,12 @@ export function handleChangeRequest<G extends SynGrammar<any, any>>(
   });
 }
 
-export function notifyChanges<G extends SynGrammar<any, any>>(
+export async function notifyChanges<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
+  await commitLock;
+
   workspace.store.update(state => {
     if (!amIScribe(state, sessionHash)) {
       return state;

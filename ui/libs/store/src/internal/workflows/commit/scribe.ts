@@ -1,5 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitInput } from '@syn/zome-client';
+import cloneDeep from 'lodash-es/cloneDeep';
 import { get } from 'svelte/store';
 import type { SynGrammar } from '../../../grammar';
 
@@ -11,7 +12,7 @@ import {
 import type { SynWorkspace } from '../../workspace';
 import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
-let commitLock: Promise<EntryHashB64 | undefined> | undefined;
+export let commitLock: Promise<EntryHashB64 | undefined> | undefined;
 
 export async function commitChanges<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
@@ -43,8 +44,9 @@ async function createCommit<G extends SynGrammar<any, any>>(
   sessionHash: EntryHashB64
 ): Promise<EntryHashB64 | undefined> {
   const state = get(workspace.store);
-
+  
   const session = selectSessionState(state, sessionHash);
+
   if (!session || session.uncommittedChanges.deltas.length === 0)
     return undefined;
 

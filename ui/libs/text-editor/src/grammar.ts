@@ -51,7 +51,7 @@ export const textEditorGrammar: TextEditorGrammar = {
     delta: TextEditorDelta,
     author: AgentPubKeyB64
   ) {
-  //  console.log(state, delta);
+    console.log(state, delta);
 
     return h(state, delta, author);
   },
@@ -61,7 +61,7 @@ export const textEditorGrammar: TextEditorGrammar = {
     conflictingDelta: TextEditorDelta
   ): TextEditorDelta {
     const h = htransformDelta(toTransform, conflictingDelta);
-    //console.log('transforms', toTransform, conflictingDelta, h)
+    console.log('transforms', toTransform, conflictingDelta, h)
     return h;
   },
 

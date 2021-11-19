@@ -191,7 +191,6 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     ); */
     if (sessionState.prerequestContent) {
       if (isLastDeltaSeenEqualToPrerequest) {
-        console.log('changing the prerequestcontent');
         contentToApplyTo = sessionState.prerequestContent.content;
       } else {
         // We are receiving a change out of order, sorry but gotta nuke
@@ -250,18 +249,16 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     if (myChanges) {
       clearRequested(sessionState, myChanges);
     }
-    console.log('hey', sessionState, contentToApplyTo);
+
     if (
       sessionState.requestedChanges.length === 0 &&
       sessionState.nonRequestedChanges.length === 0
     ) {
-      console.log('hey2', sessionState, contentToApplyTo);
       sessionState.prerequestContent = undefined;
       sessionState.currentContent = contentToApplyTo;
 
       sessionState.nonRequestedChangesAtLastDeltaSeen = undefined;
     } else {
-      console.log('hey3', sessionState, contentToApplyTo);
       sessionState.prerequestContent = {
         lastDeltaSeen: selectLastDeltaSeen(sessionState),
         content: contentToApplyTo,
