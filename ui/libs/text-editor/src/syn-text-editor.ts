@@ -116,6 +116,8 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
         }
       : undefined;
 
+    console.log(this._state.value.text, selection);
+
     return html`
       <div
         class="flex-scrollable-parent"
