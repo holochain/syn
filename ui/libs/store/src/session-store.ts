@@ -11,20 +11,11 @@ import { leaveSession } from './internal/workflows/sessions';
 import type { CloseSessionResult } from './internal/workflows/sessions/scribe';
 import pickBy from 'lodash-es/pickBy';
 import type { GrammarState, GrammarDelta, SynGrammar } from './grammar';
-import type {
-  SessionEvent,
-  SessionEventListener,
-} from './internal/events/types';
 
 export interface SynSlice<G extends SynGrammar<any, any>> {
   state: Readable<GrammarState<G>>;
 
   requestChanges(deltas: Array<GrammarDelta<G>>): void;
-
-  on<S extends SessionEvent>(
-    event: S['type'],
-    listener: SessionEventListener<S>
-  ): void;
 }
 
 export interface SessionStore<G extends SynGrammar<any, any>>
@@ -63,15 +54,5 @@ export function buildSessionStore<G extends SynGrammar<any, any>>(
     requestChanges: (deltas: Array<GrammarDelta<G>>) =>
       requestChanges(workspace, sessionHash, deltas),
     leave: async () => leaveSession(workspace, sessionHash),
-    on<S extends SessionEvent>(
-      event: S['type'],
-      listener: SessionEventListener<S>
-    ) {
-      workspace.listeners.push({
-        event: event,
-        sessionHash,
-        listener,
-      });
-    },
   };
 }
