@@ -32,5 +32,8 @@
     "lit-svelte-stores": "^0.1.4",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
