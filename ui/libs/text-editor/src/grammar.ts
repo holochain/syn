@@ -2,7 +2,7 @@ import type {
   AgentPubKeyB64,
   Dictionary,
 } from '@holochain-open-dev/core-types';
-import type { SynGrammar } from '@syn/store';
+import type { SynGrammar } from '@holochain-syn/store';
 import cloneDeep from 'lodash-es/cloneDeep';
 import { moveSelections } from './utils';
 

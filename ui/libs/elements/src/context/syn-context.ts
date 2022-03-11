@@ -1,8 +1,8 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { css, html, LitElement, PropertyValues } from 'lit';
 import { property } from 'lit/decorators.js';
-import type { SynStore } from '@syn/store';
-import { Context, ContextProvider } from '@lit-labs/context';
+import type { SynStore } from '@holochain-syn/store';
+import { Context, ContextProvider } from '@holochain-open-dev/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';

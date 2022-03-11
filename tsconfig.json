@@ -23,7 +23,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "typeRoots": ["./node_modules/@types"],
-    "lib": ["ES2019", "ES6", "dom"]
+    "lib": ["ES2019", "ES6", "dom"],
+    "incremental": true
   },
   "exclude": ["node_modules/**", "**/node_modules/**", "**/dist/**"],
   "references": []

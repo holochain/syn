@@ -1,4 +1,4 @@
-import type { Commit } from '@syn/zome-client';
+import type { Commit } from '@holochain-syn/client';
 import type {
   EntryHashB64,
   HeaderHashB64,

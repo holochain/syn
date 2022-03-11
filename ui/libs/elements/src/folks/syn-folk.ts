@@ -4,8 +4,8 @@ import { css, html, LitElement } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { AgentAvatar } from '@holochain-open-dev/profiles';
-import { contextProvided } from '@lit-labs/context';
-import type { SessionStore, SynStore } from '@syn/store';
+import { contextProvided } from '@holochain-open-dev/context';
+import type { SessionStore, SynStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { synContext, synSessionContext } from '../context/contexts';

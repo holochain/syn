@@ -10,7 +10,7 @@ import type {
   Session,
   LastDeltaSeen,
   FolkInfo,
-} from '@syn/zome-client';
+} from '@holochain-syn/client';
 import type { GrammarState, SynGrammar } from '../grammar';
 
 /**

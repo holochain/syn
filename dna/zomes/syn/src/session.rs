@@ -74,7 +74,7 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
-    let links = get_links(path.hash()?, None)?;
+    let links = get_links(path.path_entry_hash()?, None)?;
 
     let sessions_get_inputs = links
         .into_iter()
@@ -107,7 +107,7 @@ pub struct CloseSessionInput {
 pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     // TODO: add validation so that only the scribe can delete it
     let path = get_sessions_path();
-    let links = get_links(path.hash()?, None)?;
+    let links = get_links(path.path_entry_hash()?, None)?;
 
     let session_hash = EntryHash::from(input.session_hash.clone());
 
@@ -166,7 +166,7 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     let header_hash = create_entry(&session)?;
     let session_hash = hash_entry(&session)?;
 
-    let session_anchor_hash = path.hash()?;
+    let session_anchor_hash = path.path_entry_hash()?;
     create_link(session_anchor_hash, session_hash, ())?;
 
     Ok(header_hash)

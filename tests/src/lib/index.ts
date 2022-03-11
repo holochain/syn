@@ -5,17 +5,17 @@ import missedDeltas from './missed-deltas';
 
 async function run() {
   let orchestrator = new Orchestrator();
-/*   oFn(orchestrator);
+  /*   oFn(orchestrator);
   await orchestrator.run();
 
   orchestrator = new Orchestrator();
  */
-  concurrent(orchestrator);
+  missedDeltas(orchestrator);
   await orchestrator.run();
 
   orchestrator = new Orchestrator();
 
-  missedDeltas(orchestrator);
+  concurrent(orchestrator);
   await orchestrator.run();
 }
 

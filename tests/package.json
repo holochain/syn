@@ -1,5 +1,5 @@
 {
-  "name": "@syn/tests",
+  "name": "@holochain-syn/tests",
   "main": "index.js",
   "scripts": {
     "test": "npm run test:zome && npm run test:lib",
@@ -10,22 +10,23 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.1.1",
+    "@holochain-open-dev/cell-client": "^0.3.2",
+    "@holochain-open-dev/core-types": "^0.2.0",
     "@msgpack/msgpack": "^2.7.0",
-    "@syn/text-editor": "0.0.1",
+    "@holochain-syn/text-editor": "0.0.1",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
     "lodash-es": "^4.17.21",
     "path": "^0.12.7",
     "svelte": "^3.38.3",
     "tape": "^5.2.2",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.6.0",
     "typescript": "^4.3.5",
     "up": "^1.0.2",
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@holochain/tryorama": "0.4.6",
+    "@holochain/tryorama": "0.4.10",
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.14.2",
     "ava": "^3.15.0"

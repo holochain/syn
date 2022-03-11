@@ -1,4 +1,4 @@
-import type { StateForSync } from '@syn/zome-client';
+import type { StateForSync } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import merge from 'lodash-es/merge';
 

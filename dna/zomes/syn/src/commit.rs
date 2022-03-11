@@ -120,13 +120,13 @@ fn add_commit(commit_hash: EntryHashB64) -> ExternResult<()> {
     let path = all_commits_path();
     path.ensure()?;
 
-    create_link(path.hash()?, EntryHash::from(commit_hash), ())?;
+    create_link(path.path_entry_hash()?, EntryHash::from(commit_hash), ())?;
     Ok(())
 }
 
 #[hdk_extern]
 pub fn get_all_commits(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
-    let links = get_links(all_commits_path().hash()?, None)?;
+    let links = get_links(all_commits_path().path_entry_hash()?, None)?;
 
     let get_inputs = links
         .into_iter()

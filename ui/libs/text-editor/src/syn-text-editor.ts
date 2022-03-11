@@ -11,9 +11,9 @@ import {
   synContext,
   synSessionContext,
   getFolkColors,
-} from '@syn/elements';
-import { contextProvided } from '@lit-labs/context';
-import type { SessionStore, SynSlice, SynStore } from '@syn/store';
+} from '@holochain-syn/elements';
+import { contextProvided } from '@holochain-open-dev/context';
+import type { SessionStore, SynSlice, SynStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { TextEditorDeltaType, TextEditorGrammar } from './grammar';

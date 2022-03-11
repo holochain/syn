@@ -1,7 +1,6 @@
 import { Orchestrator } from '@holochain/tryorama';
 
-import { selectMissedDeltas } from '@syn/store';
-import { SynState } from '@syn/store/dist/state/syn-state';
+import { selectMissedDeltas } from '@holochain-syn/store';
 
 const synState = {
   myPubKey: 'uhCAkTQK-dOniBe986kPeL1skevMO4K8M7_0Y0hjg8KhlQz5MVdoD',

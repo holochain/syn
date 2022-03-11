@@ -1,24 +1,10 @@
-import {
-  Config,
-  InstallAgentsHapps,
-  Player,
-  ConfigSeed,
-  Orchestrator,
-} from '@holochain/tryorama';
+import { Config, Orchestrator } from '@holochain/tryorama';
 
-import { HolochainClient } from '@holochain-open-dev/cell-client';
-import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
-import { SynGrammar, SynStore, DebouncingStore } from '@syn/store';
+import { SynStore } from '@holochain-syn/store';
 import { TextEditorDeltaType } from '../grammar';
 
-import {
-  applyDelta,
-  Content,
-  delay,
-  sampleGrammar,
-  TextDelta,
-} from '../common';
+import { delay, sampleGrammar, TextDelta } from '../common';
 import { spawnSyn } from './spawn';
 
 const config = Config.gen();
@@ -94,7 +80,6 @@ export default (orchestrator: Orchestrator<any>) => {
     }
 
     await Promise.all([simulateAlice(), simulateBo()]);
-
     await delay(4000);
 
     await Promise.all([simulateAlice(), simulateBo()]);
@@ -103,21 +88,22 @@ export default (orchestrator: Orchestrator<any>) => {
     await Promise.all([simulateAlice(), simulateBo()]);
     await delay(4000);
 
-
-    console.log('hi');
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
 
+    console.log('hi1');
     let currentState = get(aliceSessionStore.state);
     t.deepEqual(currentState.body.text, expectedText);
+    console.log('hi2');
 
     currentState = get(bobSessionStore.state);
     t.deepEqual(currentState.body.text, expectedText);
+    console.log('hi3');
 
     await bobSyn.close();
-
+    console.log('hi4');
     await aliceSyn.close();
+    console.log('hi5');
 
-    await delay(1000);
   });
 };

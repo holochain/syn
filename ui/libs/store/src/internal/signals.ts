@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { SynMessageType, SynSignal } from '@syn/zome-client';
+import { SynMessageType, SynSignal } from '@holochain-syn/client';
 
 import type { SynWorkspace } from './workspace';
 import { handleSyncRequest } from './workflows/sync/scribe';

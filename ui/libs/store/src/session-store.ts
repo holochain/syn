@@ -1,4 +1,4 @@
-import type { FolkInfo, Session } from '@syn/zome-client';
+import type { FolkInfo, Session } from '@holochain-syn/client';
 import type { Readable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';

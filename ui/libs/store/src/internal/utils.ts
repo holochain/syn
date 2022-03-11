@@ -3,7 +3,7 @@ import type {
   EntryHashB64,
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
-import type { ChangeBundle, Commit } from '@syn/zome-client';
+import type { ChangeBundle, Commit } from '@holochain-syn/client';
 import cloneDeep from 'lodash-es/cloneDeep';
 import type { GrammarApplyDeltaFn, GrammarState, SynGrammar } from '../grammar';
 

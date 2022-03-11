@@ -1,7 +1,7 @@
 import { AdminWebsocket, AppWebsocket } from '@holochain/conductor-api';
 import { HolochainClient } from '@holochain-open-dev/cell-client';
-import { SynStore } from '@syn/store';
-import { applyTextEditorDelta } from '@syn/text-editor';
+import { SynStore } from '@holochain-syn/store';
+import { textEditorGrammar } from '@holochain-syn/text-editor';
 
 // definition of how to apply a delta to the content
 // if the delta is destructive also returns what was
@@ -48,15 +48,11 @@ function undo(change) {
 }
 
 export async function createStore() {
-  const appWebsocket = await AppWebsocket.connect(
-    `ws://localhost:${process.env.HC_PORT}`
-  );
+  const url = `ws://localhost:${process.env.HC_PORT}`
 
-  const cellData = await appWebsocket.appInfo({
-    installed_app_id: 'syn',
-  });
+  const hcClient = await HolochainClient.connect(url, 'syn');
+  const cellData = hcClient.cellDataByRoleId('syn');
+  const cellClient = hcClient.forCell(cellData);
 
-  const client = new HolochainClient(appWebsocket, cellData.cell_data[0]);
-
-  return new SynStore(client, { title: '', body: '', meta: {} }, applyDelta);
+  return new SynStore(cellClient, textEditorGrammar);
 }

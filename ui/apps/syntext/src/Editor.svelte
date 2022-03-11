@@ -1,8 +1,8 @@
 <script>
   import { connection } from './stores.js';
   import { createEventDispatcher, getContext } from 'svelte';
-  import { CSSifyHSL, synSessionContext } from '@syn/elements';
-  import { unnest } from '@syn/store';
+  import { CSSifyHSL, synSessionContext } from '@holochain-syn/elements';
+  import { unnest } from '@holochain-syn/store';
 
   const dispatch = createEventDispatcher();
 
@@ -10,7 +10,7 @@
 
   const store = getStore();
   $: session = store.activeSession;
-  $: content = unnest(store.activeSession, s => s.content);
+  $: content = unnest(store.activeSession, s => s.state);
 
   function getLoc(tag) {
     return $content.meta ? ($content.meta[tag] ? $content.meta[tag] : 0) : 0;
@@ -19,22 +19,14 @@
   let myTag = store.myPubKey.slice(-4);
 
   let editor;
-  $: editor_content1 = $content.body.slice(0, getLoc(myTag));
-  $: editor_content2 = $content.body.slice(getLoc(myTag));
+  $: editor_content1 = $content.text.slice(0, getLoc(myTag));
+  $: editor_content2 = $content.text.slice(getLoc(myTag));
 
   function addText(text) {
-    console.log($session, $content.body);
+    console.log($session, $content.text);
     const loc = getLoc(myTag);
-    const deltas = [{ type: 'Add', value: [loc, text] }];
-    for (const [tag, tagLoc] of Object.entries($content.meta)) {
-      if (tagLoc >= loc) {
-        deltas.push({
-          type: 'Meta',
-          value: { setLoc: [tag, tagLoc + text.length] },
-        });
-      }
-    }
-    $session.requestChange(deltas);
+    const deltas = [{ type: 'insert', text, position: loc }];
+    $session.requestChanges(deltas);
   }
 
   function handleInput(event) {
@@ -45,15 +37,15 @@
     } else {
       switch (key) {
         case 'ArrowRight':
-          if (loc < $content.body.length) {
-            $session.requestChange([
+          if (loc < $content.text.length) {
+            $session.requestChanges([
               { type: 'Meta', value: { setLoc: [myTag, loc + 1] } },
             ]);
           }
           break;
         case 'ArrowLeft':
           if (loc > 0) {
-            $session.requestChange([
+            $session.requestChanges([
               { type: 'Meta', value: { setLoc: [myTag, loc - 1] } },
             ]);
           }
@@ -63,7 +55,9 @@
           break;
         case 'Backspace':
           if (loc > 0) {
-            const deltas = [{ type: 'Delete', value: [loc - 1, loc] }];
+            const deltas = [
+              { type: 'delete', position: loc, characterCount: 1 },
+            ];
             for (const [tag, tagLoc] of Object.entries($content.meta)) {
               if (tagLoc >= loc) {
                 deltas.push({
@@ -72,7 +66,7 @@
                 });
               }
             }
-            $session.requestChange(deltas);
+            $session.requestChanges(deltas);
           }
       }
     }
@@ -85,7 +79,7 @@
       loc += editor_content1.length;
     }
     if (loc != getLoc(myTag)) {
-      $session.requestChange([
+      $session.requestChanges([
         { type: 'Meta', value: { setLoc: [myTag, loc] } },
       ]);
     }
@@ -115,7 +109,11 @@
   >
 </editor>
 
-<syn-text-editor style="height: 300px; width: 100%" content-path="body" on:change-requested={e => $session.requestChange([e.detail.delta])}></syn-text-editor>
+<syn-text-editor
+  style="height: 300px; width: 100%"
+  content-path="body"
+  on:change-requested={e => $session.requestChanges([e.detail.delta])}
+/>
 
 <style>
   editor {

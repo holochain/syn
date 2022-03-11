@@ -1,5 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { CommitInput } from '@syn/zome-client';
+import type { CommitInput } from '@holochain-syn/client';
 import { get } from 'svelte/store';
 import type { SynGrammar } from '../../../grammar';
 

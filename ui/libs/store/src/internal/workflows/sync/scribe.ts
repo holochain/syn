@@ -2,7 +2,7 @@ import type {
   MissedCommit,
   RequestSyncInput,
   StateForSync,
-} from '@syn/zome-client';
+} from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import {

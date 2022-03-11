@@ -1,5 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { AuthoredDelta } from '@syn/zome-client';
+import type { AuthoredDelta } from '@holochain-syn/client';
 
 export type SessionEventListener<SE extends SessionEvent> = (
   args: SE['payload']

@@ -1,5 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { CommitNotice } from '@syn/zome-client';
+import type { CommitNotice } from '@holochain-syn/client';
 import type { SynGrammar } from '../../../grammar';
 import {
   amIScribe,

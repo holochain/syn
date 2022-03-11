@@ -5,10 +5,8 @@ import {
   ConfigSeed,
 } from '@holochain/tryorama';
 
-import { HolochainClient } from '@holochain-open-dev/cell-client';
-import { AppWebsocket } from '@holochain/conductor-api';
 import { get } from 'svelte/store';
-import { SynGrammar, SynStore } from '@syn/store';
+import { SynGrammar, SynStore } from '@holochain-syn/store';
 import { TextEditorDeltaType } from '../grammar';
 
 import {

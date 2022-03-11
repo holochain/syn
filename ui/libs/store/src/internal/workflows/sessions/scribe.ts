@@ -3,7 +3,7 @@ import type {
   EntryHashB64,
 } from '@holochain-open-dev/core-types';
 import { get } from 'svelte/store';
-import type { Commit } from '@syn/zome-client';
+import type { Commit } from '@holochain-syn/client';
 import cloneDeep from 'lodash-es/cloneDeep';
 
 import {

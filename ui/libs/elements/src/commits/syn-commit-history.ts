@@ -2,14 +2,14 @@ import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
 import { property, state } from 'lit/decorators.js';
-import { contextProvided } from '@lit-labs/context';
+import { contextProvided } from '@holochain-open-dev/context';
 import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 
-import type { SynStore } from '@syn/store';
-import type { Commit } from '@syn/zome-client';
+import type { SynStore } from '@holochain-syn/store';
+import type { Commit } from '@holochain-syn/client';
 
 import { sharedStyles } from '../shared-styles';
 import { synContext } from '../context/contexts';

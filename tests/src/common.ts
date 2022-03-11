@@ -2,7 +2,7 @@ import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
-import { SynGrammar } from '@syn/store';
+import { SynGrammar } from '@holochain-syn/store';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

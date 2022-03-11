@@ -1,5 +1,5 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
-import type { AuthoredDelta } from '@syn/zome-client';
+import type { AuthoredDelta } from '@holochain-syn/client';
 import { derived, get, Readable, writable, Writable } from 'svelte/store';
 import type { GrammarDelta, GrammarState, SynGrammar } from '../grammar';
 import type {

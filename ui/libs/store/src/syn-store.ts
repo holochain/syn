@@ -2,7 +2,7 @@ import { derived, get, Readable, writable } from 'svelte/store';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import { serializeHash } from '@holochain-open-dev/core-types';
-import { Commit, Session, SynClient } from '@syn/zome-client';
+import { Commit, Session, SynClient } from '@holochain-syn/client';
 import merge from 'lodash-es/merge';
 
 import { initialState } from './state/syn-state';

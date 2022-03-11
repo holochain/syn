@@ -2,8 +2,8 @@ import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { css, html, LitElement, PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import type { SessionStore, SynStore } from '@syn/store';
-import { Context, contextProvided, ContextProvider } from '@lit-labs/context';
+import type { SessionStore, SynStore } from '@holochain-syn/store';
+import { Context, contextProvided, ContextProvider } from '@holochain-open-dev/context';
 
 import { synSessionContext, synContext } from './contexts';
 

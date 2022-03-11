@@ -1,7 +1,6 @@
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import type {
   EntryHashB64,
-  Dictionary,
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
 import { encode, decode } from '@msgpack/msgpack';
@@ -34,18 +33,18 @@ export class SynClient {
     protected handleSignal: (synSignal: SynSignal) => void,
     protected zomeName = 'syn'
   ) {
-    cellClient
-      .addSignalHandler(signal => {
-        console.log(signal);
-        if (
-          isEqual(cellClient.cellId, signal.data.cellId) &&
-          signal.data.payload.message &&
-          allMessageTypes.includes(signal.data.payload.message.type)
-        ) {
-          handleSignal(deepDecodeUint8Arrays(signal.data.payload));
-        }
-      })
-      .then(({ unsubscribe }) => (this.unsubscribe = unsubscribe));
+    const { unsubscribe } = cellClient.addSignalHandler(signal => {
+      console.log(signal);
+      if (
+        isEqual(cellClient.cellId, signal.data.cellId) &&
+        signal.data.payload.message &&
+        allMessageTypes.includes(signal.data.payload.message.type)
+      ) {
+        handleSignal(deepDecodeUint8Arrays(signal.data.payload));
+      }
+    });
+
+    this.unsubscribe = unsubscribe;
   }
 
   public close() {
@@ -67,7 +66,7 @@ export class SynClient {
     return this.callZome('close_session', input);
   }
 
-  public getSessions(): Promise<Dictionary<Session>> {
+  public getSessions(): Promise<Record<string, Session>> {
     return this.callZome('get_sessions', null);
   }
 
@@ -110,7 +109,7 @@ export class SynClient {
     return this.decodeCommit(commit);
   }
 
-  public async getAllCommits(): Promise<Dictionary<Commit>> {
+  public async getAllCommits(): Promise<Record<string, Commit>> {
     const commits = await this.callZome('get_all_commits', null);
 
     for (const key of Object.keys(commits)) {

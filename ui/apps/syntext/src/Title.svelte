@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, tick, getContext } from 'svelte'
-  import { unnest } from '@syn/store';
+  import { unnest } from '@holochain-syn/store';
 
   const dispatch = createEventDispatcher()
 
@@ -10,7 +10,7 @@
 
   const store = getStore();
   $: session = store.activeSession;
-  $: content = unnest(store.activeSession, s => s.content);
+  $: content = unnest(store.activeSession, s => s.state);
 
   let editingTitle = false
   function saveTitle() {

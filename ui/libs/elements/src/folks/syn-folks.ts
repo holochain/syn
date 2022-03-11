@@ -1,9 +1,9 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
-import type { SynStore } from '@syn/store';
+import type { SynStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
-import { contextProvided } from '@lit-labs/context';
+import { contextProvided } from '@holochain-open-dev/context';
 
 import { synContext } from '../context/contexts';
 import { SynFolk } from './syn-folk';

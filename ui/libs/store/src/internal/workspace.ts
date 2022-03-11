@@ -1,4 +1,4 @@
-import type { SynClient } from '@syn/zome-client';
+import type { SynClient } from '@holochain-syn/client';
 
 import type { SynState } from '../state/syn-state';
 import type { Writable } from 'svelte/store';

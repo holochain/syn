@@ -1,5 +1,5 @@
-import { createContext, Context } from '@lit-labs/context';
-import type { SessionStore, SynStore } from '@syn/store';
+import { createContext, Context } from '@holochain-open-dev/context';
+import type { SessionStore, SynStore } from '@holochain-syn/store';
 
 export const synContext: Readonly<Context<SynStore<any>>> =
   createContext('syn-context', undefined);

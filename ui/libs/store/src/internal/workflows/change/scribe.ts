@@ -4,7 +4,7 @@ import type {
   FolkChanges,
   AuthoredDelta,
   LastDeltaSeen,
-} from '@syn/zome-client';
+} from '@holochain-syn/client';
 import type {
   EntryHashB64,
   AgentPubKeyB64,

@@ -4,8 +4,8 @@
   import Debug from './Debug.svelte';
   import History from './History.svelte';
   import { content, scribeStr } from './stores.js';
-  import { SynContext, SynFolks, SynSessions } from '@syn/elements';
-  import { SynTextEditor } from '@syn/text-editor';
+  import { SynContext, SynFolks, SynSessions } from '@holochain-syn/elements';
+  import { SynTextEditor } from '@holochain-syn/text-editor';
   import { createStore } from './syn';
   import { setContext } from 'svelte';
 
@@ -111,8 +111,17 @@
         synStore = store;
       });
     } else {
-      await store.joinSession(Object.keys(sessions)[0]);
-      synStore = store;
+      for (const session of Object.keys(sessions)) {
+        try {
+          await store.joinSession(Object.keys(sessions)[0]);
+
+          synStore = store;
+          return;
+        } catch (e) {}
+      }
+      store.newSession().then(() => {
+        synStore = store;
+      });
     }
   });
   $: synStore;

@@ -2,7 +2,7 @@
   "name": "syntext",
   "version": "0.0.1",
   "scripts": {
-    "start": "npm run build && concurrently \"npm run build:watch\" \"wds --config wds.config.mjs\"",
+    "start": "concurrently \"npm run build:watch\" \"wds --config wds.config.mjs\"",
     "build": "rollup -c",
     "build:watch": "run-singleton \"rollup -c -w\""
   },
@@ -23,12 +23,12 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.1.1",
-    "@holochain/conductor-api": "0.2.4",
-    "@lit-labs/context": "github:holochain-open-dev/context#build",
-    "@syn/elements": "0.0.1",
-    "@syn/store": "0.0.1",
-    "@syn/text-editor": "0.0.1",
+    "@holochain-open-dev/cell-client": "^0.3.2",
+    "@holochain/client": "^0.3.2",
+    "@holochain-open-dev/context": "^0.0.3",
+    "@holochain-syn/elements": "0.0.1",
+    "@holochain-syn/store": "0.0.1",
+    "@holochain-syn/text-editor": "0.0.1",
     "lit": "^2.0.2",
     "sirv-cli": "^1.0.0",
     "svelte-fa": "^2.2.0"

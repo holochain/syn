@@ -3,7 +3,7 @@ import type {
   ChangeBundle,
   LastDeltaSeen,
   Session,
-} from '@syn/zome-client';
+} from '@holochain-syn/client';
 import type {
   AgentPubKeyB64,
   EntryHashB64,

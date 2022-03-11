@@ -18,7 +18,7 @@ pub fn put_snapshot_inner(content: Snapshot) -> SynResult<(HeaderHashB64, EntryH
     path.ensure()?;
 
     // snapshot anchor base
-    let snapshots_anchor_hash = path.hash()?;
+    let snapshots_anchor_hash = path.path_entry_hash()?;
     create_link(snapshots_anchor_hash, content_hash.clone(), ())?;
     Ok((header_hash.into(), content_hash.into()))
 }

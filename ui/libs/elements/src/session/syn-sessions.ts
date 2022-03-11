@@ -1,9 +1,9 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
-import type { SynStore } from '@syn/store';
+import type { SynStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
-import { contextProvided } from '@lit-labs/context';
+import { contextProvided } from '@holochain-open-dev/context';
 import {
   List,
   ListItem,
@@ -12,7 +12,7 @@ import {
   Card,
 } from '@scoped-elements/material-web';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { Session } from '@syn/zome-client';
+import type { Session } from '@holochain-syn/client';
 import { AgentAvatar } from '@holochain-open-dev/profiles';
 import { SlRelativeTime } from '@scoped-elements/shoelace';
 

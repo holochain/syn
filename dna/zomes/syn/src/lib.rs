@@ -21,7 +21,7 @@ use sync::{RequestSyncInput, StateForSync};
 use crate::commit::Commit;
 
 entry_defs![
-    Path::entry_def(),
+    PathEntry::entry_def(),
     Snapshot::entry_def(),
     Commit::entry_def(),
     Session::entry_def()
