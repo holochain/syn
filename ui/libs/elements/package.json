@@ -1,8 +1,11 @@
 {
   "name": "@holochain-syn/elements",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
@@ -27,7 +30,7 @@
     "@scoped-elements/cytoscape": "0.0.2",
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/shoelace": "0.0.8",
-    "@holochain-syn/store": "0.0.1",
+    "@holochain-syn/store": "0.0.2",
     "lit": "^2.0.2",
     "lit-svelte-stores": "^0.1.4",
     "lodash-es": "^4.17.21",

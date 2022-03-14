@@ -1,8 +1,11 @@
 {
   "name": "@holochain-syn/store",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
@@ -20,7 +23,7 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.3.2",
     "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain-syn/client": "0.0.1",
+    "@holochain-syn/client": "0.0.2",
     "lodash-es": "^4.17.21"
   },
   "publishConfig": {
