@@ -20,6 +20,20 @@ use sync::{RequestSyncInput, StateForSync};
 
 use crate::commit::Commit;
 
+enum SynLinkType {
+    PathToFolk = 0,
+    PathToCommit = 1,
+    PathToSnapshot = 2,
+    PreviousCommit = 3,
+    PathToSession = 4,
+}
+
+impl From<SynLinkType> for LinkType {
+    fn from(hdk_link_type: SynLinkType) -> Self {
+        Self(hdk_link_type as u8)
+    }
+}
+
 entry_defs![
     PathEntry::entry_def(),
     Snapshot::entry_def(),

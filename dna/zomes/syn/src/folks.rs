@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::{SignalPayload, SynMessage};
+use crate::{SignalPayload, SynLinkType, SynMessage};
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -37,10 +37,10 @@ fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
 #[hdk_extern]
 fn get_folks(_: ()) -> ExternResult<Vec<AgentPubKeyB64>> {
     let folks_anchor_hash = get_folks_path().path_entry_hash()?;
-    let links = get_links(folks_anchor_hash, None)?;
+    let links = get_links(folks_anchor_hash.into(), None)?;
     let folks = links
         .into_iter()
-        .map(|l| AgentPubKey::from(l.target).into())
+        .map(|l| AgentPubKey::from(EntryHash::from(l.target)).into())
         .collect();
     Ok(folks)
 }
@@ -52,7 +52,12 @@ pub fn register_as_folk() -> ExternResult<()> {
     let path = get_folks_path();
     path.ensure()?;
     let folks_anchor_hash = path.path_entry_hash()?;
-    create_link(folks_anchor_hash, me.into(), ())?;
+    create_link(
+        folks_anchor_hash.into(),
+        me.into(),
+        SynLinkType::PathToFolk,
+        (),
+    )?;
 
     Ok(())
 }

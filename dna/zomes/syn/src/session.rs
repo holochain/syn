@@ -6,7 +6,7 @@ use holo_hash::*;
 
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
-use crate::{SignalPayload, SynMessage};
+use crate::{SignalPayload, SynLinkType, SynMessage};
 
 /// Session
 /// This entry holds the record of who the scribe is and a hash
@@ -74,7 +74,7 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
-    let links = get_links(path.path_entry_hash()?, None)?;
+    let links = get_links(path.path_entry_hash()?.into(), None)?;
 
     let sessions_get_inputs = links
         .into_iter()
@@ -107,9 +107,9 @@ pub struct CloseSessionInput {
 pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     // TODO: add validation so that only the scribe can delete it
     let path = get_sessions_path();
-    let links = get_links(path.path_entry_hash()?, None)?;
+    let links = get_links(path.path_entry_hash()?.into(), None)?;
 
-    let session_hash = EntryHash::from(input.session_hash.clone());
+    let session_hash = AnyLinkableHash::from(EntryHash::from(input.session_hash.clone()));
 
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
 
@@ -167,7 +167,12 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
     let session_hash = hash_entry(&session)?;
 
     let session_anchor_hash = path.path_entry_hash()?;
-    create_link(session_anchor_hash, session_hash, ())?;
+    create_link(
+        session_anchor_hash.into(),
+        session_hash.into(),
+        SynLinkType::PathToSession,
+        (),
+    )?;
 
     Ok(header_hash)
 }

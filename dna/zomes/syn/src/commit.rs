@@ -8,7 +8,7 @@ use holo_hash::*;
 use crate::change::ChangeBundle;
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
-use crate::{SignalPayload, SynMessage};
+use crate::{SignalPayload, SynLinkType, SynMessage};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -73,8 +73,9 @@ fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
 
     for previous_commit_hash in input.commit.previous_commit_hashes {
         create_link(
-            EntryHash::from(previous_commit_hash),
-            commit_hash.clone(),
+            EntryHash::from(previous_commit_hash).into(),
+            commit_hash.clone().into(),
+            SynLinkType::PreviousCommit,
             tag.clone(),
         )?;
     }
@@ -120,13 +121,18 @@ fn add_commit(commit_hash: EntryHashB64) -> ExternResult<()> {
     let path = all_commits_path();
     path.ensure()?;
 
-    create_link(path.path_entry_hash()?, EntryHash::from(commit_hash), ())?;
+    create_link(
+        path.path_entry_hash()?.into(),
+        EntryHash::from(commit_hash).into(),
+        SynLinkType::PathToCommit,
+        (),
+    )?;
     Ok(())
 }
 
 #[hdk_extern]
 pub fn get_all_commits(_: ()) -> ExternResult<BTreeMap<EntryHashB64, Commit>> {
-    let links = get_links(all_commits_path().path_entry_hash()?, None)?;
+    let links = get_links(all_commits_path().path_entry_hash()?.into(), None)?;
 
     let get_inputs = links
         .into_iter()

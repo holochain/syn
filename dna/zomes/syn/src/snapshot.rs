@@ -1,7 +1,7 @@
-use holo_hash::*;
 use hdk::prelude::*;
+use holo_hash::*;
 
-use crate::error::SynResult;
+use crate::{error::SynResult, SynLinkType};
 
 /// Content
 // This is structure holds the shared content that is being collaboratively
@@ -19,7 +19,12 @@ pub fn put_snapshot_inner(content: Snapshot) -> SynResult<(HeaderHashB64, EntryH
 
     // snapshot anchor base
     let snapshots_anchor_hash = path.path_entry_hash()?;
-    create_link(snapshots_anchor_hash, content_hash.clone(), ())?;
+    create_link(
+        snapshots_anchor_hash.into(),
+        content_hash.clone().into(),
+        SynLinkType::PathToSnapshot,
+        (),
+    )?;
     Ok((header_hash.into(), content_hash.into()))
 }
 
