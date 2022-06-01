@@ -109,7 +109,7 @@ pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     let path = get_sessions_path();
     let links = get_links(path.path_entry_hash()?.into(), None)?;
 
-    let session_hash = AnyLinkableHash::from(EntryHash::from(input.session_hash.clone()));
+    let session_hash = EntryHash::from(input.session_hash.clone());
 
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
 

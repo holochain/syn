@@ -5,7 +5,7 @@ use holo_hash::*;
 
 use crate::{SignalPayload, SynLinkType, SynMessage};
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FolkInfo {
     last_seen: u64,
@@ -75,7 +75,7 @@ pub struct SendHeartbeatInput {
     pub data: String,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Heartbeat {
     pub from_folk: AgentPubKeyB64,

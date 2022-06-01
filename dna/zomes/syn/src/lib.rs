@@ -41,7 +41,7 @@ entry_defs![
     Session::entry_def()
 ];
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignalPayload {
     session_hash: EntryHashB64,
@@ -57,7 +57,7 @@ impl SignalPayload {
     }
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(tag = "type", content = "payload")]
 enum SynMessage {
     SyncReq(RequestSyncInput), // content is who the request is from
@@ -83,6 +83,14 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
     // grant unrestricted access to accept_cap_claim so other agents can send us claims
     let mut functions: GrantedFunctions = BTreeSet::new();
     functions.insert((zome_info()?.name, "recv_remote_signal".into()));
+    create_cap_grant(CapGrantEntry {
+        tag: "".into(),
+        // empty access converts to unrestricted
+        access: ().into(),
+        functions,
+    })?;
+    let mut functions: GrantedFunctions = BTreeSet::new();
+    functions.insert((zome_info()?.name, "receive_change".into()));
     create_cap_grant(CapGrantEntry {
         tag: "".into(),
         // empty access converts to unrestricted

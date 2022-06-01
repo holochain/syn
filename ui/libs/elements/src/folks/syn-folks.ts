@@ -3,14 +3,14 @@ import { html, LitElement } from 'lit';
 import type { SynStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { state } from 'lit/decorators.js';
-import { contextProvided } from '@holochain-open-dev/context';
+import { contextProvided } from '@lit-labs/context';
 
 import { synContext } from '../context/contexts';
 import { SynFolk } from './syn-folk';
 import { sharedStyles } from '../shared-styles';
 
 export class SynFolks extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: synContext, multiple: true })
+  @contextProvided({ context: synContext, subscribe: true })
   @state()
   syn!: SynStore<any>;
 

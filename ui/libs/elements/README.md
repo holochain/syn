@@ -11,7 +11,7 @@ These elements depend on having a [syn store](https://npmjs.com/package/@holocha
 Install the necessary dependencies:
 
 ```bash
-npm install @holochain-open-dev/profiles @holochain-open-dev/context @holochain-syn/elements
+npm install @holochain-open-dev/profiles @holochain-syn/elements
 ```
 
 ## Usage
@@ -21,27 +21,27 @@ First, you need to have instantiated a `SynStore` from [@holochain-syn/store](ht
 ### Defining the Context Providers
 
 ```ts
-// Define the <context-provider> element
-import '@holochain-open-dev/context/context-provider';
+// Define the <profiles-context> element
+import '@holochain-open-dev/profiles/profiles-context';
 
 // Define the <syn-context> element
 import { SynContext } from '@holochain-syn/elements';
 customElements.define('syn-context', SynContext);
 ```
 
-Now define the <context-provider> and the <syn-context> element and add it to your html wrapping the whole section of your page in which you are going to be placing the elements from @holochain-syn/elements:
+Now define the <profiles-context> and the <syn-context> element and add it to your html wrapping the whole section of your page in which you are going to be placing the elements from @holochain-syn/elements:
 
 ```html
-<context-provider id="profiles-context"> 
+<profiles-context id="profiles-context"> 
   <syn-context>
     <syn-sessions> </syn-sessions>
   </syn-context>
-</context-provider>
+</profiles-context>
 ```
 
 ### Connect the Store to the Context Providers
 
 Go to [this page](https://holochain-open-dev.github.io/reusable-modules/frontend/frameworks/), select the framework you are using, and follow its example in order to:
 
-- Connect the `ProfilesStore` to the <context-provider> with id="profiles-context".
+- Connect the `ProfilesStore` to the <profiles-context> with id="profiles-context".
 - Connect the `SynStore` to the <syn-context>.

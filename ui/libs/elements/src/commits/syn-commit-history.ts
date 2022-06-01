@@ -2,7 +2,7 @@ import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
 import { property, state } from 'lit/decorators.js';
-import { contextProvided } from '@holochain-open-dev/context';
+import { contextProvided } from '@lit-labs/context';
 import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
@@ -15,7 +15,7 @@ import { sharedStyles } from '../shared-styles';
 import { synContext } from '../context/contexts';
 
 export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: synContext, multiple: true })
+  @contextProvided({ context: synContext, subscribe: true })
   @state()
   _synStore!: SynStore<any>;
 

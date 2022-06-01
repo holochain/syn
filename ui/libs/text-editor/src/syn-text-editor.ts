@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { CodemirrorMarkdown } from '@scoped-elements/codemirror';
 import {
+  Profile,
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
@@ -12,12 +13,13 @@ import {
   synSessionContext,
   getFolkColors,
 } from '@holochain-syn/elements';
-import { contextProvided } from '@holochain-open-dev/context';
+import { contextProvided } from '@lit-labs/context';
 import type { SessionStore, SynSlice, SynStore } from '@holochain-syn/store';
-import { StoreSubscriber } from 'lit-svelte-stores';
+import { StoreSubscriber, TaskSubscriber } from 'lit-svelte-stores';
 
 import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
 import type { TextEditorDelta } from './grammar';
+import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 
 export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @property()
@@ -26,24 +28,22 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @property({ attribute: 'debounce-ms' })
   debounceMs: number = 1000;
 
-  @contextProvided({ context: synContext, multiple: true })
+  @contextProvided({ context: synContext, subscribe: true })
   @state()
   synStore!: SynStore<any>;
 
-  @contextProvided({ context: synSessionContext, multiple: true })
+  @contextProvided({ context: synSessionContext, subscribe: true })
   @state()
   sessionStore!: SessionStore<any>;
 
-  @contextProvided({ context: profilesStoreContext, multiple: true })
+  @contextProvided({ context: profilesStoreContext, subscribe: true })
   @state()
   profilesStore!: ProfilesStore;
 
   _state = new StoreSubscriber(this, () => this.synSlice?.state);
   _lastDelta: TextEditorDelta | undefined;
-  _allProfiles = new StoreSubscriber(
-    this,
-    () => this.profilesStore?.knownProfiles
-  );
+  _peersProfiles: Record<AgentPubKeyB64, TaskSubscriber<Profile | undefined>> =
+    {};
 
   _lastCursorPosition = 0;
   _cursorPosition = 0;
@@ -51,10 +51,21 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   updated(cv: PropertyValues) {
     super.updated(cv);
     if (cv.has('sessionStore') && this.sessionStore) {
-      this.sessionStore.folks.subscribe(
-        folks =>
-          folks && this.profilesStore.fetchAgentsProfiles(Object.keys(folks))
-      );
+      this.sessionStore.folks.subscribe(folks => {
+        if (!folks) return;
+
+        const allFolksPubKey = Object.keys(folks);
+
+        const unknownPeers = allFolksPubKey.filter(
+          pubKey => !Object.keys(this._peersProfiles).includes(pubKey)
+        );
+
+        for (const peer of unknownPeers) {
+          this._peersProfiles[peer] = new TaskSubscriber(this, () =>
+            this.profilesStore.fetchAgentProfile(peer)
+          );
+        }
+      });
     }
   }
 
@@ -95,7 +106,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
-        const name = this._allProfiles.value[agentPubKey]?.nickname;
+        const name = this._peersProfiles.value[agentPubKey]?.nickname;
         return {
           position: position.position,
           color: `${r} ${g} ${b}`,

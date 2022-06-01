@@ -13,7 +13,7 @@
     "@holochain-open-dev/cell-client": "^0.3.2",
     "@holochain-open-dev/core-types": "^0.2.0",
     "@msgpack/msgpack": "^2.7.0",
-    "@holochain-syn/text-editor": "0.0.1",
+    "@holochain-syn/text-editor": "0.0.4",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
     "lodash-es": "^4.17.21",

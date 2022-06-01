@@ -50,14 +50,14 @@ pub struct SendChangeRequestInput {
     pub delta_changes: DeltaChanges,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeltaChanges {
     pub at_folk_index: usize,
     pub deltas: Vec<Delta>,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LastDeltaSeen {
     pub commit_hash: Option<EntryHashB64>,
@@ -65,7 +65,7 @@ pub struct LastDeltaSeen {
 }
 
 /// Input to the send change call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeRequest {
     pub folk: AgentPubKeyB64,
@@ -111,7 +111,7 @@ pub struct SendChangeInput {
     pub delta_changes: ChangeBundle,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeNotice {
     pub last_delta_seen: LastDeltaSeen,
@@ -121,17 +121,57 @@ pub struct ChangeNotice {
 
 #[hdk_extern]
 fn send_change(input: SendChangeInput) -> ExternResult<()> {
-    let participants = input.participants.into_iter().map(|a| a.into()).collect();
+    let participants: Vec<AgentPubKeyB64> =
+        input.participants.into_iter().map(|a| a.into()).collect();
+
+    let signal = SignalPayload::new(
+        input.session_hash,
+        SynMessage::ChangeNotice(ChangeNotice {
+            last_delta_seen: input.last_delta_seen,
+            delta_changes: input.delta_changes,
+        }),
+    );
+
+    send_signal(participants, signal)
+}
+
+fn send_signal(participants: Vec<AgentPubKeyB64>, signal: SignalPayload) -> ExternResult<()> {
+    let zome_name = zome_info()?.name;
+
+    let call_inputs = participants
+        .clone()
+        .into_iter()
+        .map(|p| {
+            Call::new(
+                CallTarget::NetworkAgent(p.into()),
+                zome_name.clone(),
+                "receive_change".into(),
+                None,
+                ExternIO::encode(signal.clone()).unwrap(),
+            )
+        })
+        .collect();
+
     // send response signal to the participants
-    remote_signal(
-        ExternIO::encode(SignalPayload::new(
-            input.session_hash,
-            SynMessage::ChangeNotice(ChangeNotice {
-                last_delta_seen: input.last_delta_seen,
-                delta_changes: input.delta_changes,
-            }),
-        ))?,
-        participants,
-    )?;
-    Ok(())
+    let responses = HDK.with(|hdk| hdk.borrow().call(call_inputs))?;
+
+    let mut participants_left: Vec<AgentPubKeyB64> = Vec::new();
+
+    for (index, response) in responses.into_iter().enumerate() {
+        match response {
+            ZomeCallResponse::Ok(_) => {}
+            _ => participants_left.push(participants[index].clone()),
+        }
+    }
+
+    match participants_left.len() {
+        0 => Ok(()),
+        _ => send_signal(participants_left, signal),
+    }
+}
+
+#[hdk_extern]
+fn receive_change(signal: SignalPayload) -> ExternResult<()> {
+    debug!("Received remote signal {:?}", signal);
+    Ok(emit_signal(&signal)?)
 }

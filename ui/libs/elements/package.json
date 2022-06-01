@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/elements",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -24,8 +24,8 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.3.2",
     "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain-open-dev/profiles": "^0.0.9",
-    "@holochain-open-dev/context": "^0.0.3",
+    "@holochain-open-dev/profiles": "^0.1.1",
+    "@lit-labs/context": "^0.1.1",
     "@open-wc/scoped-elements": "^2.0.1",
     "@scoped-elements/cytoscape": "^0.0.5",
     "@scoped-elements/material-web": "^0.0.19",

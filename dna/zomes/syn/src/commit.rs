@@ -10,7 +10,7 @@ use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
 use crate::{SignalPayload, SynLinkType, SynMessage};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CommitNotice {
     pub commit_hash: EntryHashB64,

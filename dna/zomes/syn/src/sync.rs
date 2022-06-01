@@ -17,7 +17,7 @@ pub struct SendSyncRequestInput {
 }
 
 /// Input to the send sync req call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestSyncInput {
     pub scribe: AgentPubKeyB64,
@@ -46,7 +46,7 @@ fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MissedCommit {
     commit_hash: EntryHashB64,
@@ -54,7 +54,7 @@ pub struct MissedCommit {
     commit_initial_snapshot: Snapshot,
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StateForSync {
     pub folk_missed_last_commit: Option<MissedCommit>,
