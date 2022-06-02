@@ -106,7 +106,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
-        const name = this._peersProfiles.value[agentPubKey]?.nickname;
+        const name = this._peersProfiles[agentPubKey]?.value?.nickname;
         return {
           position: position.position,
           color: `${r} ${g} ${b}`,
