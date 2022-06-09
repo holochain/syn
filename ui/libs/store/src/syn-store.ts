@@ -36,7 +36,7 @@ export class SynStore<G extends SynGrammar<any, any>> {
   ) {
     const fullConfig = merge(config, defaultConfig());
 
-    const myPubKey = serializeHash(cellClient.cellId[1]);
+    const myPubKey = serializeHash(cellClient.cell.cell_id[1]);
 
     const state: SynState<G> = initialState(myPubKey);
 

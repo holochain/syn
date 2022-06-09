@@ -4,7 +4,6 @@ import type {
   AgentPubKeyB64,
 } from '@holochain-open-dev/core-types';
 import { encode, decode } from '@msgpack/msgpack';
-import isEqual from 'lodash-es/isEqual';
 
 import type {
   ChangeBundle,
@@ -34,9 +33,7 @@ export class SynClient {
     protected zomeName = 'syn'
   ) {
     const { unsubscribe } = cellClient.addSignalHandler(signal => {
-      console.log(signal);
       if (
-        isEqual(cellClient.cellId, signal.data.cellId) &&
         signal.data.payload.message &&
         allMessageTypes.includes(signal.data.payload.message.type)
       ) {

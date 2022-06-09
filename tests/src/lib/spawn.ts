@@ -1,4 +1,5 @@
 import { CellClient, HolochainClient } from '@holochain-open-dev/cell-client';
+import { AppWebsocket } from '@holochain/client';
 import { ConfigSeed, InstallAgentsHapps, Player } from '@holochain/tryorama';
 import { synDna } from '../common';
 
@@ -24,8 +25,15 @@ export async function spawnSyn(s, config: ConfigSeed): Promise<CellClient> {
     await s.shareAllNodes(allPlayers);
   }
 
-  const hcClient = await HolochainClient.connect(url, syn.hAppId);
-  const cellData = hcClient.cellData(syn.cells[0].cellId)!;
+  const appWebsocket = await AppWebsocket.connect(url);
 
-  return hcClient.forCell(cellData);
+  const appInfo = await appWebsocket.appInfo({
+    installed_app_id: syn.hAppId,
+  });
+
+  const hcClient = new HolochainClient(appWebsocket);
+
+  const cellData = appInfo.cell_data[0];
+
+  return new CellClient(hcClient, cellData);
 }
