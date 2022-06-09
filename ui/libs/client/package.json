@@ -21,7 +21,7 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.4.0",
     "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain/client": "^0.3.2",
+    "@holochain/client": "0.3.2",
     "@msgpack/msgpack": "^2.7.0",
     "lodash-es": "^4.17.21"
   },
