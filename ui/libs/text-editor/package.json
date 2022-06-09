@@ -11,14 +11,6 @@
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
   },
   "type": "module",
-  "devDependencies": {
-    "@holochain/client": "^0.3.2",
-    "@types/lodash-es": "^4.17.4",
-    "gh-pages": "^3.2.3",
-    "rimraf": "^3.0.2",
-    "run-singleton-cli": "^0.0.5",
-    "typescript": "^4.2.4"
-  },
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.4.0",
     "@holochain-open-dev/core-types": "^0.2.0",
@@ -27,12 +19,20 @@
     "@open-wc/scoped-elements": "^2.1.0",
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/codemirror": "^0.0.2",
-    "@holochain-syn/elements": "0.0.4",
-    "@holochain-syn/store": "0.0.2",
+    "@holochain-syn/elements": "0.0.5",
+    "@holochain-syn/store": "0.0.4",
     "lit": "^2.0.2",
     "lit-svelte-stores": "^0.2.0",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
+  },
+  "devDependencies": {
+    "@holochain/client": "^0.3.2",
+    "@types/lodash-es": "^4.17.4",
+    "gh-pages": "^3.2.3",
+    "rimraf": "^3.0.2",
+    "run-singleton-cli": "^0.0.5",
+    "typescript": "^4.2.4"
   },
   "publishConfig": {
     "access": "public"
