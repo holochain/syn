@@ -37,7 +37,7 @@ fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
 #[hdk_extern]
 fn get_folks(_: ()) -> ExternResult<Vec<AgentPubKeyB64>> {
     let folks_anchor_hash = get_folks_path().path_entry_hash()?;
-    let links = get_links(folks_anchor_hash.into(), None)?;
+    let links = get_links(folks_anchor_hash, None)?;
     let folks = links
         .into_iter()
         .map(|l| AgentPubKey::from(EntryHash::from(l.target)).into())
@@ -53,8 +53,8 @@ pub fn register_as_folk() -> ExternResult<()> {
     path.ensure()?;
     let folks_anchor_hash = path.path_entry_hash()?;
     create_link(
-        folks_anchor_hash.into(),
-        me.into(),
+        folks_anchor_hash,
+        me,
         SynLinkType::PathToFolk,
         (),
     )?;

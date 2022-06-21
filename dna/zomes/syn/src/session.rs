@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
 use hdk::prelude::*;
+use hdk::prelude::holo_hash::hash_type::AnyLinkable;
 use holo_hash::*;
 
 use crate::error::{SynError, SynResult};
@@ -74,7 +75,7 @@ fn new_session(input: NewSessionInput) -> ExternResult<SessionInfo> {
 #[hdk_extern]
 pub fn get_sessions(_: ()) -> ExternResult<HashMap<EntryHashB64, Session>> {
     let path = get_sessions_path();
-    let links = get_links(path.path_entry_hash()?.into(), None)?;
+    let links = get_links(path.path_entry_hash()?, None)?;
 
     let sessions_get_inputs = links
         .into_iter()
@@ -107,9 +108,9 @@ pub struct CloseSessionInput {
 pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     // TODO: add validation so that only the scribe can delete it
     let path = get_sessions_path();
-    let links = get_links(path.path_entry_hash()?.into(), None)?;
+    let links = get_links(path.path_entry_hash()?, None)?;
 
-    let session_hash = EntryHash::from(input.session_hash.clone());
+    let session_hash: HoloHash<AnyLinkable> = EntryHash::from(input.session_hash.clone()).into();
 
     let maybe_link = links.into_iter().find(|link| session_hash.eq(&link.target));
 
@@ -168,8 +169,8 @@ fn create_session(session: Session) -> SynResult<HeaderHash> {
 
     let session_anchor_hash = path.path_entry_hash()?;
     create_link(
-        session_anchor_hash.into(),
-        session_hash.into(),
+        session_anchor_hash,
+        session_hash,
         SynLinkType::PathToSession,
         (),
     )?;
