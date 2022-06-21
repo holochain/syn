@@ -21,7 +21,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.4.0",
+    "@holochain-open-dev/cell-client": "^0.4.2",
     "@holochain-open-dev/core-types": "^0.2.0",
     "@holochain-syn/client": "0.0.3",
     "lodash-es": "^4.17.21"

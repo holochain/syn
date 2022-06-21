@@ -12,7 +12,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.4.0",
+    "@holochain-open-dev/cell-client": "^0.4.2",
     "@holochain-open-dev/core-types": "^0.2.0",
     "@holochain-open-dev/profiles": "^0.2.0",
     "@lit-labs/context": "^0.1.1",
