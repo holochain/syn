@@ -42,7 +42,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
 
   _state = new StoreSubscriber(this, () => this.synSlice?.state);
   _lastDelta: TextEditorDelta | undefined;
-  _peersProfiles: Record<AgentPubKeyB64, TaskSubscriber<Profile | undefined>> =
+  _peersProfiles: Record<AgentPubKeyB64, TaskSubscriber<[], Profile | undefined>> =
     {};
 
   _lastCursorPosition = 0;
