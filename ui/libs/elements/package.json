@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/elements",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -12,22 +12,22 @@
   },
   "type": "module",
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.4.2",
+    "@holochain-open-dev/cell-client": "^0.5.3",
     "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain-open-dev/profiles": "^0.2.0",
+    "@holochain-open-dev/profiles": "^0.3.4",
     "@lit-labs/context": "^0.1.1",
     "@open-wc/scoped-elements": "^2.0.1",
     "@scoped-elements/cytoscape": "^0.0.5",
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/shoelace": "0.0.8",
-    "@holochain-syn/store": "0.0.4",
+    "@holochain-syn/store": "0.0.5",
     "lit": "^2.0.2",
     "lit-svelte-stores": "^0.1.4",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
   },
   "devDependencies": {
-    "@holochain/client": "^0.3.2",
+    "@holochain/client": "^0.4.1",
     "@types/cytoscape": "^3.19.0",
     "@types/lodash-es": "^4.17.4",
     "cytoscape": "^3.20.0",

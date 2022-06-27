@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/client",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -19,9 +19,9 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.4.2",
+    "@holochain-open-dev/cell-client": "^0.5.3",
     "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain/client": "0.3.2",
+    "@holochain/client": "^0.4.1",
     "@msgpack/msgpack": "^2.7.0",
     "lodash-es": "^4.17.21"
   },
