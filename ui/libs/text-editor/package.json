@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/text-editor",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -18,7 +18,7 @@
     "@lit-labs/context": "^0.1.1",
     "@open-wc/scoped-elements": "^2.1.0",
     "@scoped-elements/material-web": "^0.0.19",
-    "@scoped-elements/codemirror": "^0.0.3",
+    "@scoped-elements/codemirror": "^0.0.4",
     "@holochain-syn/elements": "0.0.6",
     "@holochain-syn/store": "0.0.5",
     "lit": "^2.0.2",
