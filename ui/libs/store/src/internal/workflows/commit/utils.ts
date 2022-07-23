@@ -11,6 +11,7 @@ import {
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynGrammar } from '../../../grammar';
+import { clone } from 'automerge';
 
 export function buildCommitFromUncommitted<G extends SynGrammar<any, any>>(
   state: SynState<G>,
@@ -22,7 +23,6 @@ export function buildCommitFromUncommitted<G extends SynGrammar<any, any>>(
 
   const lastCommitHash = session.lastCommitHash;
   return {
-    changes: session.uncommittedChanges,
     previousCommitHashes: lastCommitHash ? [lastCommitHash] : [],
     previousContentHash: selectLatestSnapshotHash(
       state,
@@ -48,10 +48,6 @@ export function putNewCommit<G extends SynGrammar<any, any>>(
   const session = selectSessionState(state, sessionHash);
 
   session.lastCommitHash = newCommitHash;
-  state.snapshots[commit.newContentHash] = cloneDeep(session.currentContent);
+  state.snapshots[commit.newContentHash] = clone(session.currentContent);
 
-  session.uncommittedChanges = {
-    authors: {},
-    deltas: [],
-  };
 }

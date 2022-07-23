@@ -4,7 +4,6 @@ import type {
 } from '@holochain-open-dev/core-types';
 import { get } from 'svelte/store';
 import type { Commit } from '@holochain-syn/client';
-import cloneDeep from 'lodash-es/cloneDeep';
 
 import {
   selectFolksInSession,
@@ -12,24 +11,56 @@ import {
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
-import type { SynGrammar } from '../../../grammar';
+import type { GrammarState, SynGrammar } from '../../../grammar';
+import { change, clone, Doc, FreezeObject, init, load } from 'automerge';
+
+export function getCommitSnapshot() {}
+
+export async function getInitialSessionSnapshot<G extends SynGrammar<any, any>>(
+  workspace: SynWorkspace<G>,
+  initialCommitHash: EntryHashB64 | undefined
+): Promise<Doc<GrammarState<G>>> {
+  const document = init({
+    actorId: workspace.myPubKey,
+  });
+  let currentContent = change(document, doc =>
+    workspace.grammar.initialState(doc)
+  ) as FreezeObject<GrammarState<G>>;
+
+  if (initialCommitHash) {
+    const currentCommit = await workspace.client.getCommit(initialCommitHash);
+
+    if (!currentCommit)
+      throw new Error("Can't fetch the requested commit: try again later");
+
+    const contentBytes = await workspace.client.getSnapshot(
+      (currentCommit as Commit).newContentHash
+    );
+    currentContent = load(contentBytes);
+
+    workspace.store.update(state => {
+      state.commits[initialCommitHash] = currentCommit;
+      state.snapshots[(currentCommit as Commit).newContentHash] = contentBytes;
+
+      return state;
+    });
+  }
+
+  return currentContent;
+}
 
 // Pick and join a session
 export async function newSession<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   fromCommit?: EntryHashB64
 ): Promise<EntryHashB64> {
-  let currentContent = cloneDeep(workspace.grammar.initialState);
-  let currentCommit: Commit | undefined;
+  const initialSessionContent = await getInitialSessionSnapshot(
+    workspace,
+    fromCommit
+  );
 
-  if (fromCommit) {
-    currentCommit = await workspace.client.getCommit(fromCommit);
-
-    currentContent = await workspace.client.getSnapshot(
-      (currentCommit as Commit).newContentHash
-    );
-  } else {
-    await workspace.client.putSnapshot(workspace.grammar.initialState);
+  if (!fromCommit) {
+    await workspace.client.putSnapshot(clone(initialSessionContent));
   }
   const session = await workspace.client.newSession({
     initialCommitHash: fromCommit,
@@ -41,26 +72,12 @@ export async function newSession<G extends SynGrammar<any, any>>(
     state.joinedSessions[session.sessionHash] = {
       lastCommitHash: fromCommit,
       sessionHash: session.sessionHash,
-      currentContent,
-      myFolkIndex: 0,
-      nonEmittedChangeBundle: undefined,
-      nonEmittedLastDeltaSeen: undefined,
-      nonRequestedChangesAtLastDeltaSeen: undefined,
-      nonRequestedChangesAtFolkIndex: undefined,
-      prerequestContent: undefined,
-      requestedChanges: [],
-      nonRequestedChanges: [],
-      uncommittedChanges: {
-        authors: {},
-        deltas: [],
-      },
+      currentContent: initialSessionContent,
+      unpublishedChanges: [],
+      syncStates: {},
+
       folks: {},
     };
-    if (fromCommit && currentCommit) {
-      state.snapshots[currentCommit?.newContentHash] =
-        cloneDeep(currentContent);
-      state.commits[fromCommit] = currentCommit;
-    }
 
     state.activeSessionHash = session.sessionHash;
 

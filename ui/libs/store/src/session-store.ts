@@ -2,6 +2,7 @@ import type { FolkInfo, Session } from '@holochain-syn/client';
 import type { Readable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
 import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
+import { Doc } from 'automerge';
 
 import type { SynWorkspace } from './internal/workspace';
 
@@ -17,7 +18,7 @@ import type {
 } from './internal/events/types';
 
 export interface SynSlice<G extends SynGrammar<any, any>> {
-  state: Readable<GrammarState<G>>;
+  state: Readable<Doc<GrammarState<G>>>;
 
   requestChanges(deltas: Array<GrammarDelta<G>>): void;
 

@@ -20,7 +20,7 @@ import type {
   Session,
   SessionInfo,
 } from './types/session';
-import type { SendSyncRequestInput, SendSyncResponseInput } from './types/sync';
+import type { SendSyncRequestInput, SyncResponseInput } from './types/sync';
 import { allMessageTypes, SynSignal } from './types/signal';
 import { deepDecodeUint8Arrays } from './utils';
 
@@ -134,12 +134,12 @@ export class SynClient {
   }
 
   public sendSyncResponse(
-    syncResponseInput: SendSyncResponseInput
+    syncResponseInput: SyncResponseInput
   ): Promise<void> {
     const input = {
       ...syncResponseInput,
     };
-
+/* 
     if (input.state.folkMissedLastCommit) {
       input.state.folkMissedLastCommit.commit = this.encodeCommit(
         input.state.folkMissedLastCommit.commit
@@ -152,7 +152,7 @@ export class SynClient {
       input.state.uncommittedChanges = this.encodeChangeBundle(
         syncResponseInput.state.uncommittedChanges
       );
-    }
+    } */
 
     return this.callZome('send_sync_response', input);
   }
@@ -162,11 +162,8 @@ export class SynClient {
     changeRequestInput: SendChangeRequestInput
   ): Promise<void> {
     const input = { ...changeRequestInput };
-    if (input.deltaChanges) {
-      input.deltaChanges = {
-        ...input.deltaChanges,
-        deltas: input.deltaChanges.deltas.map(d => encode(d)),
-      };
+    if (input.deltas) {
+      input.deltas = input.deltas.map(d => encode(d)) as any;
     }
 
     return this.callZome('send_change_request', input);
@@ -176,8 +173,8 @@ export class SynClient {
     const input = {
       ...sendChangeInput,
     };
-    if (input.deltaChanges) {
-      input.deltaChanges = this.encodeChangeBundle(input.deltaChanges);
+    if (input.deltas) {
+      input.deltas = input.deltas.map(d => encode(d)) as any;
     }
     return this.callZome('send_change', input);
   }
@@ -191,13 +188,13 @@ export class SynClient {
   private async callZome(fnName: string, payload: any): Promise<any> {
     return this.cellClient.callZome(this.zomeName, fnName, payload);
   }
-
+/* 
   private encodeCommit(commit: Commit) {
     return {
       ...commit,
       changes: this.encodeChangeBundle(commit.changes),
     };
-  }
+  } */
 
   private encodeChangeBundle(changes: ChangeBundle) {
     return {

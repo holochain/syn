@@ -1,11 +1,9 @@
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 
 export interface SynGrammar<STATE, DELTA> {
-  initialState: STATE;
+  initialState: (stateToInitialize: any) => void;
 
-  applyDelta: (content: STATE, delta: DELTA, author: AgentPubKeyB64) => STATE;
-
-  transformDelta?: (operationToTransform: DELTA, transformWithOperation: DELTA) => DELTA;
+  applyDelta: (content: STATE, delta: DELTA, author: AgentPubKeyB64) => void;
 
   selectPersistedState?: (state: STATE) => STATE;
 }

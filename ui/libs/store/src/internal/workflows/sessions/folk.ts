@@ -1,9 +1,11 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { generateSyncMessage, initSyncState } from 'automerge';
 import type { SynGrammar } from '../../../grammar';
 
 import { amIScribe } from '../../../state/selectors';
 import { emitEvent } from '../../events/emit';
 import type { SynWorkspace } from '../../workspace';
+import { getInitialSessionSnapshot } from './scribe';
 
 // Pick and join a session
 export async function joinSession<G extends SynGrammar<any, any>>(
@@ -11,6 +13,11 @@ export async function joinSession<G extends SynGrammar<any, any>>(
   sessionHash: EntryHashB64
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
+
+  const initialSnapshot = await getInitialSessionSnapshot(
+    workspace,
+    session.initialCommitHash
+  );
 
   return new Promise((resolve, reject) => {
     const joiningResolve = () => {
@@ -25,13 +32,21 @@ export async function joinSession<G extends SynGrammar<any, any>>(
     workspace.store.update(state => {
       state.sessions[sessionHash] = session;
 
-      state.joiningSessions[sessionHash] = joiningResolve;
+      state.joiningSessions[sessionHash] = {
+        promise: joiningResolve,
+        currentContent: initialSnapshot,
+      };
 
       if (session.scribe !== state.myPubKey) {
+        const [_, syncMessage] = generateSyncMessage(
+          initialSnapshot,
+          initSyncState()
+        );
+
         workspace.client.sendSyncRequest({
           scribe: session.scribe,
           sessionHash: sessionHash,
-          lastDeltaSeen: undefined,
+          syncMessage: syncMessage!,
         });
       }
 

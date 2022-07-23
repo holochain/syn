@@ -1,22 +1,15 @@
-import type {
-  ChangeNotice,
-  FolkChanges,
-  LastDeltaSeen,
-} from '@holochain-syn/client';
+import type { ChangeNotice, FolkChanges } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import cloneDeep from 'lodash-es/cloneDeep';
-import { get } from 'svelte/store';
 
 import {
   amIScribe,
-  selectLastDeltaSeen,
   selectSession,
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
-import type { RequestedChange, SessionState } from '../../../state/syn-state';
-import { joinSession } from '../sessions/folk';
 import type { GrammarDelta, SynGrammar } from '../../../grammar';
+import { applyChanges, change } from 'automerge';
+import { isEqual } from 'lodash-es';
 
 export function folkRequestChange<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
@@ -26,30 +19,18 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
-    let lastDeltaSeen = selectLastDeltaSeen(sessionState);
-
-    // TODO: don't do this if strategy === CRDT
-    if (!sessionState.prerequestContent) {
-      sessionState.prerequestContent = {
-        lastDeltaSeen,
-        content: cloneDeep(sessionState.currentContent),
-      };
-    } else {
-      if (sessionState.nonRequestedChangesAtLastDeltaSeen) {
-        lastDeltaSeen = sessionState.nonRequestedChangesAtLastDeltaSeen;
-      } else {
-        lastDeltaSeen = sessionState.prerequestContent.lastDeltaSeen;
-      }
-    }
-
     for (const delta of deltas) {
-      sessionState.currentContent = workspace.grammar.applyDelta(
-        sessionState.currentContent,
-        delta,
-        state.myPubKey
-      );
+      sessionState.currentContent = change(sessionState.currentContent, doc =>
+        workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
+      )[0];
     }
 
+    workspace.client.sendChangeRequest({
+      deltas,
+      scribe: state.sessions[sessionHash].scribe,
+      sessionHash,
+    });
+    /* 
     const newRequestedChanges: RequestedChange[] = [];
 
     const atDate = Date.now();
@@ -76,7 +57,7 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
     }
 
     sessionState.myFolkIndex += deltas.length;
-
+ */
     return state;
   });
 }
@@ -90,32 +71,11 @@ export async function requestChanges<G extends SynGrammar<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    if (
-      sessionState.nonRequestedChanges.length === 0 ||
-      sessionState.requestedChanges.length > 0
-    )
-      return state;
-
-    const deltas = sessionState.nonRequestedChanges.map(r => r.delta);
-
-    sessionState.requestedChanges = [
-      ...sessionState.requestedChanges,
-      ...sessionState.nonRequestedChanges,
-    ];
-    sessionState.nonRequestedChanges = [];
-
     workspace.client.sendChangeRequest({
-      lastDeltaSeen:
-        sessionState.nonRequestedChangesAtLastDeltaSeen as LastDeltaSeen,
-      deltaChanges: {
-        atFolkIndex: sessionState.nonRequestedChangesAtFolkIndex as number,
-        deltas,
-      },
+      deltas: sessionState.unpublishedChanges,
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
-    sessionState.nonRequestedChangesAtFolkIndex = undefined;
-
     return state;
   });
 }
@@ -124,6 +84,7 @@ export async function checkRequestedChanges<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64
 ) {
+  /* 
   let state = get(workspace.store);
   if (amIScribe(state, sessionHash)) {
     return;
@@ -149,7 +110,7 @@ export async function checkRequestedChanges<G extends SynGrammar<any, any>>(
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
-  }
+  } */
 }
 
 // Folk
@@ -168,122 +129,15 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    const changes = changeNotice.deltaChanges;
+    sessionState.currentContent = applyChanges(
+      sessionState.currentContent,
+      changeNotice.deltas
+    )[0];
 
-    // TODO
-    // If CRDT, we don't care about requested changes
-    // If BlockOnConflict, we try to rebase and block if applyDelta returns conflict
+    sessionState.unpublishedChanges = sessionState.unpublishedChanges.filter(
+      change => !changeNotice.deltas.find(d => isEqual(d, change))
+    );
 
-    const myChanges = changes.authors[state.myPubKey];
-
-    let contentToApplyTo = sessionState.currentContent;
-
-    const isLastDeltaSeenEqualToPrerequest =
-      sessionState.prerequestContent?.lastDeltaSeen.commitHash ==
-        changeNotice.lastDeltaSeen.commitHash &&
-      changeNotice.lastDeltaSeen.deltaIndexInCommit ===
-        sessionState.prerequestContent?.lastDeltaSeen.deltaIndexInCommit;
-    /* 
-    console.log(
-      'changenotice',
-      sessionState.prerequestContent,
-      changeNotice.lastDeltaSeen
-    ); */
-    if (sessionState.prerequestContent) {
-      if (isLastDeltaSeenEqualToPrerequest) {
-        contentToApplyTo = sessionState.prerequestContent.content;
-      } else {
-        // We are receiving a change out of order, sorry but gotta nuke
-        console.log(
-          'We are receiving a change out of order, sorry but gotta nuke',
-          sessionState.prerequestContent,
-          changeNotice
-        );
-
-        workspace.client.sendSyncRequest({
-          lastDeltaSeen: selectLastDeltaSeen(sessionState),
-          scribe: selectSession(state, sessionHash).scribe,
-          sessionHash,
-        });
-        sessionState.prerequestContent = undefined;
-        sessionState.requestedChanges = [];
-        sessionState.nonRequestedChanges = [];
-
-        return state;
-      }
-    }
-
-    for (const delta of changes.deltas) {
-      contentToApplyTo = workspace.grammar.applyDelta(
-        contentToApplyTo,
-        delta.delta,
-        delta.author
-      );
-    }
-
-    sessionState.uncommittedChanges.deltas = [
-      ...sessionState.uncommittedChanges.deltas,
-      ...changes.deltas,
-    ];
-
-    for (const [author, newFolkChanges] of Object.entries(
-      sessionState.uncommittedChanges.authors
-    )) {
-      if (!sessionState.uncommittedChanges.authors[author]) {
-        sessionState.uncommittedChanges.authors[author] = newFolkChanges;
-      } else {
-        const folkChanges = sessionState.uncommittedChanges.authors[author];
-        if (
-          folkChanges.atFolkIndex + folkChanges.commitChanges.length !==
-          newFolkChanges.atFolkIndex
-        ) {
-          // We missed changes from this folk?
-        }
-        folkChanges.commitChanges = [
-          ...folkChanges.commitChanges,
-          ...newFolkChanges.commitChanges,
-        ];
-      }
-    }
-
-    if (myChanges) {
-      clearRequested(sessionState, myChanges);
-    }
-
-    if (
-      sessionState.requestedChanges.length === 0 &&
-      sessionState.nonRequestedChanges.length === 0
-    ) {
-      sessionState.prerequestContent = undefined;
-      sessionState.currentContent = contentToApplyTo;
-
-      sessionState.nonRequestedChangesAtLastDeltaSeen = undefined;
-    } else {
-      sessionState.prerequestContent = {
-        lastDeltaSeen: selectLastDeltaSeen(sessionState),
-        content: contentToApplyTo,
-      };
-    }
     return state;
   });
-}
-
-function clearRequested<G extends SynGrammar<any, any>>(
-  sessionState: SessionState<G>,
-  myChanges: FolkChanges
-) {
-  const leftRequestedChanges: RequestedChange[] = [];
-
-  for (const requestedChange of sessionState.requestedChanges) {
-    if (
-      !(
-        requestedChange.atFolkIndex >= myChanges.atFolkIndex &&
-        requestedChange.atFolkIndex <
-          myChanges.atFolkIndex + myChanges.commitChanges.length
-      )
-    ) {
-      leftRequestedChanges.push(requestedChange);
-    }
-  }
-  sessionState.requestedChanges = leftRequestedChanges;
 }

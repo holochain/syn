@@ -5,6 +5,7 @@ import type {
 import type { SynGrammar } from '@holochain-syn/store';
 import cloneDeep from 'lodash-es/cloneDeep';
 import { moveSelections } from './utils';
+import {Text, init} from 'automerge'
 
 export enum TextEditorDeltaType {
   Insert = 'insert',
@@ -35,23 +36,22 @@ export interface AgentSelection {
 }
 
 export interface TextEditorState {
-  text: string;
+  text: Text;
   selections: Dictionary<AgentSelection>;
 }
 
 export type TextEditorGrammar = SynGrammar<TextEditorState, TextEditorDelta>;
 
 export const textEditorGrammar: TextEditorGrammar = {
-  initialState: {
-    text: '',
-    selections: {},
+  initialState(doc) {
+    doc.text = new Text();
   },
   applyDelta(
     state: TextEditorState,
     delta: TextEditorDelta,
     author: AgentPubKeyB64
   ) {
-    return h(state, delta, author);
+    state.text.
   },
 
   transformDelta(

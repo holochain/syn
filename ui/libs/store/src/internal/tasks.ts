@@ -1,7 +1,6 @@
 import { get } from 'svelte/store';
 import type { SynGrammar } from '../grammar';
 import { checkRequestedChanges, requestChanges } from './workflows/change/folk';
-import { notifyChanges } from './workflows/change/scribe';
 /* import { amIScribe, selectLastCommitTime } from '../state/selectors';
 import { commitChanges } from './workflows/commit/scribe';
  */
@@ -37,13 +36,6 @@ export function initBackgroundTasks<G extends SynGrammar<any, any>>(
   }, workspace.config.debounceInterval);
   intervals.push(requestChangesInterval);
 
-  const notifyChangesInterval = setInterval(() => {
-    const state = get(workspace.store);
-    for (const sessionHash of Object.keys(state.joinedSessions)) {
-      notifyChanges(workspace, sessionHash);
-    }
-  }, workspace.config.debounceInterval);
-  intervals.push(notifyChangesInterval);
 /* 
   const CommitEveryNMs: number | undefined = (
     workspace.config.commitStrategy as { CommitEveryNMs: number }

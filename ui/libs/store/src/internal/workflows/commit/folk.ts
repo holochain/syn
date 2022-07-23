@@ -3,7 +3,6 @@ import type { CommitNotice } from '@holochain-syn/client';
 import type { SynGrammar } from '../../../grammar';
 import {
   amIScribe,
-  selectLastDeltaSeen,
   selectLatestSnapshotHash,
   selectSessionState,
 } from '../../../state/selectors';
@@ -32,7 +31,7 @@ export async function handleCommitNotice<G extends SynGrammar<any, any>>(
       initialSnapshotHash
     );
     const sessionState = selectSessionState(state, sessionHash);
-    if (
+    /*  if (
       latestCommittedContentHash === commitNotice.previousContentHash &&
       commitNotice.committedDeltasCount ===
         sessionState.uncommittedChanges.deltas.length
@@ -57,7 +56,7 @@ export async function handleCommitNotice<G extends SynGrammar<any, any>>(
         scribe: state.sessions[sessionHash].scribe,
         sessionHash,
       });
-    }
+    } */
 
     return state;
   });

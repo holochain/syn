@@ -1,7 +1,6 @@
 import type {
   AuthoredDelta,
   ChangeBundle,
-  LastDeltaSeen,
   Session,
 } from '@holochain-syn/client';
 import type {
@@ -67,7 +66,7 @@ export function selectLatestSnapshotHash<G extends SynGrammar<any, any>>(
   if (!session || !session.lastCommitHash) return initialSnapshotHash;
   return synState.commits[session.lastCommitHash].newContentHash;
 }
-
+/* 
 export function selectMissedUncommittedChanges<G extends SynGrammar<any, any>>(
   synState: SynState<G>,
   sessionHash: EntryHashB64,
@@ -90,7 +89,6 @@ export function selectMissedUncommittedChanges<G extends SynGrammar<any, any>>(
     };
   }
 }
-
 export function selectMissedDeltas<G extends SynGrammar<any, any>>(
   synState: SynState<G>,
   sessionHash: EntryHashB64,
@@ -140,6 +138,7 @@ export function selectLastDeltaSeen<G extends SynGrammar<any, any>>(
     deltaIndexInCommit: sessionState.uncommittedChanges.deltas.length,
   };
 }
+ */
 
 export function selectFolksInSession<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,

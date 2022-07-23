@@ -3,8 +3,9 @@ import type {
   EntryHashB64,
   Dictionary,
 } from '@holochain-open-dev/core-types';
+import { BinaryChange } from 'automerge';
 
-export type Delta = any;
+export type Delta = BinaryChange;
 
 export interface FolkChanges {
   atFolkIndex: number;
@@ -27,9 +28,8 @@ export interface ChangeBundle {
 export interface SendChangeRequestInput {
   sessionHash: EntryHashB64;
   scribe: AgentPubKeyB64;
-  lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: DeltaChanges;
+  deltas: Delta[];
 }
 
 export interface DeltaChanges {
@@ -37,30 +37,21 @@ export interface DeltaChanges {
   deltas: Array<Delta>;
 }
 
-export interface LastDeltaSeen {
-  commitHash: EntryHashB64 | undefined;
-  deltaIndexInCommit: number;
-}
-
 export interface ChangeRequest {
   folk: AgentPubKeyB64;
   scribe: AgentPubKeyB64;
 
-  lastDeltaSeen: LastDeltaSeen;
-
-  deltaChanges: DeltaChanges;
+  deltas: Delta[];
 }
 
 export interface SendChangeInput {
   participants: Array<AgentPubKeyB64>;
   sessionHash: EntryHashB64;
-  lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: ChangeBundle;
+  deltas: Delta[];
 }
 
 export interface ChangeNotice {
-  lastDeltaSeen: LastDeltaSeen;
 
-  deltaChanges: ChangeBundle;
+  deltas: Delta[];
 }

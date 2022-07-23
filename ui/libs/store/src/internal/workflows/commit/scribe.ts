@@ -1,5 +1,6 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitInput } from '@holochain-syn/client';
+import { change, init, save } from 'automerge';
 import { get } from 'svelte/store';
 import type { SynGrammar } from '../../../grammar';
 
@@ -25,10 +26,6 @@ export async function commitChanges<G extends SynGrammar<any, any>>(
     return undefined;
   }
 
-  const sessionState = selectSessionState(state, sessionHash);
-
-  if (sessionState.nonEmittedChangeBundle) return undefined;
-
   if (commitLock) {
     await commitLock;
   }
@@ -43,19 +40,21 @@ async function createCommit<G extends SynGrammar<any, any>>(
   sessionHash: EntryHashB64
 ): Promise<EntryHashB64 | undefined> {
   const state = get(workspace.store);
-  
+
   const session = selectSessionState(state, sessionHash);
 
-  if (!session || session.uncommittedChanges.deltas.length === 0)
-    return undefined;
-
-  const stateToPersist = workspace.grammar.selectPersistedState
-    ? workspace.grammar.selectPersistedState(session.currentContent)
-    : session.currentContent;
+  const stateToPersist = save(session.currentContent);
   const hash = await workspace.client.putSnapshot(stateToPersist);
 
+  const doc = init({
+    actorId: workspace.myPubKey,
+  });
+  const initialSnapshot = change(doc, doc =>
+    workspace.grammar.initialState(doc)
+  );
+
   const initialSnapshotHash = await workspace.client.hashSnapshot(
-    workspace.grammar.initialState
+    initialSnapshot
   );
 
   const commit = buildCommitFromUncommitted(

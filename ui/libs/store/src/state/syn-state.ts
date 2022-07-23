@@ -3,14 +3,8 @@ import type {
   Dictionary,
   EntryHashB64,
 } from '@holochain-open-dev/core-types';
-import type {
-  ChangeBundle,
-  Commit,
-  Delta,
-  Session,
-  LastDeltaSeen,
-  FolkInfo,
-} from '@holochain-syn/client';
+import type { Commit, Delta, Session, FolkInfo } from '@holochain-syn/client';
+import type { SyncState, Doc } from 'automerge';
 import type { GrammarState, SynGrammar } from '../grammar';
 
 /**
@@ -28,17 +22,13 @@ export interface SynState<G extends SynGrammar<any, any>> {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
   sessions: Dictionary<Session>; // Segmented by EntryHashB64
-  joiningSessions: Dictionary<() => void>;
+  joiningSessions: Dictionary<{
+    promise: () => void;
+    currentContent: Doc<GrammarState<G>>;
+  }>;
   joinedSessions: Dictionary<SessionState<G>>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64
-}
-
-export interface RequestedChange {
-  atDate: number;
-  atFolkIndex: number;
-  lastDeltaSeen: LastDeltaSeen;
-  delta: Delta;
 }
 
 export interface SessionState<G extends SynGrammar<any, any>> {
@@ -46,30 +36,12 @@ export interface SessionState<G extends SynGrammar<any, any>> {
 
   lastCommitHash: EntryHashB64 | undefined;
 
-  myFolkIndex: number;
-
-  currentContent: GrammarState<G>;
-  //currentContentHash: EntryHashB64;
-
-  // Content before the request to the scribe was made
-  prerequestContent:
-    | {
-        lastDeltaSeen: LastDeltaSeen;
-        content: GrammarState<G>;
-      }
-    | undefined;
+  currentContent: Doc<GrammarState<G>>;
 
   // Only my requested changes
-  requestedChanges: Array<RequestedChange>;
+  unpublishedChanges: Array<Delta>;
 
-  nonRequestedChanges: Array<RequestedChange>;
-  nonRequestedChangesAtLastDeltaSeen: LastDeltaSeen | undefined;
-  nonRequestedChangesAtFolkIndex: number | undefined;
-
-  nonEmittedChangeBundle: ChangeBundle | undefined;
-  nonEmittedLastDeltaSeen: LastDeltaSeen | undefined;
-
-  uncommittedChanges: ChangeBundle;
+  syncStates: Dictionary<SyncState>;
 
   // AgentPubKeyB64 -> lastSeen
   folks: Dictionary<FolkInfo>;

@@ -1,18 +1,18 @@
-import type {
-  MissedCommit,
-  RequestSyncInput,
-  StateForSync,
-} from '@holochain-syn/client';
+import type { RequestSyncInput } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import {
   amIScribe,
   selectFolksInSession,
-  selectMissedUncommittedChanges,
   selectSessionState,
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import type { SynGrammar } from '../../../grammar';
+import {
+  generateSyncMessage,
+  initSyncState,
+  receiveSyncMessage,
+} from 'automerge';
 
 /**
  * Scribe is managing the session, a folk comes in:
@@ -43,39 +43,19 @@ export function handleSyncRequest<G extends SynGrammar<any, any>>(
       lastSeen: Date.now(),
     };
 
-    let missedCommit: MissedCommit | undefined;
-
-    if (
-      (!requestSyncInput.lastDeltaSeen ||
-        requestSyncInput.lastDeltaSeen.commitHash !==
-          sessionState.lastCommitHash) &&
-      sessionState.lastCommitHash
-    ) {
-      const commit = synState.commits[sessionState.lastCommitHash];
-
-      missedCommit = {
-        commit,
-        commitHash: sessionState.lastCommitHash,
-        commitInitialSnapshot: synState.snapshots[commit.newContentHash],
-      };
-    }
-
-    const uncommittedChanges = selectMissedUncommittedChanges(
-      synState,
-      sessionHash,
-      requestSyncInput.lastDeltaSeen
+    const [nextDoc, nextSyncState, message] = receiveSyncMessage(
+      sessionState.currentContent,
+      initSyncState(),
+      requestSyncInput.syncMessage
     );
 
-    const syncState: StateForSync = {
-      uncommittedChanges,
-      folkMissedLastCommit: missedCommit,
-      //currentContentHash:
-    };
+    const [state, syncMessage] = generateSyncMessage(
+      sessionState.currentContent,
+      nextSyncState
+    );
 
     workspace.client.sendSyncResponse({
-      participant: requestSyncInput.folk,
-      state: syncState,
-      sessionHash,
+      syncMessage: syncMessage!,
     });
 
     const participants = selectFolksInSession(workspace, sessionState);
