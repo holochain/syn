@@ -1,8 +1,8 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import {
-  initSyncState,
   BinarySyncMessage,
   clone,
+  generateSyncMessage,
   receiveSyncMessage,
 } from 'automerge';
 
@@ -18,25 +18,43 @@ export function handleSyncResponse<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const joiningSession = state.joiningSessions[sessionHash];
     if (joiningSession) {
-      const [nextDoc, _nextSyncState, _patch] = receiveSyncMessage(
+      const [nextDoc, nextSyncState, _patch] = receiveSyncMessage(
         joiningSession.currentContent,
-        initSyncState(),
+        joiningSession.scribeSyncState,
         syncMessage
       );
+      joiningSession.currentContent = nextDoc;
+      const [nextnextSyncState, nextsyncMessage] = generateSyncMessage(
+        nextDoc,
+        nextSyncState
+      );
 
-      state.joinedSessions[sessionHash] = {
-        sessionHash: sessionHash,
-        currentContent: nextDoc,
-        initialSnapshot: clone(nextDoc),
-        lastCommitHash: undefined,
-        syncStates: {},
-        unpublishedChanges: [],
+      joiningSession.scribeSyncState = nextnextSyncState;
 
-        folks: {},
-      };
+      const scribe = state.sessions[sessionHash].scribe;
+      if (nextsyncMessage) {
+        workspace.client.sendSyncRequest({
+          scribe,
+          sessionHash,
+          syncMessage: nextsyncMessage,
+        });
+      } else {
+        state.joinedSessions[sessionHash] = {
+          sessionHash: sessionHash,
+          currentContent: nextDoc,
+          initialSnapshot: clone(nextDoc),
+          lastCommitHash: undefined,
+          syncStates: {
+            [scribe]: joiningSession.scribeSyncState,
+          },
+          unpublishedChanges: [],
 
-      resolveJoining = state.joiningSessions[sessionHash].promise;
-      delete state.joiningSessions[sessionHash];
+          folks: {},
+        };
+
+        resolveJoining = state.joiningSessions[sessionHash].promise;
+        delete state.joiningSessions[sessionHash];
+      }
     }
 
     return state;

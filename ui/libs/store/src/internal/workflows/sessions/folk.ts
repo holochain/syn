@@ -32,17 +32,17 @@ export async function joinSession<G extends SynGrammar<any, any>>(
     workspace.store.update(state => {
       state.sessions[sessionHash] = session;
 
-      state.joiningSessions[sessionHash] = {
-        promise: joiningResolve,
-        currentContent: initialSnapshot,
-      };
-
       if (session.scribe !== state.myPubKey) {
-        const [_, syncMessage] = generateSyncMessage(
+        const [nextSyncState, syncMessage] = generateSyncMessage(
           initialSnapshot,
           initSyncState()
         );
 
+        state.joiningSessions[sessionHash] = {
+          promise: joiningResolve,
+          currentContent: initialSnapshot,
+          scribeSyncState: nextSyncState
+        };
         workspace.client.sendSyncRequest({
           scribe: session.scribe,
           sessionHash: sessionHash,

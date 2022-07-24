@@ -8,6 +8,7 @@ import {
 import { get } from 'svelte/store';
 import { SynGrammar, SynStore } from '@holochain-syn/store';
 import { TextEditorDeltaType } from '../grammar';
+import Automerge from 'automerge';
 
 import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common';
 import { spawnSyn } from './spawn';
@@ -67,6 +68,9 @@ export const oFn = orchestrator => {
 
     await delay(1000);
 
+    currentState = get(bobSessionStore.state);
+    t.equal(currentState.title, 'Bob is the boss');
+
     currentState = get(aliceSessionStore.state);
     t.equal(currentState.title, 'Bob is the boss');
 
@@ -94,11 +98,12 @@ export const oFn = orchestrator => {
 
     await delay(1000);
 
-    currentState = get(aliceSessionStore.state);
-    t.equal(currentState.body.text.toString(), 'Hi alice bob there');
-
-    currentState = get(bobSessionStore.state);
-    t.equal(currentState.body.text.toString(), 'Hi alice bob there');
+    const currentStateAlice = get(aliceSessionStore.state);
+    const currentStateBob = get(bobSessionStore.state);
+    t.equal(
+      currentStateAlice.body.text.toString(),
+      currentStateBob.body.text.toString()
+    );
 
     await bobSyn.close();
 
@@ -109,5 +114,7 @@ export const oFn = orchestrator => {
     t.equal(Object.keys(folks).length, 0);
 
     await aliceSyn.close();
+
+    process.exit(0);
   });
 };

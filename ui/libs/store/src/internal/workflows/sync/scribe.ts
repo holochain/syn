@@ -10,7 +10,6 @@ import type { SynWorkspace } from '../../workspace';
 import type { SynGrammar } from '../../../grammar';
 import {
   generateSyncMessage,
-  clone,
   initSyncState,
   receiveSyncMessage,
 } from 'automerge';
@@ -39,26 +38,32 @@ export function handleSyncRequest<G extends SynGrammar<any, any>>(
     }
 
     const sessionState = selectSessionState(synState, sessionHash);
-
+    
     sessionState.folks[requestSyncInput.folk] = {
       lastSeen: Date.now(),
     };
 
-    const [_nextDoc, nextSyncState, _message] = receiveSyncMessage(
-      clone(sessionState.currentContent),
-      initSyncState(),
+    sessionState.syncStates[requestSyncInput.folk] = initSyncState();
+
+    const [nextDoc, nextSyncState, _message] = receiveSyncMessage(
+      sessionState.currentContent,
+      sessionState.syncStates[requestSyncInput.folk],
       requestSyncInput.syncMessage
     );
+    sessionState.syncStates[requestSyncInput.folk] = nextSyncState;
 
-    const [_state, syncMessage] = generateSyncMessage(
-      clone(sessionState.currentContent),
-      nextSyncState
+    sessionState.currentContent = nextDoc;
+
+    const [nextState, syncMessage] = generateSyncMessage(
+      sessionState.currentContent,
+      sessionState.syncStates[requestSyncInput.folk]
     );
+    sessionState.syncStates[requestSyncInput.folk] = nextState;
 
     workspace.client.sendSyncResponse({
       syncMessage: syncMessage!,
       sessionHash: sessionHash,
-      participant: requestSyncInput.folk
+      participant: requestSyncInput.folk,
     });
 
     const participants = selectFolksInSession(workspace, sessionState);

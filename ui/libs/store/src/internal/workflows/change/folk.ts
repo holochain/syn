@@ -1,6 +1,6 @@
 import type { ChangeNotice } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { applyChanges, change, clone, getChanges } from 'automerge';
+import { applyChanges, change, getChanges } from 'automerge';
 import { isEqual } from 'lodash-es';
 
 import { amIScribe, selectSessionState } from '../../../state/selectors';
@@ -12,16 +12,22 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
   sessionHash: EntryHashB64,
   deltas: Array<GrammarDelta<G>>
 ) {
+  if (deltas.length === 0) return;
+
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
-    const oldContent = clone(sessionState.currentContent);
-
+    let newState = sessionState.currentContent;
     for (const delta of deltas) {
-      sessionState.currentContent = change(sessionState.currentContent, doc =>
+      newState = change(newState, doc =>
         workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
       );
     }
-    const changes = getChanges(oldContent, sessionState.currentContent);
+    const changes = getChanges(sessionState.currentContent, newState);
+    sessionState.currentContent = newState;
+    sessionState.unpublishedChanges = [
+      ...sessionState.unpublishedChanges,
+      ...changes,
+    ];
 
     workspace.client.sendChangeRequest({
       deltas: changes,
@@ -69,11 +75,13 @@ export async function requestChanges<G extends SynGrammar<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    workspace.client.sendChangeRequest({
-      deltas: sessionState.unpublishedChanges,
-      scribe: state.sessions[sessionHash].scribe,
-      sessionHash,
-    });
+    if (sessionState.unpublishedChanges.length > 0) {
+      workspace.client.sendChangeRequest({
+        deltas: sessionState.unpublishedChanges,
+        scribe: state.sessions[sessionHash].scribe,
+        sessionHash,
+      });
+    }
     return state;
   });
 }
@@ -126,11 +134,11 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     }
 
     const sessionState = selectSessionState(state, sessionHash);
-    console.log(changeNotice.deltas);
-    sessionState.currentContent = applyChanges(
+    const changes = applyChanges(
       sessionState.currentContent,
       changeNotice.deltas
-    )[0];
+    );
+    sessionState.currentContent = changes[0];
 
     sessionState.unpublishedChanges = sessionState.unpublishedChanges.filter(
       change => !changeNotice.deltas.find(d => isEqual(d, change))

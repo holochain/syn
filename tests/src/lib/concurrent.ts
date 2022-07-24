@@ -57,7 +57,9 @@ export default (orchestrator: Orchestrator<any>) => {
         aliceSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
-            position: alicePosition(get(aliceSessionStore.state).body.text.toString()),
+            position: alicePosition(
+              get(aliceSessionStore.state).body.text.toString()
+            ),
             text: aliceLine[i],
           },
         ]);
@@ -91,19 +93,13 @@ export default (orchestrator: Orchestrator<any>) => {
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
 
-    console.log('hi1');
     let currentState = get(aliceSessionStore.state);
-    t.deepEqual(currentState.body.text, expectedText);
-    console.log('hi2');
+    t.deepEqual(currentState.body.text.toString(), expectedText);
 
     currentState = get(bobSessionStore.state);
-    t.deepEqual(currentState.body.text, expectedText);
-    console.log('hi3');
+    t.deepEqual(currentState.body.text.toString(), expectedText);
 
     await bobSyn.close();
-    console.log('hi4');
     await aliceSyn.close();
-    console.log('hi5');
-
   });
 };

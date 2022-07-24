@@ -84,7 +84,6 @@ export async function handleChangeRequest<G extends SynGrammar<any, any>>(
       lastSeen: Date.now(),
     };
 
-    console.log(changes);
     const changes = applyChanges(
       sessionState.currentContent,
       changeRequest.deltas

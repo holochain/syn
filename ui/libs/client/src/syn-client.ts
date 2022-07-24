@@ -147,7 +147,7 @@ export class SynClient {
     changeRequestInput: SendChangeRequestInput
   ): Promise<void> {
     const input = { ...changeRequestInput };
-    input.deltas = input.deltas.map(d => encode(d)) as any;
+    input.deltas = changeRequestInput.deltas.map(d => encode(d)) as any;
 
     return this.callZome('send_change_request', input);
   }
@@ -156,7 +156,7 @@ export class SynClient {
     const input = {
       ...sendChangeInput,
     };
-    input.deltas = input.deltas.map(d => encode(d)) as any;
+    input.deltas = sendChangeInput.deltas.map(d => encode(d)) as any;
     return this.callZome('send_change', input);
   }
 

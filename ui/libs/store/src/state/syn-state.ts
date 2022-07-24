@@ -25,6 +25,7 @@ export interface SynState<G extends SynGrammar<any, any>> {
   joiningSessions: Dictionary<{
     promise: () => void;
     currentContent: Doc<GrammarState<G>>;
+    scribeSyncState: SyncState;
   }>;
   joinedSessions: Dictionary<SessionState<G>>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64

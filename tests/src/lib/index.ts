@@ -4,7 +4,8 @@ import concurrent from './concurrent';
 
 async function run() {
   let orchestrator = new Orchestrator();
-  oFn(orchestrator);
+
+  concurrent(orchestrator);
   await orchestrator.run();
   /*
 
@@ -15,7 +16,7 @@ async function run() {
   */
   orchestrator = new Orchestrator();
 
-  concurrent(orchestrator);
+  oFn(orchestrator);
   await orchestrator.run();
 }
 
