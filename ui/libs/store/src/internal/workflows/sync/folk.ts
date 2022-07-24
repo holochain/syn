@@ -2,6 +2,7 @@ import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import {
   initSyncState,
   BinarySyncMessage,
+  clone,
   receiveSyncMessage,
 } from 'automerge';
 
@@ -26,6 +27,7 @@ export function handleSyncResponse<G extends SynGrammar<any, any>>(
       state.joinedSessions[sessionHash] = {
         sessionHash: sessionHash,
         currentContent: nextDoc,
+        initialSnapshot: clone(nextDoc),
         lastCommitHash: undefined,
         syncStates: {},
         unpublishedChanges: [],

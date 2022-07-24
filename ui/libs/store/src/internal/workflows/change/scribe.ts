@@ -14,8 +14,8 @@ import {
   change,
   FreezeObject,
   getChanges,
-  init,
   load,
+  clone,
 } from 'automerge';
 
 export async function scribeRequestChange<G extends SynGrammar<any, any>>(
@@ -28,33 +28,36 @@ export async function scribeRequestChange<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
+    const oldContent = clone(sessionState.currentContent);
+
     for (const delta of deltas) {
       sessionState.currentContent = change(sessionState.currentContent, doc =>
         workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
-      )[0];
+      );
     }
 
+    const changes = getChanges(oldContent, sessionState.currentContent);
+
     workspace.client.sendChange({
-      deltas,
+      deltas: changes,
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
     });
 
-    let lastCommitState: FreezeObject<GrammarState<G>> = init({
-      actorId: workspace.myPubKey,
-    });
-    lastCommitState = change(lastCommitState, doc =>
-      workspace.grammar.initialState(doc)
-    );
+    let lastCommitState: FreezeObject<GrammarState<G>> =
+      sessionState.initialSnapshot;
     if (sessionState.lastCommitHash) {
       const commit = state.commits[sessionState.lastCommitHash];
 
       lastCommitState = load(state.snapshots[commit.newContentHash]);
     }
 
-    const changes = getChanges(lastCommitState, sessionState.currentContent);
+    const commitChanges = getChanges(
+      lastCommitState,
+      sessionState.currentContent
+    );
 
-    triggerCommitIfNecessary(workspace, sessionHash, changes.length);
+    triggerCommitIfNecessary(workspace, sessionHash, commitChanges.length);
 
     return state;
   });
@@ -81,6 +84,7 @@ export async function handleChangeRequest<G extends SynGrammar<any, any>>(
       lastSeen: Date.now(),
     };
 
+    console.log(changes);
     const changes = applyChanges(
       sessionState.currentContent,
       changeRequest.deltas
@@ -93,12 +97,8 @@ export async function handleChangeRequest<G extends SynGrammar<any, any>>(
       sessionHash,
     });
 
-    let lastCommitState: FreezeObject<GrammarState<G>> = init({
-      actorId: workspace.myPubKey,
-    });
-    lastCommitState = change(lastCommitState, doc =>
-      workspace.grammar.initialState(doc)
-    );
+    let lastCommitState: FreezeObject<GrammarState<G>> =
+      sessionState.initialSnapshot;
     if (sessionState.lastCommitHash) {
       const commit = state.commits[sessionState.lastCommitHash];
 

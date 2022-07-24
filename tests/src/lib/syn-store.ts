@@ -7,7 +7,7 @@ import {
 
 import { get } from 'svelte/store';
 import { SynGrammar, SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '@holochain-syn/text-editor';
+import { TextEditorDeltaType } from '../grammar';
 
 import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common';
 import { spawnSyn } from './spawn';
@@ -78,10 +78,10 @@ export const oFn = orchestrator => {
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    t.equal(currentState.body.text, 'Hi there');
+    t.equal(currentState.body.text.toString(), 'Hi there');
 
     currentState = get(bobSessionStore.state);
-    t.equal(currentState.body.text, 'Hi there');
+    t.equal(currentState.body.text.toString(), 'Hi there');
 
     // Test concurrent
 
@@ -95,10 +95,10 @@ export const oFn = orchestrator => {
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    t.equal(currentState.body.text, 'Hi alice bob there');
+    t.equal(currentState.body.text.toString(), 'Hi alice bob there');
 
     currentState = get(bobSessionStore.state);
-    t.equal(currentState.body.text, 'Hi alice bob there');
+    t.equal(currentState.body.text.toString(), 'Hi alice bob there');
 
     await bobSyn.close();
 

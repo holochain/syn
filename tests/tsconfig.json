@@ -3,8 +3,8 @@
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Basic Options */
     "outDir": "dist",
-    "target": "ES2017",
-    "module": "ESNext",
+    "target": "ES2020",
+    "module": "ES2020",
     "moduleResolution": "node",
     /* Strict Type-Checking Options */
     "strict": true /* Enable all strict type-checking options. */,

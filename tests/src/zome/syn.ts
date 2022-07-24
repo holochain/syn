@@ -12,10 +12,9 @@ import {
 } from '../common';
 import { encode, decode } from '@msgpack/msgpack';
 import { cloneDeepWith } from 'lodash-es';
-import { TextEditorDeltaType } from '@holochain-syn/text-editor';
-import pkg from 'automerge';
+import { TextEditorDeltaType } from '../grammar';
+import Automerge from 'automerge';
 import type { Doc } from 'automerge';
-const { init, change } = pkg;
 
 const config = Config.gen();
 
@@ -68,8 +67,8 @@ export default orchestrator => {
     let sessionInfo = await me.call('syn', 'new_session', {});
 
     // First ever session so content should be default content
-    let sessionSnapshot: Doc<Content> = init();
-    sessionSnapshot = change(sessionSnapshot, doc =>
+    let sessionSnapshot: Doc<Content> = Automerge.init();
+    sessionSnapshot = Automerge.change(sessionSnapshot, doc =>
       sampleGrammar.initialState(doc)
     );
 
@@ -156,15 +155,6 @@ export default orchestrator => {
     let commit1 = {
       sessionHash: sessionHash,
       commit: {
-        changes: {
-          deltas: deltas.map(d => ({ author: me_pubkey, delta: d })),
-          authors: {
-            [me_pubkey]: {
-              atFolkIndex: 0,
-              commitChanges: [0, 1],
-            },
-          },
-        },
         createdAt: Date.now(),
         previousCommitHashes: [],
         // this is the first change so same hash as snapshot
@@ -200,15 +190,6 @@ export default orchestrator => {
     let commit2 = {
       sessionHash: sessionHash,
       commit: {
-        changes: {
-          deltas: deltas.map(d => ({ author: me_pubkey, delta: d })),
-          authors: {
-            [me_pubkey]: {
-              atFolkIndex: 2,
-              commitChanges: [0, 1, 2, 3, 4],
-            },
-          },
-        },
         createdAt: Date.now(),
         previousCommitHashes: [commit_hash1],
         previousContentHash: new_content_hash_1, // this is the second change so previous commit's hash

@@ -36,6 +36,7 @@ export interface SessionState<G extends SynGrammar<any, any>> {
 
   lastCommitHash: EntryHashB64 | undefined;
 
+  initialSnapshot: Doc<GrammarState<G>>;
   currentContent: Doc<GrammarState<G>>;
 
   // Only my requested changes

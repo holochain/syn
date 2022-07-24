@@ -1,11 +1,11 @@
 import type { ChangeNotice } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { applyChanges, change, clone, getChanges } from 'automerge';
+import { isEqual } from 'lodash-es';
 
 import { amIScribe, selectSessionState } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import type { GrammarDelta, SynGrammar } from '../../../grammar';
-import { applyChanges, change } from 'automerge';
-import { isEqual } from 'lodash-es';
 
 export function folkRequestChange<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
@@ -14,15 +14,17 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
 ) {
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
+    const oldContent = clone(sessionState.currentContent);
 
     for (const delta of deltas) {
       sessionState.currentContent = change(sessionState.currentContent, doc =>
         workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
-      )[0];
+      );
     }
+    const changes = getChanges(oldContent, sessionState.currentContent);
 
     workspace.client.sendChangeRequest({
-      deltas,
+      deltas: changes,
       scribe: state.sessions[sessionHash].scribe,
       sessionHash,
     });
@@ -124,7 +126,7 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     }
 
     const sessionState = selectSessionState(state, sessionHash);
-
+    console.log(changeNotice.deltas);
     sessionState.currentContent = applyChanges(
       sessionState.currentContent,
       changeNotice.deltas

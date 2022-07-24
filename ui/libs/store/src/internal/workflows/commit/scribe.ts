@@ -47,7 +47,7 @@ async function createCommit<G extends SynGrammar<any, any>>(
   const hash = await workspace.client.putSnapshot(stateToPersist);
 
   const doc = init({
-    actorId: workspace.myPubKey,
+    
   });
   const initialSnapshot = change(doc, doc =>
     workspace.grammar.initialState(doc)

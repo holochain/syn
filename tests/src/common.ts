@@ -1,12 +1,9 @@
 import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import {
-  TextEditorDelta,
-  textEditorGrammar,
-  TextEditorState,
-} from '@holochain-syn/text-editor';
+import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
 import { SynGrammar } from '@holochain-syn/store';
+import Automerge from 'automerge';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,7 +63,7 @@ export const sampleGrammar: SynGrammar<Content, TextDelta> = {
     switch (delta.type) {
       case 'Title':
         content.title = delta.value;
-        return content;
+        break;
       default:
         textEditorGrammar.applyDelta(content.body, delta, author);
     }
@@ -74,12 +71,14 @@ export const sampleGrammar: SynGrammar<Content, TextDelta> = {
 };
 
 export function applyDeltas(
-  content: Content,
+  content: Automerge.Doc<Content>,
   deltas: TextDelta[],
   author: string
 ): Content {
   for (const delta of deltas) {
-    sampleGrammar.applyDelta(content, delta, author);
+    content = Automerge.change(content, doc =>
+      sampleGrammar.applyDelta(doc, delta, author)
+    );
   }
   return content;
 }

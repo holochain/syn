@@ -2,10 +2,9 @@
   "name": "@holochain-syn/tests",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:zome && npm run test:lib",
+    "test": "npm run test:lib",
     "test:zome": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --loader ts-node/esm --experimental-specifier-resolution=node src/zome/index.ts",
-    "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --max-old-space-size=8192 --loader ts-node/esm --experimental-specifier-resolution=node src/lib/index.ts",
-    "test-debug": "RUST_LOG='[debug]=debug' TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node unit-test/index.ts"
+    "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" node --max-old-space-size=8192 --loader ts-node/esm --experimental-specifier-resolution=node src/lib/index.ts"
   },
   "author": "",
   "license": "CAL-1.0",

@@ -21,7 +21,7 @@ export async function getInitialSessionSnapshot<G extends SynGrammar<any, any>>(
   initialCommitHash: EntryHashB64 | undefined
 ): Promise<Doc<GrammarState<G>>> {
   const document = init({
-    actorId: workspace.myPubKey,
+    
   });
   let currentContent = change(document, doc =>
     workspace.grammar.initialState(doc)
@@ -73,6 +73,7 @@ export async function newSession<G extends SynGrammar<any, any>>(
       lastCommitHash: fromCommit,
       sessionHash: session.sessionHash,
       currentContent: initialSessionContent,
+      initialSnapshot: clone(initialSessionContent),
       unpublishedChanges: [],
       syncStates: {},
 

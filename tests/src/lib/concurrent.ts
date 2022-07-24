@@ -2,7 +2,7 @@ import { Config, Orchestrator } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
 import { SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '@holochain-syn/text-editor';
+import { TextEditorDeltaType } from '../grammar';
 
 import { delay, sampleGrammar, TextDelta } from '../common';
 import { spawnSyn } from './spawn';
@@ -57,7 +57,7 @@ export default (orchestrator: Orchestrator<any>) => {
         aliceSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
-            position: alicePosition(get(aliceSessionStore.state).body.text),
+            position: alicePosition(get(aliceSessionStore.state).body.text.toString()),
             text: aliceLine[i],
           },
         ]);
@@ -71,7 +71,7 @@ export default (orchestrator: Orchestrator<any>) => {
         bobSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
-            position: bobPosition(content),
+            position: bobPosition(content.toString()),
             text: bobLine[i],
           },
         ]);

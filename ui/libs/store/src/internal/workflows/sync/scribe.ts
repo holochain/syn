@@ -10,6 +10,7 @@ import type { SynWorkspace } from '../../workspace';
 import type { SynGrammar } from '../../../grammar';
 import {
   generateSyncMessage,
+  clone,
   initSyncState,
   receiveSyncMessage,
 } from 'automerge';
@@ -44,13 +45,13 @@ export function handleSyncRequest<G extends SynGrammar<any, any>>(
     };
 
     const [_nextDoc, nextSyncState, _message] = receiveSyncMessage(
-      sessionState.currentContent,
+      clone(sessionState.currentContent),
       initSyncState(),
       requestSyncInput.syncMessage
     );
 
     const [_state, syncMessage] = generateSyncMessage(
-      sessionState.currentContent,
+      clone(sessionState.currentContent),
       nextSyncState
     );
 
