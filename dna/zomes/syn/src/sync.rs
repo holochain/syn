@@ -1,10 +1,6 @@
-use crate::snapshot::Snapshot;
-
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::change::{ChangeBundle, LastDeltaSeen};
-use crate::commit::Commit;
 use crate::{SignalPayload, SynMessage};
 
 /// Input to the send sync req call
@@ -13,7 +9,7 @@ use crate::{SignalPayload, SynMessage};
 pub struct SendSyncRequestInput {
     pub scribe: AgentPubKeyB64,
     pub session_hash: EntryHashB64,
-    pub last_delta_seen: Option<LastDeltaSeen>,
+    pub sync_message: SerializedBytes,
 }
 
 /// Input to the send sync req call
@@ -22,7 +18,7 @@ pub struct SendSyncRequestInput {
 pub struct RequestSyncInput {
     pub scribe: AgentPubKeyB64,
     pub folk: AgentPubKeyB64,
-    pub last_delta_seen: Option<LastDeltaSeen>,
+    pub sync_message: SerializedBytes,
 }
 
 #[hdk_extern]
@@ -33,7 +29,7 @@ fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
     let request_sync = RequestSyncInput {
         scribe: input.scribe,
         folk: me,
-        last_delta_seen: input.last_delta_seen,
+        sync_message: input.sync_message,
     };
 
     remote_signal(
@@ -46,31 +42,13 @@ fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct MissedCommit {
-    commit_hash: EntryHashB64,
-    commit: Commit,
-    commit_initial_snapshot: Snapshot,
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct StateForSync {
-    pub folk_missed_last_commit: Option<MissedCommit>,
-
-    pub uncommitted_changes: ChangeBundle,
-    // Result of applying all these deltas to the current content
-    // pub current_content_hash: EntryHashB64
-}
-
 /// Input to the send sync response call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SendSyncResponseInput {
     pub participant: AgentPubKeyB64,
     pub session_hash: EntryHashB64,
-    pub state: StateForSync,
+    pub sync_message: SerializedBytes,
 }
 
 #[hdk_extern]
@@ -79,7 +57,7 @@ fn send_sync_response(input: SendSyncResponseInput) -> ExternResult<()> {
     remote_signal(
         ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::SyncResp(input.state),
+            SynMessage::SyncResp(input.sync_message),
         ))?,
         vec![AgentPubKey::from(input.participant)],
     )?;

@@ -1,37 +1,33 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import type { CommitNotice } from '@holochain-syn/client';
 import type { SynGrammar } from '../../../grammar';
-import {
-  amIScribe,
-  selectLatestSnapshotHash,
-  selectSessionState,
-} from '../../../state/selectors';
+import { amIScribe } from '../../../state/selectors';
 
 import type { SynWorkspace } from '../../workspace';
-import { buildCommitFromUncommitted, putNewCommit } from './utils';
 
 export async function handleCommitNotice<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   sessionHash: EntryHashB64,
-  commitNotice: CommitNotice
+  _commitNotice: CommitNotice
 ) {
   // TODO: move this away from here
-  const initialSnapshotHash = await workspace.client.hashSnapshot(
+  /*   const initialSnapshotHash = await workspace.client.hashSnapshot(
     workspace.grammar.initialState
-  );
+  ); */
   workspace.store.update(state => {
     if (amIScribe(state, sessionHash)) {
       console.log("Received a commit notice but I'm the scribe!");
       return state;
     }
 
+    /* 
     const latestCommittedContentHash = selectLatestSnapshotHash(
       state,
       sessionHash,
       initialSnapshotHash
     );
     const sessionState = selectSessionState(state, sessionHash);
-    /*  if (
+     if (
       latestCommittedContentHash === commitNotice.previousContentHash &&
       commitNotice.committedDeltasCount ===
         sessionState.uncommittedChanges.deltas.length

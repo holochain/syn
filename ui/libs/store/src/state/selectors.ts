@@ -1,8 +1,4 @@
-import type {
-  AuthoredDelta,
-  ChangeBundle,
-  Session,
-} from '@holochain-syn/client';
+import type { Session } from '@holochain-syn/client';
 import type {
   AgentPubKeyB64,
   EntryHashB64,

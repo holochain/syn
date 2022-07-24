@@ -43,19 +43,21 @@ export function handleSyncRequest<G extends SynGrammar<any, any>>(
       lastSeen: Date.now(),
     };
 
-    const [nextDoc, nextSyncState, message] = receiveSyncMessage(
+    const [_nextDoc, nextSyncState, _message] = receiveSyncMessage(
       sessionState.currentContent,
       initSyncState(),
       requestSyncInput.syncMessage
     );
 
-    const [state, syncMessage] = generateSyncMessage(
+    const [_state, syncMessage] = generateSyncMessage(
       sessionState.currentContent,
       nextSyncState
     );
 
     workspace.client.sendSyncResponse({
       syncMessage: syncMessage!,
+      sessionHash: sessionHash,
+      participant: requestSyncInput.folk
     });
 
     const participants = selectFolksInSession(workspace, sessionState);

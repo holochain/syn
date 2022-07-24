@@ -17,7 +17,7 @@ export function handleSyncResponse<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const joiningSession = state.joiningSessions[sessionHash];
     if (joiningSession) {
-      const [nextDoc, nextSyncState, patch] = receiveSyncMessage(
+      const [nextDoc, _nextSyncState, _patch] = receiveSyncMessage(
         joiningSession.currentContent,
         initSyncState(),
         syncMessage

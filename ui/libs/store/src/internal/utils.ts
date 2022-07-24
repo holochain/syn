@@ -3,9 +3,7 @@ import type {
   EntryHashB64,
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
-import type { ChangeBundle, Commit } from '@holochain-syn/client';
-import cloneDeep from 'lodash-es/cloneDeep';
-import type { GrammarApplyDeltaFn, GrammarState, SynGrammar } from '../grammar';
+import type { Commit } from '@holochain-syn/client';
 
 export function orderCommits(
   initialContentHash: EntryHashB64,
@@ -31,16 +29,4 @@ export function orderCommits(
   }
 
   return orderedCommits;
-}
-
-export function applyChangeBundle<G extends SynGrammar<any, any>>(
-  initialContent: GrammarState<G>,
-  applyDeltaFn: GrammarApplyDeltaFn<G>,
-  changeBundle: ChangeBundle
-): GrammarState<G> {
-  let content = initialContent;
-  for (const delta of changeBundle.deltas) {
-    content = applyDeltaFn(cloneDeep(content), delta.delta, delta.author);
-  }
-  return content;
 }

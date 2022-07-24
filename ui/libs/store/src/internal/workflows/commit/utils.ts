@@ -3,7 +3,6 @@ import type {
   EntryHashB64,
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
-import cloneDeep from 'lodash-es/cloneDeep';
 
 import type { SynState } from '../../../state/syn-state';
 import {

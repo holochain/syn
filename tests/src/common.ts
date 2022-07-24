@@ -1,7 +1,11 @@
 import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
+import {
+  TextEditorDelta,
+  textEditorGrammar,
+  TextEditorState,
+} from '@holochain-syn/text-editor';
 import { SynGrammar } from '@holochain-syn/store';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,36 +56,20 @@ export type TextDelta =
     }
   | TextEditorDelta;
 
-export const applyDelta = (
-  content: Content,
-  delta: TextDelta,
-  author: string
-): Content => {
-  switch (delta.type) {
-    case 'Title':
-      content.title = delta.value;
-      return content;
-    default:
-      return {
-        ...content,
-        body: textEditorGrammar.applyDelta(content.body, delta, author),
-      };
-  }
-};
-
 export const sampleGrammar: SynGrammar<Content, TextDelta> = {
-  initialState: {
-    title: '',
-    body: textEditorGrammar.initialState,
+  initialState(doc) {
+    doc.title = '';
+    doc.body = {};
+    textEditorGrammar.initialState(doc.body);
   },
-  applyDelta,
-  transformDelta(toTransform, withOperation) {
-    if (toTransform.type === 'Title' || withOperation.type == 'Title')
-      return toTransform;
-    return (textEditorGrammar.transformDelta as any)(
-      toTransform,
-      withOperation
-    );
+  applyDelta(content: Content, delta: TextDelta, author: string) {
+    switch (delta.type) {
+      case 'Title':
+        content.title = delta.value;
+        return content;
+      default:
+        textEditorGrammar.applyDelta(content.body, delta, author);
+    }
   },
 };
 
@@ -91,7 +79,7 @@ export function applyDeltas(
   author: string
 ): Content {
   for (const delta of deltas) {
-    content = applyDelta(content, delta, author);
+    sampleGrammar.applyDelta(content, delta, author);
   }
   return content;
 }

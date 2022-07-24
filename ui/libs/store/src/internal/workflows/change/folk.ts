@@ -1,11 +1,7 @@
-import type { ChangeNotice, FolkChanges } from '@holochain-syn/client';
+import type { ChangeNotice } from '@holochain-syn/client';
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 
-import {
-  amIScribe,
-  selectSession,
-  selectSessionState,
-} from '../../../state/selectors';
+import { amIScribe, selectSessionState } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import type { GrammarDelta, SynGrammar } from '../../../grammar';
 import { applyChanges, change } from 'automerge';
@@ -81,8 +77,8 @@ export async function requestChanges<G extends SynGrammar<any, any>>(
 }
 
 export async function checkRequestedChanges<G extends SynGrammar<any, any>>(
-  workspace: SynWorkspace<G>,
-  sessionHash: EntryHashB64
+  _workspace: SynWorkspace<G>,
+  _sessionHash: EntryHashB64
 ) {
   /* 
   let state = get(workspace.store);

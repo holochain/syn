@@ -11,7 +11,7 @@ export interface SynGrammar<STATE, DELTA> {
 export type GrammarDelta<G extends SynGrammar<any, any>> = Parameters<
   G['applyDelta']
 >[1];
-export type GrammarState<G extends SynGrammar<any, any>> = G['initialState'];
+export type GrammarState<G extends SynGrammar<any, any>> = Parameters<G['applyDelta']>[0];
 
 export type GrammarApplyDeltaFn<G extends SynGrammar<any, any>> =
   G['applyDelta'];

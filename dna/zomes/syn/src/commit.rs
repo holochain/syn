@@ -5,10 +5,9 @@ use chrono::{serde::ts_milliseconds, DateTime, Utc};
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::change::ChangeBundle;
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
-use crate::{SignalPayload, SynLinkType, SynMessage};
+use crate::SynLinkType;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -35,8 +34,6 @@ pub struct ChangeMeta {
 #[derive(Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Commit {
-    pub changes: ChangeBundle,
-
     pub previous_commit_hashes: Vec<EntryHashB64>,
     #[serde(with = "ts_milliseconds")]
     pub created_at: DateTime<Utc>,
@@ -63,7 +60,6 @@ pub struct CommitInput {
 #[hdk_extern]
 fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
     let commit = input.commit.clone();
-    let delta_count = commit.changes.deltas.len();
 
     create_entry(&commit)?;
     let commit_hash = hash_entry(&commit)?;
@@ -83,7 +79,7 @@ fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
     let commit_hash_b64 = EntryHashB64::from(commit_hash);
 
     add_commit(commit_hash_b64.clone())?;
-
+    /*
     if input.participants.len() > 0 {
         let commit_info = CommitNotice {
             committed_deltas_count: delta_count,
@@ -103,7 +99,7 @@ fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
             .map(|a| AgentPubKey::from(a))
             .collect();
         remote_signal(payload, participants)?;
-    }
+    } */
     Ok(commit_hash_b64)
 }
 

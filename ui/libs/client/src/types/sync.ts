@@ -20,5 +20,7 @@ export interface RequestSyncInput {
 }
 
 export interface SyncResponseInput {
+  participant: AgentPubKeyB64;
+  sessionHash: EntryHashB64;
   syncMessage: BinarySyncMessage;
 }

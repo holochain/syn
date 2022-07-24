@@ -1,28 +1,10 @@
 import type {
   AgentPubKeyB64,
   EntryHashB64,
-  Dictionary,
 } from '@holochain-open-dev/core-types';
 import { BinaryChange } from 'automerge';
 
 export type Delta = BinaryChange;
-
-export interface FolkChanges {
-  atFolkIndex: number;
-  commitChanges: Array<number>;
-}
-
-export interface AuthoredDelta {
-  author: AgentPubKeyB64;
-  delta: Delta;
-}
-
-export interface ChangeBundle {
-  // Indexed by commit index
-  deltas: Array<AuthoredDelta>;
-  // AgentPubKeyB64 -> folkIndex -> sessionIndex
-  authors: Dictionary<FolkChanges>;
-}
 
 // From folk to scribe
 export interface SendChangeRequestInput {

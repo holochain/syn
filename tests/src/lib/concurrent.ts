@@ -2,7 +2,7 @@ import { Config, Orchestrator } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
 import { SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '../grammar';
+import { TextEditorDeltaType } from '@holochain-syn/text-editor';
 
 import { delay, sampleGrammar, TextDelta } from '../common';
 import { spawnSyn } from './spawn';

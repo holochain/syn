@@ -1,5 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import type { AuthoredDelta } from '@holochain-syn/client';
+import { BinaryChange } from 'automerge';
 
 export type SessionEventListener<SE extends SessionEvent> = (
   args: SE['payload']
@@ -19,4 +19,4 @@ export interface SessionEventContent<T extends SessionEventType, P> {
 }
 export type SessionEvent =
   | SessionEventContent<'session-closed', void>
-  | SessionEventContent<'new-remote-delta', AuthoredDelta>;
+  | SessionEventContent<'new-remote-delta', BinaryChange>;

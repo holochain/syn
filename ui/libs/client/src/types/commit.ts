@@ -3,7 +3,6 @@ import type {
   EntryHashB64,
   HeaderHashB64,
 } from '@holochain-open-dev/core-types';
-import type { ChangeBundle } from './change';
 
 export interface CommitInput {
   sessionHash: EntryHashB64;
@@ -14,8 +13,6 @@ export interface CommitInput {
 }
 
 export interface Commit {
-  changes: ChangeBundle;
-
   createdAt: number;
 
   previousCommitHashes: Array<EntryHashB64>;

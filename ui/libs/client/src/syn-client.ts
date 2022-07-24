@@ -5,11 +5,7 @@ import type {
 } from '@holochain-open-dev/core-types';
 import { encode, decode } from '@msgpack/msgpack';
 
-import type {
-  ChangeBundle,
-  SendChangeInput,
-  SendChangeRequestInput,
-} from './types/change';
+import type { SendChangeInput, SendChangeRequestInput } from './types/change';
 import type { Commit, CommitInput, Content } from './types/commit';
 import type { SendFolkLoreInput } from './types/folks';
 import type { SendHeartbeatInput } from './types/heartbeat';
@@ -89,31 +85,16 @@ export class SynClient {
   }
 
   /** Commits */
-  public commitChanges(commitInput: CommitInput): Promise<EntryHashB64> {
-    const commit = {
-      ...commitInput,
-      commit: {
-        ...commitInput.commit,
-        changes: this.encodeChangeBundle(commitInput.commit.changes),
-      },
-    };
-
-    return this.callZome('commit_changes', commit);
+  public commitChanges(input: CommitInput): Promise<EntryHashB64> {
+    return this.callZome('commit_changes', input);
   }
 
   public async getCommit(commitHash: EntryHashB64): Promise<Commit> {
-    const commit = await this.callZome('get_commit', commitHash);
-    return this.decodeCommit(commit);
+    return this.callZome('get_commit', commitHash);
   }
 
   public async getAllCommits(): Promise<Record<string, Commit>> {
-    const commits = await this.callZome('get_all_commits', null);
-
-    for (const key of Object.keys(commits)) {
-      commits[key] = this.decodeCommit(commits[key]);
-    }
-
-    return commits;
+    return await this.callZome('get_all_commits', null);
   }
 
   /** Folks */
@@ -130,16 +111,20 @@ export class SynClient {
   public sendSyncRequest(
     syncRequestInput: SendSyncRequestInput
   ): Promise<void> {
-    return this.callZome('send_sync_request', syncRequestInput);
+    const input = {
+      ...syncRequestInput,
+      syncMessage: encode(syncRequestInput.syncMessage),
+    };
+
+    return this.callZome('send_sync_request', input);
   }
 
-  public sendSyncResponse(
-    syncResponseInput: SyncResponseInput
-  ): Promise<void> {
+  public sendSyncResponse(syncResponseInput: SyncResponseInput): Promise<void> {
     const input = {
       ...syncResponseInput,
+      syncMessage: encode(syncResponseInput.syncMessage),
     };
-/* 
+    /* 
     if (input.state.folkMissedLastCommit) {
       input.state.folkMissedLastCommit.commit = this.encodeCommit(
         input.state.folkMissedLastCommit.commit
@@ -162,9 +147,7 @@ export class SynClient {
     changeRequestInput: SendChangeRequestInput
   ): Promise<void> {
     const input = { ...changeRequestInput };
-    if (input.deltas) {
-      input.deltas = input.deltas.map(d => encode(d)) as any;
-    }
+    input.deltas = input.deltas.map(d => encode(d)) as any;
 
     return this.callZome('send_change_request', input);
   }
@@ -173,9 +156,7 @@ export class SynClient {
     const input = {
       ...sendChangeInput,
     };
-    if (input.deltas) {
-      input.deltas = input.deltas.map(d => encode(d)) as any;
-    }
+    input.deltas = input.deltas.map(d => encode(d)) as any;
     return this.callZome('send_change', input);
   }
 
@@ -187,35 +168,5 @@ export class SynClient {
   /** Helpers */
   private async callZome(fnName: string, payload: any): Promise<any> {
     return this.cellClient.callZome(this.zomeName, fnName, payload);
-  }
-/* 
-  private encodeCommit(commit: Commit) {
-    return {
-      ...commit,
-      changes: this.encodeChangeBundle(commit.changes),
-    };
-  } */
-
-  private encodeChangeBundle(changes: ChangeBundle) {
-    return {
-      ...changes,
-      deltas: changes.deltas.map(d => ({
-        author: d.author,
-        delta: encode(d.delta),
-      })),
-    };
-  }
-
-  private decodeCommit(commit: any): Commit {
-    return {
-      ...commit,
-      changes: {
-        authors: commit.changes.authors,
-        deltas: commit.changes.deltas.map(d => ({
-          author: d.author,
-          delta: decode(d.delta),
-        })),
-      },
-    };
   }
 }

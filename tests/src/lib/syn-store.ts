@@ -7,16 +7,9 @@ import {
 
 import { get } from 'svelte/store';
 import { SynGrammar, SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '../grammar';
+import { TextEditorDeltaType } from '@holochain-syn/text-editor';
 
-import {
-  applyDelta,
-  Content,
-  delay,
-  sampleGrammar,
-  synDna,
-  TextDelta,
-} from '../common';
+import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common';
 import { spawnSyn } from './spawn';
 
 const config = Config.gen();

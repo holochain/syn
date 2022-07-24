@@ -12,7 +12,10 @@ import {
 } from '../common';
 import { encode, decode } from '@msgpack/msgpack';
 import { cloneDeepWith } from 'lodash-es';
-import { TextEditorDeltaType } from '../grammar';
+import { TextEditorDeltaType } from '@holochain-syn/text-editor';
+import pkg from 'automerge';
+import type { Doc } from 'automerge';
+const { init, change } = pkg;
 
 const config = Config.gen();
 
@@ -65,7 +68,10 @@ export default orchestrator => {
     let sessionInfo = await me.call('syn', 'new_session', {});
 
     // First ever session so content should be default content
-    let sessionSnapshot: Content = sampleGrammar.initialState;
+    let sessionSnapshot: Doc<Content> = init();
+    sessionSnapshot = change(sessionSnapshot, doc =>
+      sampleGrammar.initialState(doc)
+    );
 
     // I created the session, so I should be the scribe
     t.deepEqual(sessionInfo.session.scribe, me_pubkey);

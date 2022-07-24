@@ -15,10 +15,9 @@ mod utils;
 
 use session::Session;
 
-use snapshot::Snapshot;
-use sync::{RequestSyncInput, StateForSync};
-
 use crate::commit::Commit;
+use snapshot::Snapshot;
+use sync::RequestSyncInput;
 
 enum SynLinkType {
     PathToFolk = 0,
@@ -61,7 +60,7 @@ impl SignalPayload {
 #[serde(tag = "type", content = "payload")]
 enum SynMessage {
     SyncReq(RequestSyncInput), // content is who the request is from
-    SyncResp(StateForSync),
+    SyncResp(SerializedBytes),
     ChangeReq(ChangeRequest),
     ChangeNotice(ChangeNotice),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
