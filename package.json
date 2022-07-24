@@ -32,7 +32,7 @@
     "new-port-cli": "^1.0.0",
     "prettier": "^2.3.2",
     "repeating-cli": "^3.0.0",
-    "typescript": "4.2.4"
+    "typescript": "4.7.4"
   },
   "eslintConfig": {
     "extends": [

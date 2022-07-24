@@ -18,7 +18,7 @@
     "rimraf": "^3.0.2",
     "run-singleton-cli": "^0.0.5",
     "svelte": "^3.38.2",
-    "typescript": "^4.2.4"
+    "typescript": "^4.7.4"
   },
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.5.3",
