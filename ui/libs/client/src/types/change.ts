@@ -11,29 +11,27 @@ export interface SendChangeRequestInput {
   sessionHash: EntryHashB64;
   scribe: AgentPubKeyB64;
 
-  deltas: Delta[];
-}
-
-export interface DeltaChanges {
-  atFolkIndex: number;
-  deltas: Array<Delta>;
+  stateChanges: BinaryChange[];
+  ephemeralChanges: BinaryChange[];
 }
 
 export interface ChangeRequest {
   folk: AgentPubKeyB64;
   scribe: AgentPubKeyB64;
 
-  deltas: Delta[];
+  stateChanges: BinaryChange[];
+  ephemeralChanges: BinaryChange[];
 }
 
 export interface SendChangeInput {
   participants: Array<AgentPubKeyB64>;
   sessionHash: EntryHashB64;
 
-  deltas: Delta[];
+  stateChanges: BinaryChange[];
+  ephemeralChanges: BinaryChange[];
 }
 
 export interface ChangeNotice {
-
-  deltas: Delta[];
+  stateChanges: BinaryChange[];
+  ephemeralChanges: BinaryChange[];
 }

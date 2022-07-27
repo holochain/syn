@@ -28,18 +28,23 @@ export async function scribeRequestChange<G extends SynGrammar<any, any>>(
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
 
-    const oldContent = clone(sessionState.currentContent);
+    const oldContent = clone(sessionState.state);
+    const oldEphemeral = clone(sessionState.ephemeral);
 
     for (const delta of deltas) {
-      sessionState.currentContent = change(sessionState.currentContent, doc =>
-        workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
-      );
+      sessionState.state = change(sessionState.state, doc => {
+        sessionState.ephemeral = change(sessionState.ephemeral, eph => {
+          workspace.grammar.applyDelta(doc, delta, eph, workspace.myPubKey);
+        });
+      });
     }
 
-    const changes = getChanges(oldContent, sessionState.currentContent);
+    const stateChanges = getChanges(oldContent, sessionState.state);
+    const ephemeralChanges = getChanges(oldEphemeral, sessionState.ephemeral);
 
     workspace.client.sendChange({
-      deltas: changes,
+      stateChanges,
+      ephemeralChanges,
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
     });
@@ -52,10 +57,7 @@ export async function scribeRequestChange<G extends SynGrammar<any, any>>(
       lastCommitState = load(state.snapshots[commit.newContentHash]);
     }
 
-    const commitChanges = getChanges(
-      lastCommitState,
-      sessionState.currentContent
-    );
+    const commitChanges = getChanges(lastCommitState, sessionState.state);
 
     triggerCommitIfNecessary(workspace, sessionHash, commitChanges.length);
 
@@ -84,14 +86,28 @@ export async function handleChangeRequest<G extends SynGrammar<any, any>>(
       lastSeen: Date.now(),
     };
 
-    const changes = applyChanges(
-      sessionState.currentContent,
-      changeRequest.deltas
+    const stateChanges = applyChanges(
+      sessionState.state,
+      changeRequest.stateChanges
     );
-    sessionState.currentContent = changes[0];
+    sessionState.state = stateChanges[0];
+    const ephemeralChanges = applyChanges(
+      sessionState.ephemeral,
+      changeRequest.ephemeralChanges
+    );
+    sessionState.ephemeral = ephemeralChanges[0];
+
+    if (
+      stateChanges[1].pendingChanges > 0 ||
+      ephemeralChanges[1].pendingChanges > 0
+    ) {
+      // One of the changes that this peer sent has been lost
+      // Initiate sync request
+    }
 
     workspace.client.sendChange({
-      deltas: changeRequest.deltas,
+      stateChanges: changeRequest.stateChanges,
+      ephemeralChanges: changeRequest.ephemeralChanges,
       participants: selectFolksInSession(workspace, sessionState),
       sessionHash,
     });
@@ -106,7 +122,7 @@ export async function handleChangeRequest<G extends SynGrammar<any, any>>(
 
     const changesSinceCommit = getChanges(
       lastCommitState,
-      sessionState.currentContent
+      sessionState.state
     );
 
     triggerCommitIfNecessary(workspace, sessionHash, changesSinceCommit.length);

@@ -11,22 +11,29 @@ import {
 } from '../../../state/selectors';
 import type { SynWorkspace } from '../../workspace';
 import { commitChanges } from '../commit/scribe';
-import type { GrammarState, SynGrammar } from '../../../grammar';
-import { change, clone, Doc, FreezeObject, init, load } from 'automerge';
+import type {
+  GrammarEphemeralState,
+  GrammarState,
+  SynGrammar,
+} from '../../../grammar';
+import { change, clone, Doc, init, load } from 'automerge';
 
 export function getCommitSnapshot() {}
 
 export async function getInitialSessionSnapshot<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
   initialCommitHash: EntryHashB64 | undefined
-): Promise<Doc<GrammarState<G>>> {
-  const document = init({
-    
-  });
-  let currentContent = change(document, doc =>
-    workspace.grammar.initialState(doc)
-  ) as FreezeObject<GrammarState<G>>;
-
+): Promise<{
+  state: Doc<GrammarState<G>>;
+  ephemeral: Doc<GrammarEphemeralState<G>>;
+}> {
+  let state = init({});
+  let ephemeral: Doc<GrammarEphemeralState<G>> = init({});
+  state = change(state, doc => {
+    ephemeral = change(ephemeral, eph => {
+      workspace.grammar.initState(doc, eph);
+    }) as Doc<GrammarEphemeralState<G>>;
+  }) as Doc<GrammarState<G>>;
   if (initialCommitHash) {
     const currentCommit = await workspace.client.getCommit(initialCommitHash);
 
@@ -36,7 +43,7 @@ export async function getInitialSessionSnapshot<G extends SynGrammar<any, any>>(
     const contentBytes = await workspace.client.getSnapshot(
       (currentCommit as Commit).newContentHash
     );
-    currentContent = load(contentBytes);
+    state = load(contentBytes);
 
     workspace.store.update(state => {
       state.commits[initialCommitHash] = currentCommit;
@@ -46,7 +53,7 @@ export async function getInitialSessionSnapshot<G extends SynGrammar<any, any>>(
     });
   }
 
-  return currentContent;
+  return { state, ephemeral };
 }
 
 // Pick and join a session
@@ -60,7 +67,7 @@ export async function newSession<G extends SynGrammar<any, any>>(
   );
 
   if (!fromCommit) {
-    await workspace.client.putSnapshot(clone(initialSessionContent));
+    await workspace.client.putSnapshot(clone(initialSessionContent.state));
   }
   const session = await workspace.client.newSession({
     initialCommitHash: fromCommit,
@@ -72,11 +79,12 @@ export async function newSession<G extends SynGrammar<any, any>>(
     state.joinedSessions[session.sessionHash] = {
       lastCommitHash: fromCommit,
       sessionHash: session.sessionHash,
-      currentContent: initialSessionContent,
-      initialSnapshot: clone(initialSessionContent),
+      state: initialSessionContent.state,
+      ephemeral: initialSessionContent.ephemeral,
+      initialSnapshot: clone(initialSessionContent.state),
       unpublishedChanges: [],
+      unpublishedEphemeralChanges: [],
       syncStates: {},
-
       folks: {},
     };
 

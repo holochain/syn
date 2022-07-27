@@ -16,23 +16,37 @@ export function folkRequestChange<G extends SynGrammar<any, any>>(
 
   workspace.store.update(state => {
     const sessionState = selectSessionState(state, sessionHash);
-    let newState = sessionState.currentContent;
+    let newState = sessionState.state;
+    let newEphemeralState = sessionState.ephemeral;
     for (const delta of deltas) {
-      newState = change(newState, doc =>
-        workspace.grammar.applyDelta(doc, delta, workspace.myPubKey)
-      );
+      newState = change(newState, doc => {
+        newEphemeralState = change(newEphemeralState, eph => {
+          workspace.grammar.applyDelta(doc, delta, eph, workspace.myPubKey);
+        });
+      });
     }
-    const changes = getChanges(sessionState.currentContent, newState);
-    sessionState.currentContent = newState;
+    const stateChanges = getChanges(sessionState.state, newState);
+    const ephemeralChanges = getChanges(
+      sessionState.ephemeral,
+      newEphemeralState
+    );
+
+    sessionState.state = newState;
+    sessionState.ephemeral = newEphemeralState;
     sessionState.unpublishedChanges = [
       ...sessionState.unpublishedChanges,
-      ...changes,
+      ...stateChanges,
+    ];
+    sessionState.unpublishedEphemeralChanges = [
+      ...sessionState.unpublishedEphemeralChanges,
+      ...ephemeralChanges,
     ];
 
     workspace.client.sendChangeRequest({
-      deltas: changes,
-      scribe: state.sessions[sessionHash].scribe,
       sessionHash,
+      scribe: state.sessions[sessionHash].scribe,
+      stateChanges,
+      ephemeralChanges,
     });
     /* 
     const newRequestedChanges: RequestedChange[] = [];
@@ -75,9 +89,13 @@ export async function requestChanges<G extends SynGrammar<any, any>>(
 
     const sessionState = selectSessionState(state, sessionHash);
 
-    if (sessionState.unpublishedChanges.length > 0) {
+    if (
+      sessionState.unpublishedChanges.length > 0 ||
+      sessionState.unpublishedChanges.length > 0
+    ) {
       workspace.client.sendChangeRequest({
-        deltas: sessionState.unpublishedChanges,
+        stateChanges: sessionState.unpublishedChanges,
+        ephemeralChanges: sessionState.unpublishedEphemeralChanges,
         scribe: state.sessions[sessionHash].scribe,
         sessionHash,
       });
@@ -134,15 +152,29 @@ export function handleChangeNotice<G extends SynGrammar<any, any>>(
     }
 
     const sessionState = selectSessionState(state, sessionHash);
-    const changes = applyChanges(
-      sessionState.currentContent,
-      changeNotice.deltas
+    const changes = applyChanges(sessionState.state, changeNotice.stateChanges);
+    const ephemeralChanges = applyChanges(
+      sessionState.ephemeral,
+      changeNotice.ephemeralChanges
     );
-    sessionState.currentContent = changes[0];
+    sessionState.state = changes[0];
+    sessionState.ephemeral = ephemeralChanges[0];
+
+    if (
+      changes[1].pendingChanges > 0 ||
+      ephemeralChanges[1].pendingChanges > 0
+    ) {
+      // One of the changes that the scribe had broadcasted has been lost
+      // Initiate sync request
+    }
 
     sessionState.unpublishedChanges = sessionState.unpublishedChanges.filter(
-      change => !changeNotice.deltas.find(d => isEqual(d, change))
+      change => !changeNotice.stateChanges.find(d => isEqual(d, change))
     );
+    sessionState.unpublishedEphemeralChanges =
+      sessionState.unpublishedEphemeralChanges.filter(
+        change => !changeNotice.ephemeralChanges.find(d => isEqual(d, change))
+      );
 
     return state;
   });

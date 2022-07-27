@@ -8,7 +8,8 @@ import { BinarySyncMessage } from 'automerge';
 export interface SendSyncRequestInput {
   sessionHash: EntryHashB64;
   scribe: AgentPubKeyB64;
-  syncMessage: BinarySyncMessage;
+  syncMessage: BinarySyncMessage | undefined;
+  ephemeralSyncMessage: BinarySyncMessage | undefined;
 }
 
 // Received by the scribe
@@ -16,11 +17,13 @@ export interface RequestSyncInput {
   folk: AgentPubKeyB64;
   scribe: AgentPubKeyB64;
 
-  syncMessage: BinarySyncMessage;
+  syncMessage: BinarySyncMessage | undefined;
+  ephemeralSyncMessage: BinarySyncMessage | undefined;
 }
 
 export interface SyncResponseInput {
   participant: AgentPubKeyB64;
   sessionHash: EntryHashB64;
-  syncMessage: BinarySyncMessage;
+  syncMessage: BinarySyncMessage | undefined;
+  ephemeralSyncMessage: BinarySyncMessage | undefined;
 }

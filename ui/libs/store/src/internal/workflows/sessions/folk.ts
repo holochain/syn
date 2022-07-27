@@ -1,5 +1,5 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { generateSyncMessage, initSyncState } from 'automerge';
+import { clone, generateSyncMessage, initSyncState } from 'automerge';
 import type { SynGrammar } from '../../../grammar';
 
 import { amIScribe } from '../../../state/selectors';
@@ -13,6 +13,9 @@ export async function joinSession<G extends SynGrammar<any, any>>(
   sessionHash: EntryHashB64
 ): Promise<void> {
   const session = await workspace.client.getSession(sessionHash);
+
+  if (session.scribe === workspace.myPubKey)
+    throw new Error("Can't join a session for which we are the scribe");
 
   const initialSnapshot = await getInitialSessionSnapshot(
     workspace,
@@ -32,30 +35,44 @@ export async function joinSession<G extends SynGrammar<any, any>>(
     workspace.store.update(state => {
       state.sessions[sessionHash] = session;
 
-      if (session.scribe !== state.myPubKey) {
-        const [nextSyncState, syncMessage] = generateSyncMessage(
-          initialSnapshot,
-          initSyncState()
-        );
+      const [nextSyncState, syncMessage] = generateSyncMessage(
+        initialSnapshot.state,
+        initSyncState()
+      );
+      const [ephemeralNextSyncState, ephemeralSyncMessage] =
+        generateSyncMessage(initialSnapshot.ephemeral, initSyncState());
 
-        state.joiningSessions[sessionHash] = {
-          promise: joiningResolve,
-          currentContent: initialSnapshot,
-          scribeSyncState: nextSyncState
-        };
-        workspace.client.sendSyncRequest({
-          scribe: session.scribe,
-          sessionHash: sessionHash,
-          syncMessage: syncMessage!,
-        });
-      }
+      state.joiningSessionsPromises[sessionHash] = joiningResolve;
+
+      state.joinedSessions[sessionHash] = {
+        state: initialSnapshot.state,
+        syncStates: {
+          [session.scribe]: {
+            state: nextSyncState,
+            ephemeral: ephemeralNextSyncState,
+          },
+        },
+        ephemeral: initialSnapshot.ephemeral,
+        folks: {},
+        initialSnapshot: clone(initialSnapshot.state),
+        lastCommitHash: session.initialCommitHash,
+        sessionHash,
+        unpublishedChanges: [],
+        unpublishedEphemeralChanges: [],
+      };
+      workspace.client.sendSyncRequest({
+        scribe: session.scribe,
+        sessionHash: sessionHash,
+        syncMessage: syncMessage!,
+        ephemeralSyncMessage: ephemeralSyncMessage,
+      });
 
       return state;
     });
 
     setTimeout(() => {
       workspace.store.update(state => {
-        delete state.joiningSessions[sessionHash];
+        delete state.joiningSessionsPromises[sessionHash];
         return state;
       });
       reject('Could not connect to the scribe of the session');

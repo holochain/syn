@@ -1,13 +1,13 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
 import {
   BinarySyncMessage,
-  clone,
   generateSyncMessage,
   receiveSyncMessage,
 } from 'automerge';
 
 import type { SynWorkspace } from '../../workspace';
 import type { SynGrammar } from '../../../grammar';
+import { selectSession, selectSessionState } from '../../../state/selectors';
 
 export function handleSyncResponse<G extends SynGrammar<any, any>>(
   workspace: SynWorkspace<G>,
@@ -16,44 +16,48 @@ export function handleSyncResponse<G extends SynGrammar<any, any>>(
 ) {
   let resolveJoining: (() => void) | undefined = undefined;
   workspace.store.update(state => {
-    const joiningSession = state.joiningSessions[sessionHash];
-    if (joiningSession) {
+    const joiningSession = state.joiningSessionsPromises[sessionHash];
+    if (joiningSession !== undefined) {
+      const session = selectSession(state, sessionHash);
+      const sessionState = selectSessionState(state, sessionHash);
+
       const [nextDoc, nextSyncState, _patch] = receiveSyncMessage(
-        joiningSession.currentContent,
-        joiningSession.scribeSyncState,
+        sessionState.state,
+        sessionState.syncStates[session.scribe].state,
         syncMessage
       );
-      joiningSession.currentContent = nextDoc;
+      sessionState.state = nextDoc;
       const [nextnextSyncState, nextsyncMessage] = generateSyncMessage(
         nextDoc,
         nextSyncState
       );
+      sessionState.syncStates[session.scribe].state = nextnextSyncState;
 
-      joiningSession.scribeSyncState = nextnextSyncState;
+      const [ephemeralNextDoc, ephemeralNextSyncState, _ephemeralPatch] =
+        receiveSyncMessage(
+          sessionState.state,
+          sessionState.syncStates[session.scribe].ephemeral,
+          syncMessage
+        );
+      sessionState.state = ephemeralNextDoc;
+      const [
+        ephemeralNextephemeralNextSyncState,
+        ephemeralNextNextSyncMessage,
+      ] = generateSyncMessage(ephemeralNextDoc, ephemeralNextSyncState);
+      sessionState.syncStates[session.scribe].ephemeral =
+        ephemeralNextephemeralNextSyncState;
 
       const scribe = state.sessions[sessionHash].scribe;
-      if (nextsyncMessage) {
+      if (nextsyncMessage || ephemeralNextNextSyncMessage) {
         workspace.client.sendSyncRequest({
           scribe,
           sessionHash,
           syncMessage: nextsyncMessage,
+          ephemeralSyncMessage: ephemeralNextNextSyncMessage,
         });
       } else {
-        state.joinedSessions[sessionHash] = {
-          sessionHash: sessionHash,
-          currentContent: nextDoc,
-          initialSnapshot: clone(nextDoc),
-          lastCommitHash: undefined,
-          syncStates: {
-            [scribe]: joiningSession.scribeSyncState,
-          },
-          unpublishedChanges: [],
-
-          folks: {},
-        };
-
-        resolveJoining = state.joiningSessions[sessionHash].promise;
-        delete state.joiningSessions[sessionHash];
+        resolveJoining = state.joiningSessionsPromises[sessionHash];
+        delete state.joiningSessionsPromises[sessionHash];
       }
     }
 

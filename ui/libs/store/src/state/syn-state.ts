@@ -22,11 +22,7 @@ export interface SynState<G extends SynGrammar<any, any>> {
   myPubKey: AgentPubKeyB64;
   activeSessionHash: EntryHashB64 | undefined; // Optional
   sessions: Dictionary<Session>; // Segmented by EntryHashB64
-  joiningSessions: Dictionary<{
-    promise: () => void;
-    currentContent: Doc<GrammarState<G>>;
-    scribeSyncState: SyncState;
-  }>;
+  joiningSessionsPromises: Dictionary<() => void>;
   joinedSessions: Dictionary<SessionState<G>>; // Segmented by EntryHashB64
   commits: Dictionary<Commit>; // Segmented by EntryHashB64
   snapshots: Dictionary<any>; // Segmented by EntryHashB64
@@ -38,12 +34,15 @@ export interface SessionState<G extends SynGrammar<any, any>> {
   lastCommitHash: EntryHashB64 | undefined;
 
   initialSnapshot: Doc<GrammarState<G>>;
-  currentContent: Doc<GrammarState<G>>;
 
-  // Only my requested changes
+  state: Doc<GrammarState<G>>;
+  ephemeral: Doc<GrammarState<G>>;
+
+  // Only my requested changes that haven't been requested back to me
   unpublishedChanges: Array<Delta>;
+  unpublishedEphemeralChanges: Array<Delta>;
 
-  syncStates: Dictionary<SyncState>;
+  syncStates: Dictionary<{ state: SyncState; ephemeral: SyncState }>;
 
   // AgentPubKeyB64 -> lastSeen
   folks: Dictionary<FolkInfo>;
@@ -57,7 +56,7 @@ export function initialState<G extends SynGrammar<any, any>>(
     activeSessionHash: undefined,
     sessions: {},
     joinedSessions: {},
-    joiningSessions: {},
+    joiningSessionsPromises: {},
     commits: {},
     snapshots: {},
   };
