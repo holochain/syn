@@ -6,38 +6,22 @@ use crate::{SignalPayload, SynMessage};
 /// Input to the send sync req call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendSyncRequestInput {
-    pub scribe: AgentPubKeyB64,
+pub struct RequestSyncInput {
+    pub to: AgentPubKeyB64,
     pub session_hash: EntryHashB64,
     pub sync_message: SerializedBytes,
 }
 
-/// Input to the send sync req call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RequestSyncInput {
-    pub scribe: AgentPubKeyB64,
-    pub folk: AgentPubKeyB64,
-    pub sync_message: SerializedBytes,
-}
-
 #[hdk_extern]
-fn send_sync_request(input: SendSyncRequestInput) -> ExternResult<()> {
-    let scribe = AgentPubKey::from(input.scribe.clone());
-    let me = AgentPubKeyB64::from(agent_info()?.agent_initial_pubkey);
-
-    let request_sync = RequestSyncInput {
-        scribe: input.scribe,
-        folk: me,
-        sync_message: input.sync_message,
-    };
+fn request_sync(input: RequestSyncInput) -> ExternResult<()> {
+    let to = AgentPubKey::from(input.to.clone());
 
     remote_signal(
         ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::SyncReq(request_sync),
+            SynMessage::SyncRequest(input),
         ))?,
-        vec![scribe],
+        vec![to],
     )?;
     Ok(())
 }
@@ -57,7 +41,7 @@ fn send_sync_response(input: SendSyncResponseInput) -> ExternResult<()> {
     remote_signal(
         ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::SyncResp(input.sync_message),
+            SynMessage::SyncResponse(input.sync_message),
         ))?,
         vec![AgentPubKey::from(input.participant)],
     )?;

@@ -1,10 +1,11 @@
 import type { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { clone, generateSyncMessage, initSyncState } from 'automerge';
+import { clone, initSyncState } from 'automerge';
 import type { SynGrammar } from '../../../grammar';
 
 import { amIScribe } from '../../../state/selectors';
 import { emitEvent } from '../../events/emit';
 import type { SynWorkspace } from '../../workspace';
+import { requestSync } from '../sync';
 import { getInitialSessionSnapshot } from './scribe';
 
 // Pick and join a session
@@ -31,25 +32,16 @@ export async function joinSession<G extends SynGrammar<any, any>>(
 
       resolve();
     };
-
     workspace.store.update(state => {
       state.sessions[sessionHash] = session;
 
-      const [nextSyncState, syncMessage] = generateSyncMessage(
-        initialSnapshot.state,
-        initSyncState()
-      );
-      const [ephemeralNextSyncState, ephemeralSyncMessage] =
-        generateSyncMessage(initialSnapshot.ephemeral, initSyncState());
-
       state.joiningSessionsPromises[sessionHash] = joiningResolve;
-
       state.joinedSessions[sessionHash] = {
         state: initialSnapshot.state,
         syncStates: {
           [session.scribe]: {
-            state: nextSyncState,
-            ephemeral: ephemeralNextSyncState,
+            state: initSyncState(),
+            ephemeral: initSyncState(),
           },
         },
         ephemeral: initialSnapshot.ephemeral,
@@ -60,15 +52,11 @@ export async function joinSession<G extends SynGrammar<any, any>>(
         unpublishedChanges: [],
         unpublishedEphemeralChanges: [],
       };
-      workspace.client.sendSyncRequest({
-        scribe: session.scribe,
-        sessionHash: sessionHash,
-        syncMessage: syncMessage!,
-        ephemeralSyncMessage: ephemeralSyncMessage,
-      });
 
       return state;
     });
+
+    requestSync(workspace, sessionHash, session.scribe);
 
     setTimeout(() => {
       workspace.store.update(state => {

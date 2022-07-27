@@ -50,7 +50,7 @@ export function areWeJoiningSession<G extends SynGrammar<any, any>>(
   synState: SynState<G>,
   sessionHash: EntryHashB64
 ): boolean {
-  return !!synState.joiningSessions[sessionHash];
+  return !!synState.joiningSessionsPromises[sessionHash];
 }
 
 export function selectLatestSnapshotHash<G extends SynGrammar<any, any>>(

@@ -41,9 +41,12 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   profilesStore!: ProfilesStore;
 
   _state = new StoreSubscriber(this, () => this.synSlice?.state);
+  _cursors = new StoreSubscriber(this, () => this.synSlice?.ephemeral);
   _lastDelta: TextEditorDelta | undefined;
-  _peersProfiles: Record<AgentPubKeyB64, TaskSubscriber<[], Profile | undefined>> =
-    {};
+  _peersProfiles: Record<
+    AgentPubKeyB64,
+    TaskSubscriber<[], Profile | undefined>
+  > = {};
 
   _lastCursorPosition = 0;
   _cursorPosition = 0;
@@ -101,14 +104,14 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
 
   remoteCursors() {
     if (!this._state.value) return [];
-    return Object.entries(this._state.value.selections)
+    return Object.entries(this._cursors.value)
       .filter(([pubKey, _]) => pubKey !== this.synStore.myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
         const name = this._peersProfiles[agentPubKey]?.value?.nickname;
         return {
-          position: position.position,
+          position: position.position.value,
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };
@@ -118,16 +121,14 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   render() {
     if (this._state.value === undefined) return html``;
 
-    const mySelection = this._state.value.selections[this.synStore.myPubKey];
+    const mySelection = this._cursors.value[this.synStore.myPubKey];
 
     const selection = mySelection
       ? {
           from: mySelection.position,
-          to: mySelection.position + mySelection.characterCount,
+          to: mySelection.position.value + mySelection.characterCount,
         }
       : undefined;
-
-    console.log(this._state.value.text, selection);
 
     return html`
       <div
@@ -140,7 +141,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
               style="flex: 1; "
               id="editor"
               .state=${{
-                text: this._state.value.text,
+                text: this._state.value.toString(),
                 selection,
               }}
               .additionalCursors=${this.remoteCursors()}

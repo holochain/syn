@@ -43,14 +43,13 @@ async function createCommit<G extends SynGrammar<any, any>>(
 
   const session = selectSessionState(state, sessionHash);
 
-  const stateToPersist = save(session.currentContent);
+  const stateToPersist = save(session.state);
   const hash = await workspace.client.putSnapshot(stateToPersist);
 
-  const doc = init({
-    
-  });
+  const doc = init({});
+  const eph = init({});
   const initialSnapshot = change(doc, doc =>
-    workspace.grammar.initialState(doc)
+    workspace.grammar.initState(doc, eph)
   );
 
   const initialSnapshotHash = await workspace.client.hashSnapshot(

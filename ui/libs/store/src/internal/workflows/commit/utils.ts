@@ -47,6 +47,5 @@ export function putNewCommit<G extends SynGrammar<any, any>>(
   const session = selectSessionState(state, sessionHash);
 
   session.lastCommitHash = newCommitHash;
-  state.snapshots[commit.newContentHash] = clone(session.currentContent);
-
+  state.snapshots[commit.newContentHash] = clone(session.state);
 }

@@ -11,7 +11,12 @@ import { requestChanges } from './internal/workflows/change';
 import { leaveSession } from './internal/workflows/sessions';
 import type { CloseSessionResult } from './internal/workflows/sessions/scribe';
 import pickBy from 'lodash-es/pickBy';
-import type { GrammarState, GrammarDelta, SynGrammar } from './grammar';
+import type {
+  GrammarState,
+  GrammarDelta,
+  SynGrammar,
+  GrammarEphemeralState,
+} from './grammar';
 import type {
   SessionEvent,
   SessionEventListener,
@@ -19,6 +24,7 @@ import type {
 
 export interface SynSlice<G extends SynGrammar<any, any>> {
   state: Readable<Doc<GrammarState<G>>>;
+  ephemeral: Readable<Doc<GrammarEphemeralState<G>>>;
 
   requestChanges(deltas: Array<GrammarDelta<G>>): void;
 
@@ -45,7 +51,8 @@ export function buildSessionStore<G extends SynGrammar<any, any>>(
   const sessionState = derived(workspace.store, state =>
     selectSessionState(state, sessionHash)
   );
-  const content = derived(sessionState, state => state?.currentContent);
+  const content = derived(sessionState, state => state?.state);
+  const ephemeral = derived(sessionState, state => state?.ephemeral);
   const lastCommitHash = derived(sessionState, state => state?.lastCommitHash);
 
   const folks = derived(sessionState, state =>
@@ -61,6 +68,7 @@ export function buildSessionStore<G extends SynGrammar<any, any>>(
     lastCommitHash,
     folks,
     state: content,
+    ephemeral,
     requestChanges: (deltas: Array<GrammarDelta<G>>) =>
       requestChanges(workspace, sessionHash, deltas),
     leave: async () => leaveSession(workspace, sessionHash),

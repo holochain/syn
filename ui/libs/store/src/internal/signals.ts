@@ -2,8 +2,7 @@ import { get } from 'svelte/store';
 import { SynMessageType, SynSignal } from '@holochain-syn/client';
 
 import type { SynWorkspace } from './workspace';
-import { handleSyncRequest } from './workflows/sync/scribe';
-import { handleSyncResponse } from './workflows/sync/folk';
+import { handleSyncResponse, handleSyncRequest } from './workflows/sync';
 import { areWeJoiningSession, selectSessionState } from '../state/selectors';
 import { handleChangeRequest } from './workflows/change/scribe';
 import { handleCommitNotice } from './workflows/commit/folk';

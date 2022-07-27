@@ -59,8 +59,8 @@ impl SignalPayload {
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(tag = "type", content = "payload")]
 enum SynMessage {
-    SyncReq(RequestSyncInput), // content is who the request is from
-    SyncResp(SerializedBytes),
+    SyncRequest(RequestSyncInput), // content is who the request is from
+    SyncResponse(SerializedBytes),
     ChangeReq(ChangeRequest),
     ChangeNotice(ChangeNotice),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info

@@ -15,7 +15,7 @@ import { joinSession } from './internal/workflows/sessions/folk';
 import { buildSessionStore, SessionStore } from './session-store';
 import { closeSession, newSession } from './internal/workflows/sessions/scribe';
 import { leaveSession } from './internal/workflows/sessions';
-import type { SynGrammar } from './grammar';
+import type { GrammarState, SynGrammar } from './grammar';
 
 export class SynStore<G extends SynGrammar<any, any>> {
   /** Private fields */
@@ -27,7 +27,7 @@ export class SynStore<G extends SynGrammar<any, any>> {
   joinedSessions: Readable<EntryHashB64[]>;
   knownSessions: Readable<Dictionary<Session>>;
   allCommits: Readable<Dictionary<Commit>>;
-  snapshots: Readable<Dictionary<G['initialState']>>;
+  snapshots: Readable<Dictionary<GrammarState<G>>>;
 
   constructor(
     cellClient: CellClient,
