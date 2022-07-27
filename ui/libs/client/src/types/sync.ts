@@ -7,15 +7,15 @@ import { BinarySyncMessage } from 'automerge';
 // Sent by the folk
 export interface SendSyncRequestInput {
   sessionHash: EntryHashB64;
-  scribe: AgentPubKeyB64;
+  to: AgentPubKeyB64;
   syncMessage: BinarySyncMessage | undefined;
   ephemeralSyncMessage: BinarySyncMessage | undefined;
 }
 
 // Received by the scribe
 export interface RequestSyncInput {
-  folk: AgentPubKeyB64;
-  scribe: AgentPubKeyB64;
+  from: AgentPubKeyB64;
+  to: AgentPubKeyB64;
 
   syncMessage: BinarySyncMessage | undefined;
   ephemeralSyncMessage: BinarySyncMessage | undefined;

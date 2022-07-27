@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use chrono::{serde::ts_milliseconds, DateTime, Utc};
-use hdk::prelude::*;
 use hdk::prelude::holo_hash::hash_type::AnyLinkable;
+use hdk::prelude::*;
 use holo_hash::*;
 
 use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
-use crate::{SignalPayload, SynLinkType, SynMessage};
+use crate::{SynMessage, SynLinkType, SessionMessage, SynInput};
 
 /// Session
 /// This entry holds the record of who the scribe is and a hash
@@ -125,9 +125,9 @@ pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
 
     // send response signal to the participant
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::SessionClosed,
+            SessionMessage::SessionClosed,
         ))?,
         participants,
     )?;
@@ -135,21 +135,19 @@ pub fn close_session(input: CloseSessionInput) -> ExternResult<()> {
     Ok(())
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct NotifyLeaveSessionInput {
-    pub session_hash: EntryHashB64,
-    pub scribe: AgentPubKeyB64,
-}
+pub struct  LeaveSessionPayload;
 
 #[hdk_extern]
-pub fn notify_leave_session(input: NotifyLeaveSessionInput) -> ExternResult<()> {
+pub fn notify_leave_session(input: SynInput<LeaveSessionPayload>) -> ExternResult<()> {
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::LeaveSessionNotice(agent_info()?.agent_latest_pubkey.into()),
+            SessionMessage::LeaveSessionNotice,
         ))?,
-        vec![input.scribe.into()],
+        vec![input.to.into()],
     )?;
 
     Ok(())

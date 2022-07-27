@@ -7,7 +7,7 @@ import type { RequestSyncInput } from './sync';
 import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
 import { BinarySyncMessage } from 'automerge';
 
-export enum SynMessageType {
+export enum SessionMessageType {
   SyncReq = 'SyncReq',
   SyncResp = 'SyncResp',
   ChangeReq = 'ChangeReq',
@@ -20,20 +20,20 @@ export enum SynMessageType {
 }
 
 export const allMessageTypes = [
-  SynMessageType.SyncReq,
-  SynMessageType.SyncResp,
-  SynMessageType.ChangeReq,
-  SynMessageType.ChangeNotice,
-  SynMessageType.CommitNotice,
-  SynMessageType.Heartbeat,
-  SynMessageType.FolkLore,
-  SynMessageType.SessionClosed,
-  SynMessageType.LeaveSessionNotice,
+  SessionMessageType.SyncReq,
+  SessionMessageType.SyncResp,
+  SessionMessageType.ChangeReq,
+  SessionMessageType.ChangeNotice,
+  SessionMessageType.CommitNotice,
+  SessionMessageType.Heartbeat,
+  SessionMessageType.FolkLore,
+  SessionMessageType.SessionClosed,
+  SessionMessageType.LeaveSessionNotice,
 ];
 
 export type SynSignal = {
   sessionHash: string;
-  message: SynMessage;
+  message: SessionMessage;
 };
 
 export interface MessageBody<TYPE, PAYLOAD> {
@@ -41,13 +41,13 @@ export interface MessageBody<TYPE, PAYLOAD> {
   payload: PAYLOAD;
 }
 
-export type SynMessage =
-  | MessageBody<SynMessageType.SyncReq, RequestSyncInput>
-  | MessageBody<SynMessageType.SyncResp, BinarySyncMessage>
-  | MessageBody<SynMessageType.ChangeReq, ChangeRequest>
-  | MessageBody<SynMessageType.ChangeNotice, ChangeNotice>
-  | MessageBody<SynMessageType.CommitNotice, CommitNotice>
-  | MessageBody<SynMessageType.Heartbeat, Heartbeat>
-  | MessageBody<SynMessageType.FolkLore, FolkLore>
-  | MessageBody<SynMessageType.LeaveSessionNotice, AgentPubKeyB64>
-  | MessageBody<SynMessageType.SessionClosed, void>;
+export type SessionMessage =
+  | MessageBody<SessionMessageType.SyncReq, RequestSyncInput>
+  | MessageBody<SessionMessageType.SyncResp, BinarySyncMessage>
+  | MessageBody<SessionMessageType.ChangeReq, ChangeRequest>
+  | MessageBody<SessionMessageType.ChangeNotice, ChangeNotice>
+  | MessageBody<SessionMessageType.CommitNotice, CommitNotice>
+  | MessageBody<SessionMessageType.Heartbeat, Heartbeat>
+  | MessageBody<SessionMessageType.FolkLore, FolkLore>
+  | MessageBody<SessionMessageType.LeaveSessionNotice, AgentPubKeyB64>
+  | MessageBody<SessionMessageType.SessionClosed, void>;

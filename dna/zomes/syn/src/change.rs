@@ -1,7 +1,7 @@
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::{SignalPayload, SynMessage};
+use crate::{SessionMessage, SignalPayload, SynInput, SynMessage};
 
 /// Delta
 /// change this for your app to indicate a small change in a patch-grammar
@@ -10,41 +10,22 @@ use crate::{SignalPayload, SynMessage};
 pub struct Delta(SerializedBytes);
 
 /// Input to the send change call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Clone, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SendChangeRequestInput {
-    pub session_hash: EntryHashB64,
-    pub scribe: AgentPubKeyB64,
-
-    pub deltas: Vec<Delta>,
-}
-
-/// Input to the send change call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ChangeRequest {
-    pub folk: AgentPubKeyB64,
-    pub scribe: AgentPubKeyB64,
-
-    pub deltas: Vec<Delta>,
+pub struct ChangeRequestPayload {
+    pub state_changes: Vec<Delta>,
+    pub ephemeral_changes: Vec<Delta>,
 }
 
 #[hdk_extern]
-fn send_change_request(input: SendChangeRequestInput) -> ExternResult<()> {
-    let scribe = AgentPubKey::from(input.scribe.clone());
-
-    let me = AgentPubKeyB64::from(agent_info()?.agent_initial_pubkey);
-    let request = ChangeRequest {
-        folk: me,
-        scribe: input.scribe,
-        deltas: input.deltas,
-    };
+fn send_change_request(input: SynInput<ChangeRequestPayload>) -> ExternResult<()> {
+    let scribe = AgentPubKey::from(input.to.clone());
 
     // send response signal to the participant
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::ChangeReq(request),
+            SessionMessage::ChangeReq(input.payload),
         ))?,
         vec![scribe],
     )?;
@@ -58,13 +39,15 @@ pub struct SendChangeInput {
     pub participants: Vec<AgentPubKeyB64>,
     pub session_hash: EntryHashB64,
 
-    pub deltas: Vec<Delta>,
+    pub state_changes: Vec<Delta>,
+    pub ephemeral_changes: Vec<Delta>,
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeNotice {
-    pub deltas: Vec<Delta>,
+    pub state_changes: Vec<Delta>,
+    pub ephemeral_changes: Vec<Delta>,
 }
 
 #[hdk_extern]
@@ -74,7 +57,7 @@ fn send_change(input: SendChangeInput) -> ExternResult<()> {
 
     let signal = SignalPayload::new(
         input.session_hash,
-        SynMessage::ChangeNotice(ChangeNotice {
+        SessionMessage::ChangeNotice(ChangeNotice {
             deltas: input.deltas,
         }),
     );

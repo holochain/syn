@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { SynMessageType, SynSignal } from '@holochain-syn/client';
+import { SessionMessageType, SynSignal } from '@holochain-syn/client';
 
 import type { SynWorkspace } from './workspace';
 import { handleSyncResponse, handleSyncRequest } from './workflows/sync';
@@ -21,7 +21,7 @@ function shouldWeHandle<G extends SynGrammar<any, any>>(
   if (selectSessionState(state, signal.sessionHash)) return true;
   if (
     areWeJoiningSession(state, signal.sessionHash) &&
-    signal.message.type === SynMessageType.SyncResp
+    signal.message.type === SessionMessageType.SyncResp
   )
     return true;
   return false;
@@ -39,51 +39,51 @@ export function handleSignal<G extends SynGrammar<any, any>>(
   }
 
   switch (signal.message.type) {
-    case SynMessageType.SyncReq:
+    case SessionMessageType.SyncReq:
       return handleSyncRequest(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.SyncResp:
+    case SessionMessageType.SyncResp:
       return handleSyncResponse(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.ChangeReq:
+    case SessionMessageType.ChangeReq:
       return handleChangeRequest(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.ChangeNotice:
+    case SessionMessageType.ChangeNotice:
       return handleChangeNotice(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.CommitNotice:
+    case SessionMessageType.CommitNotice:
       return handleCommitNotice(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.FolkLore:
+    case SessionMessageType.FolkLore:
       return handleFolkLore(
         workspace,
         signal.sessionHash,
         signal.message.payload
       );
-    case SynMessageType.Heartbeat:
+    case SessionMessageType.Heartbeat:
       return handleHeartbeat(
         workspace,
         signal.sessionHash,
         signal.message.payload.fromFolk
       );
-    case SynMessageType.SessionClosed:
+    case SessionMessageType.SessionClosed:
       return handleSessionClosed(workspace, signal.sessionHash);
-    case SynMessageType.LeaveSessionNotice:
+    case SessionMessageType.LeaveSessionNotice:
       return handleLeaveSessionNotice(
         workspace,
         signal.sessionHash,

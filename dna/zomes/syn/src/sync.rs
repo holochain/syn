@@ -1,49 +1,38 @@
 use hdk::prelude::*;
-use holo_hash::*;
 
-use crate::{SignalPayload, SynMessage};
+use crate::{SynMessage, SessionMessage, SynInput};
 
 /// Input to the send sync req call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+#[derive(Serialize, Clone, Deserialize, SerializedBytes, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct RequestSyncInput {
-    pub to: AgentPubKeyB64,
-    pub session_hash: EntryHashB64,
-    pub sync_message: SerializedBytes,
+pub struct SyncPayload {
+    pub sync_message: Option<SerializedBytes>,
+    pub ephemeral_sync_message: Option<SerializedBytes>,
 }
 
 #[hdk_extern]
-fn request_sync(input: RequestSyncInput) -> ExternResult<()> {
+fn request_sync(input: SynInput<SyncPayload>) -> ExternResult<()> {
     let to = AgentPubKey::from(input.to.clone());
 
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
-            input.session_hash,
-            SynMessage::SyncRequest(input),
+        ExternIO::encode(SynMessage::new(
+            input.session_hash.clone(),
+            SessionMessage::SyncRequest(input.payload),
         ))?,
         vec![to],
     )?;
     Ok(())
 }
 
-/// Input to the send sync response call
-#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SendSyncResponseInput {
-    pub participant: AgentPubKeyB64,
-    pub session_hash: EntryHashB64,
-    pub sync_message: SerializedBytes,
-}
-
 #[hdk_extern]
-fn send_sync_response(input: SendSyncResponseInput) -> ExternResult<()> {
+fn send_sync_response(input: SynInput<SyncPayload>) -> ExternResult<()> {
     // send response signal to the participant
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::SyncResponse(input.sync_message),
+            SessionMessage::SyncResponse(input.payload),
         ))?,
-        vec![AgentPubKey::from(input.participant)],
+        vec![AgentPubKey::from(input.to)],
     )?;
     Ok(())
 }

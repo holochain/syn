@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use hdk::prelude::*;
 use holo_hash::*;
 
-use crate::{SignalPayload, SynLinkType, SynMessage};
+use crate::{SynMessage, SynLinkType, SessionMessage};
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -25,9 +25,9 @@ pub struct SendFolkLoreInput {
 #[hdk_extern]
 fn send_folk_lore(input: SendFolkLoreInput) -> ExternResult<()> {
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::FolkLore(input.folk_lore),
+            SessionMessage::FolkLore(input.folk_lore),
         ))?,
         input.participants.into_iter().map(|a| a.into()).collect(),
     )?;
@@ -52,12 +52,7 @@ pub fn register_as_folk() -> ExternResult<()> {
     let path = get_folks_path();
     path.ensure()?;
     let folks_anchor_hash = path.path_entry_hash()?;
-    create_link(
-        folks_anchor_hash,
-        me,
-        SynLinkType::PathToFolk,
-        (),
-    )?;
+    create_link(folks_anchor_hash, me, SynLinkType::PathToFolk, ())?;
 
     Ok(())
 }
@@ -86,9 +81,9 @@ pub struct Heartbeat {
 fn send_heartbeat(input: SendHeartbeatInput) -> ExternResult<()> {
     let me = agent_info()?.agent_latest_pubkey;
     remote_signal(
-        ExternIO::encode(SignalPayload::new(
+        ExternIO::encode(SynMessage::new(
             input.session_hash,
-            SynMessage::Heartbeat(Heartbeat {
+            SessionMessage::Heartbeat(Heartbeat {
                 from_folk: me.into(),
                 data: input.data,
             }),

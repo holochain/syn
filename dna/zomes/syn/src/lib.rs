@@ -1,4 +1,4 @@
-use change::{ChangeNotice, ChangeRequest};
+use change::{ChangeNotice, ChangeRequest, ChangeRequestPayload};
 use commit::CommitNotice;
 use folks::{register_as_folk, FolkLore, Heartbeat};
 use hdk::prelude::holo_hash::*;
@@ -17,7 +17,7 @@ use session::Session;
 
 use crate::commit::Commit;
 use snapshot::Snapshot;
-use sync::RequestSyncInput;
+use sync::SyncPayload;
 
 enum SynLinkType {
     PathToFolk = 0,
@@ -42,39 +42,62 @@ entry_defs![
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct SignalPayload {
-    session_hash: EntryHashB64,
-    message: SynMessage,
+pub struct SynInput<T> {
+    pub session_hash: EntryHashB64,
+    pub to: AgentPubKeyB64,
+    pub payload: T,
 }
 
-impl SignalPayload {
-    fn new(session_hash: EntryHashB64, message: SynMessage) -> Self {
-        SignalPayload {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SignalPayload {
+    pub from: AgentPubKeyB64,
+    pub syn_message: SynMessage,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SynMessage {
+    pub session_hash: EntryHashB64,
+    pub session_message: SessionMessage,
+}
+
+impl SynMessage {
+    fn new(session_hash: EntryHashB64, message: SessionMessage) -> Self {
+        SynMessage {
             session_hash,
-            message,
+            session_message: message,
         }
     }
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 #[serde(tag = "type", content = "payload")]
-enum SynMessage {
-    SyncRequest(RequestSyncInput), // content is who the request is from
-    SyncResponse(SerializedBytes),
-    ChangeReq(ChangeRequest),
+enum SessionMessage {
+    SyncRequest(SyncPayload), // content is who the request is from
+    SyncResponse(SyncPayload),
+    ChangeReq(ChangeRequestPayload),
     ChangeNotice(ChangeNotice),
     Heartbeat(Heartbeat), // signal to scribe for maintaining participant info
     FolkLore(FolkLore),   // signal to participants to update other participants info
     CommitNotice(CommitNotice), // signal for sending commit and content hash after commit
     SessionClosed,
-    LeaveSessionNotice(AgentPubKeyB64),
+    LeaveSessionNotice,
 }
 
 #[hdk_extern]
 fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
-    let sig: SignalPayload = signal.decode()?;
-    debug!("Received remote signal {:?}", sig);
-    Ok(emit_signal(&sig)?)
+    let syn_message: SynMessage = signal.decode()?;
+
+    let from = call_info()?.provenance;
+
+    let payload = SignalPayload {
+        from: from.into(),
+        syn_message,
+    };
+
+    debug!("Received remote signal {:?}", payload);
+    Ok(emit_signal(&payload)?)
 }
 
 #[hdk_extern]

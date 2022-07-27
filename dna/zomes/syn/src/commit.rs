@@ -90,7 +90,7 @@ fn commit_changes(input: CommitInput) -> ExternResult<EntryHashB64> {
         };
         let payload = ExternIO::encode(SignalPayload::new(
             input.session_hash,
-            SynMessage::CommitNotice(commit_info),
+            SessionMessage::CommitNotice(commit_info),
         ))?;
 
         let participants = input
