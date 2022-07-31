@@ -1,8 +1,23 @@
 ---
 manifest_version: "1"
-name: syn
-uuid: ~
-properties: ~
-zomes:
-  - name: syn
-    bundled: "../../../target/wasm32-unknown-unknown/release/hc_zome_syn.wasm"
+name: syn-test
+
+integrity:
+  uid: 00000000-0000-0000-0000-000000000000
+  properties: ~
+  zomes:
+    - name: version_control_integrity
+      bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_version_control_integrity.wasm
+    - name: real_time_sessions_integrity
+      bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_real_time_sessions_integrity.wasm
+
+coordinator:
+  zomes:
+    - name: version_control
+      bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_version_control_coordinator.wasm
+      dependencies:
+        - name: version_control_integrity
+    - name: real_time_sessions
+      bundled: ../../target/wasm32-unknown-unknown/release/hc_zome_real_time_sessions_coordinator.wasm
+      dependencies:
+        - name: real_time_sessions_integrity

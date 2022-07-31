@@ -1,14 +1,14 @@
 ---
 manifest_version: "1"
-name: syn
+name: syn-test
 description: ""
 roles:
-  - id: syn
+  - id: syn-test
     provisioning:
       strategy: create
       deferred: false
     dna:
-      bundled: ../dna/syn.dna
+      bundled: ./syn-test.dna
       properties: ~
       uuid: ~
       version: ~
