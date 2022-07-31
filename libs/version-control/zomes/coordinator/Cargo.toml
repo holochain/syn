@@ -1,0 +1,16 @@
+[package]
+authors = ["guillem.cordoba@gmail.com"]
+edition = "2021"
+name = "hc_zome_version_control_coordinator"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_zome_version_control_coordinator"
+
+[dependencies]
+derive_more = "0.99.9"
+hdk = "0.0.142"
+serde = "1"
+
+hc_zome_version_control_integrity = {path = "../integrity"}

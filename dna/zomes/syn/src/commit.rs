@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use std::usize;
 
-use chrono::{serde::ts_milliseconds, DateTime, Utc};
 use hdk::prelude::*;
 use holo_hash::*;
 
@@ -9,46 +8,8 @@ use crate::error::{SynError, SynResult};
 use crate::utils::element_to_entry;
 use crate::SynLinkType;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CommitNotice {
-    pub commit_hash: EntryHashB64,
-    pub committed_deltas_count: usize,
-
-    pub previous_content_hash: EntryHashB64,
-    pub new_content_hash: EntryHashB64,
-
-    pub meta: ChangeMeta,
-}
-
-///  Content Change
-#[derive(Clone, Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ChangeMeta {
-    pub witnesses: Vec<AgentPubKeyB64>, // maybe?
-    pub app_specific: Option<SerializedBytes>,
-}
-
-/// Entry type for committing changes to the content, called by the clerk.
-#[hdk_entry(id = "content_change")]
-#[derive(Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Commit {
-    pub previous_commit_hashes: Vec<EntryHashB64>,
-    #[serde(with = "ts_milliseconds")]
-    pub created_at: DateTime<Utc>,
-
-    // hash of Content on which these deltas are to be applied
-    pub previous_content_hash: EntryHashB64,
-    // hash of Content with these deltas applied
-    pub new_content_hash: EntryHashB64,
-
-    pub meta: ChangeMeta,
-}
-
 /// Input to the commit call
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct CommitInput {
     pub session_hash: EntryHashB64,
 

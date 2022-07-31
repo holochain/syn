@@ -29,7 +29,7 @@ export type TextEditorDelta =
     };
 
 export interface AgentSelection {
-  position: Automerge.Counter;
+  position: string;
   characterCount: number;
 }
 
@@ -52,49 +52,19 @@ export const textEditorGrammar: TextEditorGrammar = {
     ephemeral: TextEditorEphemeralState,
     author: AgentPubKeyB64
   ) {
-    let finalCursorPosition;
+    let finalCursorPosition = (state as any).getElemId(delta.position);
 
-    if (!ephemeral[author]) {
-      ephemeral[author] = {
-        position: new Automerge.Counter(),
-        characterCount: 0,
-      };
-    }
+    ephemeral[author] = {
+      position: finalCursorPosition,
+      characterCount: 0,
+    };
 
     if (delta.type === TextEditorDeltaType.Insert) {
       state.insertAt!(delta.position, ...delta.text);
-
-      finalCursorPosition = delta.position + delta.text.length;
-      ephemeral[author].characterCount = 0;
-
-      for (const [agentPubKey, counter] of Object.entries(ephemeral)) {
-        if (agentPubKey !== author && delta.position < counter.position.value) {
-          counter.position.increment(delta.text.length);
-        }
-      }
     } else if (delta.type === TextEditorDeltaType.Delete) {
       state.deleteAt!(delta.position, delta.characterCount);
-
-      ephemeral[author].characterCount = 0;
-      finalCursorPosition = delta.position;
-
-      for (const [agentPubKey, counter] of Object.entries(ephemeral)) {
-        if (agentPubKey !== author && delta.position < counter.position.value) {
-          counter.position.decrement(delta.characterCount);
-        }
-      }
     } else if (delta.type === TextEditorDeltaType.ChangeSelection) {
       ephemeral[author].characterCount = delta.characterCount;
-
-      finalCursorPosition = delta.position;
-    }
-
-    const cursorDelta = finalCursorPosition - ephemeral[author].position.value;
-
-    if (cursorDelta > 0) {
-      ephemeral[author].position.increment(cursorDelta);
-    } else {
-      ephemeral[author].position.decrement(cursorDelta);
     }
   },
 };

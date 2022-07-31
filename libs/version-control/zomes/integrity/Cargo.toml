@@ -1,0 +1,14 @@
+[package]
+authors = ["eric.harris-braun@holo.host"]
+edition = "2021"
+name = "hc_zome_version_control_integrity"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_zome_version_control_integrity"
+
+[dependencies]
+derive_more = "0.99.9"
+hdi = "0.0.14"
+serde = "1"

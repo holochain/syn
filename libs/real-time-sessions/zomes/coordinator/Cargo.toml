@@ -1,0 +1,15 @@
+[package]
+authors = ["eric.harris-braun@holo.host"]
+edition = "2021"
+name = "hc_zome_real_time_sessions_coordinator"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "hc_zome_real_time_sessions_coordinator"
+
+[dependencies]
+serde = "1"
+hc_zome_peer_status_coordinator = {git = "https://github.com/holochain-open-dev/peer-status", branch = "for-hdk-0.0.142"}
+hc_zome_real_time_sessions_integrity = {path = "../integrity"}
+hdk = "0.0.142"
