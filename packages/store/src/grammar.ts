@@ -1,9 +1,10 @@
 import type { AgentPubKey } from '@holochain/client';
 
-export interface SynGrammar<STATE, DELTA, EPHEMERAL = {}> {
+export interface SynGrammar<DELTA, STATE, EPHEMERAL = {}> {
+  initState: (state: STATE) => void;
   applyDelta: (
-    content: STATE,
     delta: DELTA,
+    content: STATE,
     ephemeral: EPHEMERAL,
     author: AgentPubKey
   ) => void;

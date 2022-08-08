@@ -1,8 +1,8 @@
 import { createContext } from '@lit-labs/context';
-import type { SessionStore, SynStore } from '@holochain-syn/store';
+import type { WorkspaceStore, SynStore } from '@holochain-syn/store';
 
-export const synContext = createContext<SynStore<any>>('syn-context');
+export const synContext = createContext<SynStore>('syn-context');
 
-export const synSessionContext = createContext<SessionStore<any> | undefined>(
-  'syn-session-context'
+export const synWorkspaceContext = createContext<WorkspaceStore<any> | undefined>(
+  'syn-workspace-context'
 );

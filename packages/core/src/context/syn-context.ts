@@ -6,7 +6,7 @@ import { contextProvider } from '@lit-labs/context';
 import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';
-import { SynSessionContext } from './syn-session-context';
+import { SynWorkspaceContext } from './syn-workspace-context';
 
 /**
  * Context provider element to serve as a container for all the
@@ -15,7 +15,7 @@ import { SynSessionContext } from './syn-session-context';
 export class SynContext extends ScopedElementsMixin(LitElement) {
   @contextProvider({ context: synContext })
   @property()
-  store!: SynStore<any>;
+  store!: SynStore;
 
   _activeSession = new StoreSubscriber(this, () => this.store.activeSession);
 

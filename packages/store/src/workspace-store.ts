@@ -371,7 +371,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     );
   }
 
-  private handleHeartbeat(from: AgentPubKey, participants: AgentPubKey[]) {
+  private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {
     this._participants.update(p => {
       const newParticipants = participants.filter(maybeNew => !p.has(maybeNew));
 

@@ -98,13 +98,13 @@ export class SynStore {
     return entryHash;
   }
 
-  async createRoot(
-    initState: (d: Doc<any>) => any,
+  async createRootCommit<G extends SynGrammar<any, any>>(
+    grammar: G,
     meta: any
   ): Promise<[EntryHash, Commit]> {
     let doc: Doc<any> = init();
 
-    doc = change(doc, d => initState(d));
+    doc = change(doc, d => grammar.initState(d));
 
     if (meta) {
       meta = encode(meta);
