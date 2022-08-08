@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/store",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -20,10 +20,11 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@holochain/client": "^0.6.0",
-    "@holochain-open-dev/cell-client": "^0.6.0",
-    "@holochain-syn/real-time-sessions": "0.0.1",
-    "@holochain-syn/version-control": "0.0.1",
+    "@holochain-open-dev/cell-client": "^0.7.0",
+    "@holochain-open-dev/utils": "^0.3.1",
+    "@holochain-syn/client": "0.1.0",
+    "@holochain/client": "^0.7.0",
+    "@msgpack/msgpack": "^2.7.2",
     "automerge": "^1.0.1-preview.7",
     "lodash-es": "^4.17.21"
   },

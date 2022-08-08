@@ -1,2 +1,0 @@
-mod commit;
-mod snapshot;

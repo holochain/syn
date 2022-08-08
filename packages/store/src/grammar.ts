@@ -1,13 +1,11 @@
-import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
+import type { AgentPubKey } from '@holochain/client';
 
 export interface SynGrammar<STATE, DELTA, EPHEMERAL = {}> {
-  initState: (state: any, ephemeral: any) => void;
-
   applyDelta: (
     content: STATE,
     delta: DELTA,
     ephemeral: EPHEMERAL,
-    author: AgentPubKeyB64
+    author: AgentPubKey
   ) => void;
 }
 

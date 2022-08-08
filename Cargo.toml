@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "zomes/*/*",
+  "zomes/syn/*",
 ]
 
 [profile.dev]
