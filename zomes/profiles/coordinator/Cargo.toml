@@ -1,0 +1,12 @@
+[package]
+authors = ["eric@harris-braun.com"]
+edition = "2018"
+name = "profiles_coordinator"
+version = "0.0.1-alpha1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "profiles_coordinator"
+
+[dependencies]
+hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", rev = "for-hdk-v0.0.142", package = "hc_zome_profiles_coordinator"}

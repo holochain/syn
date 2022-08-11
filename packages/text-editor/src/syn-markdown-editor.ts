@@ -26,8 +26,8 @@ import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
 import { elemIdToPosition } from './utils';
 
 export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
-  @property()
-  sliceStore!: SliceStore<TextEditorGrammar>;
+  @property({ type: Object })
+  slice!: SliceStore<TextEditorGrammar>;
 
   @property({ attribute: 'debounce-ms' })
   debounceMs: number = 1000;
@@ -40,8 +40,8 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   @state()
   profilesStore!: ProfilesStore;
 
-  _state = new StoreSubscriber(this, () => this.sliceStore.state);
-  _cursors = new StoreSubscriber(this, () => this.sliceStore.ephemeral);
+  _state = new StoreSubscriber(this, () => this.slice.state);
+  _cursors = new StoreSubscriber(this, () => this.slice.ephemeral);
   _peersProfiles: AgentPubKeyMap<TaskSubscriber<[], Profile | undefined>> =
     new AgentPubKeyMap();
 
@@ -50,8 +50,8 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
 
   updated(cv: PropertyValues) {
     super.updated(cv);
-    if (cv.has('sliceStore') && this.sliceStore) {
-      this.sliceStore.worskpace.participants.subscribe(participants => {
+    if (cv.has('slice') && this.slice) {
+      this.slice.worskpace.participants.subscribe(participants => {
         const allFolksPubKey = [...participants.active, ...participants.idle];
 
         const unknownPeers = allFolksPubKey.filter(
@@ -71,7 +71,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onTextInserted(from: number, text: string) {
-    this.sliceStore.requestChanges([
+    this.slice.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
         position: from,
@@ -81,7 +81,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this.sliceStore.requestChanges([
+    this.slice.requestChanges([
       {
         type: TextEditorDeltaType.Delete,
         position: from,
@@ -91,7 +91,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    this.sliceStore.requestChanges([
+    this.slice.requestChanges([
       {
         type: TextEditorDeltaType.ChangeSelection,
         position: ranges[0].from,

@@ -93,7 +93,7 @@ pub fn get_workspace_tip(workspace_hash: EntryHash) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-pub fn get_workspace_active_participants(
+pub fn get_workspace_participants(
     workspace_hash: EntryHash,
 ) -> ExternResult<Vec<AgentPubKey>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
@@ -120,7 +120,7 @@ pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOu
         (),
     )?;
 
-    let participants = get_workspace_active_participants(workspace_hash.clone())?;
+    let participants = get_workspace_participants(workspace_hash.clone())?;
     let current_tip_hash = get_workspace_tip(workspace_hash.clone())?;
 
     let current_tip = get(current_tip_hash, GetOptions::default())?.ok_or(wasm_error!(

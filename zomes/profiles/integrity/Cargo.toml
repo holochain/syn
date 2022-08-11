@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name = "profiles_integrity"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "profiles_integrity"
+
+[dependencies]
+serde = "1"
+derive_more = "0"
+hc_zome_profiles_integrity = {git = "https://github.com/holochain-open-dev/profiles", rev = "for-hdk-v0.0.142", package = "hc_zome_profiles_integrity"}

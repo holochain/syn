@@ -8,6 +8,8 @@ integrity:
   zomes:
     - name: syn_integrity
       bundled: ../target/wasm32-unknown-unknown/release/hc_zome_syn_integrity.wasm
+    - name: profiles_integrity
+      bundled: ../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
 
 coordinator:
   zomes:
@@ -15,3 +17,7 @@ coordinator:
       bundled: ../target/wasm32-unknown-unknown/release/hc_zome_syn_coordinator.wasm
       dependencies:
         - name: syn_integrity
+    - name: profiles
+      bundled: ../target/wasm32-unknown-unknown/release/profiles_coordinator.wasm
+      dependencies:
+        - name: profiles_integrity

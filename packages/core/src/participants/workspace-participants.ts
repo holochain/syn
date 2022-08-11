@@ -4,21 +4,21 @@ import type { WorkspaceStore } from '@holochain-syn/store';
 import { StoreSubscriber } from 'lit-svelte-stores';
 import { property } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
+import { AgentPubKey } from '@holochain/client';
+import { classMap } from 'lit/directives/class-map.js';
+import { AgentAvatar } from '@holochain-open-dev/profiles';
 
 import { synWorkspaceContext } from '../context/contexts';
 import { sharedStyles } from '../shared-styles';
-import { AgentAvatar } from '@holochain-open-dev/profiles';
-import { classMap } from 'lit/directives/class-map';
-import { AgentPubKey } from '@holochain/client';
 
 export class WorkspaceParticipants extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synWorkspaceContext, subscribe: true })
   @property()
-  workspaceStore!: WorkspaceStore<any>;
+  workspacestore!: WorkspaceStore<any>;
 
   _participants = new StoreSubscriber(
     this,
-    () => this.workspaceStore.participants
+    () => this.workspacestore.participants
   );
 
   renderParticipant(pubKey: AgentPubKey, idle: boolean) {

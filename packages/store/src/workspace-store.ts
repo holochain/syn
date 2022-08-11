@@ -10,6 +10,7 @@ import { AgentPubKeyMap } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import {
   BinaryDocument,
+  change,
   BinarySyncMessage,
   Doc,
   generateSyncMessage,
@@ -23,6 +24,8 @@ import {
   SyncState,
   save,
 } from 'automerge';
+import { AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
+import isEqual from 'lodash-es/isEqual';
 
 import type {
   GrammarState,
@@ -31,9 +34,7 @@ import type {
   GrammarEphemeralState,
 } from './grammar';
 
-import { AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
 import { SynConfig } from './config';
-import isEqual from 'lodash-es/isEqual';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
@@ -49,10 +50,10 @@ export function extractSlice<
   G2 extends SynGrammar<any, any>
 >(
   sliceStore: SliceStore<G1>,
-  wrapChange: (changes: GrammarDelta<G2>) => GrammarDelta<G1>,
-  sliceState: (s: Doc<GrammarState<G1>>) => Doc<GrammarState<G2>>,
+  wrapChange: (change: GrammarDelta<G2>) => GrammarDelta<G1>,
+  sliceState: (state: Doc<GrammarState<G1>>) => Doc<GrammarState<G2>>,
   sliceEphemeral: (
-    s: Doc<GrammarEphemeralState<G1>>
+    ephemeralState: Doc<GrammarEphemeralState<G1>>
   ) => Doc<GrammarEphemeralState<G2>>
 ): SliceStore<G2> {
   return {
@@ -143,17 +144,20 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           return;
         }
 
-        if (message.payload.type === 'JoinWorkspace') {
-          this.handleJoinWorkspaceNotice(synSignal.provenance);
+        if (
+          message.payload.type === 'JoinWorkspace' ||
+          !get(this._participants).get(synSignal.provenance)
+        ) {
+          this.handleNewParticipant(synSignal.provenance);
+        } else {
+          this._participants.update(p => {
+            const participantInfo = p.get(synSignal.provenance);
+            participantInfo.lastSeen = Date.now();
+            p.put(synSignal.provenance, participantInfo);
+
+            return p;
+          });
         }
-
-        this._participants.update(p => {
-          const participantInfo = p.get(synSignal.provenance);
-          participantInfo.lastSeen = Date.now();
-          p.put(synSignal.provenance, participantInfo);
-
-          return p;
-        });
 
         if (message.payload.type === 'ChangeNotice') {
           this.handleChangeNotice(
@@ -187,8 +191,28 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
     this.unsubscribe = unsubscribe;
 
-    this.interval = setInterval(() => {
+    this.interval = setInterval(async () => {
+      const participants = await this.client.getWorkspaceParticipants(
+        workspaceHash
+      );
+
       this._participants.update(p => {
+        const newParticipants = participants.filter(
+          maybeNew => !p.has(maybeNew)
+        );
+
+        for (const newParticipant of newParticipants) {
+          p.put(newParticipant, {
+            lastSeen: undefined,
+            syncStates: {
+              state: initSyncState(),
+              ephemeral: initSyncState(),
+            },
+          });
+
+          this.requestSync(newParticipant);
+        }
+
         for (const [participant, info] of p.entries()) {
           if (!info.lastSeen || info.lastSeen > config.outOfSessionTimeout) {
             p.delete(participant);
@@ -262,12 +286,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       this._ephemeral.update(ephemeralState => {
         let newEphemeralState = ephemeralState;
 
-        for (const change of changes) {
+        for (const changeRequested of changes) {
           newState = change(newState, doc => {
             newEphemeralState = change(newEphemeralState, eph => {
               this.grammar.applyDelta(
+                changeRequested,
                 doc,
-                change,
                 eph,
                 this.client.cellClient.cell.cell_id[1]
               );
@@ -291,7 +315,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         return newEphemeralState;
       });
 
-      return state;
+      return newState;
     });
   }
 
@@ -450,7 +474,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     clearInterval(this.interval);
   }
 
-  private handleJoinWorkspaceNotice(participant: AgentPubKey) {
+  private handleNewParticipant(participant: AgentPubKey) {
     this._participants.update(p => {
       p.put(participant, {
         lastSeen: Date.now(),

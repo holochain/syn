@@ -34,6 +34,12 @@ export class SynClient {
     return this.callZome('get_all_workspaces', null);
   }
 
+  public getWorkspaceParticipants(
+    workspace_hash: EntryHash
+  ): Promise<Array<AgentPubKey>> {
+    return this.callZome('get_workspace_participants', workspace_hash);
+  }
+
   public updateWorkspaceTip(
     input: UpdateWorkspaceTipInput
   ): Promise<Array<Record>> {

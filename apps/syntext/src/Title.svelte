@@ -16,7 +16,7 @@
       // only dispatch a changeReq if the title trying to be saved is different
       // than the current title
       if (titleBeingTyped !== $state.title) {
-        let delta = { type: 'Title', value: titleBeingTyped }
+        let delta = { type: 'SetTitle', value: titleBeingTyped }
         workpsaceStore.requestChanges([delta])
       }
       titleBeingTyped = ''

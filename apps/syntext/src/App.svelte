@@ -1,10 +1,15 @@
 <script>
   import Title from './Title.svelte';
-  import { SynContext, WorkspaceParticipants } from '@holochain-syn/core';
+  import { SynContext, WorkspaceParticipants, SynStore, SynClient } from '@holochain-syn/core';
   import { SynMarkdownEditor } from '@holochain-syn/text-editor';
-  import { createStore, DocumentGrammar, textSlice } from './syn';
+  import { createCellClient, DocumentGrammar, textSlice } from './syn';
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
+  import {
+    ProfilesContext,
+    ProfilesService,
+    ProfilesStore,
+  } from '@holochain-open-dev/profiles';
 
   $: disconnected = false;
   let syn;
@@ -78,10 +83,11 @@
   };
 
   let synStore;
+  let profilesStore;
   let workspaceStore;
 
-  async function init() {
-    const store = await createStore();
+  async function initSyn(cellClient) {
+    const store = new SynStore(new SynClient(cellClient));
     const workspaces = get(await store.fetchAllWorkspaces());
 
     if (workspaces.keys().length === 0) {
@@ -107,15 +113,20 @@
       synStore = store;
     }
   }
-  onMount(() => init());
+  onMount(async () => {
+    const cellClient = await createCellClient();
+    profilesStore = new ProfilesStore(new ProfilesService(cellClient));
+    await initSyn(cellClient);
+  });
 
-  $: synStore, workspaceStore;
+  $: synStore, workspaceStore, profilesStore;
 
   customElements.define('syn-context', SynContext);
+  customElements.define('profiles-context', ProfilesContext);
   customElements.define('workspace-participants', WorkspaceParticipants);
   customElements.define('syn-markdown-editor', SynMarkdownEditor);
 
-  setContext('store', {
+  setContext('workspaceStore', {
     getWorkspaceStore: () => workspaceStore,
   });
 </script>
@@ -127,54 +138,60 @@
 </svelte:head>
 
 {#if synStore}
-  <syn-context store={synStore}>
-    <div class="toolbar">
-      <h1>SynText</h1>
-      <div>
-        <Title />
+  <profiles-context store={profilesStore}>
+    <syn-context store={synStore}>
+      <div class="toolbar">
+        <h1>SynText</h1>
+        <div>
+          <Title />
+        </div>
       </div>
-    </div>
-    <main>
-      <div>
-        <syn-markdown-editor sliceStore={textSlice(workspaceStore)} />
-      </div>
-    </main>
+      <main>
+        <div>
+          <syn-markdown-editor slice={textSlice(workspaceStore)} />
+        </div>
+      </main>
 
-    <div class="folks-tray">
-      <h3>Folks</h3>
-      <workspace-participants {workspaceStore} />
-    </div>
-  </syn-context>
-  <div
-    class="tab"
-    class:shown={tabShown}
-    class:drawer-hidden={drawerHidden}
-    on:mouseenter={showTab}
-    on:mouseleave={hideTab}
-  >
+      <div class="folks-tray">
+        <h3>Participants</h3>
+        <workspace-participants workspacestore={workspaceStore} />
+      </div>
+    </syn-context>
     <div
-      class="tab-inner"
+      class="tab"
       class:shown={tabShown}
-      on:click={drawerHidden ? showDrawer() : hideDrawer()}
+      class:drawer-hidden={drawerHidden}
+      on:mouseenter={showTab}
+      on:mouseleave={hideTab}
     >
-      <i
-        class:drawer-hidden={drawerHidden}
-        class="tab-icon fas {drawerHidden
-          ? 'fa-chevron-up'
-          : 'fa-chevron-down'}"
+      <div
+        class="tab-inner"
+        class:shown={tabShown}
+        on:click={drawerHidden ? showDrawer() : hideDrawer()}
+      >
+        <i
+          class:drawer-hidden={drawerHidden}
+          class="tab-icon fas {drawerHidden
+            ? 'fa-chevron-up'
+            : 'fa-chevron-down'}"
+        />
+      </div>
+    </div>
+    <div
+      class="debug-drawer"
+      bind:this={resizeable}
+      use:initResizeable
+      on:mouseenter={showTab}
+      on:mouseleave={hideTab}
+      class:hidden={drawerHidden}
+    >
+      <div
+        class="handle"
+        bind:this={resizeHandle}
+        on:mousedown={startDragging}
       />
     </div>
-  </div>
-  <div
-    class="debug-drawer"
-    bind:this={resizeable}
-    use:initResizeable
-    on:mouseenter={showTab}
-    on:mouseleave={hideTab}
-    class:hidden={drawerHidden}
-  >
-    <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging} />
-  </div>
+  </profiles-context>
 {/if}
 
 <style>
