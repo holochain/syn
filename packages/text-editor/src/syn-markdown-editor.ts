@@ -146,7 +146,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
               style="flex: 1; "
               id="editor"
               .state=${{
-                text: this._state.value.toString(),
+                text: this._state.value.text.toString(),
                 selection,
               }}
               .additionalCursors=${this.remoteCursors()}

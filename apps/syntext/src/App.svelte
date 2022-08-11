@@ -1,6 +1,11 @@
 <script>
   import Title from './Title.svelte';
-  import { SynContext, WorkspaceParticipants, SynStore, SynClient } from '@holochain-syn/core';
+  import {
+    SynContext,
+    WorkspaceParticipants,
+    SynStore,
+    SynClient,
+  } from '@holochain-syn/core';
   import { SynMarkdownEditor } from '@holochain-syn/text-editor';
   import { createCellClient, DocumentGrammar, textSlice } from './syn';
   import { setContext, onMount } from 'svelte';
@@ -146,10 +151,11 @@
           <Title />
         </div>
       </div>
-      <main>
-        <div>
-          <syn-markdown-editor slice={textSlice(workspaceStore)} />
-        </div>
+      <main style="display: flex; flex: 1;">
+        <syn-markdown-editor
+          style="display: flex; flex: 1;"
+          slice={textSlice(workspaceStore)}
+        />
       </main>
 
       <div class="folks-tray">

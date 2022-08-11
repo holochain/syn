@@ -127,6 +127,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   private unsubscribe: () => void = () => {};
   private interval;
 
+  get myPubKey() {
+    return this.client.cellClient.cell.cell_id[1];
+  }
+
   private constructor(
     protected client: SynClient,
     protected grammar: G,
@@ -195,10 +199,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       const participants = await this.client.getWorkspaceParticipants(
         workspaceHash
       );
-
+      
       this._participants.update(p => {
         const newParticipants = participants.filter(
-          maybeNew => !p.has(maybeNew)
+          maybeNew => !p.has(maybeNew) && !isEqual(this.myPubKey, maybeNew)
         );
 
         for (const newParticipant of newParticipants) {
@@ -214,18 +218,23 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         }
 
         for (const [participant, info] of p.entries()) {
-          if (!info.lastSeen || info.lastSeen > config.outOfSessionTimeout) {
+          if (
+            !info.lastSeen ||
+            Date.now() - info.lastSeen > config.outOfSessionTimeout
+          ) {
             p.delete(participant);
           }
         }
 
-        this.client.sendMessage(p.keys(), {
-          workspace_hash: workspaceHash,
-          payload: {
-            type: 'Heartbeat',
-            known_participants: p.keys(),
-          },
-        });
+        if (p.keys().length > 0) {
+          this.client.sendMessage(p.keys(), {
+            workspace_hash: workspaceHash,
+            payload: {
+              type: 'Heartbeat',
+              known_participants: p.keys(),
+            },
+          });
+        }
         return p;
       });
     }, config.hearbeatInterval);
@@ -289,12 +298,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = change(newState, doc => {
             newEphemeralState = change(newEphemeralState, eph => {
-              this.grammar.applyDelta(
-                changeRequested,
-                doc,
-                eph,
-                this.client.cellClient.cell.cell_id[1]
-              );
+              this.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });
         }
@@ -373,7 +377,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       return p;
     });
 
-    if (syncMessage !== undefined || ephemeralSyncMessage !== undefined) {
+    if (syncMessage || ephemeralSyncMessage) {
       this.client.sendMessage([participant], {
         workspace_hash: this.workspaceHash,
         payload: {
