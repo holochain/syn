@@ -21,8 +21,8 @@ export function elemIdToPosition(
   text: Automerge.Text
 ): number | undefined {
   for (let i = 0; i < text.length; i++) {
-    if (text.get(i) === elemId) return i - 1;
+    if ((text as any).getElemId(i) === elemId) return i;
   }
 
-  return -1;
+  return undefined;
 }

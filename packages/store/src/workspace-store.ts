@@ -301,7 +301,6 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = change(newState, doc => {
             newEphemeralState = change(newEphemeralState, eph => {
-              console.log(this.myPubKey)
               this.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });

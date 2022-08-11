@@ -9,25 +9,16 @@ export const DocumentGrammar = {
     state.body = {};
     textEditorGrammar.initState(state.body);
   },
-  applyDelta(delta, state, author) {
+  applyDelta(delta, state, eph, author) {
     if (delta.type === 'SetTitle') {
       state.title = delta.value;
     } else {
-      textEditorGrammar.applyDelta(delta.textEditorDelta, state.body, author);
+      textEditorGrammar.applyDelta(delta.textEditorDelta, state.body, eph, author);
     }
   },
 };
 
 export function textSlice(workspaceStore) {
-  console.log(extractSlice(
-    workspaceStore,
-    change => ({
-      type: 'TextEditorDelta',
-      textEditorDelta: change
-    }),
-    state => state.body,
-    eph => eph
-  ))
   return extractSlice(
     workspaceStore,
     change => ({

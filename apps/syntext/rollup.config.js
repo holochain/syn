@@ -57,7 +57,7 @@ export default {
   plugins: [
     replace({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE),
-      'process.env.HC_PORT': JSON.stringify(process.env.HC_PORT),
+      'process.env.APP_HOST': JSON.stringify(process.env.APP_HOST),
       delimiters: ['', ''],
     }),
     svelte({

@@ -53,7 +53,6 @@ export const textEditorGrammar: TextEditorGrammar = {
     author: AgentPubKey
   ) {
     let finalCursorPosition = delta.position;
-    console.log('hey!', delta, state);
 
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
@@ -61,7 +60,6 @@ export const textEditorGrammar: TextEditorGrammar = {
     } else if (delta.type === TextEditorDeltaType.Delete) {
       state.text.deleteAt!(delta.position, delta.characterCount);
     }
-
 
     if (state.text.length > 0 && state.text.length > finalCursorPosition) {
       const elementId = (state.text as any).getElemId(finalCursorPosition);
