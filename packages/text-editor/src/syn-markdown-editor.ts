@@ -102,7 +102,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
 
   remoteCursors() {
     const myPubKey = serializeHash(this.synStore.myPubKey);
-    if (!this._state.value) return [];
+    if (!this._cursors.value) return [];
     return Object.entries(this._cursors.value)
       .filter(([pubKey, _]) => pubKey !== myPubKey)
       .map(([agentPubKey, position]) => {

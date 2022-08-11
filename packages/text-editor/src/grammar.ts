@@ -53,6 +53,7 @@ export const textEditorGrammar: TextEditorGrammar = {
     author: AgentPubKey
   ) {
     let finalCursorPosition = delta.position;
+    console.log('hey!', delta, state);
 
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
@@ -61,15 +62,19 @@ export const textEditorGrammar: TextEditorGrammar = {
       state.text.deleteAt!(delta.position, delta.characterCount);
     }
 
-    const elementId = (state.text as any).getElemId(finalCursorPosition);
 
-    ephemeral[serializeHash(author)] = {
-      position: elementId,
-      characterCount: 0,
-    };
+    if (state.text.length > 0 && state.text.length > finalCursorPosition) {
+      const elementId = (state.text as any).getElemId(finalCursorPosition);
 
-    if (delta.type === TextEditorDeltaType.ChangeSelection) {
-      ephemeral[serializeHash(author)].characterCount = delta.characterCount;
+      ephemeral[serializeHash(author)] = {
+        position: elementId,
+        characterCount: 0,
+      };
+
+      if (delta.type === TextEditorDeltaType.ChangeSelection) {
+        ephemeral[serializeHash(author)].characterCount =
+          delta.characterCount;
+      }
     }
   },
 };

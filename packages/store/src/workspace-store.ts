@@ -40,7 +40,7 @@ export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
 
   state: Readable<Doc<GrammarState<G>>>;
-  ephemeral: Readable<Doc<GrammarEphemeralState<G>>>;
+  ephemeral: Readable<GrammarEphemeralState<G>>;
 
   requestChanges(changes: Array<GrammarDelta<G>>): void;
 }
@@ -60,7 +60,8 @@ export function extractSlice<
     worskpace: sliceStore.worskpace as WorkspaceStore<G1>,
     state: derived(sliceStore.state, sliceState),
     ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),
-    requestChanges: changes => changes.map(wrapChange),
+    requestChanges: changes =>
+      sliceStore.requestChanges(changes.map(wrapChange)),
   };
 }
 
@@ -116,7 +117,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   _ephemeral: Writable<Doc<GrammarEphemeralState<G>>>;
   get ephemeral() {
-    return derived(this._ephemeral, i => i);
+    return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
   _currentTip: Writable<EntryHash>;
@@ -199,7 +200,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       const participants = await this.client.getWorkspaceParticipants(
         workspaceHash
       );
-      
+
       this._participants.update(p => {
         const newParticipants = participants.filter(
           maybeNew => !p.has(maybeNew) && !isEqual(this.myPubKey, maybeNew)
@@ -264,7 +265,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     this._participants = writable(participantsMap);
 
-    this._ephemeral = writable(init());
+    let eph = init();
+
+    this._ephemeral = writable(eph);
 
     for (const p of initialParticipants) {
       this.requestSync(p);
@@ -298,6 +301,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = change(newState, doc => {
             newEphemeralState = change(newEphemeralState, eph => {
+              console.log(this.myPubKey)
               this.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });
