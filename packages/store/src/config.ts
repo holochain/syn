@@ -14,7 +14,7 @@ export function defaultConfig(): SynConfig {
   return {
     hearbeatInterval: 2 * 1000,
     outOfSessionTimeout: 8 * 1000,
-    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 30 }, // TODO: reduce ms
+    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 10 }, // TODO: reduce ms
   };
 }
 

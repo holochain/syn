@@ -6,7 +6,7 @@ import {
 } from '@holochain-syn/client';
 import { Readable, writable, Writable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
-import { AgentPubKeyMap } from '@holochain-open-dev/utils';
+import { AgentPubKeyMap, serializeHash } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import {
   BinaryDocument,
@@ -126,7 +126,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   }
 
   private unsubscribe: () => void = () => {};
-  private interval;
+  private intervals: any[] = [];
 
   get myPubKey() {
     return this.client.cellClient.cell.cell_id[1];
@@ -196,7 +196,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
     this.unsubscribe = unsubscribe;
 
-    this.interval = setInterval(async () => {
+    const heartbeatInterval = setInterval(async () => {
       const participants = await this.client.getWorkspaceParticipants(
         workspaceHash
       );
@@ -239,6 +239,29 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         return p;
       });
     }, config.hearbeatInterval);
+    this.intervals.push(heartbeatInterval);
+
+    const commitInterval = setInterval(async () => {
+      const activeParticipants = [
+        this.myPubKey,
+        ...get(this.participants).active,
+      ]
+        .map(p => serializeHash(p))
+        .sort((p1, p2) => {
+          if (p1 < p2) {
+            return -1;
+          }
+          if (p1 > p2) {
+            return 1;
+          }
+          return 0;
+        });
+
+      if (activeParticipants[0] === serializeHash(this.myPubKey)) {
+        this.commitChanges();
+      }
+    }, this.config.commitStrategy.CommitEveryNMs);
+    this.intervals.push(commitInterval);
 
     const commit = decode((currentTip.entry as any).Present.entry) as Commit;
     const commitState = decode(commit.state) as BinaryDocument;
@@ -446,13 +469,19 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       authors: get(this._participants).keys(),
       meta,
       previous_commit_hashes: [get(this._currentTip)],
-      state: save(this._state),
+      state: encode(save(get(this._state))),
       witnesses: [],
     });
 
-    this._currentTip.set(
-      (newCommit.signed_action.hashed.content as Create).entry_hash
-    );
+    const newCommitHash = (newCommit.signed_action.hashed.content as Create)
+      .entry_hash;
+
+    await this.client.updateWorkspaceTip({
+      new_tip_hash: newCommitHash,
+      workspace_hash: this.workspaceHash,
+    });
+
+    this._currentTip.set(newCommitHash);
   }
 
   private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {
@@ -478,7 +507,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   async leaveWorkspace(): Promise<void> {
     await this.client.leaveWorkspace(this.workspaceHash);
     this.unsubscribe();
-    clearInterval(this.interval);
+    for (const interval of this.intervals) {
+      clearInterval(interval);
+    }
   }
 
   private handleNewParticipant(participant: AgentPubKey) {
