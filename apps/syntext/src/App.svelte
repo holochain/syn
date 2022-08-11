@@ -151,9 +151,8 @@
           <Title />
         </div>
       </div>
-      <main style="display: flex; flex: 1;">
+      <main>
         <syn-markdown-editor
-          style="display: flex; flex: 1;"
           slice={textSlice(workspaceStore)}
         />
       </main>
@@ -204,21 +203,26 @@
   main {
     padding: 1em;
     background: hsla(100, 20%, 50%, 0.2);
-    grid-column: 1 / 2;
+    grid-column: 1 / 1;
+    grid-row: 2 / 2;
   }
-
+  syn-markdown-editor {
+    height: 100%;
+    width: 100%;
+  }
   .toolbar {
     background: hsla(19, 20%, 50%, 0.2);
     padding: 2rem;
-    grid-column: 1 / 2;
+    grid-column: 1 / 1;
+    grid-row: 1 / 1;
   }
 
   .folks-tray {
     min-width: calc((var(--folks-padding) * 2) + var(--folk-hex-width));
     width: auto;
     background: hsla(255, 20%, 50%, 0.2);
-    grid-column: 2 / 3;
-    grid-row: 1/4;
+    grid-column: 2 / 2;
+    grid-row: 1 / 3;
   }
 
   :global(:root) {
