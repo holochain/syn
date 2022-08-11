@@ -1,8 +1,4 @@
-import type {
-  AgentPubKeyB64,
-  Dictionary,
-} from '@holochain-open-dev/core-types';
-import type { SynGrammar } from '@holochain-syn/store';
+import type { SynGrammar } from '@holochain-syn/core';
 import Automerge from 'automerge';
 
 export enum TextEditorDeltaType {
@@ -29,35 +25,28 @@ export type TextEditorDelta =
     };
 
 export interface AgentSelection {
-  position: number;
+  position: string;
   characterCount: number;
 }
 
-export interface TextEditorState {
+export type TextEditorState = {
   text: Automerge.Text;
-  selections: Dictionary<AgentSelection>;
-}
+};
 
-export type TextEditorGrammar = SynGrammar<TextEditorState, TextEditorDelta>;
+export type TextEditorGrammar = SynGrammar<TextEditorDelta, TextEditorState>;
 
 export const textEditorGrammar: TextEditorGrammar = {
-  initialState(doc) {
+  initState(doc) {
     doc.text = new Automerge.Text();
   },
-  applyDelta(
-    state: TextEditorState,
-    delta: TextEditorDelta,
-    _author: AgentPubKeyB64
-  ) {
+  applyDelta(delta: TextEditorDelta, state: TextEditorState) {
+    let finalCursorPosition = delta.position;
+
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
+      finalCursorPosition += delta.text.length;
+    } else if (delta.type === TextEditorDeltaType.Delete) {
+      state.text.deleteAt!(delta.position, delta.characterCount);
     }
-  },
-
-  selectPersistedState(state) {
-    return {
-      text: state.text,
-      selections: {},
-    };
   },
 };

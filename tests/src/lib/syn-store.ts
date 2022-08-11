@@ -25,81 +25,86 @@ export const oFn = orchestrator => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = new SynStore(aliceClient, sampleGrammar, {
-      commitStrategy: {
-        CommitEveryNDeltas: 3,
-      },
-    });
-    const bobSyn = new SynStore(bobClient, sampleGrammar, {
-      commitStrategy: {
-        CommitEveryNDeltas: 3,
-      },
-    });
+    const aliceSyn = new SynStore(new SynClient(aliceClient));
+    const bobSyn = new SynStore(new SynClient(bobClient));
 
-    const aliceSessionStore = await aliceSyn.newSession();
-    const sessionHash = aliceSessionStore.sessionHash;
+    const { initialCommitHash } = await aliceSyn.createRoot(sampleGrammar);
+    const workspaceHash = await aliceSyn.createWorkspace(
+      {
+        name: 'main',
+        meta: undefined,
+      },
+      initialCommitHash
+    );
 
-    t.ok(aliceSessionStore.sessionHash);
-    t.equal(aliceSessionStore.session.scribe, aliceSyn.myPubKey);
+    const aliceWorkspaceStore = await aliceSyn.joinWorkspace(
+      workspaceHash,
+      sampleGrammar
+    );
+    
+    t.ok(aliceWorkspaceStore.workspaceHash);
 
     await delay(2000);
 
-    const bobSessionStore = await bobSyn.joinSession(sessionHash);
+    const bobWorkspaceStore = await bobSyn.joinWorkspace(workspaceHash, sampleGrammar);
 
-    aliceSessionStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
+    aliceWorkspaceStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
     await delay(2000);
 
-    let currentState = get(bobSessionStore.state);
+    let participants = get(aliceWorkspaceStore.participants);
+    t.equal(participants.active.length, 1);
+
+    let currentState = get(bobWorkspaceStore.state);
     t.equal(currentState.title, 'A new title');
 
-    aliceSessionStore.requestChanges([
+    aliceWorkspaceStore.requestChanges([
       { type: 'Title', value: 'Another thing' },
     ]);
 
     await delay(1000);
 
-    currentState = get(bobSessionStore.state);
+    currentState = get(bobWorkspaceStore.state);
     t.equal(currentState.title, 'Another thing');
 
-    bobSessionStore.requestChanges([
+    bobWorkspaceStore.requestChanges([
       { type: 'Title', value: 'Bob is the boss' },
     ]);
 
     await delay(1000);
 
-    currentState = get(bobSessionStore.state);
+    currentState = get(bobWorkspaceStore.state);
     t.equal(currentState.title, 'Bob is the boss');
 
-    currentState = get(aliceSessionStore.state);
+    currentState = get(aliceWorkspaceStore.state);
     t.equal(currentState.title, 'Bob is the boss');
 
-    bobSessionStore.requestChanges([
+    bobWorkspaceStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 0, text: 'Hi ' },
       { type: TextEditorDeltaType.Insert, position: 3, text: 'there' },
     ]);
 
     await delay(1000);
 
-    currentState = get(aliceSessionStore.state);
+    currentState = get(aliceWorkspaceStore.state);
     t.equal(currentState.body.text.toString(), 'Hi there');
 
-    currentState = get(bobSessionStore.state);
+    currentState = get(bobWorkspaceStore.state);
     t.equal(currentState.body.text.toString(), 'Hi there');
 
     // Test concurrent
 
-    aliceSessionStore.requestChanges([
+    aliceWorkspaceStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 3, text: 'alice ' },
     ]);
-    bobSessionStore.requestChanges([
+    bobWorkspaceStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
     ]);
 
     await delay(1000);
 
-    const currentStateAlice = get(aliceSessionStore.state);
-    const currentStateBob = get(bobSessionStore.state);
+    const currentStateAlice = get(aliceWorkspaceStore.state);
+    const currentStateBob = get(bobWorkspaceStore.state);
     t.equal(
       currentStateAlice.body.text.toString(),
       currentStateBob.body.text.toString()
@@ -109,9 +114,9 @@ export const oFn = orchestrator => {
 
     await delay(1000);
 
-    const folks = get(aliceSessionStore.folks);
+    participants = get(aliceWorkspaceStore.participants);
 
-    t.equal(Object.keys(folks).length, 0);
+    t.equal(participants.active.length, 0);
 
     await aliceSyn.close();
 

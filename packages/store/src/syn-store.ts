@@ -111,7 +111,7 @@ export class SynStore {
     }
 
     const commit: Commit = {
-      state: save(doc),
+      state: encode(save(doc)),
       authors: [this.myPubKey],
       meta,
       previous_commit_hashes: [],
@@ -127,6 +127,6 @@ export class SynStore {
       return c;
     });
 
-    return [entryHash, commit];
+    return { initialCommitHash: entryHash, initialCommit: commit };
   }
 }

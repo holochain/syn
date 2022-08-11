@@ -10,7 +10,7 @@
     "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-node-resolve": "^10.0.0",
     "@rollup/plugin-replace": "^2.3.4",
-    "@web/dev-server": "^0.1.25",
+    "@web/dev-server": "^0.1.33",
     "catch-exit": "^1.2.2",
     "concurrently": "^6.2.1",
     "copy": "^0.3.2",

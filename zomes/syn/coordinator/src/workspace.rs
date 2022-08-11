@@ -18,8 +18,15 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 
     create_link(
         all_workspaces_path().path_entry_hash()?,
-        entry_hash,
+        entry_hash.clone(),
         LinkTypes::PathToWorkspaces,
+        (),
+    )?;
+
+    create_link(
+        entry_hash,
+        input.initial_tip_hash,
+        LinkTypes::WorkspaceToTip,
         (),
     )?;
 
@@ -206,7 +213,7 @@ pub struct SynMessage {
 
 #[hdk_extern]
 pub fn send_message(input: SynMessage) -> ExternResult<()> {
-    remote_signal(ExternIO::encode(input.workspace_message), input.recipients)?;
+    remote_signal(input.workspace_message, input.recipients)?;
 
     Ok(())
 }

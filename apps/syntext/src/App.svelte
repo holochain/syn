@@ -1,12 +1,10 @@
 <script>
-  import Editor from './Editor.svelte';
   import Title from './Title.svelte';
-  import Debug from './Debug.svelte';
-  import History from './History.svelte';
-  import { SynContext, SynParticipants } from '@holochain-syn/core';
-  import { SynTextEditor } from '@holochain-syn/text-editor';
+  import { SynContext, WorkspaceParticipants } from '@holochain-syn/core';
+  import { SynMarkdownEditor } from '@holochain-syn/text-editor';
   import { createStore, DocumentGrammar, textSlice } from './syn';
-  import { setContext } from 'svelte';
+  import { setContext, onMount } from 'svelte';
+  import { get } from 'svelte/store';
 
   $: disconnected = false;
   let syn;
@@ -84,7 +82,7 @@
 
   async function init() {
     const store = await createStore();
-    const workspaces = await store.getAllWorkspaces();
+    const workspaces = get(await store.fetchAllWorkspaces());
 
     if (workspaces.keys().length === 0) {
       const { initialCommitHash } = await store.createRoot(DocumentGrammar);
@@ -103,17 +101,18 @@
       synStore = store;
     } else {
       workspaceStore = await store.joinWorkspace(
-        workspaceHash,
+        workspaces.keys()[0],
         DocumentGrammar
       );
       synStore = store;
     }
   }
+  onMount(() => init());
 
   $: synStore, workspaceStore;
 
   customElements.define('syn-context', SynContext);
-  customElements.define('syn-participants', SynParticipants);
+  customElements.define('workspace-participants', WorkspaceParticipants);
   customElements.define('syn-markdown-editor', SynMarkdownEditor);
 
   setContext('store', {
@@ -143,7 +142,7 @@
 
     <div class="folks-tray">
       <h3>Folks</h3>
-      <syn-participants />
+      <workspace-participants {workspaceStore} />
     </div>
   </syn-context>
   <div

@@ -5,5 +5,5 @@ const app = new App({
 	props: {
 	}
 });
-
+console.log('hey')
 export default app

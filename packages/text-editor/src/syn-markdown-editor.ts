@@ -25,7 +25,7 @@ import {
 import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
 import { elemIdToPosition } from './utils';
 
-export class SynTextEditor extends ScopedElementsMixin(LitElement) {
+export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   @property()
   sliceStore!: SliceStore<TextEditorGrammar>;
 

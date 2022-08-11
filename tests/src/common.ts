@@ -54,31 +54,18 @@ export type TextDelta =
   | TextEditorDelta;
 
 export const sampleGrammar: SynGrammar<Content, TextDelta> = {
-  initialState(doc) {
+  initState(doc) {
     doc.title = '';
     doc.body = {};
-    textEditorGrammar.initialState(doc.body);
+    textEditorGrammar.initState(doc.body);
   },
-  applyDelta(content: Content, delta: TextDelta, author: string) {
+  applyDelta(delta: TextDelta, content: Content, eph: any, author: string) {
     switch (delta.type) {
       case 'Title':
         content.title = delta.value;
         break;
       default:
-        textEditorGrammar.applyDelta(content.body, delta, author);
+        textEditorGrammar.applyDelta(delta, content.body, eph, author);
     }
   },
 };
-
-export function applyDeltas(
-  content: Automerge.Doc<Content>,
-  deltas: TextDelta[],
-  author: string
-): Content {
-  for (const delta of deltas) {
-    content = Automerge.change(content, doc =>
-      sampleGrammar.applyDelta(doc, delta, author)
-    );
-  }
-  return content;
-}

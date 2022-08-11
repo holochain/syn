@@ -25,11 +25,11 @@ pub struct SynSignal {
 }
 
 #[hdk_extern]
-pub fn recv_remote_signal(signal: ExternIO) -> ExternResult<()> {
-    let message: WorkspaceMessage = signal
+pub fn recv_remote_signal(message: WorkspaceMessage) -> ExternResult<()> {
+/*     let message: WorkspaceMessage = signal
         .decode()
         .map_err(|err| wasm_error!(WasmErrorInner::Guest(err.into())))?;
-
+ */
     let info = call_info()?;
 
     let notice = SynSignal {

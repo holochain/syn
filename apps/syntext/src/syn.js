@@ -1,6 +1,6 @@
 import { AdminWebsocket, AppWebsocket } from '@holochain/client';
-import { HolochainClient } from '@holochain-open-dev/cell-client';
-import { SynStore } from '@holochain-syn/core';
+import { HolochainClient, CellClient } from '@holochain-open-dev/cell-client';
+import { SynStore, SynClient } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 
 export const DocumentGrammar = {
@@ -38,8 +38,8 @@ export async function createStore() {
 
   const client = new HolochainClient(appWebsocket);
 
-  const cellData = appInfo.cell_data.find(c => c.role_id === 'syn');
+  const cellData = appInfo.cell_data.find(c => c.role_id === 'syn-test');
   const cellClient = new CellClient(client, cellData);
 
-  return new SynStore(cellClient);
+  return new SynStore(new SynClient(cellClient));
 }

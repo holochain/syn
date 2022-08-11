@@ -29,18 +29,26 @@ export default (orchestrator: Orchestrator<any>) => {
     const aliceClient = await spawnSyn(s, config);
     const bobClient = await spawnSyn(s, config);
 
-    const aliceSyn = new SynStore(aliceClient, sampleGrammar, {
-      commitStrategy: { CommitEveryNDeltas: 3 }, // TODO: reduce ms
-    });
-    const bobSyn = new SynStore(bobClient, sampleGrammar, {});
+    const aliceSyn = new SynStore(new SynClient(aliceClient));
+    const bobSyn = new SynStore(new SynClient(bobClient));
 
-    const aliceSessionStore = await aliceSyn.newSession();
-    const sessionHash = aliceSessionStore.sessionHash;
+    const { initialCommitHash } = await aliceSyn.createRoot(sampleGrammar);
+    const workspaceHash = await aliceSyn.createWorkspace(
+      {
+        name: 'main',
+        meta: undefined,
+      },
+      initialCommitHash
+    );
 
-    t.ok(aliceSessionStore.sessionHash);
-    t.equal(aliceSessionStore.session.scribe, aliceSyn.myPubKey);
+    const aliceWorkspaceStore = await aliceSyn.joinWorkspace(
+      workspaceHash,
+      sampleGrammar
+    );
 
-    aliceSessionStore.requestChanges([
+    t.ok(aliceWorkspaceStore.workspaceHash);
+
+    aliceWorkspaceStore.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
         position: 0,
@@ -50,15 +58,15 @@ export default (orchestrator: Orchestrator<any>) => {
 
     await delay(2000);
 
-    const bobSessionStore = await bobSyn.joinSession(sessionHash);
+    const bobWorkspaceStore = await bobSyn.joinWorkspace(workspaceHash, sampleGrammar);
 
     async function simulateAlice() {
       for (let i = 0; i < aliceLine.length; i++) {
-        aliceSessionStore.requestChanges([
+        aliceWorkspaceStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
             position: alicePosition(
-              get(aliceSessionStore.state).body.text.toString()
+              get(aliceWorkspaceStore.state).body.text.toString()
             ),
             text: aliceLine[i],
           },
@@ -69,8 +77,8 @@ export default (orchestrator: Orchestrator<any>) => {
 
     async function simulateBo() {
       for (let i = 0; i < bobLine.length; i++) {
-        let content = get(bobSessionStore.state).body.text;
-        bobSessionStore.requestChanges([
+        let content = get(bobWorkspaceStore.state).body.text;
+        bobWorkspaceStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
             position: bobPosition(content.toString()),
@@ -93,13 +101,13 @@ export default (orchestrator: Orchestrator<any>) => {
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
 
-    let currentState = get(aliceSessionStore.state);
+    let currentState = get(aliceWorkspaceStore.state);
     t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    currentState = get(bobSessionStore.state);
+    currentState = get(bobWorkspaceStore.state);
     t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    await bobSyn.close();
-    await aliceSyn.close();
+    await aliceWorkspaceStore.leave();
+    await bobWorkspaceStore.leave();
   });
 };

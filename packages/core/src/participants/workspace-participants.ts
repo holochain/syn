@@ -11,7 +11,7 @@ import { AgentAvatar } from '@holochain-open-dev/profiles';
 import { classMap } from 'lit/directives/class-map';
 import { AgentPubKey } from '@holochain/client';
 
-export class SynFolks extends ScopedElementsMixin(LitElement) {
+export class WorkspaceParticipants extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synWorkspaceContext, subscribe: true })
   @property()
   workspaceStore!: WorkspaceStore<any>;
