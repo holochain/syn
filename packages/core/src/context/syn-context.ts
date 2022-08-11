@@ -3,10 +3,8 @@ import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { SynStore } from '@holochain-syn/store';
 import { contextProvider } from '@lit-labs/context';
-import { StoreSubscriber } from 'lit-svelte-stores';
 
 import { synContext } from './contexts';
-import { SynWorkspaceContext } from './syn-workspace-context';
 
 /**
  * Context provider element to serve as a container for all the
@@ -17,16 +15,8 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
   @property()
   store!: SynStore;
 
-  _activeSession = new StoreSubscriber(this, () => this.store.activeSession);
-
   render() {
-    return html`
-      <syn-session-context
-        .sessionHash=${this._activeSession.value?.sessionHash}
-      >
-        <slot></slot>
-      </syn-session-context>
-    `;
+    return html` <slot></slot> `;
   }
 
   static get styles() {
@@ -35,11 +25,5 @@ export class SynContext extends ScopedElementsMixin(LitElement) {
         display: contents;
       }
     `;
-  }
-
-  static get scopedElements() {
-    return {
-      'syn-session-context': SynSessionContext,
-    };
   }
 }

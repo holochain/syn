@@ -35,11 +35,32 @@ import { AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
 import { SynConfig } from './config';
 import isEqual from 'lodash-es/isEqual';
 
-export interface StateSlice<G extends SynGrammar<any, any>> {
+export interface SliceStore<G extends SynGrammar<any, any>> {
+  worskpace: WorkspaceStore<any>;
+
   state: Readable<Doc<GrammarState<G>>>;
   ephemeral: Readable<Doc<GrammarEphemeralState<G>>>;
 
   requestChanges(changes: Array<GrammarDelta<G>>): void;
+}
+
+export function extractSlice<
+  G1 extends SynGrammar<any, any>,
+  G2 extends SynGrammar<any, any>
+>(
+  sliceStore: SliceStore<G1>,
+  wrapChange: (changes: GrammarDelta<G2>) => GrammarDelta<G1>,
+  sliceState: (s: Doc<GrammarState<G1>>) => Doc<GrammarState<G2>>,
+  sliceEphemeral: (
+    s: Doc<GrammarEphemeralState<G1>>
+  ) => Doc<GrammarEphemeralState<G2>>
+): SliceStore<G2> {
+  return {
+    worskpace: sliceStore.worskpace as WorkspaceStore<G1>,
+    state: derived(sliceStore.state, sliceState),
+    ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),
+    requestChanges: changes => changes.map(wrapChange),
+  };
 }
 
 export interface WorkspaceParticipant {
@@ -48,11 +69,43 @@ export interface WorkspaceParticipant {
 }
 
 export class WorkspaceStore<G extends SynGrammar<any, any>>
-  implements StateSlice<G>
+  implements SliceStore<G>
 {
+  get worskpace() {
+    return this;
+  }
+
   _participants: Writable<AgentPubKeyMap<WorkspaceParticipant>>;
   get participants() {
-    return derived(this._participants, i => i.keys());
+    return derived(this._participants, i => {
+      const isActive = (lastSeen: number | undefined) =>
+        lastSeen && Date.now() - lastSeen < this.config.hearbeatInterval * 2;
+      const isIdle = (lastSeen: number | undefined) =>
+        lastSeen &&
+        Date.now() - lastSeen > this.config.hearbeatInterval * 2 &&
+        Date.now() - lastSeen < this.config.outOfSessionTimeout;
+      const isOffline = (lastSeen: number | undefined) =>
+        !lastSeen || Date.now() - lastSeen > this.config.outOfSessionTimeout;
+
+      const active = i
+        .entries()
+        .filter(([_, info]) => isActive(info.lastSeen))
+        .map(([pubkey, _]) => pubkey);
+      const idle = i
+        .entries()
+        .filter(([_, info]) => isIdle(info.lastSeen))
+        .map(([pubkey, _]) => pubkey);
+      const offline = i
+        .entries()
+        .filter(([_, info]) => isOffline(info.lastSeen))
+        .map(([pubkey, _]) => pubkey);
+
+      return {
+        active,
+        idle,
+        offline,
+      };
+    });
   }
 
   _state: Writable<Doc<GrammarState<G>>>;

@@ -12,10 +12,10 @@ export interface SynGrammar<DELTA, STATE, EPHEMERAL = {}> {
 
 export type GrammarDelta<G extends SynGrammar<any, any>> = Parameters<
   G['applyDelta']
->[1];
+>[0];
 export type GrammarState<G extends SynGrammar<any, any>> = Parameters<
   G['applyDelta']
->[0];
+>[1];
 
 export type GrammarEphemeralState<G extends SynGrammar<any, any>> = Parameters<
   G['applyDelta']

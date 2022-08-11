@@ -1,10 +1,10 @@
 export * from './context/syn-context';
 export * from './context/syn-workspace-context';
 export * from './context/contexts';
-export * from './folks/syn-folks';
+export * from './participants/workspace-participants';
 export * from './utils/colors';
 export * from './shared-styles';
-export * from './session/syn-sessions';
+export * from './commits/commit-history';
 
-export * from '@holochain-syn/real-time-sessions';
-export * from '@holochain-syn/version-control';
+export * from '@holochain-syn/store';
+export * from '@holochain-syn/client';

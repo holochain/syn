@@ -1,4 +1,4 @@
-# @holochain-syn/elements
+# @holochain-syn/core
 
 Collection of custom elements to easily build `syn` applications.
 
@@ -11,7 +11,7 @@ These elements depend on having a [syn store](https://npmjs.com/package/@holocha
 Install the necessary dependencies:
 
 ```bash
-npm install @holochain-open-dev/profiles @holochain-syn/elements
+npm install @holochain-open-dev/profiles @holochain-syn/core
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ First, you need to have instantiated a `SynStore` from [@holochain-syn/store](ht
 import '@holochain-open-dev/profiles/profiles-context';
 
 // Define the <syn-context> element
-import { SynContext } from '@holochain-syn/elements';
+import { SynContext } from '@holochain-syn/core';
 customElements.define('syn-context', SynContext);
 ```
 

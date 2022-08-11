@@ -1,38 +1,38 @@
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
-import { property, state } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
 import { Card, CircularProgress } from '@scoped-elements/material-web';
-import { StoreSubscriber } from 'lit-svelte-stores';
+import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
-import type { Dictionary, EntryHashB64 } from '@holochain-open-dev/core-types';
 
 import type { SynStore } from '@holochain-syn/store';
 
 import { sharedStyles } from '../shared-styles';
 import { synContext } from '../context/contexts';
+import { EntryHash } from '@holochain/client';
+import {
+  deserializeHash,
+  EntryHashMap,
+  serializeHash,
+} from '@holochain-open-dev/utils';
+import { Commit } from '@holochain-syn/client';
 
 export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, subscribe: true })
-  @state()
-  _synStore!: SynStore<any>;
-
-  @state()
-  _loading = true;
+  @property()
+  synStore!: SynStore;
 
   @property()
-  selectedCommitHash: EntryHashB64 | undefined;
+  selectedCommitHash: EntryHash | undefined;
 
-  _allCommits = new StoreSubscriber(this, () => this._synStore.allCommits);
-
-  async firstUpdated() {
-    await this._synStore.fetchCommitHistory();
-    this._loading = false;
-  }
+  _allCommitsTask = new TaskSubscriber(this, () =>
+    this.synStore.fetchAllCommits()
+  );
 
   onNodeSelected(nodeId: string) {
-    this.selectedCommitHash = nodeId;
+    this.selectedCommitHash = deserializeHash(nodeId);
     this.dispatchEvent(
       new CustomEvent('commit-selected', {
         bubbles: true,
@@ -45,11 +45,13 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   }
 
   get selectedNodeIds() {
-    return this.selectedCommitHash ? [this.selectedCommitHash] : [];
+    return this.selectedCommitHash
+      ? [serializeHash(this.selectedCommitHash)]
+      : [];
   }
 
-  renderContent() {
-    const elements = getCommitGraph(this._allCommits.value);
+  renderContent(allCommits: EntryHashMap<Commit>) {
+    const elements = getCommitGraph(allCommits);
     if (elements.length === 0)
       return html` <div
         class="row"
@@ -79,24 +81,24 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    if (this._loading)
-      return html`
+    return this._allCommitsTask.render({
+      pending: () => html`
         <div
           class="row"
           style="flex: 1; align-items: center; justify-content: center;"
         >
           <mwc-circular-progress indeterminate></mwc-circular-progress>
         </div>
-      `;
-
-    return html`<mwc-card style="flex: 1;">
-      <div class="column" style="flex: 1;">
-        <span class="title" style="margin: 16px; margin-bottom: 4px;"
-          >Commit History</span
-        >
-        ${this.renderContent()}
-      </div>
-    </mwc-card>`;
+      `,
+      complete: allCommits => html`<mwc-card style="flex: 1;">
+        <div class="column" style="flex: 1;">
+          <span class="title" style="margin: 16px; margin-bottom: 4px;"
+            >Commit History</span
+          >
+          ${this.renderContent(allCommits)}
+        </div>
+      </mwc-card>`,
+    });
   }
 
   static get scopedElements() {
@@ -111,23 +113,26 @@ export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
 }
 
 function getCommitGraph(
-  commits: Dictionary<Commit>
+  commits: EntryHashMap<Commit>
 ): Array<NodeDefinition | EdgeDefinition> {
   const elements: Array<NodeDefinition | EdgeDefinition> = [];
 
-  for (const [commitHash, commit] of Object.entries(commits)) {
+  for (const [commitHash, commit] of commits.entries()) {
+    const strCommitHash = serializeHash(commitHash);
     elements.push({
       data: {
-        id: commitHash,
+        id: strCommitHash,
       },
     });
 
-    for (const parentCommitHash of commit.previousCommitHashes) {
+    for (const parentCommitHash of commit.previous_commit_hashes) {
+      const strParentCommitHash = serializeHash(parentCommitHash);
+
       elements.push({
         data: {
-          id: `${parentCommitHash}->${commitHash}`,
-          source: parentCommitHash,
-          target: commitHash,
+          id: `${strParentCommitHash}->${strCommitHash}`,
+          source: strParentCommitHash,
+          target: strCommitHash,
         },
       });
     }

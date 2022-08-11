@@ -10,62 +10,60 @@ import {
 import {
   sharedStyles,
   synContext,
-  synSessionContext,
   getFolkColors,
-} from '@holochain-syn/elements';
+  SynStore,
+  SliceStore,
+} from '@holochain-syn/core';
 import { contextProvided } from '@lit-labs/context';
-import type { SessionStore, SynSlice, SynStore } from '@holochain-syn/store';
 import { StoreSubscriber, TaskSubscriber } from 'lit-svelte-stores';
+import {
+  AgentPubKeyMap,
+  deserializeHash,
+  serializeHash,
+} from '@holochain-open-dev/utils';
 
 import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
-import type { TextEditorDelta } from './grammar';
-import type { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
+import { elemIdToPosition } from './utils';
 
 export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   @property()
-  synSlice!: SynSlice<TextEditorGrammar>;
+  sliceStore!: SliceStore<TextEditorGrammar>;
 
   @property({ attribute: 'debounce-ms' })
   debounceMs: number = 1000;
 
   @contextProvided({ context: synContext, subscribe: true })
-  @state()
-  synStore!: SynStore<any>;
-
-  @contextProvided({ context: synSessionContext, subscribe: true })
-  @state()
-  sessionStore!: SessionStore<any>;
+  @property()
+  synStore!: SynStore;
 
   @contextProvided({ context: profilesStoreContext, subscribe: true })
   @state()
   profilesStore!: ProfilesStore;
 
-  _state = new StoreSubscriber(this, () => this.synSlice?.state);
-  _cursors = new StoreSubscriber(this, () => this.synSlice?.ephemeral);
-  _lastDelta: TextEditorDelta | undefined;
-  _peersProfiles: Record<
-    AgentPubKeyB64,
-    TaskSubscriber<[], Profile | undefined>
-  > = {};
+  _state = new StoreSubscriber(this, () => this.sliceStore.state);
+  _cursors = new StoreSubscriber(this, () => this.sliceStore.ephemeral);
+  _peersProfiles: AgentPubKeyMap<TaskSubscriber<[], Profile | undefined>> =
+    new AgentPubKeyMap();
 
   _lastCursorPosition = 0;
   _cursorPosition = 0;
 
   updated(cv: PropertyValues) {
     super.updated(cv);
-    if (cv.has('sessionStore') && this.sessionStore) {
-      this.sessionStore.folks.subscribe(folks => {
-        if (!folks) return;
-
-        const allFolksPubKey = Object.keys(folks);
+    if (cv.has('sliceStore') && this.sliceStore) {
+      this.sliceStore.worskpace.participants.subscribe(participants => {
+        const allFolksPubKey = [...participants.active, ...participants.idle];
 
         const unknownPeers = allFolksPubKey.filter(
-          pubKey => !Object.keys(this._peersProfiles).includes(pubKey)
+          pubKey => !this._peersProfiles.has(pubKey)
         );
 
         for (const peer of unknownPeers) {
-          this._peersProfiles[peer] = new TaskSubscriber(this, () =>
-            this.profilesStore.fetchAgentProfile(peer)
+          this._peersProfiles.put(
+            peer,
+            new TaskSubscriber(this, () =>
+              this.profilesStore.fetchAgentProfile(peer)
+            )
           );
         }
       });
@@ -73,7 +71,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onTextInserted(from: number, text: string) {
-    this.synSlice.requestChanges([
+    this.sliceStore.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
         position: from,
@@ -83,7 +81,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this.synSlice.requestChanges([
+    this.sliceStore.requestChanges([
       {
         type: TextEditorDeltaType.Delete,
         position: from,
@@ -93,7 +91,7 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    this.synSlice.requestChanges([
+    this.sliceStore.requestChanges([
       {
         type: TextEditorDeltaType.ChangeSelection,
         position: ranges[0].from,
@@ -103,15 +101,17 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   }
 
   remoteCursors() {
+    const myPubKey = serializeHash(this.synStore.myPubKey);
     if (!this._state.value) return [];
     return Object.entries(this._cursors.value)
-      .filter(([pubKey, _]) => pubKey !== this.synStore.myPubKey)
+      .filter(([pubKey, _]) => pubKey !== myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
 
-        const name = this._peersProfiles[agentPubKey]?.value?.nickname;
+        const name = this._peersProfiles.get(deserializeHash(agentPubKey))
+          ?.value?.nickname;
         return {
-          position: position.position.value,
+          position: elemIdToPosition(position.position, this._state.value.text),
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };
@@ -121,12 +121,17 @@ export class SynTextEditor extends ScopedElementsMixin(LitElement) {
   render() {
     if (this._state.value === undefined) return html``;
 
-    const mySelection = this._cursors.value[this.synStore.myPubKey];
+    const mySelection =
+      this._cursors.value[serializeHash(this.synStore.myPubKey)];
 
-    const selection = mySelection
+    const myPosition =
+      mySelection &&
+      elemIdToPosition(mySelection.position, this._state.value.text);
+
+    const selection = myPosition
       ? {
-          from: mySelection.position,
-          to: mySelection.position.value + mySelection.characterCount,
+          from: myPosition,
+          to: myPosition + mySelection.characterCount,
         }
       : undefined;
 

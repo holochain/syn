@@ -1,25 +1,23 @@
 <script>
   import { createEventDispatcher, tick, getContext } from 'svelte'
-  import { unnest } from '@holochain-syn/store';
 
   const dispatch = createEventDispatcher()
 
   let titleBeingTyped = ''
 
-  const { getStore } = getContext('store');
+  const { getWorkspaceStore } = getContext('workspaceStore');
 
-  const store = getStore();
-  $: session = store.activeSession;
-  $: content = unnest(store.activeSession, s => s.state);
+  const workpsaceStore = getWorkspaceStore();
+  $: state = workpsaceStore.state;
 
   let editingTitle = false
   function saveTitle() {
     if (editingTitle) {
       // only dispatch a changeReq if the title trying to be saved is different
       // than the current title
-      if (titleBeingTyped !== $content.title) {
+      if (titleBeingTyped !== $state.title) {
         let delta = { type: 'Title', value: titleBeingTyped }
-        $session.requestChange([delta])
+        workpsaceStore.requestChanges([delta])
       }
       titleBeingTyped = ''
       editingTitle = false
@@ -31,7 +29,7 @@
   let titleEl // variable to bind the title input to when it's created
   async function beginEditTitle() {
     titleHover=false
-    titleBeingTyped = $content.title // fill the field with the current title
+    titleBeingTyped = $state.title // fill the field with the current title
     editingTitle = true
     await tick() // wait for the title input element to be created
     titleEl.focus()
@@ -50,7 +48,7 @@
 
   // keep track of whether the doc is untitled
   let untitled
-  $: untitled = ($content.title === '')
+  $: untitled = ($state.title === '')
 
   let titleHover // whether the title is being hovered
 
@@ -103,7 +101,7 @@
         {#if untitled}
           Untitled Document
         {:else}
-          {$content.title}
+          {$state.title}
         {/if}
       </span>
     </div>

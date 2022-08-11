@@ -1,8 +1,6 @@
-import type {
-  AgentPubKeyB64,
-  Dictionary,
-} from '@holochain-open-dev/core-types';
+import { serializeHash } from '@holochain-open-dev/utils';
 import type { SynGrammar } from '@holochain-syn/store';
+import { AgentPubKey } from '@holochain/client';
 import Automerge from 'automerge';
 
 export enum TextEditorDeltaType {
@@ -33,38 +31,45 @@ export interface AgentSelection {
   characterCount: number;
 }
 
-export type TextEditorState = Automerge.Text;
-export type TextEditorEphemeralState = Dictionary<AgentSelection>;
+export type TextEditorState = {
+  text: Automerge.Text;
+};
+export type TextEditorEphemeralState = { [key: string]: AgentSelection };
 
 export type TextEditorGrammar = SynGrammar<
-  TextEditorState,
   TextEditorDelta,
+  TextEditorState,
   TextEditorEphemeralState
 >;
 
 export const textEditorGrammar: TextEditorGrammar = {
-  initState(doc, _ephemeral) {
+  initState(doc) {
     doc.text = new Automerge.Text();
   },
   applyDelta(
-    state: TextEditorState,
     delta: TextEditorDelta,
+    state: TextEditorState,
     ephemeral: TextEditorEphemeralState,
-    author: AgentPubKeyB64
+    author: AgentPubKey
   ) {
-    let finalCursorPosition = (state as any).getElemId(delta.position);
+    let finalCursorPosition = delta.position;
 
-    ephemeral[author] = {
-      position: finalCursorPosition,
+    if (delta.type === TextEditorDeltaType.Insert) {
+      state.text.insertAt!(delta.position, ...delta.text);
+      finalCursorPosition += delta.text.length;
+    } else if (delta.type === TextEditorDeltaType.Delete) {
+      state.text.deleteAt!(delta.position, delta.characterCount);
+    }
+
+    const elementId = (state.text as any).getElemId(finalCursorPosition);
+
+    ephemeral[serializeHash(author)] = {
+      position: elementId,
       characterCount: 0,
     };
 
-    if (delta.type === TextEditorDeltaType.Insert) {
-      state.insertAt!(delta.position, ...delta.text);
-    } else if (delta.type === TextEditorDeltaType.Delete) {
-      state.deleteAt!(delta.position, delta.characterCount);
-    } else if (delta.type === TextEditorDeltaType.ChangeSelection) {
-      ephemeral[author].characterCount = delta.characterCount;
+    if (delta.type === TextEditorDeltaType.ChangeSelection) {
+      ephemeral[serializeHash(author)].characterCount = delta.characterCount;
     }
   },
 };

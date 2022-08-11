@@ -17,7 +17,8 @@
   },
   "workspaces": [
     "tests",
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "devDependencies": {
     "@holochain/client": "0.3.2",

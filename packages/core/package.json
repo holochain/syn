@@ -15,6 +15,7 @@
     "@holochain/client": "^0.7.0",
     "@holochain-open-dev/cell-client": "^0.7.0",
     "@holochain-open-dev/profiles": "^0.4.2",
+    "@holochain-open-dev/utils": "^0.3.1",
     "@holochain-syn/client": "^0.1.0",
     "@holochain-syn/store": "0.1.0",
     "@lit-labs/context": "^0.1.2",
@@ -23,7 +24,7 @@
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/shoelace": "0.0.8",
     "lit": "^2.0.2",
-    "lit-svelte-stores": "^0.1.4",
+    "lit-svelte-stores": "^0.2.1",
     "lodash-es": "^4.17.21",
     "svelte": "^3.42.4"
   },

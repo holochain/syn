@@ -1,2 +1,2 @@
-export * from './syn-text-editor';
+export * from './syn-markdown-editor';
 export * from './grammar';

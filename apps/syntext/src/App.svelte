@@ -3,35 +3,12 @@
   import Title from './Title.svelte';
   import Debug from './Debug.svelte';
   import History from './History.svelte';
-  import { content, scribeStr } from './stores.js';
-  import { SynContext, SynFolks, SynSessions } from '@holochain-syn/elements';
+  import { SynContext, SynParticipants } from '@holochain-syn/core';
   import { SynTextEditor } from '@holochain-syn/text-editor';
-  import { createStore } from './syn';
+  import { createStore, DocumentGrammar, textSlice } from './syn';
   import { setContext } from 'svelte';
 
   $: disconnected = false;
-
-  // definition of how to convert a change to text for the history renderer
-  function changeToText(change) {
-    let delta = change.delta;
-    let detail;
-    switch (delta.type) {
-      case 'Add':
-        detail = `${delta.value[1]}@${delta.value[0]}`;
-        break;
-      case 'Delete':
-        detail = `${change.deleted}@${delta.value[0]}`;
-        break;
-      case 'Title':
-        detail = `${change.deleted}->${delta.value}`;
-        break;
-      case 'Meta':
-        detail = '';
-    }
-    return `${delta.type}:\n${detail}`;
-  }
-
-  $: noscribe = $scribeStr === '';
   let syn;
 
   // The debug drawer's ability to resized and hidden
@@ -103,36 +80,44 @@
   };
 
   let synStore;
-  createStore().then(async store => {
-    const sessions = await store.getAllSessions();
+  let workspaceStore;
 
-    if (Object.keys(sessions).length === 0) {
-      store.newSession().then(() => {
-        synStore = store;
-      });
+  async function init() {
+    const store = await createStore();
+    const workspaces = await store.getAllWorkspaces();
+
+    if (workspaces.keys().length === 0) {
+      const { initialCommitHash } = await store.createRoot(DocumentGrammar);
+      const workspaceHash = await store.createWorkspace(
+        {
+          name: 'main',
+          meta: undefined,
+        },
+        initialCommitHash
+      );
+
+      workspaceStore = await store.joinWorkspace(
+        workspaceHash,
+        DocumentGrammar
+      );
+      synStore = store;
     } else {
-      for (const session of Object.keys(sessions)) {
-        try {
-          await store.joinSession(Object.keys(sessions)[0]);
-
-          synStore = store;
-          return;
-        } catch (e) {}
-      }
-      store.newSession().then(() => {
-        synStore = store;
-      });
+      workspaceStore = await store.joinWorkspace(
+        workspaceHash,
+        DocumentGrammar
+      );
+      synStore = store;
     }
-  });
-  $: synStore;
+  }
+
+  $: synStore, workspaceStore;
 
   customElements.define('syn-context', SynContext);
-  customElements.define('syn-sessions', SynSessions);
-  customElements.define('syn-folks', SynFolks);
-  customElements.define('syn-text-editor', SynTextEditor);
+  customElements.define('syn-participants', SynParticipants);
+  customElements.define('syn-markdown-editor', SynMarkdownEditor);
 
   setContext('store', {
-    getStore: () => synStore,
+    getWorkspaceStore: () => workspaceStore,
   });
 </script>
 
@@ -146,21 +131,19 @@
   <syn-context store={synStore}>
     <div class="toolbar">
       <h1>SynText</h1>
-      <div class:noscribe>
+      <div>
         <Title />
       </div>
     </div>
     <main>
-      <div class:noscribe>
-        <Editor />
+      <div>
+        <syn-markdown-editor sliceStore={textSlice(workspaceStore)} />
       </div>
     </main>
 
     <div class="folks-tray">
       <h3>Folks</h3>
-      <syn-folks />
-      <h3>Active Sessions</h3>
-      <syn-sessions />
+      <syn-participants />
     </div>
   </syn-context>
   <div
@@ -192,10 +175,6 @@
     class:hidden={drawerHidden}
   >
     <div class="handle" bind:this={resizeHandle} on:mousedown={startDragging} />
-    <div class="debug-content">
-      <History changeToTextFn={changeToText} />
-      <Debug />
-    </div>
   </div>
 {/if}
 
