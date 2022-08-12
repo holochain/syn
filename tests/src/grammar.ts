@@ -1,4 +1,4 @@
-import type { SynGrammar } from '@holochain-syn/core';
+import type { SynGrammar } from '@holochain-syn/store';
 import Automerge from 'automerge';
 
 export enum TextEditorDeltaType {
@@ -40,6 +40,7 @@ export const textEditorGrammar: TextEditorGrammar = {
     doc.text = new Automerge.Text();
   },
   applyDelta(delta: TextEditorDelta, state: TextEditorState) {
+    // @ts-ignore
     let finalCursorPosition = delta.position;
 
     if (delta.type === TextEditorDeltaType.Insert) {

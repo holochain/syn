@@ -1,17 +1,16 @@
 import {
   Config,
-  InstallAgentsHapps,
-  Player,
-  ConfigSeed,
 } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynGrammar, SynStore } from '@holochain-syn/store';
+import { SynStore } from '@holochain-syn/store';
+import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar';
-import Automerge from 'automerge';
+//import Automerge from 'automerge';
 
-import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common';
+import { delay, sampleGrammar,  } from '../common';
 import { spawnSyn } from './spawn';
+import {  } from '@holochain-syn/client';
 
 const config = Config.gen();
 
@@ -110,7 +109,7 @@ export const oFn = orchestrator => {
       currentStateBob.body.text.toString()
     );
 
-    await bobSyn.close();
+    //await bobSyn.leave();
 
     await delay(1000);
 
@@ -118,7 +117,7 @@ export const oFn = orchestrator => {
 
     t.equal(participants.active.length, 0);
 
-    await aliceSyn.close();
+   // await aliceSyn.close();
 
     process.exit(0);
   });

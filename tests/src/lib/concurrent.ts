@@ -1,10 +1,12 @@
 import { Config, Orchestrator } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '../grammar';
+import { SynStore, GrammarDelta } from '@holochain-syn/store';
+import { SynClient } from '@holochain-syn/client';
 
-import { delay, sampleGrammar, TextDelta } from '../common';
+import {  TextEditorDeltaType, TextEditorGrammar } from '../grammar';
+
+import { delay, sampleGrammar } from '../common';
 import { spawnSyn } from './spawn';
 
 const config = Config.gen();
@@ -48,13 +50,13 @@ export default (orchestrator: Orchestrator<any>) => {
 
     t.ok(aliceWorkspaceStore.workspaceHash);
 
-    aliceWorkspaceStore.requestChanges([
-      {
-        type: TextEditorDeltaType.Insert,
-        position: 0,
-        text: '\n',
-      },
-    ]);
+    const delta: GrammarDelta<TextEditorGrammar> = {
+      type: TextEditorDeltaType.Insert,
+      position: 0,
+      text: '\n',
+    }
+
+    aliceWorkspaceStore.requestChanges([delta]);
 
     await delay(2000);
 
@@ -107,7 +109,7 @@ ${bobLine}${bobLine}${bobLine}`;
     currentState = get(bobWorkspaceStore.state);
     t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    await aliceWorkspaceStore.leave();
-    await bobWorkspaceStore.leave();
+  //  await aliceWorkspaceStore.leave();
+  //  await bobWorkspaceStore.leave();
   });
 };

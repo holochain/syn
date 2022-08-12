@@ -19,7 +19,7 @@
     "@holochain-syn/client": "^0.1.0",
     "@holochain-syn/store": "0.1.0",
     "@lit-labs/context": "^0.1.2",
-    "@open-wc/scoped-elements": "^2.0.1",
+    "@open-wc/scoped-elements": "^2.1.1",
     "@scoped-elements/cytoscape": "^0.0.5",
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/shoelace": "0.0.8",

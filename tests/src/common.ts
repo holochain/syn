@@ -1,4 +1,3 @@
-import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
@@ -30,9 +29,6 @@ export type Signal = {
 
 export const delay = ms => new Promise(r => setTimeout(r, ms));
 
-export function serializeHash(hash: Uint8Array): string {
-  return `u${Base64.fromUint8Array(hash, true)}`;
-}
 
 /*
   Fake UI functions
@@ -53,13 +49,13 @@ export type TextDelta =
     }
   | TextEditorDelta;
 
-export const sampleGrammar: SynGrammar<Content, TextDelta> = {
+export const sampleGrammar: SynGrammar<TextDelta, Content> = {
   initState(doc) {
     doc.title = '';
-    doc.body = {};
+    doc.body = {text: new Automerge.Text()};
     textEditorGrammar.initState(doc.body);
   },
-  applyDelta(delta: TextDelta, content: Content, eph: any, author: string) {
+  applyDelta(delta: TextDelta, content: Content, eph: any, author: Uint8Array) {
     switch (delta.type) {
       case 'Title':
         content.title = delta.value;

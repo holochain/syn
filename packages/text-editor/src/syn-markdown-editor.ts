@@ -11,9 +11,11 @@ import {
   sharedStyles,
   synContext,
   getFolkColors,
+} from '@holochain-syn/core';
+import {
   SynStore,
   SliceStore,
-} from '@holochain-syn/core';
+}from '@holochain-syn/store'
 import { contextProvided } from '@lit-labs/context';
 import { StoreSubscriber, TaskSubscriber } from 'lit-svelte-stores';
 import {
