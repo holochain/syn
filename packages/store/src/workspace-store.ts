@@ -505,6 +505,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   }
 
   async leaveWorkspace(): Promise<void> {
+    const participants = get(this.participants).active;
+
+    if (participants.length === 0) {
+      await this.commitChanges();
+    }
+
     await this.client.leaveWorkspace(this.workspaceHash);
     this.unsubscribe();
     for (const interval of this.intervals) {

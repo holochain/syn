@@ -27,6 +27,7 @@ export type TextEditorDelta =
     };
 
 export interface AgentSelection {
+  left: boolean;
   position: string;
   characterCount: number;
 }
@@ -52,26 +53,49 @@ export const textEditorGrammar: TextEditorGrammar = {
     ephemeral: TextEditorEphemeralState,
     author: AgentPubKey
   ) {
-    let finalCursorPosition = delta.position;
-
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
-      finalCursorPosition += delta.text.length;
-    } else if (delta.type === TextEditorDeltaType.Delete) {
-      state.text.deleteAt!(delta.position, delta.characterCount);
-    }
-
-    if (state.text.length > 0 && state.text.length > finalCursorPosition) {
-      const elementId = (state.text as any).getElemId(finalCursorPosition);
+      const elementId = (state.text as any).getElemId(
+        delta.position + delta.text.length - 1
+      );
 
       ephemeral[serializeHash(author)] = {
+        left: false,
         position: elementId,
         characterCount: 0,
       };
+    } else if (delta.type === TextEditorDeltaType.Delete) {
+      state.text.deleteAt!(delta.position, delta.characterCount);
+      if (delta.position === 0) {
+        const elementId = (state.text as any).getElemId(0);
 
-      if (delta.type === TextEditorDeltaType.ChangeSelection) {
-        ephemeral[serializeHash(author)].characterCount =
-          delta.characterCount;
+        ephemeral[serializeHash(author)] = {
+          left: true,
+          position: elementId,
+          characterCount: 0,
+        };
+      } else {
+        const elementId = (state.text as any).getElemId(delta.position - 1);
+
+        ephemeral[serializeHash(author)] = {
+          left: false,
+          position: elementId,
+          characterCount: 0,
+        };
+      }
+    } else {
+      if (delta.position === state.text.length) {
+        ephemeral[serializeHash(author)] = {
+          left: false,
+          position: (state.text as any).getElemId(delta.position - 1),
+          characterCount: delta.characterCount,
+        };
+      } else {
+        ephemeral[serializeHash(author)] = {
+          left: true,
+          position: (state.text as any).getElemId(delta.position),
+          characterCount: delta.characterCount,
+        };
       }
     }
   },

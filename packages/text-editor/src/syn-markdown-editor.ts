@@ -111,7 +111,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
         const name = this._peersProfiles.get(deserializeHash(agentPubKey))
           ?.value?.nickname;
         return {
-          position: elemIdToPosition(position.position, this._state.value.text),
+          position: elemIdToPosition(position.left, position.position, this._state.value.text),
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };
@@ -126,7 +126,11 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
 
     const myPosition =
       mySelection &&
-      elemIdToPosition(mySelection.position, this._state.value.text);
+      elemIdToPosition(
+        mySelection.left,
+        mySelection.position,
+        this._state.value.text
+      );
 
     const selection = myPosition
       ? {

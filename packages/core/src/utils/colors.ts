@@ -1,7 +1,5 @@
-import {
-  AgentPubKeyB64,
-  deserializeHash,
-} from '@holochain-open-dev/core-types';
+import { AgentPubKeyB64 } from '@holochain-open-dev/core-types';
+import { deserializeHash } from '@holochain-open-dev/utils';
 
 export type HSL = [number, number, number];
 

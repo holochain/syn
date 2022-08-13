@@ -10,6 +10,7 @@ import { AgentAvatar } from '@holochain-open-dev/profiles';
 
 import { synWorkspaceContext } from '../context/contexts';
 import { sharedStyles } from '../shared-styles';
+import { serializeHash } from '@holochain-open-dev/utils';
 
 export class WorkspaceParticipants extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synWorkspaceContext, subscribe: true })
@@ -27,7 +28,8 @@ export class WorkspaceParticipants extends ScopedElementsMixin(LitElement) {
         class="${classMap({
           'out-of-session': idle,
         })}"
-        .agentPubKey=${pubKey}
+        .agentPubKey=${serializeHash(pubKey)}
+        style="margin-bottom: 8px;"
       ></agent-avatar>
     `;
   }
