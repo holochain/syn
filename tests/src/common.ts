@@ -1,7 +1,8 @@
 import { Base64 } from 'js-base64';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar';
+import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar.js';
+import { AgentPubKey } from '@holochain/client';
 import { SynGrammar } from '@holochain-syn/store';
 import Automerge from 'automerge';
 
@@ -53,13 +54,18 @@ export type TextDelta =
     }
   | TextEditorDelta;
 
-export const sampleGrammar: SynGrammar<Content, TextDelta> = {
+export const sampleGrammar: SynGrammar<TextDelta, Content> = {
   initState(doc) {
     doc.title = '';
-    doc.body = {};
+    doc.body = {} as any;
     textEditorGrammar.initState(doc.body);
   },
-  applyDelta(delta: TextDelta, content: Content, eph: any, author: string) {
+  applyDelta(
+    delta: TextDelta,
+    content: Content,
+    eph: any,
+    author: AgentPubKey
+  ) {
     switch (delta.type) {
       case 'Title':
         content.title = delta.value;

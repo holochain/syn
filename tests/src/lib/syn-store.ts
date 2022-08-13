@@ -6,12 +6,12 @@ import {
 } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynGrammar, SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '../grammar';
+import { SynGrammar, SynStore, SynClient } from '@holochain-syn/core';
+import { TextEditorDeltaType } from '../grammar.js';
 import Automerge from 'automerge';
 
-import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common';
-import { spawnSyn } from './spawn';
+import { Content, delay, sampleGrammar, synDna, TextDelta } from '../common.js';
+import { spawnSyn } from './spawn.js';
 
 const config = Config.gen();
 
@@ -110,7 +110,7 @@ export const oFn = orchestrator => {
       currentStateBob.body.text.toString()
     );
 
-    await bobSyn.close();
+    await bobWorkspaceStore.leaveWorkspace();
 
     await delay(1000);
 
@@ -118,7 +118,7 @@ export const oFn = orchestrator => {
 
     t.equal(participants.active.length, 0);
 
-    await aliceSyn.close();
+    await bobWorkspaceStore.leaveWorkspace();
 
     process.exit(0);
   });

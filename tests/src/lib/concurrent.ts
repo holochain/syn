@@ -1,11 +1,11 @@
 import { Config, Orchestrator } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore } from '@holochain-syn/store';
-import { TextEditorDeltaType } from '../grammar';
+import { SynStore, SynClient } from '@holochain-syn/core';
+import { TextEditorDeltaType } from '../grammar.js';
 
-import { delay, sampleGrammar, TextDelta } from '../common';
-import { spawnSyn } from './spawn';
+import { delay, sampleGrammar, TextDelta } from '../common.js';
+import { spawnSyn } from './spawn.js';
 
 const config = Config.gen();
 
@@ -107,7 +107,7 @@ ${bobLine}${bobLine}${bobLine}`;
     currentState = get(bobWorkspaceStore.state);
     t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    await aliceWorkspaceStore.leave();
-    await bobWorkspaceStore.leave();
+    await aliceWorkspaceStore.leaveWorkspace();
+    await bobWorkspaceStore.leaveWorkspace();
   });
 };

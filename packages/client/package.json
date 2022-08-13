@@ -6,7 +6,12 @@
   "files": [
     "dist"
   ],
-  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""

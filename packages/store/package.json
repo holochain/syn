@@ -2,15 +2,20 @@
   "name": "@holochain-syn/store",
   "version": "0.1.0",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
   },
-  "type": "module",
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.7.0",
     "@holochain-open-dev/utils": "^0.3.1",

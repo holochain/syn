@@ -1,6 +1,6 @@
 import { Orchestrator } from '@holochain/tryorama';
-import { oFn } from './syn-store';
-import concurrent from './concurrent';
+import { oFn } from './syn-store.js';
+import concurrent from './concurrent.js';
 
 async function run() {
   let orchestrator = new Orchestrator();

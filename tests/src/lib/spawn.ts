@@ -1,7 +1,7 @@
 import { CellClient, HolochainClient } from '@holochain-open-dev/cell-client';
 import { AppWebsocket } from '@holochain/client';
 import { ConfigSeed, InstallAgentsHapps, Player } from '@holochain/tryorama';
-import { synDna } from '../common';
+import { synDna } from '../common.js';
 
 let allPlayers: Player[] = [];
 
