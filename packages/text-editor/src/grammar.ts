@@ -84,7 +84,9 @@ export const textEditorGrammar: TextEditorGrammar = {
         };
       }
     } else {
-      if (delta.position === state.text.length) {
+      if (state.text.length === 0) {
+
+      } else if (delta.position === state.text.length) {
         ephemeral[serializeHash(author)] = {
           left: false,
           position: (state.text as any).getElemId(delta.position - 1),

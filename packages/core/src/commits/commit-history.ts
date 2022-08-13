@@ -8,16 +8,16 @@ import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
 import type { SynStore } from '@holochain-syn/store';
+import { Commit } from '@holochain-syn/client';
 
-import { sharedStyles } from '../shared-styles';
-import { synContext } from '../context/contexts';
 import { EntryHash } from '@holochain/client';
 import {
   deserializeHash,
   EntryHashMap,
   serializeHash,
 } from '@holochain-open-dev/utils';
-import { Commit } from '@holochain-syn/client';
+import { sharedStyles } from '../shared-styles';
+import { synContext } from '../context/contexts';
 
 export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, subscribe: true })

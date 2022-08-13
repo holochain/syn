@@ -111,6 +111,7 @@ export class SynStore {
     }
 
     const commit: Commit = {
+      created_at: Date.now(),
       state: encode(save(doc)),
       authors: [this.myPubKey],
       meta,

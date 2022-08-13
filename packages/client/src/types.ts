@@ -3,6 +3,8 @@ import { AgentPubKey, EntryHash, Record } from '@holochain/client';
 export interface Commit {
   state: Uint8Array;
 
+  created_at: number;
+
   previous_commit_hashes: Array<EntryHash>;
 
   authors: Array<AgentPubKey>;

@@ -471,6 +471,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       previous_commit_hashes: [get(this._currentTip)],
       state: encode(save(get(this._state))),
       witnesses: [],
+      created_at: Date.now(),
     });
 
     const newCommitHash = (newCommit.signed_action.hashed.content as Create)

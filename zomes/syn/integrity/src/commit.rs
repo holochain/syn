@@ -3,6 +3,7 @@ use hdi::prelude::*;
 #[hdk_entry_helper]
 pub struct Commit {
   pub state: SerializedBytes,
+  pub created_at: Timestamp,
 
   pub previous_commit_hashes: Vec<EntryHash>,
 
