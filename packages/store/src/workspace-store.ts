@@ -8,22 +8,7 @@ import { Readable, writable, Writable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
 import { AgentPubKeyMap, serializeHash } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
-import {
-  BinaryDocument,
-  change,
-  BinarySyncMessage,
-  Doc,
-  generateSyncMessage,
-  getChanges,
-  init,
-  initSyncState,
-  applyChanges,
-  load,
-  receiveSyncMessage,
-  BinaryChange,
-  SyncState,
-  save,
-} from 'automerge';
+import Automerge from 'automerge';
 import { AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
 import isEqual from 'lodash-es/isEqual';
 
@@ -39,7 +24,7 @@ import { SynConfig } from './config';
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
 
-  state: Readable<Doc<GrammarState<G>>>;
+  state: Readable<Automerge.Doc<GrammarState<G>>>;
   ephemeral: Readable<GrammarEphemeralState<G>>;
 
   requestChanges(changes: Array<GrammarDelta<G>>): void;
@@ -51,10 +36,10 @@ export function extractSlice<
 >(
   sliceStore: SliceStore<G1>,
   wrapChange: (change: GrammarDelta<G2>) => GrammarDelta<G1>,
-  sliceState: (state: Doc<GrammarState<G1>>) => Doc<GrammarState<G2>>,
+  sliceState: (state: Automerge.Doc<GrammarState<G1>>) => Automerge.Doc<GrammarState<G2>>,
   sliceEphemeral: (
-    ephemeralState: Doc<GrammarEphemeralState<G1>>
-  ) => Doc<GrammarEphemeralState<G2>>
+    ephemeralState: Automerge.Doc<GrammarEphemeralState<G1>>
+  ) => Automerge.Doc<GrammarEphemeralState<G2>>
 ): SliceStore<G2> {
   return {
     worskpace: sliceStore.worskpace as WorkspaceStore<G1>,
@@ -67,7 +52,7 @@ export function extractSlice<
 
 export interface WorkspaceParticipant {
   lastSeen: number | undefined;
-  syncStates: { state: SyncState; ephemeral: SyncState };
+  syncStates: { state: Automerge.SyncState; ephemeral: Automerge.SyncState };
 }
 
 export class WorkspaceStore<G extends SynGrammar<any, any>>
@@ -110,12 +95,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
   }
 
-  _state: Writable<Doc<GrammarState<G>>>;
+  _state: Writable<Automerge.Doc<GrammarState<G>>>;
   get state() {
     return derived(this._state, i => i);
   }
 
-  _ephemeral: Writable<Doc<GrammarEphemeralState<G>>>;
+  _ephemeral: Writable<Automerge.Doc<GrammarEphemeralState<G>>>;
   get ephemeral() {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
@@ -167,9 +152,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         if (message.payload.type === 'ChangeNotice') {
           this.handleChangeNotice(
             synSignal.provenance,
-            message.payload.state_changes.map(c => decode(c) as BinaryChange),
+            message.payload.state_changes.map(c => decode(c) as Automerge.BinaryChange),
             message.payload.ephemeral_changes.map(
-              c => decode(c) as BinaryChange
+              c => decode(c) as Automerge.BinaryChange
             )
           );
         }
@@ -177,12 +162,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           this.handleSyncRequest(
             synSignal.provenance,
             message.payload.sync_message
-              ? (decode(message.payload.sync_message) as BinarySyncMessage)
+              ? (decode(message.payload.sync_message) as Automerge.BinarySyncMessage)
               : undefined,
             message.payload.ephemeral_sync_message
               ? (decode(
                   message.payload.ephemeral_sync_message
-                ) as BinarySyncMessage)
+                ) as Automerge.BinarySyncMessage)
               : undefined
           );
         }
@@ -210,8 +195,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           p.put(newParticipant, {
             lastSeen: undefined,
             syncStates: {
-              state: initSyncState(),
-              ephemeral: initSyncState(),
+              state: Automerge.initSyncState(),
+              ephemeral: Automerge.initSyncState(),
             },
           });
 
@@ -264,9 +249,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.intervals.push(commitInterval);
 
     const commit = decode((currentTip.entry as any).Present.entry) as Commit;
-    const commitState = decode(commit.state) as BinaryDocument;
+    const commitState = decode(commit.state) as Automerge.BinaryDocument;
 
-    const state = load(commitState);
+    const state = Automerge.load(commitState);
 
     this._state = writable(state);
     this._currentTip = writable(
@@ -280,15 +265,15 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       participantsMap.put(p, {
         lastSeen: undefined,
         syncStates: {
-          state: initSyncState(),
-          ephemeral: initSyncState(),
+          state: Automerge.initSyncState(),
+          ephemeral: Automerge.initSyncState(),
         },
       });
     }
 
     this._participants = writable(participantsMap);
 
-    let eph = init();
+    let eph = Automerge.init();
 
     this._ephemeral = writable(eph);
 
@@ -322,15 +307,15 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         let newEphemeralState = ephemeralState;
 
         for (const changeRequested of changes) {
-          newState = change(newState, doc => {
-            newEphemeralState = change(newEphemeralState, eph => {
+          newState = Automerge.change(newState, doc => {
+            newEphemeralState = Automerge.change(newEphemeralState, eph => {
               this.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });
         }
 
-        const stateChanges = getChanges(state, newState);
-        const ephemeralChanges = getChanges(ephemeralState, newEphemeralState);
+        const stateChanges = Automerge.getChanges(state, newState);
+        const ephemeralChanges = Automerge.getChanges(ephemeralState, newEphemeralState);
 
         const participants = get(this._participants).keys();
 
@@ -351,13 +336,13 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleChangeNotice(
     from: AgentPubKey,
-    stateChanges: BinaryChange[],
-    ephemeralChanges: BinaryChange[]
+    stateChanges: Automerge.BinaryChange[],
+    ephemeralChanges: Automerge.BinaryChange[]
   ) {
     let thereArePendingChanges = false;
 
     this._state.update(state => {
-      const stateChangesInfo = applyChanges(state, stateChanges);
+      const stateChangesInfo = Automerge.applyChanges(state, stateChanges);
 
       thereArePendingChanges =
         thereArePendingChanges || stateChangesInfo[1].pendingChanges > 0;
@@ -366,7 +351,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     this._ephemeral.update(ephemeral => {
-      const ephemeralChangesInfo = applyChanges(ephemeral, ephemeralChanges);
+      const ephemeralChangesInfo = Automerge.applyChanges(ephemeral, ephemeralChanges);
 
       thereArePendingChanges =
         thereArePendingChanges || ephemeralChangesInfo[1].pendingChanges > 0;
@@ -382,11 +367,11 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   requestSync(participant: AgentPubKey) {
     const syncStates = get(this._participants).get(participant).syncStates;
 
-    const [nextSyncState, syncMessage] = generateSyncMessage(
+    const [nextSyncState, syncMessage] = Automerge.generateSyncMessage(
       get(this._state),
       syncStates.state
     );
-    const [ephemeralNextSyncState, ephemeralSyncMessage] = generateSyncMessage(
+    const [ephemeralNextSyncState, ephemeralSyncMessage] = Automerge.generateSyncMessage(
       get(this._ephemeral),
       syncStates.ephemeral
     );
@@ -419,15 +404,15 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleSyncRequest(
     from: AgentPubKey,
-    syncMessage: BinarySyncMessage | undefined,
-    ephemeralSyncMessage: BinarySyncMessage | undefined
+    syncMessage: Automerge.BinarySyncMessage | undefined,
+    ephemeralSyncMessage: Automerge.BinarySyncMessage | undefined
   ) {
     this._participants.update(p => {
       const participantInfo = p.get(from);
 
       if (syncMessage) {
         this._state.update(state => {
-          const [nextDoc, nextSyncState, _message] = receiveSyncMessage(
+          const [nextDoc, nextSyncState, _message] = Automerge.receiveSyncMessage(
             state,
             participantInfo.syncStates.state,
             syncMessage
@@ -441,7 +426,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
       if (ephemeralSyncMessage) {
         this._ephemeral.update(ephemeral => {
-          const [nextDoc, nextSyncState, _message] = receiveSyncMessage(
+          const [nextDoc, nextSyncState, _message] = Automerge.receiveSyncMessage(
             ephemeral,
             participantInfo.syncStates.ephemeral,
             ephemeralSyncMessage
@@ -469,7 +454,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       authors: get(this._participants).keys(),
       meta,
       previous_commit_hashes: [get(this._currentTip)],
-      state: encode(save(get(this._state))),
+      state: encode(Automerge.save(get(this._state))),
       witnesses: [],
       created_at: Date.now(),
     });
@@ -493,8 +478,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         p.put(newParticipant, {
           lastSeen: undefined,
           syncStates: {
-            state: initSyncState(),
-            ephemeral: initSyncState(),
+            state: Automerge.initSyncState(),
+            ephemeral: Automerge.initSyncState(),
           },
         });
 
@@ -524,8 +509,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       p.put(participant, {
         lastSeen: Date.now(),
         syncStates: {
-          state: initSyncState(),
-          ephemeral: initSyncState(),
+          state: Automerge.initSyncState(),
+          ephemeral: Automerge.initSyncState(),
         },
       });
       return p;

@@ -8,7 +8,7 @@ import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import type { SynGrammar } from './grammar';
 import { EntryHashMap } from '@holochain-open-dev/utils';
 import { WorkspaceStore } from './workspace-store';
-import { change, Doc, init, save } from 'automerge';
+import Automerge from 'automerge';
 
 export class SynStore {
   /** Public accessors */
@@ -102,9 +102,9 @@ export class SynStore {
     grammar: G,
     meta?: any
   ): Promise<{ initialCommitHash: EntryHash; initialCommit: Commit }> {
-    let doc: Doc<any> = init();
+    let doc: Automerge.Doc<any> = Automerge.init();
 
-    doc = change(doc, d => grammar.initState(d));
+    doc = Automerge.change(doc, d => grammar.initState(d));
 
     if (meta) {
       meta = encode(meta);
@@ -112,7 +112,7 @@ export class SynStore {
 
     const commit: Commit = {
       created_at: Date.now(),
-      state: encode(save(doc)),
+      state: encode(Automerge.save(doc)),
       authors: [this.myPubKey],
       meta,
       previous_commit_hashes: [],

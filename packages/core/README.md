@@ -1,10 +1,6 @@
 # @holochain-syn/core
 
-Collection of custom elements to easily build `syn` applications.
-
-This package is using the modular pattern described in https://holochain-open-dev.github.io.
-
-These elements depend on having a [syn store](https://npmjs.com/package/@holochain-syn/store) and a [profiles store](https://holochain-open-dev.github.io/profiles/guides/frontend/profiles-store/) defined.
+Core package to easily build `syn` Holochain applications.
 
 ## Installing
 
@@ -34,7 +30,7 @@ Now define the <profiles-context> and the <syn-context> element and add it to yo
 ```html
 <profiles-context id="profiles-context"> 
   <syn-context>
-    <syn-sessions> </syn-sessions>
+    <!-- The rest of your application goes here -->
   </syn-context>
 </profiles-context>
 ```

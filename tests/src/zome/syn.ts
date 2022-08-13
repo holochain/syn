@@ -14,7 +14,6 @@ import { encode, decode } from '@msgpack/msgpack';
 import { cloneDeepWith } from 'lodash-es';
 import { TextEditorDeltaType } from '../grammar';
 import Automerge from 'automerge';
-import type { Doc } from 'automerge';
 
 const config = Config.gen();
 
@@ -67,7 +66,7 @@ export default orchestrator => {
     let sessionInfo = await me.call('syn', 'new_session', {});
 
     // First ever session so content should be default content
-    let sessionSnapshot: Doc<Content> = Automerge.init();
+    let sessionSnapshot: Automerge.Doc<Content> = Automerge.init();
     sessionSnapshot = Automerge.change(sessionSnapshot, doc =>
       sampleGrammar.initialState(doc)
     );
