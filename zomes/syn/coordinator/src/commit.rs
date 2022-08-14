@@ -3,18 +3,20 @@ use hdk::prelude::*;
 
 #[hdk_extern]
 fn create_commit(commit: Commit) -> ExternResult<Record> {
+    let entry_hash = hash_entry(&commit)?;
+
     let action_hash = create_entry(EntryTypes::Commit(commit))?;
 
     let path = all_commits_path();
 
     create_link(
         path.path_entry_hash()?,
-        action_hash.clone(),
+        entry_hash.clone(),
         LinkTypes::PathToCommits,
         (),
     )?;
 
-    let record = get(action_hash, GetOptions::default())?;
+    let record = get(entry_hash, GetOptions::default())?;
 
     record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"

@@ -6,6 +6,7 @@ import { property } from 'lit/decorators.js';
 import { contextProvided } from '@lit-labs/context';
 import { AgentPubKey } from '@holochain/client';
 import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
 import { serializeHash } from '@holochain-open-dev/utils';
 import { AgentAvatar } from '@holochain-open-dev/profiles';
 
@@ -32,7 +33,10 @@ export class WorkspaceParticipants extends ScopedElementsMixin(LitElement) {
           'out-of-session': idle,
         })}"
         .agentPubKey=${serializeHash(pubKey)}
-        style="margin-bottom: 8px;"
+        style=${styleMap({
+          'margin-bottom': this.direction === 'column' ? '8px' : '0px',
+          'margin-right': this.direction === 'row' ? '8px' : '0px',
+        })}
       ></agent-avatar>
     `;
   }

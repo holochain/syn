@@ -20,6 +20,7 @@ import type {
 } from './grammar';
 
 import { SynConfig } from './config';
+import { SynStore } from './syn-store';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
@@ -36,7 +37,9 @@ export function extractSlice<
 >(
   sliceStore: SliceStore<G1>,
   wrapChange: (change: GrammarDelta<G2>) => GrammarDelta<G1>,
-  sliceState: (state: Automerge.Doc<GrammarState<G1>>) => Automerge.Doc<GrammarState<G2>>,
+  sliceState: (
+    state: Automerge.Doc<GrammarState<G1>>
+  ) => Automerge.Doc<GrammarState<G2>>,
   sliceEphemeral: (
     ephemeralState: Automerge.Doc<GrammarEphemeralState<G1>>
   ) => Automerge.Doc<GrammarEphemeralState<G2>>
@@ -119,6 +122,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private constructor(
     protected client: SynClient,
+    protected synStore: SynStore,
     protected grammar: G,
     protected config: SynConfig,
     public workspaceHash: EntryHash,
@@ -152,7 +156,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         if (message.payload.type === 'ChangeNotice') {
           this.handleChangeNotice(
             synSignal.provenance,
-            message.payload.state_changes.map(c => decode(c) as Automerge.BinaryChange),
+            message.payload.state_changes.map(
+              c => decode(c) as Automerge.BinaryChange
+            ),
             message.payload.ephemeral_changes.map(
               c => decode(c) as Automerge.BinaryChange
             )
@@ -162,7 +168,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           this.handleSyncRequest(
             synSignal.provenance,
             message.payload.sync_message
-              ? (decode(message.payload.sync_message) as Automerge.BinarySyncMessage)
+              ? (decode(
+                  message.payload.sync_message
+                ) as Automerge.BinarySyncMessage)
               : undefined,
             message.payload.ephemeral_sync_message
               ? (decode(
@@ -284,6 +292,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   static async joinWorkspace<G extends SynGrammar<any, any>>(
     client: SynClient,
+    store: SynStore,
     grammar: G,
     config: SynConfig,
     workspaceHash: EntryHash
@@ -292,6 +301,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     return new WorkspaceStore(
       client,
+      store,
       grammar,
       config,
       workspaceHash,
@@ -315,7 +325,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         }
 
         const stateChanges = Automerge.getChanges(state, newState);
-        const ephemeralChanges = Automerge.getChanges(ephemeralState, newEphemeralState);
+        const ephemeralChanges = Automerge.getChanges(
+          ephemeralState,
+          newEphemeralState
+        );
 
         const participants = get(this._participants).keys();
 
@@ -351,7 +364,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     this._ephemeral.update(ephemeral => {
-      const ephemeralChangesInfo = Automerge.applyChanges(ephemeral, ephemeralChanges);
+      const ephemeralChangesInfo = Automerge.applyChanges(
+        ephemeral,
+        ephemeralChanges
+      );
 
       thereArePendingChanges =
         thereArePendingChanges || ephemeralChangesInfo[1].pendingChanges > 0;
@@ -371,10 +387,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       get(this._state),
       syncStates.state
     );
-    const [ephemeralNextSyncState, ephemeralSyncMessage] = Automerge.generateSyncMessage(
-      get(this._ephemeral),
-      syncStates.ephemeral
-    );
+    const [ephemeralNextSyncState, ephemeralSyncMessage] =
+      Automerge.generateSyncMessage(get(this._ephemeral), syncStates.ephemeral);
 
     this._participants.update(p => {
       const info = p.get(participant);
@@ -412,11 +426,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
       if (syncMessage) {
         this._state.update(state => {
-          const [nextDoc, nextSyncState, _message] = Automerge.receiveSyncMessage(
-            state,
-            participantInfo.syncStates.state,
-            syncMessage
-          );
+          const [nextDoc, nextSyncState, _message] =
+            Automerge.receiveSyncMessage(
+              state,
+              participantInfo.syncStates.state,
+              syncMessage
+            );
 
           participantInfo.syncStates.state = nextSyncState;
 
@@ -426,11 +441,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
       if (ephemeralSyncMessage) {
         this._ephemeral.update(ephemeral => {
-          const [nextDoc, nextSyncState, _message] = Automerge.receiveSyncMessage(
-            ephemeral,
-            participantInfo.syncStates.ephemeral,
-            ephemeralSyncMessage
-          );
+          const [nextDoc, nextSyncState, _message] =
+            Automerge.receiveSyncMessage(
+              ephemeral,
+              participantInfo.syncStates.ephemeral,
+              ephemeralSyncMessage
+            );
 
           participantInfo.syncStates.ephemeral = nextSyncState;
 
@@ -446,6 +462,20 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   }
 
   async commitChanges(meta?: any) {
+    const currentTip = get(this._currentTip);
+    const currentTipCommit = get(this.synStore.knownCommits).get(currentTip);
+    if (currentTipCommit) {
+      if (
+        isEqual(
+          Automerge.save(currentTipCommit),
+          Automerge.save(get(this._state))
+        )
+      ) {
+        // Nothing to commit, just return
+        return;
+      }
+    }
+
     if (meta) {
       meta = encode(meta);
     }
@@ -453,7 +483,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     const newCommit = await this.client.createCommit({
       authors: get(this._participants).keys(),
       meta,
-      previous_commit_hashes: [get(this._currentTip)],
+      previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
       created_at: Date.now(),

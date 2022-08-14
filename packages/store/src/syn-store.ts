@@ -70,6 +70,7 @@ export class SynStore {
   ) {
     return WorkspaceStore.joinWorkspace(
       this.client,
+      this,
       grammar,
       this.config as SynConfig,
       workspaceHash
