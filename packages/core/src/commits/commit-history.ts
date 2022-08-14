@@ -19,7 +19,7 @@ import {
 import { sharedStyles } from '../shared-styles';
 import { synContext } from '../context/contexts';
 
-export class SynCommitHistory extends ScopedElementsMixin(LitElement) {
+export class CommitHistory extends ScopedElementsMixin(LitElement) {
   @contextProvided({ context: synContext, subscribe: true })
   @property()
   synStore!: SynStore;

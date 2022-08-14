@@ -19,6 +19,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   },
 
   rootDir: 'public',
+  clearTerminalOnReload: false,
 
   /** Compile JS for older browsers. Requires @web/dev-server-esbuild plugin */
   // esbuildTarget: 'auto'

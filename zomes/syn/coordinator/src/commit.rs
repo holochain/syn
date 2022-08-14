@@ -1,5 +1,5 @@
-use hdk::prelude::*;
 use hc_zome_syn_integrity::*;
+use hdk::prelude::*;
 
 #[hdk_extern]
 fn create_commit(commit: Commit) -> ExternResult<Record> {
@@ -28,19 +28,25 @@ pub fn get_commit(commit_hash: EntryHash) -> ExternResult<Option<Record>> {
 
 #[hdk_extern]
 pub fn get_all_commits(_: ()) -> ExternResult<Vec<Record>> {
-    let links = get_links(all_commits_path().path_entry_hash()?, LinkTypes::PathToCommits, None)?;
+    let links = get_links(
+        all_commits_path().path_entry_hash()?,
+        LinkTypes::PathToCommits,
+        None,
+    )?;
 
     let get_inputs = links
         .into_iter()
-        .map(|link| GetInput::new(link.target.into(), GetOptions::default()))
+        .map(|link| {
+            GetInput::new(
+                AnyDhtHash::from(EntryHash::from(link.target)),
+                GetOptions::default(),
+            )
+        })
         .collect();
 
     let maybe_records = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
 
-    let records: Vec<Record> = maybe_records
-        .into_iter()
-        .filter_map(|e| e)
-        .collect();
+    let records: Vec<Record> = maybe_records.into_iter().filter_map(|e| e).collect();
 
     Ok(records)
 }
