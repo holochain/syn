@@ -11,4 +11,5 @@ name = "hc_zome_syn_integrity"
 [dependencies]
 derive_more = "0.99.9"
 hdi = "0.0.14"
-serde = "1"
+serde = "=1.0.136"
+chrono = "=0.4.19"

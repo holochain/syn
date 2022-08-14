@@ -8,6 +8,7 @@ crate-type = ["cdylib", "rlib"]
 name = "profiles_integrity"
 
 [dependencies]
-serde = "1"
+chrono = "=0.4.19"
 derive_more = "0"
 hc_zome_profiles_integrity = {git = "https://github.com/holochain-open-dev/profiles", rev = "for-hdk-v0.0.142", package = "hc_zome_profiles_integrity"}
+serde = "=1.0.136"

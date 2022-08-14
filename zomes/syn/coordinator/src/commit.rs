@@ -5,7 +5,7 @@ use hdk::prelude::*;
 fn create_commit(commit: Commit) -> ExternResult<Record> {
     let entry_hash = hash_entry(&commit)?;
 
-    let action_hash = create_entry(EntryTypes::Commit(commit))?;
+    create_entry(EntryTypes::Commit(commit))?;
 
     let path = all_commits_path();
 
