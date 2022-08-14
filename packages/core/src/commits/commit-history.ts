@@ -10,9 +10,8 @@ import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 import type { SynStore } from '@holochain-syn/store';
 import { Commit } from '@holochain-syn/client';
 
-import { EntryHash } from '@holochain/client';
+import { EntryHashB64 } from '@holochain-open-dev/core-types';
 import {
-  deserializeHash,
   EntryHashMap,
   serializeHash,
 } from '@holochain-open-dev/utils';
@@ -25,14 +24,14 @@ export class CommitHistory extends ScopedElementsMixin(LitElement) {
   synStore!: SynStore;
 
   @property()
-  selectedCommitHash: EntryHash | undefined;
+  selectedCommitHash: EntryHashB64 | undefined;
 
   _allCommitsTask = new TaskSubscriber(this, () =>
     this.synStore.fetchAllCommits()
   );
 
   onNodeSelected(nodeId: string) {
-    this.selectedCommitHash = deserializeHash(nodeId);
+    this.selectedCommitHash = nodeId;
     this.dispatchEvent(
       new CustomEvent('commit-selected', {
         bubbles: true,
@@ -45,9 +44,7 @@ export class CommitHistory extends ScopedElementsMixin(LitElement) {
   }
 
   get selectedNodeIds() {
-    return this.selectedCommitHash
-      ? [serializeHash(this.selectedCommitHash)]
-      : [];
+    return this.selectedCommitHash ? [this.selectedCommitHash] : [];
   }
 
   renderContent(allCommits: EntryHashMap<Commit>) {

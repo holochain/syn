@@ -467,7 +467,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     if (currentTipCommit) {
       if (
         isEqual(
-          Automerge.save(currentTipCommit),
+          decode(currentTipCommit.state) as any,
           Automerge.save(get(this._state))
         )
       ) {
