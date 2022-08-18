@@ -12,6 +12,6 @@ name = "hc_zome_syn_coordinator"
 derive_more = "0.99.9"
 hdk = "0.0.146"
 serde = "=1.0.136"
-chrono = "=0.4.22"
+chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 
 hc_zome_syn_integrity = {path = "../integrity"}
