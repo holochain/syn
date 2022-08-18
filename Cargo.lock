@@ -475,7 +475,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#7e2f2b1f1d645a6eff43e0eb0449808ae82473b7"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#a859525d4c5df744b7a95589c03bb76ba86eb6d9"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_coordinator_types",
@@ -488,7 +488,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_coordinator_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#7e2f2b1f1d645a6eff43e0eb0449808ae82473b7"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#a859525d4c5df744b7a95589c03bb76ba86eb6d9"
 dependencies = [
  "derive_more",
  "serde",
@@ -497,7 +497,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#7e2f2b1f1d645a6eff43e0eb0449808ae82473b7"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#a859525d4c5df744b7a95589c03bb76ba86eb6d9"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity_types",
@@ -508,7 +508,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#7e2f2b1f1d645a6eff43e0eb0449808ae82473b7"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.0.146#a859525d4c5df744b7a95589c03bb76ba86eb6d9"
 dependencies = [
  "derive_more",
  "hdi",
