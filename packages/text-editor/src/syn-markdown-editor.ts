@@ -62,7 +62,11 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
           this._peersProfiles.put(
             peer,
             new TaskSubscriber(this, () =>
-              this.profilesStore.fetchAgentProfile(peer)
+{              console.log("PEER", peer)
+              const x = this.profilesStore.fetchAgentProfile(peer)
+              console.log("FISH", x)
+              return x
+            }
             )
           );
         }
