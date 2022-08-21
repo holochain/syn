@@ -10,7 +10,7 @@
   "license": "CAL-1.0",
   "dependencies": {
     "@holochain/client": "0.7.0",
-    "@holochain-open-dev/cell-client": "^0.7.0",
+    "@holochain-open-dev/cell-client": "^0.7.2",
     "@holochain-open-dev/core-types": "^0.2.0",
     "@holochain-syn/text-editor": "0.1.0",
     "@holochain-syn/core": "0.1.0",

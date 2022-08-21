@@ -17,7 +17,7 @@
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.7.0",
+    "@holochain-open-dev/cell-client": "^0.7.2",
     "@holochain-open-dev/utils": "^0.3.1",
     "@holochain-syn/client": "0.1.1",
     "@holochain/client": "^0.7.0",
