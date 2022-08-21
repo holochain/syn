@@ -25,7 +25,7 @@
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.7.2",
     "@holochain-open-dev/profiles": "^0.5.0",
-    "@holochain-syn/core": "0.1.2",
+    "@holochain-syn/core": "0.1.8",
     "@holochain-syn/text-editor": "0.1.1",
     "@holochain/client": "^0.7.0",
     "@lit-labs/context": "^0.1.2",

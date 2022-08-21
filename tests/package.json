@@ -11,9 +11,9 @@
   "dependencies": {
     "@holochain/client": "0.7.0",
     "@holochain-open-dev/cell-client": "^0.7.2",
-    "@holochain-open-dev/core-types": "^0.2.0",
-    "@holochain-syn/text-editor": "0.1.0",
-    "@holochain-syn/core": "0.1.0",
+    "@holochain-open-dev/core-types": "^0.4.0",
+    "@holochain-syn/text-editor": "0.1.1",
+    "@holochain-syn/core": "0.1.1",
     "@msgpack/msgpack": "^2.7.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
