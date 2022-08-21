@@ -12,4 +12,4 @@ name = "profiles_coordinator"
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 serde = "=1.0.136"
 
-hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.0.146", package = "hc_zome_profiles_coordinator"}
+hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", rev = "for-hdk-v0.0.147", package = "hc_zome_profiles_coordinator"}

@@ -10,6 +10,6 @@ name = "hc_zome_syn_integrity"
 
 [dependencies]
 derive_more = "0.99.9"
-hdi = "0.0.18"
+hdi = "0.0.19"
 serde = "=1.0.136"
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
