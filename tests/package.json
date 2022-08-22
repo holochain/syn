@@ -13,7 +13,7 @@
     "@holochain-open-dev/cell-client": "^0.7.2",
     "@holochain-open-dev/core-types": "^0.4.1",
     "@holochain-syn/text-editor": "0.1.1",
-    "@holochain-syn/core": "0.1.1",
+    "@holochain-syn/core": "0.1.8",
     "@msgpack/msgpack": "^2.7.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
@@ -27,7 +27,7 @@
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@holochain/tryorama": "0.4.10",
+    "@holochain/tryorama": "0.6.2",
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.14.2",
     "ava": "^3.15.0"

@@ -20,7 +20,7 @@
     "@holochain/client": "^0.7.0",
     "@holochain-open-dev/cell-client": "^0.7.2",
     "@holochain-open-dev/core-types": "^0.4.1",
-    "@holochain-open-dev/profiles": "^0.5.0",
+    "@holochain-open-dev/profiles": "^0.5.1",
     "@holochain-open-dev/utils": "^0.3.2",
     "@holochain-syn/client": "^0.1.2",
     "@holochain-syn/store": "0.1.5",
