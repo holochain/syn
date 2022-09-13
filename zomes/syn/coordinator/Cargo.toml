@@ -10,7 +10,7 @@ name = "hc_zome_syn_coordinator"
 
 [dependencies]
 derive_more = "0.99.9"
-hdk = "0.0.147"
+hdk = "0.0.151"
 serde = "=1.0.136"
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 

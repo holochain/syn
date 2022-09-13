@@ -475,7 +475,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_coordinator"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.147#96c4defe4a36feea95bc4d4db77897fe2f6cdf91"
+source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.151#c59b7c0be87b149dadf019c99f744ff0f1afd36e"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_coordinator_types",
@@ -488,7 +488,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_coordinator_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.147#96c4defe4a36feea95bc4d4db77897fe2f6cdf91"
+source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.151#c59b7c0be87b149dadf019c99f744ff0f1afd36e"
 dependencies = [
  "derive_more",
  "serde",
@@ -497,7 +497,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.147#96c4defe4a36feea95bc4d4db77897fe2f6cdf91"
+source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.151#c59b7c0be87b149dadf019c99f744ff0f1afd36e"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity_types",
@@ -508,7 +508,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.147#96c4defe4a36feea95bc4d4db77897fe2f6cdf91"
+source = "git+https://github.com/holochain-open-dev/profiles?rev=for-hdk-v0.0.151#c59b7c0be87b149dadf019c99f744ff0f1afd36e"
 dependencies = [
  "derive_more",
  "hdi",
@@ -538,9 +538,9 @@ dependencies = [
 
 [[package]]
 name = "hdi"
-version = "0.0.19"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba6f257e179e61f9721300b6b1424e53fdb861c2da66500b99c7c3874f68c082"
+checksum = "ea65d2746da93d727be3e4b3483ac39278eeef697eb5f8da697b45258a4506a6"
 dependencies = [
  "hdk_derive",
  "holo_hash",
@@ -555,9 +555,9 @@ dependencies = [
 
 [[package]]
 name = "hdk"
-version = "0.0.147"
+version = "0.0.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d34bee935da779878b4ca292ca24430f473dc7bb42d672a418490b2a4b41363"
+checksum = "32dede497abac5325962c9209022a4749bb356d5603c3b69f7c0fb78dbba6d3c"
 dependencies = [
  "getrandom",
  "hdi",
@@ -575,9 +575,9 @@ dependencies = [
 
 [[package]]
 name = "hdk_derive"
-version = "0.0.45"
+version = "0.0.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a75448ccacc03fb68df73cb7cb62f3210c5229a8a64f91d48031765a783411d"
+checksum = "2808f8910d17eb8900ad476571c9a061dee2c9c028768e515fcf7a2beb1fb7cf"
 dependencies = [
  "darling 0.14.1",
  "heck",
@@ -619,9 +619,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_integrity_types"
-version = "0.0.15"
+version = "0.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4e1171fcb755f05c27e4d36c36db1ef90825e57f92e39de6b04d9a7198d5271"
+checksum = "8425f069da7915bc8bc5ea5f79b1ffb9ab5b00b9c024101bf3306497a9668f52"
 dependencies = [
  "holo_hash",
  "holochain_serialized_bytes",
@@ -686,9 +686,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_zome_types"
-version = "0.0.44"
+version = "0.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da57496d603633f880b12470fe4123943bbc39a51a8ba3c2d36ee79b4c3ead85"
+checksum = "9eacb7f8930998e9ad99c558598c7403263d4d6a25d7742dba524e1a86fec295"
 dependencies = [
  "holo_hash",
  "holochain_integrity_types",
@@ -785,9 +785,9 @@ dependencies = [
 
 [[package]]
 name = "kitsune_p2p_timestamp"
-version = "0.0.12"
+version = "0.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecb8b1cdf10eff092ce86f4b1c18f4d09bdb1ae02eb6b35680717365930116c3"
+checksum = "cbaf2233e3ef48c97c4116051e0bb17fb4295acaa7dc35a40ea07c90399c4961"
 dependencies = [
  "chrono",
  "derive_more",
