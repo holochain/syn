@@ -4,7 +4,7 @@
   "scripts": {
     "test": "npm run test:lib",
     "test:zome": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/zome/index.ts",
-    "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" web-test-runner \"src/**/*.test.ts\" --node-resolve --puppeteer --watch"
+    "test:lib": "TRYORAMA_LOG_LEVEL=info RUST_BACKTRACE=1 TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node src/lib/index.ts"
   },
   "author": "",
   "license": "CAL-1.0",
@@ -28,14 +28,10 @@
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@esm-bundle/chai": "^4.3.4-fix.0",
     "@holochain/tryorama": "0.8.0",
+    "@lit-labs/ssr": "^2.2.3",
     "@types/lodash": "^4.14.171",
-    "@types/mocha": "^9.1.1",
     "@types/node": "^15.14.2",
-    "@web/dev-server-esbuild": "^0.3.2",
-    "@web/test-runner": "^0.14.0",
-    "@web/test-runner-puppeteer": "^0.10.5",
     "ava": "^3.15.0"
   },
   "type": "module"

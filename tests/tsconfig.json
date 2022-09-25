@@ -5,8 +5,7 @@
     "skipDefaultLibCheck": true,
     "outDir": "dist",
     "declarationDir": "dist",
-    "declaration": true,
-    "types": ["node", "mocha"]
+    "declaration": true
   },
   "include": [
     "./src/**/*"
