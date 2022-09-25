@@ -13,9 +13,9 @@
   "type": "module",
   "dependencies": {
     "automerge": "^1.0.1-preview.7",
-    "@holochain-open-dev/cell-client": "^0.7.2",
-    "@holochain-open-dev/profiles": "^0.5.1",
-    "@holochain-open-dev/utils": "^0.3.2",
+    "@holochain-open-dev/cell-client": "^0.7.3",
+    "@holochain-open-dev/profiles": "^0.5.3",
+    "@holochain-open-dev/utils": "^0.3.3",
     "@holochain-syn/core": "0.1.9",
     "@lit-labs/context": "^0.1.2",
     "@open-wc/scoped-elements": "^2.1.0",
@@ -27,7 +27,7 @@
     "svelte": "^3.42.4"
   },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.4",
+    "@types/lodash-es": "^4.17.6",
     "gh-pages": "^3.2.3",
     "rimraf": "^3.0.2",
     "run-singleton-cli": "^0.0.5",

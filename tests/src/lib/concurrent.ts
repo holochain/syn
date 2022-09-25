@@ -1,4 +1,4 @@
-import { Config, Orchestrator } from '@holochain/tryorama';
+import { Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
 import { SynStore, SynClient } from '@holochain-syn/core';
@@ -6,8 +6,6 @@ import { TextEditorDeltaType } from '../grammar.js';
 
 import { delay, sampleGrammar, TextDelta } from '../common.js';
 import { spawnSyn } from './spawn.js';
-
-const config = Config.gen();
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
@@ -24,10 +22,9 @@ function bobPosition(text: string) {
   return text.length;
 }
 
-export default (orchestrator: Orchestrator<any>) => {
-  orchestrator.registerScenario('syn 2 nodes', async (s, t) => {
-    const aliceClient = await spawnSyn(s, config);
-    const bobClient = await spawnSyn(s, config);
+export default (t) => {
+  const concurrentTest = async (scenario: Scenario) => {
+    const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
 
     const aliceSyn = new SynStore(new SynClient(aliceClient));
     const bobSyn = new SynStore(new SynClient(bobClient));
@@ -109,5 +106,6 @@ ${bobLine}${bobLine}${bobLine}`;
 
     await aliceWorkspaceStore.leaveWorkspace();
     await bobWorkspaceStore.leaveWorkspace();
-  });
+  }
+  return concurrentTest
 };

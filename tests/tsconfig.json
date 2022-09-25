@@ -6,8 +6,8 @@
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2022"],
-    "moduleResolution": "node16",
-    "moduleDetection": "force",
+    "moduleResolution": "nodenext",
+    //"moduleDetection": "force",
     /* Strict Type-Checking Options */
     "strict": true /* Enable all strict type-checking options. */,
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,

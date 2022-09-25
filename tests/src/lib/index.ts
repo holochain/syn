@@ -1,23 +1,8 @@
-import { Orchestrator } from '@holochain/tryorama';
+import { pause, runScenario  } from "@holochain/tryorama";
 import { oFn } from './syn-store.js';
 import concurrent from './concurrent.js';
+import test from "tape-promise/tape.js";
 
-async function run() {
-  let orchestrator = new Orchestrator();
-
-  concurrent(orchestrator);
-  await orchestrator.run();
-  /*
-
-  orchestrator = new Orchestrator();
-  missedDeltas(orchestrator);
-  await orchestrator.run();
-  
-  */
-  orchestrator = new Orchestrator();
-
-  oFn(orchestrator);
-  await orchestrator.run();
-}
-
-run();
+test("syn concurrent test", async (t) => {
+  await runScenario(concurrent(t))
+})
