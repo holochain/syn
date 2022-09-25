@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@holochain-open-dev/cell-client": "^0.7.3",
-    "@holochain-open-dev/utils": "^0.3.4",
+    "@holochain-open-dev/utils": "^0.4.0",
     "@holochain-syn/client": "0.1.2",
     "@holochain/client": "^0.8.0",
     "@msgpack/msgpack": "^2.7.2",

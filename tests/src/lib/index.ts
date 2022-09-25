@@ -1,4 +1,3 @@
-import '@lit-labs/ssr/lib/install-global-dom-shim';
 import { runScenario  } from "@holochain/tryorama";
 import concurrent from './concurrent.js';
 import test from "tape-promise/tape.js";
