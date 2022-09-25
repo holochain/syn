@@ -40,11 +40,8 @@ export const textEditorGrammar: TextEditorGrammar = {
     doc.text = new Automerge.Text();
   },
   applyDelta(delta: TextEditorDelta, state: TextEditorState) {
-    let finalCursorPosition = delta.position;
-
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
-      finalCursorPosition += delta.text.length;
     } else if (delta.type === TextEditorDeltaType.Delete) {
       state.text.deleteAt!(delta.position, delta.characterCount);
     }

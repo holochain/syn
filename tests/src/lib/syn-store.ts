@@ -6,7 +6,8 @@ import {
 } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynGrammar, SynStore, SynClient } from '@holochain-syn/core';
+import { SynStore } from '@holochain-syn/store';
+import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 import Automerge from 'automerge';
 

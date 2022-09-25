@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar.js';
 import { AgentPubKey } from '@holochain/client';
 import { SynGrammar } from '@holochain-syn/store';
-import Automerge from 'automerge';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

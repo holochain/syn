@@ -62,11 +62,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
           this._peersProfiles.put(
             peer,
             new TaskSubscriber(this, () =>
-{              console.log("PEER", peer)
-              const x = this.profilesStore.fetchAgentProfile(peer)
-              console.log("FISH", x)
-              return x
-            }
+              this.profilesStore.fetchAgentProfile(peer)
             )
           );
         }
@@ -115,7 +111,11 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
         const name = this._peersProfiles.get(deserializeHash(agentPubKey))
           ?.value?.nickname;
         return {
-          position: elemIdToPosition(position.left, position.position, this._state.value.text),
+          position: elemIdToPosition(
+            position.left,
+            position.position,
+            this._state.value.text
+          ),
           color: `${r} ${g} ${b}`,
           name: name || 'Loading...',
         };

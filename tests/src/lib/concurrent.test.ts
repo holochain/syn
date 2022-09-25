@@ -1,10 +1,11 @@
-import { Scenario } from '@holochain/tryorama';
+import { runScenario, Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore, SynClient } from '@holochain-syn/core';
+import { SynStore } from '@holochain-syn/store';
+import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
-import { delay, sampleGrammar, TextDelta } from '../common.js';
+import { delay, sampleGrammar } from '../common.js';
 import { spawnSyn } from './spawn.js';
 
 process.on('unhandledRejection', error => {
@@ -22,8 +23,8 @@ function bobPosition(text: string) {
   return text.length;
 }
 
-export default (t) => {
-  const concurrentTest = async (scenario: Scenario) => {
+it('concurrent stress test', async () =>
+  runScenario(async (scenario: Scenario) => {
     const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
 
     const aliceSyn = new SynStore(new SynClient(aliceClient));
@@ -43,7 +44,7 @@ export default (t) => {
       sampleGrammar
     );
 
-    t.ok(aliceWorkspaceStore.workspaceHash);
+    expect(aliceWorkspaceStore.workspaceHash).to.be.ok;
 
     aliceWorkspaceStore.requestChanges([
       {
@@ -55,7 +56,10 @@ export default (t) => {
 
     await delay(2000);
 
-    const bobWorkspaceStore = await bobSyn.joinWorkspace(workspaceHash, sampleGrammar);
+    const bobWorkspaceStore = await bobSyn.joinWorkspace(
+      workspaceHash,
+      sampleGrammar
+    );
 
     async function simulateAlice() {
       for (let i = 0; i < aliceLine.length; i++) {
@@ -99,13 +103,11 @@ export default (t) => {
 ${bobLine}${bobLine}${bobLine}`;
 
     let currentState = get(aliceWorkspaceStore.state);
-    t.deepEqual(currentState.body.text.toString(), expectedText);
+    expect(currentState.body.text.toString()).to.eq(expectedText);
 
     currentState = get(bobWorkspaceStore.state);
-    t.deepEqual(currentState.body.text.toString(), expectedText);
+    expect(currentState.body.text.toString()).to.eq(expectedText);
 
     await aliceWorkspaceStore.leaveWorkspace();
     await bobWorkspaceStore.leaveWorkspace();
-  }
-  return concurrentTest
-};
+  }));

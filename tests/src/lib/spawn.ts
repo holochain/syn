@@ -3,8 +3,6 @@ import { AppWebsocket, DnaSource } from '@holochain/client';
 import { Player, Scenario } from '@holochain/tryorama';
 import { synDna } from '../common.js';
 
-let allPlayers: Player[] = [];
-
 export async function spawnSyn(scenario: Scenario, playersCount: number): Promise<Array<CellClient>> {
 
   const dnas: DnaSource[] = [{ path: synDna }];

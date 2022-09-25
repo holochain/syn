@@ -1,23 +1,23 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    /* Visit https://aka.ms/tsconfig.json to read more about this file */
-    /* Basic Options */
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "outDir": "dist",
-    "target": "ES2022",
-    "module": "ES2022",
-    "lib": ["ES2022"],
-    "moduleResolution": "nodenext",
-    //"moduleDetection": "force",
-    /* Strict Type-Checking Options */
-    "strict": true /* Enable all strict type-checking options. */,
-    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
-    "noImplicitAny": false /* Raise error on expressions and declarations with an implied 'any' type. */,
-    /* Advanced Options */
-    "skipLibCheck": true /* Skip type checking of declaration files. */,
-    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
+    "declarationDir": "dist",
+    "declaration": true,
+    "types": ["node", "mocha"]
   },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "**/dist/**"
+  ],
   "ts-node": {
     "esm": true,
-    "experimentalSpecifierResolution": true
+    "experimentalSpecifierResolution": "node"
   }
 }
