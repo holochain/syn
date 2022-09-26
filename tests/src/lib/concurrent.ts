@@ -47,7 +47,7 @@ export default t => async (scenario: Scenario) => {
     {
       type: TextEditorDeltaType.Insert,
       position: 0,
-      text: ' \n',
+      text: '\n',
     },
   ]);
 
