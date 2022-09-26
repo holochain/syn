@@ -23,12 +23,21 @@ fn create_commit(commit: Commit) -> ExternResult<Record> {
 
     let path = all_commits_path();
 
-    create_link(
-        path.path_entry_hash()?,
-        entry_hash.clone(),
-        LinkTypes::PathToCommits,
-        (),
-    )?;
+    let ScopedLinkType {
+        zome_id,
+        zome_type: link_type,
+    } = LinkTypes::PathToCommits.try_into()?;
+
+    let _= HDK.with(|h| {
+        h.borrow().create_link(CreateLinkInput::new(
+            path.path_entry_hash()?.into(),
+            entry_hash.clone().into(),
+            zome_id,
+            link_type,
+            ().into(),
+            ChainTopOrdering::Relaxed,
+        ))
+    })?;
 
     let record = get(entry_hash, GetOptions::default())?;
 
