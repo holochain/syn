@@ -1,5 +1,5 @@
 import { CellClient, HolochainClient } from '@holochain-open-dev/cell-client';
-import { AppWebsocket, DnaSource } from '@holochain/client';
+import { DnaSource } from '@holochain/client';
 import { Player, Scenario } from '@holochain/tryorama';
 import { synDna } from '../common.js';
 
@@ -16,18 +16,15 @@ export async function spawnSyn(scenario: Scenario, playersCount: number): Promis
   await scenario.shareAllAgents();
 
   let clients : CellClient[] = []
-  players.forEach( async(player) =>{
+  for (let i=0;i<players.length; i+=1) {
+    const player = players[i]
     /*
   player.setSignalHandler(signal => {
     console.log('Received Signal for player:', signal.data.payload);
   });*/
 
-    const url = (player as any)._conductor.appClient.client.socket.url;
-
-    const appWebsocket = await AppWebsocket.connect(url);
-    const hcClient = new HolochainClient(appWebsocket);
-
+    const hcClient = new HolochainClient(player.conductor.appWs());
     clients.push(new CellClient(hcClient, player.cells[0]));
-  })
+  }
   return clients
 }

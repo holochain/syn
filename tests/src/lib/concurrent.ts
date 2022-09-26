@@ -24,7 +24,6 @@ function bobPosition(text: string) {
 }
 export default t => async (scenario: Scenario) => {
   const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-
   const aliceSyn = new SynStore(new SynClient(aliceClient));
   const bobSyn = new SynStore(new SynClient(bobClient));
 
@@ -42,7 +41,7 @@ export default t => async (scenario: Scenario) => {
     sampleGrammar
   );
 
-  t.ok(aliceWorkspaceStore.workspaceHash).to.be.ok;
+  t.ok(aliceWorkspaceStore.workspaceHash);
 
   aliceWorkspaceStore.requestChanges([
     {
