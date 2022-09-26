@@ -13,8 +13,8 @@ process.on('unhandledRejection', error => {
   console.log('unhandledRejection', error);
 });
 
-const aliceLine = 'ñlkjlñkj';
-const bobLine = 'fgjhfgjhfg';
+const aliceLine = 'ALICE_HELLO_ALICE';
+const bobLine = 'BOB_HI_BOB';
 
 function alicePosition(text: string) {
   return text.split('\n')[0].length;
@@ -69,11 +69,11 @@ export default t => async (scenario: Scenario) => {
           text: aliceLine[i],
         },
       ]);
-      await delay(300);
+      await delay(1000);
     }
   }
 
-  async function simulateBo() {
+  async function simulateBob() {
     for (let i = 0; i < bobLine.length; i++) {
       let content = get(bobWorkspaceStore.state).body.text;
       bobWorkspaceStore.requestChanges([
@@ -83,17 +83,17 @@ export default t => async (scenario: Scenario) => {
           text: bobLine[i],
         },
       ]);
-      await delay(300);
+      await delay(1000);
     }
   }
 
-  await Promise.all([simulateAlice(), simulateBo()]);
+  await Promise.all([simulateAlice(), simulateBob()]);
   await delay(4000);
 
-  await Promise.all([simulateAlice(), simulateBo()]);
+  await Promise.all([simulateAlice(), simulateBob()]);
   await delay(4000);
 
-  await Promise.all([simulateAlice(), simulateBo()]);
+  await Promise.all([simulateAlice(), simulateBob()]);
   await delay(4000);
 
   const expectedText = `${aliceLine}${aliceLine}${aliceLine}
