@@ -47,16 +47,16 @@ export default t => async (scenario: Scenario) => {
     {
       type: TextEditorDeltaType.Insert,
       position: 0,
-      text: '\n',
+      text: ' \n',
     },
   ]);
-
-  await delay(2000);
 
   const bobWorkspaceStore = await bobSyn.joinWorkspace(
     workspaceHash,
     sampleGrammar
   );
+
+  await delay(2000);
 
   async function simulateAlice() {
     for (let i = 0; i < aliceLine.length; i++) {
@@ -107,6 +107,5 @@ ${bobLine}${bobLine}${bobLine}`;
 
   await aliceWorkspaceStore.leaveWorkspace();
   await bobWorkspaceStore.leaveWorkspace();
-  t.end()
-
+  t.end();
 };
