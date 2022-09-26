@@ -67,12 +67,22 @@ pub struct UpdateWorkspaceTipInput {
 
 #[hdk_extern]
 pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> {
-    create_link(
-        input.workspace_hash,
-        input.new_tip_hash,
-        LinkTypes::WorkspaceToTip,
-        (),
-    )?;
+ 
+    let ScopedLinkType {
+        zome_id,
+        zome_type: link_type,
+    } = LinkTypes::WorkspaceToTip.try_into()?;
+
+    let _= HDK.with(|h| {
+        h.borrow().create_link(CreateLinkInput::new(
+            input.workspace_hash.into(),
+            input.new_tip_hash.into(),
+            zome_id,
+            link_type,
+            ().into(),
+            ChainTopOrdering::Relaxed,
+        ))
+    })?;
 
     Ok(())
 }
