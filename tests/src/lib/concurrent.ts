@@ -107,4 +107,6 @@ ${bobLine}${bobLine}${bobLine}`;
 
   await aliceWorkspaceStore.leaveWorkspace();
   await bobWorkspaceStore.leaveWorkspace();
+  t.end()
+
 };
