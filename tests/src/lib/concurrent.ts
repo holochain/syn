@@ -1,21 +1,20 @@
-import { Config, Orchestrator } from '@holochain/tryorama';
+import { Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore, SynClient } from '@holochain-syn/core';
+import { SynStore } from '@holochain-syn/store';
+import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
-import { delay, sampleGrammar, TextDelta } from '../common.js';
+import { delay, sampleGrammar } from '../common.js';
 import { spawnSyn } from './spawn.js';
-
-const config = Config.gen();
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
   console.log('unhandledRejection', error);
 });
 
-const aliceLine = 'ñlkjlñkj';
-const bobLine = 'fgjhfgjhfg';
+const aliceLine = 'ALICE_HELLO_ALICE';
+const bobLine = 'BOB_HI_BOB';
 
 function alicePosition(text: string) {
   return text.split('\n')[0].length;
@@ -23,91 +22,89 @@ function alicePosition(text: string) {
 function bobPosition(text: string) {
   return text.length;
 }
+export default t => async (scenario: Scenario) => {
+  const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
+  const aliceSyn = new SynStore(new SynClient(aliceClient));
+  const bobSyn = new SynStore(new SynClient(bobClient));
 
-export default (orchestrator: Orchestrator<any>) => {
-  orchestrator.registerScenario('syn 2 nodes', async (s, t) => {
-    const aliceClient = await spawnSyn(s, config);
-    const bobClient = await spawnSyn(s, config);
+  const { initialCommitHash } = await aliceSyn.createRoot(sampleGrammar);
+  const workspaceHash = await aliceSyn.createWorkspace(
+    {
+      name: 'main',
+      meta: undefined,
+    },
+    initialCommitHash
+  );
 
-    const aliceSyn = new SynStore(new SynClient(aliceClient));
-    const bobSyn = new SynStore(new SynClient(bobClient));
+  const aliceWorkspaceStore = await aliceSyn.joinWorkspace(
+    workspaceHash,
+    sampleGrammar
+  );
 
-    const { initialCommitHash } = await aliceSyn.createRoot(sampleGrammar);
-    const workspaceHash = await aliceSyn.createWorkspace(
-      {
-        name: 'main',
-        meta: undefined,
-      },
-      initialCommitHash
-    );
+  t.ok(aliceWorkspaceStore.workspaceHash);
 
-    const aliceWorkspaceStore = await aliceSyn.joinWorkspace(
-      workspaceHash,
-      sampleGrammar
-    );
+  aliceWorkspaceStore.requestChanges([
+    {
+      type: TextEditorDeltaType.Insert,
+      position: 0,
+      text: '\n',
+    },
+  ]);
 
-    t.ok(aliceWorkspaceStore.workspaceHash);
+  await delay(2000);
 
-    aliceWorkspaceStore.requestChanges([
-      {
-        type: TextEditorDeltaType.Insert,
-        position: 0,
-        text: '\n',
-      },
-    ]);
+  const bobWorkspaceStore = await bobSyn.joinWorkspace(
+    workspaceHash,
+    sampleGrammar
+  );
 
-    await delay(2000);
-
-    const bobWorkspaceStore = await bobSyn.joinWorkspace(workspaceHash, sampleGrammar);
-
-    async function simulateAlice() {
-      for (let i = 0; i < aliceLine.length; i++) {
-        aliceWorkspaceStore.requestChanges([
-          {
-            type: TextEditorDeltaType.Insert,
-            position: alicePosition(
-              get(aliceWorkspaceStore.state).body.text.toString()
-            ),
-            text: aliceLine[i],
-          },
-        ]);
-        await delay(300);
-      }
+  async function simulateAlice() {
+    for (let i = 0; i < aliceLine.length; i++) {
+      aliceWorkspaceStore.requestChanges([
+        {
+          type: TextEditorDeltaType.Insert,
+          position: alicePosition(
+            get(aliceWorkspaceStore.state).body.text.toString()
+          ),
+          text: aliceLine[i],
+        },
+      ]);
+      await delay(1000);
     }
+  }
 
-    async function simulateBo() {
-      for (let i = 0; i < bobLine.length; i++) {
-        let content = get(bobWorkspaceStore.state).body.text;
-        bobWorkspaceStore.requestChanges([
-          {
-            type: TextEditorDeltaType.Insert,
-            position: bobPosition(content.toString()),
-            text: bobLine[i],
-          },
-        ]);
-        await delay(300);
-      }
+  async function simulateBob() {
+    for (let i = 0; i < bobLine.length; i++) {
+      let content = get(bobWorkspaceStore.state).body.text;
+      bobWorkspaceStore.requestChanges([
+        {
+          type: TextEditorDeltaType.Insert,
+          position: bobPosition(content.toString()),
+          text: bobLine[i],
+        },
+      ]);
+      await delay(1000);
     }
+  }
 
-    await Promise.all([simulateAlice(), simulateBo()]);
-    await delay(4000);
+  await Promise.all([simulateAlice(), simulateBob()]);
+  await delay(4000);
 
-    await Promise.all([simulateAlice(), simulateBo()]);
-    await delay(4000);
+  await Promise.all([simulateAlice(), simulateBob()]);
+  await delay(4000);
 
-    await Promise.all([simulateAlice(), simulateBo()]);
-    await delay(4000);
+  await Promise.all([simulateAlice(), simulateBob()]);
+  await delay(4000);
 
-    const expectedText = `${aliceLine}${aliceLine}${aliceLine}
+  const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
 
-    let currentState = get(aliceWorkspaceStore.state);
-    t.deepEqual(currentState.body.text.toString(), expectedText);
+  let currentState = get(aliceWorkspaceStore.state);
+  t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    currentState = get(bobWorkspaceStore.state);
-    t.deepEqual(currentState.body.text.toString(), expectedText);
+  currentState = get(bobWorkspaceStore.state);
+  t.deepEqual(currentState.body.text.toString(), expectedText);
 
-    await aliceWorkspaceStore.leaveWorkspace();
-    await bobWorkspaceStore.leaveWorkspace();
-  });
+  await aliceWorkspaceStore.leaveWorkspace();
+  await bobWorkspaceStore.leaveWorkspace();
 };

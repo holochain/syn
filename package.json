@@ -10,7 +10,7 @@
     "prepare": "npm run build:libs",
     "build:libs": "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",
     "test": "npm run build:happ && npm run build:libs && npm test -w @holochain-syn/tests",
-    "start:happ": "hc s generate -r=$HC_PORT workdir/syn-test.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
+    "start:happ": "echo \"pass\" | hc s --piped generate -r=$HC_PORT workdir/syn-test.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
     "build:happ": "npm run build:dna && hc app pack workdir",
     "build:dna": "npm run build:zome && hc dna pack workdir",
     "build:zome": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"

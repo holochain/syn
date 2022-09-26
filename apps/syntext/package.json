@@ -23,11 +23,11 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
-    "@holochain-open-dev/cell-client": "^0.7.0",
-    "@holochain-open-dev/profiles": "^0.5.0",
-    "@holochain-syn/core": "0.1.2",
-    "@holochain-syn/text-editor": "0.1.1",
-    "@holochain/client": "^0.7.0",
+    "@holochain-open-dev/cell-client": "^0.7.3",
+    "@holochain-open-dev/profiles": "^0.5.3",
+    "@holochain-syn/core": "0.1.9",
+    "@holochain-syn/text-editor": "0.1.2",
+    "@holochain/client": "^0.8.0",
     "@lit-labs/context": "^0.1.2",
     "lit": "^2.0.2",
     "sirv-cli": "^1.0.0",
