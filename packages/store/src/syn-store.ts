@@ -18,7 +18,7 @@ export class SynStore {
   knownCommits: Writable<EntryHashMap<Commit>> = writable(new EntryHashMap());
 
   constructor(
-    protected client: SynClient,
+    public client: SynClient,
     public config?: RecursivePartial<SynConfig>
   ) {
     this.config = merge(config, defaultConfig());
