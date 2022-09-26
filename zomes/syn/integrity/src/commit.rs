@@ -1,6 +1,7 @@
 use hdi::prelude::*;
 
 #[hdk_entry_helper]
+#[derive(Clone)]
 pub struct Commit {
   pub state: SerializedBytes,
   pub created_at: Timestamp,

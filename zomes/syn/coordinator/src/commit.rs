@@ -4,8 +4,22 @@ use hdk::prelude::*;
 #[hdk_extern]
 fn create_commit(commit: Commit) -> ExternResult<Record> {
     let entry_hash = hash_entry(&commit)?;
+    let c = EntryTypes::Commit(commit.clone());
+    let _ = HDK.with(|h| {
+        let index = ScopedEntryDefIndex::try_from(&c)?;
+        let vis = EntryVisibility::from(&c);
+        let entry = commit.try_into()?;
 
-    create_entry(EntryTypes::Commit(commit))?;
+        h.borrow().create(CreateInput::new(
+            index,
+            vis,
+            entry,
+            // This is used to test many conductors thrashing creates between
+            // each other so we want to avoid retries that make the test take
+            // a long time.
+            ChainTopOrdering::Relaxed,
+        ))
+    });
 
     let path = all_commits_path();
 
