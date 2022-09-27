@@ -1,43 +1,16 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
+use crate::utils::*;
 
 #[hdk_extern]
 fn create_commit(commit: Commit) -> ExternResult<Record> {
     let entry_hash = hash_entry(&commit)?;
     let c = EntryTypes::Commit(commit.clone());
-    let _ = HDK.with(|h| {
-        let index = ScopedEntryDefIndex::try_from(&c)?;
-        let vis = EntryVisibility::from(&c);
-        let entry = commit.try_into()?;
-
-        h.borrow().create(CreateInput::new(
-            index,
-            vis,
-            entry,
-            // This is used to test many conductors thrashing creates between
-            // each other so we want to avoid retries that make the test take
-            // a long time.
-            ChainTopOrdering::Relaxed,
-        ))
-    });
+    let _= create_relaxed(c, commit.try_into()?);
 
     let path = all_commits_path();
 
-    let ScopedLinkType {
-        zome_id,
-        zome_type: link_type,
-    } = LinkTypes::PathToCommits.try_into()?;
-
-    let _= HDK.with(|h| {
-        h.borrow().create_link(CreateLinkInput::new(
-            path.path_entry_hash()?.into(),
-            entry_hash.clone().into(),
-            zome_id,
-            link_type,
-            ().into(),
-            ChainTopOrdering::Relaxed,
-        ))
-    })?;
+    let _= create_link_relaxed(path.path_entry_hash()?, entry_hash.clone(),LinkTypes::PathToCommits, ())?;
 
     let record = get(entry_hash, GetOptions::default())?;
 

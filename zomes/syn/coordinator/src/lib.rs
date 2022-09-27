@@ -3,6 +3,7 @@ use workspace::WorkspaceMessage;
 
 mod commit;
 mod workspace;
+mod utils;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
