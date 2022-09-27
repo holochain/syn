@@ -1,7 +1,7 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::create_link_relaxed;
+use crate::utils::{create_link_relaxed, create_relaxed};
 
 fn all_workspaces_path() -> Path {
     Path::from("all_workspaces")
@@ -16,16 +16,16 @@ pub struct CreateWorkspaceInput {
 #[hdk_extern]
 pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     let entry_hash = hash_entry(&input.workspace)?;
-    let action_hash = create_entry(EntryTypes::Workspace(input.workspace))?;
+    let action_hash = create_relaxed(EntryTypes::Workspace(input.workspace.clone()),input.workspace.try_into()?)?;
 
-    create_link(
+    create_link_relaxed(
         all_workspaces_path().path_entry_hash()?,
         entry_hash.clone(),
         LinkTypes::PathToWorkspaces,
         (),
     )?;
 
-    create_link(
+    create_link_relaxed(
         entry_hash,
         input.initial_tip_hash,
         LinkTypes::WorkspaceToTip,
