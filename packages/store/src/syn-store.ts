@@ -30,9 +30,8 @@ export class SynStore {
     this.config = merge(config, defaultConfig());
 
     this.client.cellClient.addSignalHandler(signal => {
-      if (signal.data.payload.type === 'NewWorkspace') {
-        const record = signal.data.payload.record;
-
+      if (signal.data.payload.message.payload.type === 'NewWorkspace') {
+        const record = signal.data.payload.message.payload.record;
         this.knownWorkspaces.update(w => {
           const entryHash = (record.signed_action.hashed.content as Create)
             .entry_hash;

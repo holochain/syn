@@ -109,6 +109,24 @@ export default t => async (scenario: Scenario) => {
     const state = stateFromCommit(commit)
     t.deepEqual(state,currentStateAlice)
   }
+  
+  await bobSyn.fetchAllWorkspaces()
+
+  let ws = get(bobSyn.knownWorkspaces)
+  t.equal(ws.keys().length, 1)
+  // second workspace
+  const workspaceHash2 = await aliceSyn.createWorkspace(
+    {
+      name: 'second',
+      meta: undefined,
+    },
+    initialCommitHash
+  );
+  t.ok(workspaceHash2)
+  await delay(500)
+  ws = get(bobSyn.knownWorkspaces)
+  t.equal(ws.keys().length, 2)  
+
 
   await bobWorkspaceStore.leaveWorkspace();
 
