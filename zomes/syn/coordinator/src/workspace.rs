@@ -1,6 +1,8 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
+use crate::utils::{create_link_relaxed, create_relaxed};
+
 fn all_workspaces_path() -> Path {
     Path::from("all_workspaces")
 }
@@ -14,16 +16,16 @@ pub struct CreateWorkspaceInput {
 #[hdk_extern]
 pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     let entry_hash = hash_entry(&input.workspace)?;
-    let action_hash = create_entry(EntryTypes::Workspace(input.workspace))?;
+    let action_hash = create_relaxed(EntryTypes::Workspace(input.workspace.clone()),input.workspace.try_into()?)?;
 
-    create_link(
+    create_link_relaxed(
         all_workspaces_path().path_entry_hash()?,
         entry_hash.clone(),
         LinkTypes::PathToWorkspaces,
         (),
     )?;
 
-    create_link(
+    create_link_relaxed(
         entry_hash,
         input.initial_tip_hash,
         LinkTypes::WorkspaceToTip,
@@ -67,12 +69,8 @@ pub struct UpdateWorkspaceTipInput {
 
 #[hdk_extern]
 pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> {
-    create_link(
-        input.workspace_hash,
-        input.new_tip_hash,
-        LinkTypes::WorkspaceToTip,
-        (),
-    )?;
+ 
+    create_link_relaxed(input.workspace_hash, input.new_tip_hash, LinkTypes::WorkspaceToTip, ())?;
 
     Ok(())
 }
@@ -113,28 +111,29 @@ pub struct JoinWorkspaceOutput {
 #[hdk_extern]
 pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOutput> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
-    create_link(
-        workspace_hash.clone(),
-        my_pub_key,
-        LinkTypes::WorkspaceToParticipant,
-        (),
-    )?;
-
     let participants = get_workspace_participants(workspace_hash.clone())?;
-    let current_tip_hash = get_workspace_tip(workspace_hash.clone())?;
 
+    if !participants.contains(&my_pub_key) {
+        create_link(
+            workspace_hash.clone(),
+            my_pub_key,
+            LinkTypes::WorkspaceToParticipant,
+            (),
+        )?;
+        // Signal
+        send_message(SynMessage {
+            workspace_message: WorkspaceMessage {
+                workspace_hash: workspace_hash.clone(),
+                payload: MessagePayload::JoinWorkspace,
+            },
+            recipients: participants.clone(),
+        })?;
+    }
+
+    let current_tip_hash = get_workspace_tip(workspace_hash)?;
     let current_tip = get(current_tip_hash, GetOptions::default())?.ok_or(wasm_error!(
         WasmErrorInner::Guest("Can't get the current tip for the workspace".into())
     ))?;
-
-    // Signal
-    send_message(SynMessage {
-        workspace_message: WorkspaceMessage {
-            workspace_hash,
-            payload: MessagePayload::JoinWorkspace,
-        },
-        recipients: participants.clone(),
-    })?;
 
     let output = JoinWorkspaceOutput {
         participants,

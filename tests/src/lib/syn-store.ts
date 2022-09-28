@@ -1,7 +1,7 @@
 import { Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore } from '@holochain-syn/store';
+import { SynStore, stateFromCommit } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
@@ -99,6 +99,16 @@ export default t => async (scenario: Scenario) => {
     currentStateAlice.body.text.toString(),
     currentStateBob.body.text.toString()
   );
+
+  await aliceWorkspaceStore.commitChanges()
+  const getWorkspaceTip = await aliceSyn.client.getWorkspaceTip(workspaceHash)
+  t.ok(getWorkspaceTip)
+  const commit = await aliceSyn.client.getCommit(getWorkspaceTip)
+  t.ok(commit)
+  if (commit) {
+    const state = stateFromCommit(commit)
+    t.deepEqual(state,currentStateAlice)
+  }
 
   await bobWorkspaceStore.leaveWorkspace();
 

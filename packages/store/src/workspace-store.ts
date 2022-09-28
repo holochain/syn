@@ -20,7 +20,7 @@ import type {
 } from './grammar';
 
 import { SynConfig } from './config';
-import { SynStore } from './syn-store';
+import { stateFromCommit, SynStore } from './syn-store';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
@@ -257,9 +257,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.intervals.push(commitInterval);
 
     const commit = decode((currentTip.entry as any).Present.entry) as Commit;
-    const commitState = decode(commit.state) as Automerge.BinaryDocument;
-
-    const state = Automerge.load(commitState);
+    const state = stateFromCommit(commit)
 
     this._state = writable(state);
     this._currentTip = writable(

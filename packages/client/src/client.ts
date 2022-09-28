@@ -1,5 +1,6 @@
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import type { AgentPubKey, EntryHash, Record } from '@holochain/client';
+import { decode } from '@msgpack/msgpack';
 
 import {
   Commit,
@@ -17,8 +18,11 @@ export class SynClient {
     return this.callZome('create_commit', commit);
   }
 
-  public async getCommit(commitHash: EntryHash): Promise<Record> {
-    return this.callZome('get_commit', commitHash);
+  public async getCommit(commitHash: EntryHash): Promise<Commit|undefined> {
+    const record: Record | undefined = await this.callZome('get_commit', commitHash);
+    if (!record) return undefined
+    const commit = decode((record.entry as any).Present.entry) as Commit;
+    return commit
   }
 
   public async getAllCommits(): Promise<Array<Record>> {
@@ -38,6 +42,12 @@ export class SynClient {
     workspace_hash: EntryHash
   ): Promise<Array<AgentPubKey>> {
     return this.callZome('get_workspace_participants', workspace_hash);
+  }
+
+  public getWorkspaceTip(
+    workspaceHash: EntryHash
+  ): Promise<EntryHash> {
+    return this.callZome('get_workspace_tip', workspaceHash);
   }
 
   public updateWorkspaceTip(

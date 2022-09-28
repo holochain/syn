@@ -1,20 +1,16 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
+use crate::utils::*;
 
 #[hdk_extern]
 fn create_commit(commit: Commit) -> ExternResult<Record> {
     let entry_hash = hash_entry(&commit)?;
-
-    create_entry(EntryTypes::Commit(commit))?;
+    let c = EntryTypes::Commit(commit.clone());
+    let _= create_relaxed(c, commit.try_into()?);
 
     let path = all_commits_path();
 
-    create_link(
-        path.path_entry_hash()?,
-        entry_hash.clone(),
-        LinkTypes::PathToCommits,
-        (),
-    )?;
+    let _= create_link_relaxed(path.path_entry_hash()?, entry_hash.clone(),LinkTypes::PathToCommits, ())?;
 
     let record = get(entry_hash, GetOptions::default())?;
 

@@ -10,6 +10,12 @@ import { EntryHashMap } from '@holochain-open-dev/utils';
 import { WorkspaceStore } from './workspace-store';
 import Automerge from 'automerge';
 
+export const stateFromCommit = (commit: Commit) => {
+  const commitState = decode(commit.state) as Automerge.BinaryDocument;
+  const state = Automerge.load(commitState);
+  return state
+}
+
 export class SynStore {
   /** Public accessors */
   knownWorkspaces: Writable<EntryHashMap<Workspace>> = writable(
@@ -18,7 +24,7 @@ export class SynStore {
   knownCommits: Writable<EntryHashMap<Commit>> = writable(new EntryHashMap());
 
   constructor(
-    protected client: SynClient,
+    public client: SynClient,
     public config?: RecursivePartial<SynConfig>
   ) {
     this.config = merge(config, defaultConfig());

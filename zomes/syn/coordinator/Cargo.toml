@@ -2,7 +2,7 @@
 authors = ["guillem.cordoba@gmail.com"]
 edition = "2021"
 name = "hc_zome_syn_coordinator"
-version = "0.0.1"
+version = "0.0.2"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
