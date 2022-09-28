@@ -26,7 +26,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     )?;
 
     create_link_relaxed(
-        entry_hash,
+        entry_hash.clone(),
         input.initial_tip_hash,
         LinkTypes::WorkspaceToTip,
         (),
@@ -34,9 +34,33 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 
     let record = get(action_hash, GetOptions::default())?;
 
-    record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
+    let record = record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
-    ))))
+    ))))?;
+
+    // Signal
+    // participants is everybody who has joined any workspace
+    let path = all_workspaces_path();
+    let links = get_links(path.path_entry_hash()?, LinkTypes::PathToWorkspaces, None)?;
+
+    let workspaces: Vec<EntryHash> = links.into_iter().map(|l| l.target.into()).collect();
+    let mut participants: HashSet<AgentPubKey>= HashSet::new();
+    for hash in workspaces.into_iter() {
+        let p: Vec<AgentPubKey> = get_workspace_participants(hash)?;
+        for agent in p {
+            participants.insert(agent);
+        }
+    }
+    let recipients:Vec<AgentPubKey> = participants.into_iter().collect();
+
+    send_message(SynMessage {
+        workspace_message: WorkspaceMessage {
+            workspace_hash: entry_hash,
+            payload: MessagePayload::NewWorkspace { record: record.clone() },
+        },
+        recipients,
+    })?;
+    Ok(record)
 }
 
 #[hdk_extern]
@@ -183,6 +207,9 @@ pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
 #[derive(Serialize, Debug, Deserialize)]
 #[serde(tag = "type")]
 pub enum MessagePayload {
+    NewWorkspace {
+        record: Record
+    },
     JoinWorkspace,
     LeaveWorkspace,
     ChangeNotice{

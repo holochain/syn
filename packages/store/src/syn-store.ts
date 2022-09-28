@@ -30,7 +30,7 @@ export class SynStore {
     this.config = merge(config, defaultConfig());
 
     this.client.cellClient.addSignalHandler(signal => {
-      if (signal.data.payload.type === 'NEW_WORKSPACE') {
+      if (signal.data.payload.type === 'NewWorkspace') {
         const record = signal.data.payload.record;
 
         this.knownWorkspaces.update(w => {
