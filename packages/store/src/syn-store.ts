@@ -28,6 +28,22 @@ export class SynStore {
     public config?: RecursivePartial<SynConfig>
   ) {
     this.config = merge(config, defaultConfig());
+
+    this.client.cellClient.addSignalHandler(signal => {
+      if (signal.data.payload.type === 'NEW_WORKSPACE') {
+        const record = signal.data.payload.record;
+
+        this.knownWorkspaces.update(w => {
+          const entryHash = (record.signed_action.hashed.content as Create)
+            .entry_hash;
+          const workspace = decode(
+            (record.entry as any).Present.entry
+          ) as Workspace;
+          w.put(entryHash, workspace);
+          return w;
+        });
+      }
+    });
   }
 
   get myPubKey() {
