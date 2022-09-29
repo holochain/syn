@@ -140,7 +140,7 @@ pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOu
     let participants = get_workspace_participants(workspace_hash.clone())?;
 
     if !participants.contains(&my_pub_key) {
-        create_link(
+        create_link_relaxed(
             workspace_hash.clone(),
             my_pub_key,
             LinkTypes::WorkspaceToParticipant,
