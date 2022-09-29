@@ -51,8 +51,10 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
             participants.insert(agent);
         }
     }
-    let recipients:Vec<AgentPubKey> = participants.into_iter().collect();
+    let mut recipients:Vec<AgentPubKey> = participants.into_iter().collect();
+    let my_pub_key = agent_info()?.agent_initial_pubkey;
 
+    recipients.retain(|agent| *agent != my_pub_key );
     send_message(SynMessage {
         workspace_message: WorkspaceMessage {
             workspace_hash: entry_hash,
