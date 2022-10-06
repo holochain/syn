@@ -1,9 +1,11 @@
 use hdk::prelude::*;
-use workspace::WorkspaceMessage;
+use messages::SynMessage;
 
 mod commit;
-mod workspace;
+mod messages;
+mod root;
 mod utils;
+mod workspace;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -21,16 +23,12 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SynSignal {
-  provenance: AgentPubKey,
-  message: WorkspaceMessage
+    provenance: AgentPubKey,
+    message: SynMessage,
 }
 
 #[hdk_extern]
-pub fn recv_remote_signal(message: WorkspaceMessage) -> ExternResult<()> {
-/*     let message: WorkspaceMessage = signal
-        .decode()
-        .map_err(|err| wasm_error!(WasmErrorInner::Guest(err.into())))?;
- */
+pub fn recv_remote_signal(message: SynMessage) -> ExternResult<()> {
     let info = call_info()?;
 
     let notice = SynSignal {

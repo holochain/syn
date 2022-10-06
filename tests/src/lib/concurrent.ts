@@ -1,7 +1,7 @@
 import { Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { DocumentStore, SynStore } from '@holochain-syn/store';
+import { RootStore, SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
@@ -27,13 +27,13 @@ export default t => async (scenario: Scenario) => {
   const aliceSyn = new SynStore(new SynClient(aliceClient));
   const bobSyn = new SynStore(new SynClient(bobClient));
 
-  const aliceDocumentStore = await aliceSyn.createDocument(sampleGrammar);
-  const workspaceHash = await aliceDocumentStore.createWorkspace(
+  const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
+  const workspaceHash = await aliceRootStore.createWorkspace(
     'main',
-    aliceDocumentStore.documentRootHash
+    aliceRootStore.rootHash
   );
 
-  const aliceWorkspaceStore = await aliceDocumentStore.joinWorkspace(
+  const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
     workspaceHash
   );
 
@@ -49,17 +49,17 @@ export default t => async (scenario: Scenario) => {
 
   await delay(2000);
 
-  const roots = get(await bobSyn.fetchAllDocumentRoots());
+  const roots = get(await bobSyn.fetchAllRoots());
 
-  const [documentRootHash, documentRoot] = roots.entries()[0];
-  const bobDocumentStore = new DocumentStore(
+  const [rootHash, rootCommit] = roots.entries()[0];
+  const bobRootStore = new RootStore(
     bobSyn.client,
     sampleGrammar,
-    documentRootHash,
-    documentRoot
+    rootHash,
+    rootCommit
   );
 
-  const bobWorkspaceStore = await bobDocumentStore.joinWorkspace(workspaceHash);
+  const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
 
   await delay(2000);
 

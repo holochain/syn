@@ -7,18 +7,24 @@ import {
   CreateCommitInput,
   CreateWorkspaceInput,
   JoinWorkspaceOutput,
+  SendMessageInput,
+  SynMessage,
   UpdateWorkspaceTipInput,
-  WorkspaceMessage,
 } from './types';
 
 export class SynClient {
   constructor(public cellClient: CellClient, protected zomeName = 'syn') {}
 
-  /** Commits */
+  /** Roots */
   public createRoot(commit: Commit): Promise<Record> {
     return this.callZome('create_root', commit);
   }
 
+  public async getAllRoots(): Promise<Array<Record>> {
+    return await this.callZome('get_all_roots', null);
+  }
+
+  /** Commits */
   public createCommit(input: CreateCommitInput): Promise<Record> {
     return this.callZome('create_commit', input);
   }
@@ -31,10 +37,6 @@ export class SynClient {
     if (!record) return undefined;
     const commit = decode((record.entry as any).Present.entry) as Commit;
     return commit;
-  }
-
-  public async getAllRoots(): Promise<Array<Record>> {
-    return await this.callZome('get_all_roots', null);
   }
 
   public async getCommitsForRoot(root_hash: EntryHash): Promise<Array<Record>> {
@@ -78,12 +80,12 @@ export class SynClient {
 
   public sendMessage(
     recipients: Array<AgentPubKey>,
-    workspace_message: WorkspaceMessage
+    message: SynMessage
   ): Promise<void> {
     return this.callZome('send_message', {
       recipients,
-      workspace_message,
-    });
+      message,
+    } as SendMessageInput);
   }
 
   /** Helpers */

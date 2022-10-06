@@ -131,12 +131,32 @@ const synStore = new SynStore(new SynClient(cellClient));
 At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.
 
 ```ts
-const documentStore = await synStore.createDocument(textEditorGrammar);
-const workspaceHash = await documentStore.createWorkspace(
+const rootStore = await synStore.createRoot(textEditorGrammar);
+const workspaceHash = await rootStore.createWorkspace(
   'main',
-  documentStore.documentRootHash
+  rootStore.rootHash
 );
-const workspaceStore = await documentStore.joinWorkspace(workspaceHash);
+const workspaceStore = await rootStore.joinWorkspace(workspaceHash);
+```
+
+If you want another peer to discover that documenta and join the same workspace, you can do this:
+
+```ts
+import { get } from 'svelte/store';
+import { RootStore } from '@holochain-syn/store';
+
+// Fetch all documents
+const documents = get(await store.fetchAllRoots());
+const [rootHash, rootCommit] = documents.entries()[0];
+
+const rootStore = new RootStore(
+  store.client,
+  textEditorGrammar,
+  rootHash,
+  rootCommit
+);
+const workspaces = get(await rootStore.fetchWorkspaces());
+const workspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
 ```
 
 ### State and state changes

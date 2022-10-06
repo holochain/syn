@@ -5,7 +5,7 @@
     WorkspaceParticipants,
     SynStore,
     SynClient,
-    DocumentStore,
+    RootStore,
   } from '@holochain-syn/core';
   import { SynMarkdownEditor } from '@holochain-syn/text-editor';
   import { createCellClient, DocumentGrammar, textSlice } from './syn';
@@ -94,28 +94,28 @@
 
   async function initSyn(cellClient) {
     const store = new SynStore(new SynClient(cellClient));
-    const roots = get(await store.fetchAllDocumentRoots());
+    const roots = get(await store.fetchAllRoots());
 
     if (roots.keys().length === 0) {
-      const documentStore = await store.createDocument(DocumentGrammar);
-      const workspaceHash = await documentStore.createWorkspace(
+      const rootStore = await store.createRoot(DocumentGrammar);
+      const workspaceHash = await rootStore.createWorkspace(
         'main',
-        documentStore.documentRootHash
+        rootStore.rootHash
       );
 
-      workspaceStore = await documentStore.joinWorkspace(workspaceHash);
+      workspaceStore = await rootStore.joinWorkspace(workspaceHash);
       synStore = store;
     } else {
-      const [documentRootHash, documentRoot] = roots.entries()[0];
+      const [rootHash, rootCommit] = roots.entries()[0];
 
-      const documentStore = new DocumentStore(
+      const rootStore = new RootStore(
         store.client,
         DocumentGrammar,
-        documentRootHash,
-        documentRoot
+        rootHash,
+        rootCommit
       );
-      const workspaces = get(await documentStore.fetchWorkspaces());
-      workspaceStore = await documentStore.joinWorkspace(workspaces.keys()[0]);
+      const workspaces = get(await rootStore.fetchWorkspaces());
+      workspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
       synStore = store;
     }
   }

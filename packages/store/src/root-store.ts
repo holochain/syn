@@ -9,7 +9,7 @@ import type { SynGrammar } from './grammar';
 import { EntryHashMap } from '@holochain-open-dev/utils';
 import { WorkspaceStore } from './workspace-store';
 
-export class DocumentStore<G extends SynGrammar<any, any>> {
+export class RootStore<G extends SynGrammar<any, any>> {
   /** Public accessors */
   knownWorkspaces: Writable<EntryHashMap<Workspace>> = writable(
     new EntryHashMap()
@@ -19,12 +19,13 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
   constructor(
     public client: SynClient,
     public grammar: G,
-    public documentRootHash: EntryHash,
-    public documentRoot: Commit
+    public rootHash: EntryHash,
+    public rootCommit: Commit
   ) {
-    this.knownCommits = writable(
-      new EntryHashMap([[documentRootHash, documentRoot]])
-    );
+    if (this.rootCommit.previous_commit_hashes.length > 0)
+      throw new Error('The given commit is not a root commit because it has previous commits');
+
+    this.knownCommits = writable(new EntryHashMap([[rootHash, rootCommit]]));
   }
 
   get myPubKey() {
@@ -32,9 +33,7 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
   }
 
   async fetchWorkspaces() {
-    const workspaces = await this.client.getWorkspacesForRoot(
-      this.documentRootHash
-    );
+    const workspaces = await this.client.getWorkspacesForRoot(this.rootHash);
 
     this.knownWorkspaces.update(w => {
       for (const record of workspaces) {
@@ -53,7 +52,7 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
   }
 
   async fetchCommits() {
-    const commits = await this.client.getCommitsForRoot(this.documentRootHash);
+    const commits = await this.client.getCommitsForRoot(this.rootHash);
 
     this.knownCommits.update(c => {
       for (const record of commits) {
@@ -87,9 +86,9 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
     const workspaceRecord = await this.client.createWorkspace({
       workspace: {
         name: workspaceName,
-        root_hash: this.documentRootHash,
+        initial_commit_hash: initialTipHash,
       },
-      initial_tip_hash: initialTipHash,
+      root_hash: this.rootHash,
     });
     const entryHash = (workspaceRecord.signed_action.hashed.content as Create)
       .entry_hash;

@@ -1,12 +1,12 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::{create_link_relaxed, create_relaxed};
+use crate::{utils::{create_link_relaxed, create_relaxed}, messages::{SendMessageInput, SynMessage, MessagePayload, WorkspaceMessage, send_message}};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
     workspace: Workspace,
-    initial_tip_hash: EntryHash,
+    root_hash: EntryHash,
 }
 
 #[hdk_extern]
@@ -18,7 +18,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     )?;
 
     create_link_relaxed(
-        input.workspace.root_hash,
+        input.root_hash,
         entry_hash.clone(),
         LinkTypes::RootToWorkspaces,
         (),
@@ -26,7 +26,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 
     create_link_relaxed(
         entry_hash,
-        input.initial_tip_hash,
+        input.workspace.initial_commit_hash,
         LinkTypes::WorkspaceToTip,
         (),
     )?;
@@ -113,18 +113,18 @@ pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOu
     let participants = get_workspace_participants(workspace_hash.clone())?;
 
     if !participants.contains(&my_pub_key) {
-        create_link(
+        create_link_relaxed(
             workspace_hash.clone(),
             my_pub_key,
             LinkTypes::WorkspaceToParticipant,
             (),
         )?;
         // Signal
-        send_message(SynMessage {
-            workspace_message: WorkspaceMessage {
+        send_message(SendMessageInput {
+            message: SynMessage::WorkspaceMessage(WorkspaceMessage {
                 workspace_hash: workspace_hash.clone(),
                 payload: MessagePayload::JoinWorkspace,
-            },
+            }),
             recipients: participants.clone(),
         })?;
     }
@@ -168,50 +168,13 @@ pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
     }
 
     // Signal
-    send_message(SynMessage {
-        workspace_message: WorkspaceMessage {
-            workspace_hash,
+    send_message(SendMessageInput {
+        message: SynMessage::WorkspaceMessage(WorkspaceMessage {
+            workspace_hash: workspace_hash.clone(),
             payload: MessagePayload::LeaveWorkspace,
-        },
-        recipients: participants,
+        }),
+        recipients: participants.clone(),
     })?;
-
-    Ok(())
-}
-
-#[derive(Serialize, Debug, Deserialize)]
-#[serde(tag = "type")]
-pub enum MessagePayload {
-    JoinWorkspace,
-    LeaveWorkspace,
-    ChangeNotice {
-        state_changes: Vec<SerializedBytes>,
-        ephemeral_changes: Vec<SerializedBytes>,
-    },
-    SyncReq {
-        sync_message: Option<SerializedBytes>,
-        ephemeral_sync_message: Option<SerializedBytes>,
-    },
-    Heartbeat {
-        known_participants: Vec<AgentPubKey>,
-    },
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct WorkspaceMessage {
-    workspace_hash: EntryHash,
-    payload: MessagePayload,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SynMessage {
-    workspace_message: WorkspaceMessage,
-    recipients: Vec<AgentPubKey>,
-}
-
-#[hdk_extern]
-pub fn send_message(input: SynMessage) -> ExternResult<()> {
-    remote_signal(input.workspace_message, input.recipients)?;
 
     Ok(())
 }

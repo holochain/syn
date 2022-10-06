@@ -3,13 +3,13 @@ import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { contextProvider } from '@lit-labs/context';
 
-import { synDocumentContext } from './contexts';
-import { DocumentStore } from '@holochain-syn/store';
+import { synRootContext } from './contexts';
+import { RootStore } from '@holochain-syn/store';
 
-export class SynDocumentContext extends ScopedElementsMixin(LitElement) {
-  @contextProvider({ context: synDocumentContext })
+export class SynRootContext extends ScopedElementsMixin(LitElement) {
+  @contextProvider({ context: synRootContext })
   @property()
-  documentstore!: DocumentStore<any>;
+  rootstore!: RootStore<any>;
 
   render() {
     return html`<slot></slot>`;

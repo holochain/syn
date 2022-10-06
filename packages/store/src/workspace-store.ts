@@ -20,7 +20,7 @@ import type {
 
 import { SynConfig } from './config';
 import { stateFromCommit } from './syn-store';
-import { DocumentStore } from './document-store';
+import { RootStore } from './root-store';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
@@ -117,18 +117,21 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   private intervals: any[] = [];
 
   get myPubKey() {
-    return this.documentStore.client.cellClient.cell.cell_id[1];
+    return this.rootStore.client.cellClient.cell.cell_id[1];
   }
 
   private constructor(
-    protected documentStore: DocumentStore<G>,
+    protected rootStore: RootStore<G>,
     protected config: SynConfig,
     public workspaceHash: EntryHash,
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const { unsubscribe } = this.documentStore.client.cellClient.addSignalHandler(signal => {
+    const { unsubscribe } = this.rootStore.client.cellClient.addSignalHandler(signal => {
       const synSignal: SynSignal = signal.data.payload;
+
+      if (synSignal.message.type !== 'WorkspaceMessage') return;
+
       const message: WorkspaceMessage = synSignal.message;
       if (message && isEqual(message.workspace_hash, workspaceHash)) {
         if (message.payload.type === 'LeaveWorkspace') {
@@ -188,7 +191,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.unsubscribe = unsubscribe;
 
     const heartbeatInterval = setInterval(async () => {
-      const participants = await this.documentStore.client.getWorkspaceParticipants(
+      const participants = await this.rootStore.client.getWorkspaceParticipants(
         workspaceHash
       );
 
@@ -219,7 +222,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         }
 
         if (p.keys().length > 0) {
-          this.documentStore.client.sendMessage(p.keys(), {
+          this.rootStore.client.sendMessage(p.keys(), {
+            type: 'WorkspaceMessage',
             workspace_hash: workspaceHash,
             payload: {
               type: 'Heartbeat',
@@ -287,14 +291,14 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   }
 
   static async joinWorkspace<G extends SynGrammar<any, any>>(
-    documentStore: DocumentStore<G>,
+    rootStore: RootStore<G>,
     config: SynConfig,
     workspaceHash: EntryHash
   ): Promise<WorkspaceStore<G>> {
-    const output = await documentStore.client.joinWorkspace(workspaceHash);
+    const output = await rootStore.client.joinWorkspace(workspaceHash);
 
     return new WorkspaceStore(
-      documentStore,
+      rootStore,
       config,
       workspaceHash,
       output.current_tip,
@@ -311,7 +315,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = Automerge.change(newState, doc => {
             newEphemeralState = Automerge.change(newEphemeralState, eph => {
-              this.documentStore.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
+              this.rootStore.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });
         }
@@ -324,7 +328,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
         const participants = get(this._participants).keys();
 
-        this.documentStore.client.sendMessage(participants, {
+        this.rootStore.client.sendMessage(participants, {
+          type: 'WorkspaceMessage',
           workspace_hash: this.workspaceHash,
           payload: {
             type: 'ChangeNotice',
@@ -395,7 +400,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     if (syncMessage || ephemeralSyncMessage) {
-      this.documentStore.client.sendMessage([participant], {
+      this.rootStore.client.sendMessage([participant], {
+        type: 'WorkspaceMessage',
         workspace_hash: this.workspaceHash,
         payload: {
           type: 'SyncReq',
@@ -455,7 +461,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
-    const currentTipCommit = get(this.documentStore.knownCommits).get(
+    const currentTipCommit = get(this.rootStore.knownCommits).get(
       currentTip
     );
     if (currentTipCommit) {
@@ -480,18 +486,17 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
-      created_at: Date.now(),
     };
 
-    const newCommit = await this.documentStore.client.createCommit({
+    const newCommit = await this.rootStore.client.createCommit({
       commit,
-      root_hash: this.documentStore.documentRootHash,
+      root_hash: this.rootStore.rootHash,
     });
 
     const newCommitHash = (newCommit.signed_action.hashed.content as Create)
       .entry_hash;
 
-    await this.documentStore.client.updateWorkspaceTip({
+    await this.rootStore.client.updateWorkspaceTip({
       new_tip_hash: newCommitHash,
       workspace_hash: this.workspaceHash,
     });
@@ -526,7 +531,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       await this.commitChanges();
     }
 
-    await this.documentStore.client.leaveWorkspace(this.workspaceHash);
+    await this.rootStore.client.leaveWorkspace(this.workspaceHash);
     this.unsubscribe();
     for (const interval of this.intervals) {
       clearInterval(interval);

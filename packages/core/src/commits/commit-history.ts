@@ -11,21 +11,21 @@ import { EntryHashB64 } from '@holochain-open-dev/core-types';
 import { EntryHashMap, serializeHash } from '@holochain-open-dev/utils';
 
 import { Commit } from '@holochain-syn/client';
-import { DocumentStore } from '@holochain-syn/store';
+import { RootStore } from '@holochain-syn/store';
 
 import { sharedStyles } from '../shared-styles';
-import { synDocumentContext } from '../context/contexts';
+import { synRootContext } from '../context/contexts';
 
 export class CommitHistory extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: synDocumentContext, subscribe: true })
+  @contextProvided({ context: synRootContext, subscribe: true })
   @property()
-  documentstore!: DocumentStore<any>;
+  rootstore!: RootStore<any>;
 
   @property()
   selectedCommitHash: EntryHashB64 | undefined;
 
   _allCommitsTask = new TaskSubscriber(this, () =>
-    this.documentstore.fetchCommits()
+    this.rootstore.fetchCommits()
   );
 
   onNodeSelected(nodeId: string) {
