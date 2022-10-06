@@ -32,7 +32,9 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
   }
 
   async fetchWorkspaces() {
-    const workspaces = await this.client.getWorkspacesForRoot(this.documentRootHash);
+    const workspaces = await this.client.getWorkspacesForRoot(
+      this.documentRootHash
+    );
 
     this.knownWorkspaces.update(w => {
       for (const record of workspaces) {
@@ -70,7 +72,7 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
   async joinWorkspace(
     workspaceHash: EntryHash,
     config?: RecursivePartial<SynConfig>
-  ) {
+  ): Promise<WorkspaceStore<G>> {
     return WorkspaceStore.joinWorkspace(
       this,
       merge(config, defaultConfig()),
@@ -102,5 +104,4 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
 
     return entryHash;
   }
-
 }
