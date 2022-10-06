@@ -1,6 +1,5 @@
 import {
   Commit,
-  SynClient,
   WorkspaceMessage,
   SynSignal,
 } from '@holochain-syn/client';
@@ -20,7 +19,8 @@ import type {
 } from './grammar';
 
 import { SynConfig } from './config';
-import { stateFromCommit, SynStore } from './syn-store';
+import { stateFromCommit } from './syn-store';
+import { DocumentStore } from './document-store';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   worskpace: WorkspaceStore<any>;
@@ -100,7 +100,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   _state: Writable<Automerge.Doc<GrammarState<G>>>;
   get state() {
-    return derived(this._state, i => i);
+    return derived(this._state, i => Automerge.clone(i));
   }
 
   _ephemeral: Writable<Automerge.Doc<GrammarEphemeralState<G>>>;
@@ -117,19 +117,17 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   private intervals: any[] = [];
 
   get myPubKey() {
-    return this.client.cellClient.cell.cell_id[1];
+    return this.documentStore.client.cellClient.cell.cell_id[1];
   }
 
   private constructor(
-    protected client: SynClient,
-    protected synStore: SynStore,
-    protected grammar: G,
+    protected documentStore: DocumentStore<G>,
     protected config: SynConfig,
     public workspaceHash: EntryHash,
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const { unsubscribe } = this.client.cellClient.addSignalHandler(signal => {
+    const { unsubscribe } = this.documentStore.client.cellClient.addSignalHandler(signal => {
       const synSignal: SynSignal = signal.data.payload;
       const message: WorkspaceMessage = synSignal.message;
       if (message && isEqual(message.workspace_hash, workspaceHash)) {
@@ -190,7 +188,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.unsubscribe = unsubscribe;
 
     const heartbeatInterval = setInterval(async () => {
-      const participants = await this.client.getWorkspaceParticipants(
+      const participants = await this.documentStore.client.getWorkspaceParticipants(
         workspaceHash
       );
 
@@ -221,7 +219,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         }
 
         if (p.keys().length > 0) {
-          this.client.sendMessage(p.keys(), {
+          this.documentStore.client.sendMessage(p.keys(), {
             workspace_hash: workspaceHash,
             payload: {
               type: 'Heartbeat',
@@ -257,7 +255,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.intervals.push(commitInterval);
 
     const commit = decode((currentTip.entry as any).Present.entry) as Commit;
-    const state = stateFromCommit(commit)
+    const state = stateFromCommit(commit);
 
     this._state = writable(state);
     this._currentTip = writable(
@@ -289,18 +287,14 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   }
 
   static async joinWorkspace<G extends SynGrammar<any, any>>(
-    client: SynClient,
-    store: SynStore,
-    grammar: G,
+    documentStore: DocumentStore<G>,
     config: SynConfig,
     workspaceHash: EntryHash
   ): Promise<WorkspaceStore<G>> {
-    const output = await client.joinWorkspace(workspaceHash);
+    const output = await documentStore.client.joinWorkspace(workspaceHash);
 
     return new WorkspaceStore(
-      client,
-      store,
-      grammar,
+      documentStore,
       config,
       workspaceHash,
       output.current_tip,
@@ -317,7 +311,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = Automerge.change(newState, doc => {
             newEphemeralState = Automerge.change(newEphemeralState, eph => {
-              this.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
+              this.documentStore.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
             });
           });
         }
@@ -330,7 +324,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
         const participants = get(this._participants).keys();
 
-        this.client.sendMessage(participants, {
+        this.documentStore.client.sendMessage(participants, {
           workspace_hash: this.workspaceHash,
           payload: {
             type: 'ChangeNotice',
@@ -401,7 +395,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     if (syncMessage || ephemeralSyncMessage) {
-      this.client.sendMessage([participant], {
+      this.documentStore.client.sendMessage([participant], {
         workspace_hash: this.workspaceHash,
         payload: {
           type: 'SyncReq',
@@ -461,7 +455,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
-    const currentTipCommit = get(this.synStore.knownCommits).get(currentTip);
+    const currentTipCommit = get(this.documentStore.knownCommits).get(
+      currentTip
+    );
     if (currentTipCommit) {
       if (
         isEqual(
@@ -478,19 +474,24 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       meta = encode(meta);
     }
 
-    const newCommit = await this.client.createCommit({
+    const commit: Commit = {
       authors: get(this._participants).keys(),
       meta,
       previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
       created_at: Date.now(),
+    };
+
+    const newCommit = await this.documentStore.client.createCommit({
+      commit,
+      root_hash: this.documentStore.documentRootHash,
     });
 
     const newCommitHash = (newCommit.signed_action.hashed.content as Create)
       .entry_hash;
 
-    await this.client.updateWorkspaceTip({
+    await this.documentStore.client.updateWorkspaceTip({
       new_tip_hash: newCommitHash,
       workspace_hash: this.workspaceHash,
     });
@@ -525,7 +526,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       await this.commitChanges();
     }
 
-    await this.client.leaveWorkspace(this.workspaceHash);
+    await this.documentStore.client.leaveWorkspace(this.workspaceHash);
     this.unsubscribe();
     for (const interval of this.intervals) {
       clearInterval(interval);

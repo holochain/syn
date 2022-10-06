@@ -3,10 +3,6 @@ use hdk::prelude::*;
 
 use crate::utils::{create_link_relaxed, create_relaxed};
 
-fn all_workspaces_path() -> Path {
-    Path::from("all_workspaces")
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
     workspace: Workspace,
@@ -16,12 +12,15 @@ pub struct CreateWorkspaceInput {
 #[hdk_extern]
 pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     let entry_hash = hash_entry(&input.workspace)?;
-    let action_hash = create_relaxed(EntryTypes::Workspace(input.workspace.clone()),input.workspace.try_into()?)?;
+    let action_hash = create_relaxed(
+        EntryTypes::Workspace(input.workspace.clone()),
+        input.workspace.clone().try_into()?,
+    )?;
 
     create_link_relaxed(
-        all_workspaces_path().path_entry_hash()?,
+        input.workspace.root_hash,
         entry_hash.clone(),
-        LinkTypes::PathToWorkspaces,
+        LinkTypes::RootToWorkspaces,
         (),
     )?;
 
@@ -40,10 +39,8 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_all_workspaces(_: ()) -> ExternResult<Vec<Record>> {
-    let path = all_workspaces_path();
-
-    let links = get_links(path.path_entry_hash()?, LinkTypes::PathToWorkspaces, None)?;
+pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>> {
+    let links = get_links(root_hash, LinkTypes::RootToWorkspaces, None)?;
 
     let workspaces_get_inputs = links
         .into_iter()
@@ -69,8 +66,12 @@ pub struct UpdateWorkspaceTipInput {
 
 #[hdk_extern]
 pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> {
- 
-    create_link_relaxed(input.workspace_hash, input.new_tip_hash, LinkTypes::WorkspaceToTip, ())?;
+    create_link_relaxed(
+        input.workspace_hash,
+        input.new_tip_hash,
+        LinkTypes::WorkspaceToTip,
+        (),
+    )?;
 
     Ok(())
 }
@@ -91,9 +92,7 @@ pub fn get_workspace_tip(workspace_hash: EntryHash) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-pub fn get_workspace_participants(
-    workspace_hash: EntryHash,
-) -> ExternResult<Vec<AgentPubKey>> {
+pub fn get_workspace_participants(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
 
     let participants: Vec<AgentPubKey> = links
@@ -185,9 +184,9 @@ pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
 pub enum MessagePayload {
     JoinWorkspace,
     LeaveWorkspace,
-    ChangeNotice{
+    ChangeNotice {
         state_changes: Vec<SerializedBytes>,
-        ephemeral_changes: Vec<SerializedBytes>
+        ephemeral_changes: Vec<SerializedBytes>,
     },
     SyncReq {
         sync_message: Option<SerializedBytes>,

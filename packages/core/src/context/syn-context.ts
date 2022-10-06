@@ -13,7 +13,7 @@ import { synContext } from './contexts';
 export class SynContext extends ScopedElementsMixin(LitElement) {
   @contextProvider({ context: synContext })
   @property()
-  store!: SynStore;
+  synstore!: SynStore;
 
   render() {
     return html` <slot></slot> `;

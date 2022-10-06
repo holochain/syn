@@ -12,9 +12,9 @@ export interface CommitStrategy {
 
 export function defaultConfig(): SynConfig {
   return {
-    hearbeatInterval: 2 * 1000,
-    outOfSessionTimeout: 8 * 1000,
-    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 10 }, // TODO: reduce ms
+    hearbeatInterval: 5 * 1000,
+    outOfSessionTimeout: 15 * 1000,
+    commitStrategy: { CommitEveryNDeltas: 30, CommitEveryNMs: 1000 * 10 }, // TODO: reduce ms
   };
 }
 

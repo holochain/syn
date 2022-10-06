@@ -1,79 +1,34 @@
 import { derived, Writable, writable } from 'svelte/store';
-import { Commit, SynClient, Workspace } from '@holochain-syn/client';
+import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
-import { Create, EntryHash } from '@holochain/client';
-import merge from 'lodash-es/merge';
+import { Create } from '@holochain/client';
 
-import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import type { SynGrammar } from './grammar';
 import { EntryHashMap } from '@holochain-open-dev/utils';
-import { WorkspaceStore } from './workspace-store';
 import Automerge from 'automerge';
+import { DocumentStore } from './document-store';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
   const state = Automerge.load(commitState);
-  return state
-}
+  return state;
+};
 
 export class SynStore {
   /** Public accessors */
-  knownWorkspaces: Writable<EntryHashMap<Workspace>> = writable(
-    new EntryHashMap()
-  );
-  knownCommits: Writable<EntryHashMap<Commit>> = writable(new EntryHashMap());
+  knownRoots: Writable<EntryHashMap<Commit>> = writable(new EntryHashMap());
 
-  constructor(
-    public client: SynClient,
-    public config?: RecursivePartial<SynConfig>
-  ) {
-    this.config = merge(config, defaultConfig());
-
-    this.client.cellClient.addSignalHandler(signal => {
-      if (signal.data.payload.type === 'NEW_WORKSPACE') {
-        const record = signal.data.payload.record;
-
-        this.knownWorkspaces.update(w => {
-          const entryHash = (record.signed_action.hashed.content as Create)
-            .entry_hash;
-          const workspace = decode(
-            (record.entry as any).Present.entry
-          ) as Workspace;
-          w.put(entryHash, workspace);
-          return w;
-        });
-      }
-    });
-  }
+  constructor(public client: SynClient) {}
 
   get myPubKey() {
     return this.client.cellClient.cell.cell_id[1];
   }
 
-  async fetchAllWorkspaces() {
-    const workspaces = await this.client.getAllWorkspaces();
+  async fetchAllDocumentRoots() {
+    const rootCommits = await this.client.getAllRoots();
 
-    this.knownWorkspaces.update(w => {
-      for (const record of workspaces) {
-        const entryHash = (record.signed_action.hashed.content as Create)
-          .entry_hash;
-        const workspace = decode(
-          (record.entry as any).Present.entry
-        ) as Workspace;
-        w.put(entryHash, workspace);
-      }
-
-      return w;
-    });
-
-    return derived(this.knownWorkspaces, i => i);
-  }
-
-  async fetchAllCommits() {
-    const commits = await this.client.getAllCommits();
-
-    this.knownCommits.update(c => {
-      for (const record of commits) {
+    this.knownRoots.update(c => {
+      for (const record of rootCommits) {
         const entryHash = (record.signed_action.hashed.content as Create)
           .entry_hash;
         const commit = decode((record.entry as any).Present.entry) as Commit;
@@ -83,48 +38,13 @@ export class SynStore {
       return c;
     });
 
-    return derived(this.knownCommits, i => i);
+    return derived(this.knownRoots, i => i);
   }
 
-  async joinWorkspace<G extends SynGrammar<any, any>>(
-    workspaceHash: EntryHash,
-    grammar: G
-  ) {
-    return WorkspaceStore.joinWorkspace(
-      this.client,
-      this,
-      grammar,
-      this.config as SynConfig,
-      workspaceHash
-    );
-  }
-
-  async createWorkspace(
-    workspace: Workspace,
-    initialTipHash: EntryHash
-  ): Promise<EntryHash> {
-    const workspaceRecord = await this.client.createWorkspace({
-      workspace,
-      initial_tip_hash: initialTipHash,
-    });
-    const entryHash = (workspaceRecord.signed_action.hashed.content as Create)
-      .entry_hash;
-    this.knownWorkspaces.update(w => {
-      const workspace = decode(
-        (workspaceRecord.entry as any).Present.entry
-      ) as Workspace;
-      w.put(entryHash, workspace);
-
-      return w;
-    });
-
-    return entryHash;
-  }
-
-  async createRoot<G extends SynGrammar<any, any>>(
+  async createDocument<G extends SynGrammar<any, any>>(
     grammar: G,
     meta?: any
-  ): Promise<{ initialCommitHash: EntryHash; initialCommit: Commit }> {
+  ): Promise<DocumentStore<G>> {
     let doc: Automerge.Doc<any> = Automerge.init();
 
     doc = Automerge.change(doc, d => grammar.initState(d));
@@ -142,15 +62,15 @@ export class SynStore {
       witnesses: [],
     };
 
-    const record = await this.client.createCommit(commit);
+    const record = await this.client.createRoot(commit);
     const entryHash = (record.signed_action.hashed.content as Create)
       .entry_hash;
 
-    this.knownCommits.update(c => {
+    this.knownRoots.update(c => {
       c.put(entryHash, commit);
       return c;
     });
 
-    return { initialCommitHash: entryHash, initialCommit: commit };
+    return new DocumentStore(this.client, grammar, entryHash, commit);
   }
 }

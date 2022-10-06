@@ -5,6 +5,7 @@
     WorkspaceParticipants,
     SynStore,
     SynClient,
+    DocumentStore,
   } from '@holochain-syn/core';
   import { SynMarkdownEditor } from '@holochain-syn/text-editor';
   import { createCellClient, DocumentGrammar, textSlice } from './syn';
@@ -93,28 +94,28 @@
 
   async function initSyn(cellClient) {
     const store = new SynStore(new SynClient(cellClient));
-    const workspaces = get(await store.fetchAllWorkspaces());
+    const roots = get(await store.fetchAllDocumentRoots());
 
-    if (workspaces.keys().length === 0) {
-      const { initialCommitHash } = await store.createRoot(DocumentGrammar);
-      const workspaceHash = await store.createWorkspace(
-        {
-          name: 'main',
-          meta: undefined,
-        },
-        initialCommitHash
+    if (roots.keys().length === 0) {
+      const documentStore = await store.createDocument(DocumentGrammar);
+      const workspaceHash = await documentStore.createWorkspace(
+        'main',
+        documentStore.documentRootHash
       );
 
-      workspaceStore = await store.joinWorkspace(
-        workspaceHash,
-        DocumentGrammar
-      );
+      workspaceStore = await documentStore.joinWorkspace(workspaceHash);
       synStore = store;
     } else {
-      workspaceStore = await store.joinWorkspace(
-        workspaces.keys()[0],
-        DocumentGrammar
+      const [documentRootHash, documentRoot] = roots.entries()[0];
+
+      const documentStore = new DocumentStore(
+        store.client,
+        DocumentGrammar,
+        documentRootHash,
+        documentRoot
       );
+      const workspaces = get(await documentStore.fetchWorkspaces());
+      workspaceStore = await documentStore.joinWorkspace(workspaces.keys()[0]);
       synStore = store;
     }
   }
@@ -144,7 +145,7 @@
 
 {#if synStore}
   <profiles-context store={profilesStore}>
-    <syn-context store={synStore}>
+    <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
         <div>
@@ -152,9 +153,7 @@
         </div>
       </div>
       <main>
-        <syn-markdown-editor
-          slice={textSlice(workspaceStore)}
-        />
+        <syn-markdown-editor slice={textSlice(workspaceStore)} />
       </main>
 
       <div class="folks-tray">

@@ -1,7 +1,7 @@
 import { Scenario } from '@holochain/tryorama';
 
 import { get } from 'svelte/store';
-import { SynStore, stateFromCommit } from '@holochain-syn/store';
+import { SynStore, stateFromCommit, DocumentStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
@@ -18,29 +18,35 @@ export default t => async (scenario: Scenario) => {
   const aliceSyn = new SynStore(new SynClient(aliceClient));
   const bobSyn = new SynStore(new SynClient(bobClient));
 
-  const { initialCommitHash } = await aliceSyn.createRoot(sampleGrammar);
-  const workspaceHash = await aliceSyn.createWorkspace(
-    {
-      name: 'main',
-      meta: undefined,
-    },
-    initialCommitHash
+  const aliceDocumentStore = await aliceSyn.createDocument(sampleGrammar);
+  const workspaceHash = await aliceDocumentStore.createWorkspace(
+    'main',
+    aliceDocumentStore.documentRootHash
   );
 
-  const aliceWorkspaceStore = await aliceSyn.joinWorkspace(
+  const aliceWorkspaceStore = await aliceDocumentStore.joinWorkspace(
     workspaceHash,
-    sampleGrammar
   );
   
   t.ok(aliceWorkspaceStore.workspaceHash);
 
   await delay(2000);
 
-  const bobWorkspaceStore = await bobSyn.joinWorkspace(workspaceHash, sampleGrammar);
+  const roots = get(await bobSyn.fetchAllDocumentRoots());
+
+  const [documentRootHash, documentRoot] = roots.entries()[0];
+  const bobDocumentStore = new DocumentStore(
+    bobSyn.client,
+    sampleGrammar,
+    documentRootHash,
+    documentRoot
+  );
+  
+  const bobWorkspaceStore = await bobDocumentStore.joinWorkspace(workspaceHash);
 
   aliceWorkspaceStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
-  await delay(2000);
+  await delay(5000);
 
   let participants = get(aliceWorkspaceStore.participants);
   t.equal(participants.active.length, 2);

@@ -7,27 +7,25 @@ import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
-import type { SynStore } from '@holochain-syn/store';
-import { Commit } from '@holochain-syn/client';
-
 import { EntryHashB64 } from '@holochain-open-dev/core-types';
-import {
-  EntryHashMap,
-  serializeHash,
-} from '@holochain-open-dev/utils';
+import { EntryHashMap, serializeHash } from '@holochain-open-dev/utils';
+
+import { Commit } from '@holochain-syn/client';
+import { DocumentStore } from '@holochain-syn/store';
+
 import { sharedStyles } from '../shared-styles';
-import { synContext } from '../context/contexts';
+import { synDocumentContext } from '../context/contexts';
 
 export class CommitHistory extends ScopedElementsMixin(LitElement) {
-  @contextProvided({ context: synContext, subscribe: true })
+  @contextProvided({ context: synDocumentContext, subscribe: true })
   @property()
-  synStore!: SynStore;
+  documentstore!: DocumentStore<any>;
 
   @property()
   selectedCommitHash: EntryHashB64 | undefined;
 
   _allCommitsTask = new TaskSubscriber(this, () =>
-    this.synStore.fetchAllCommits()
+    this.documentstore.fetchCommits()
   );
 
   onNodeSelected(nodeId: string) {

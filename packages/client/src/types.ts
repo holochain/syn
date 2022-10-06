@@ -15,11 +15,15 @@ export interface Commit {
 
 export interface Workspace {
   name: String;
-  meta: Uint8Array | undefined;
+  root_hash: EntryHash;
 }
 
 /** Client API */
 
+export interface CreateCommitInput {
+  commit: Commit;
+  root_hash: EntryHash;
+}
 export interface CreateWorkspaceInput {
   workspace: Workspace;
   initial_tip_hash: EntryHash;

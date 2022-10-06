@@ -15,8 +15,9 @@ pub enum EntryTypes {
 
 #[hdk_link_types]
 pub enum LinkTypes {
-  PathToCommits,
-  PathToWorkspaces,
+  PathToRoots,
+  RootToWorkspaces,
+  RootToCommits,
   WorkspaceToTip,
   WorkspaceToParticipant,
 }

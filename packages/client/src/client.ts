@@ -4,6 +4,7 @@ import { decode } from '@msgpack/msgpack';
 
 import {
   Commit,
+  CreateCommitInput,
   CreateWorkspaceInput,
   JoinWorkspaceOutput,
   UpdateWorkspaceTipInput,
@@ -14,19 +15,30 @@ export class SynClient {
   constructor(public cellClient: CellClient, protected zomeName = 'syn') {}
 
   /** Commits */
-  public createCommit(commit: Commit): Promise<Record> {
-    return this.callZome('create_commit', commit);
+  public createRoot(commit: Commit): Promise<Record> {
+    return this.callZome('create_root', commit);
   }
 
-  public async getCommit(commitHash: EntryHash): Promise<Commit|undefined> {
-    const record: Record | undefined = await this.callZome('get_commit', commitHash);
-    if (!record) return undefined
+  public createCommit(input: CreateCommitInput): Promise<Record> {
+    return this.callZome('create_commit', input);
+  }
+
+  public async getCommit(commitHash: EntryHash): Promise<Commit | undefined> {
+    const record: Record | undefined = await this.callZome(
+      'get_commit',
+      commitHash
+    );
+    if (!record) return undefined;
     const commit = decode((record.entry as any).Present.entry) as Commit;
-    return commit
+    return commit;
   }
 
-  public async getAllCommits(): Promise<Array<Record>> {
-    return await this.callZome('get_all_commits', null);
+  public async getAllRoots(): Promise<Array<Record>> {
+    return await this.callZome('get_all_roots', null);
+  }
+
+  public async getCommitsForRoot(root_hash: EntryHash): Promise<Array<Record>> {
+    return await this.callZome('get_commits_for_root', root_hash);
   }
 
   /** Workspaces */
@@ -34,8 +46,8 @@ export class SynClient {
     return this.callZome('create_workspace', input);
   }
 
-  public getAllWorkspaces(): Promise<Array<Record>> {
-    return this.callZome('get_all_workspaces', null);
+  public getWorkspacesForRoot(root_hash: EntryHash): Promise<Array<Record>> {
+    return this.callZome('get_workspaces_for_root', root_hash);
   }
 
   public getWorkspaceParticipants(
@@ -44,9 +56,7 @@ export class SynClient {
     return this.callZome('get_workspace_participants', workspace_hash);
   }
 
-  public getWorkspaceTip(
-    workspaceHash: EntryHash
-  ): Promise<EntryHash> {
+  public getWorkspaceTip(workspaceHash: EntryHash): Promise<EntryHash> {
     return this.callZome('get_workspace_tip', workspaceHash);
   }
 

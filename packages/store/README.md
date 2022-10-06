@@ -13,6 +13,8 @@ So, you have to create your own "grammar", which consists of:
 - The shape of the state that's being synchronized.
 - All the possible delta changes, and how they affect that state.
 
+`syn` uses [Automerge](https://automerge.org/) under the hood to achieve real-time conflict-free collaboration. You can use Automerge's special `Counter` and `Text` types to avoid conflicts with counters and text, otherwise you can just use normal JS objects and lists.
+
 ```ts
 import { SynGrammar } from '@holochain-syn/store';
 import Automerge from 'automerge';
@@ -52,6 +54,50 @@ const counterGrammar: CounterGrammar = {
 };
 ```
 
+IMPORTANT! Using Automerge does mean that the code you write on your grammar **must follow the rules that automerge imposes**: mainly, that you use mutable idioms to update the state. 
+
+So instead of this:
+
+```ts
+const cardsGrammar = {
+  initState(state): {
+    state.cards = {};
+  },
+  applyDelta(
+    delta: CounterDelta,
+    state: CounterState,
+    ephemeralState: any,
+    _author: AgentPubKey
+  ): CounterState {
+    const newCard = { id: 123, title: delta.title, done: false };
+    state.cards = {
+      ids: [...state.cards.ids, newCard.id],
+      entities: { ...state.cards.entities, [newCard.id]: newCard }
+    };
+  },
+};
+```
+
+You must write your grammar like this:
+
+```ts
+const cardsGrammar = {
+  initState(state): {
+    state.cards = { ids: [], entities: {} };
+  },
+  applyDelta(
+    delta: CounterDelta,
+    state: CounterState,
+    ephemeralState: any,
+    _author: AgentPubKey
+  ): CounterState {
+    const newCard = { id: 123, title: delta.title, done: false };
+    state.cards.ids.push(newCard.id);
+    state.cards.entities[newCard.id] = newCard;
+  },
+};
+```
+
 With this, you'll have defined how `syn` is going to aggregate the changes that the agents make into the final state.
 
 ## Using the Store
@@ -85,12 +131,12 @@ const synStore = new SynStore(new SynClient(cellClient));
 At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.
 
 ```ts
-const { initialCommitHash } = await synStore.createRoot(textEditorGrammar);
-const workspaceHash = await synStore.createWorkspace(
-  { name: 'main', meta: undefined },
-  initialCommitHash
+const documentStore = await synStore.createDocument(textEditorGrammar);
+const workspaceHash = await documentStore.createWorkspace(
+  'main',
+  documentStore.documentRootHash
 );
-const workspaceStore = await store.joinWorkspace(workspaceHash);
+const workspaceStore = await documentStore.joinWorkspace(workspaceHash);
 ```
 
 ### State and state changes

@@ -66,6 +66,9 @@ export const textEditorGrammar: TextEditorGrammar = {
       };
     } else if (delta.type === TextEditorDeltaType.Delete) {
       state.text.deleteAt!(delta.position, delta.characterCount);
+      
+      if (state.text.length === 0) return;
+
       if (delta.position === 0) {
         const elementId = (state.text as any).getElemId(0);
 
