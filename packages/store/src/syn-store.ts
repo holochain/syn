@@ -66,15 +66,14 @@ export class SynStore {
     meta?: any
   ): Promise<RootStore<G>> {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'DETERMINISTIC',
+      actorId: 'aa',      
     });
 
-    doc = Automerge.change(doc, d => grammar.initState(d));
+    doc = Automerge.change(doc, { time: 0 }, d => grammar.initState(d));
 
     if (meta) {
       meta = encode(meta);
     }
-
     const commit: Commit = {
       state: encode(Automerge.save(doc)),
       authors: [],

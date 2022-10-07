@@ -159,6 +159,16 @@ const workspaces: RecordBag<Workspace> = get(await rootStore.fetchWorkspaces());
 const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces.entryMap.keys()[0]);
 ```
 
+#### Deterministic Roots
+
+In some cases, you need a way to create global roots that are known in advance and that must exist for your application to work. In this cases, you need to be able to create roots in a deterministic way, so that if two agents have created the global root in parallel, the end result is only one root, with possibly multiple workspaces that need to be resolved at the app level.
+
+To create a deterministic root:
+
+```ts
+const rootStore = await synStore.createDeterministicRoot(textEditorGramma);
+```
+
 ### State and state changes
 
 Now you are connected to all the peers in that same workspace, and can subscribe to the current state for the workspace and also request changes to the state:
