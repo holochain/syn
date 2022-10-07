@@ -134,7 +134,7 @@ At this point, no synchronization is happening yet. This is because first you ne
 const rootStore = await synStore.createRoot(textEditorGrammar);
 const workspaceHash = await rootStore.createWorkspace(
   'main',
-  rootStore.rootHash
+  rootStore.root.entryHash
 );
 const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaceHash);
 ```
@@ -145,7 +145,7 @@ If you want another peer to discover that documenta and join the same workspace,
 import { get } from 'svelte/store';
 import { Commit } from '@holochain-syn/client';
 import { RootStore, WorkspaceStore } from '@holochain-syn/store';
-import { RecordBag } from '@holochain-open-dev/utils';
+import { RecordBag, EntryHashMap } from '@holochain-open-dev/utils';
 
 // Fetch all roots
 const roots: RecordBag<Commit> = get(await store.fetchAllRoots());
@@ -155,8 +155,8 @@ const rootStore = new RootStore(
   textEditorGrammar,
   roots.entryRecords[0]
 );
-const workspaces: RecordBag<Workspace> = get(await rootStore.fetchWorkspaces());
-const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces.entryMap.keys()[0]);
+const workspaces: EntryHashMap<Workspace> = get(await rootStore.fetchWorkspaces());
+const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
 ```
 
 #### Deterministic Roots

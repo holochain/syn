@@ -96,25 +96,24 @@
     const store = new SynStore(new SynClient(cellClient));
     const roots = get(await store.fetchAllRoots());
 
-    if (roots.keys().length === 0) {
+    if (roots.entryMap.keys().length === 0) {
       const rootStore = await store.createRoot(DocumentGrammar);
+
       const workspaceHash = await rootStore.createWorkspace(
         'main',
-        rootStore.rootHash
+        rootStore.root.entryHash
       );
 
       workspaceStore = await rootStore.joinWorkspace(workspaceHash);
       synStore = store;
     } else {
-      const [rootHash, rootCommit] = roots.entries()[0];
-
       const rootStore = new RootStore(
         store.client,
         DocumentGrammar,
-        rootHash,
-        rootCommit
+        roots.entryRecords[0]
       );
       const workspaces = get(await rootStore.fetchWorkspaces());
+
       workspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
       synStore = store;
     }
