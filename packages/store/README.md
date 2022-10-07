@@ -131,7 +131,10 @@ const synStore = new SynStore(new SynClient(cellClient));
 At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.
 
 ```ts
-const rootStore = await synStore.createRoot(textEditorGrammar);
+const rootStore = await synStore.createRoot(textEditorGrammar, 
+  // This is an optional object to be able to store arbitrary information in the commit
+  { applicationDefinedField: 'somevalue'} 
+);
 const workspaceHash = await rootStore.createWorkspace(
   'main',
   rootStore.root.entryHash
@@ -166,7 +169,10 @@ In some cases, you need a way to create global roots that are known in advance a
 To create a deterministic root:
 
 ```ts
-const rootStore = await synStore.createDeterministicRoot(textEditorGramma);
+const rootStore = await synStore.createDeterministicRoot(textEditorGramma,
+  // This is an optional object to be able to store arbitrary information in the commit
+  { applicationDefinedField: 'somevalue'} 
+);
 ```
 
 ### State and state changes
@@ -196,5 +202,8 @@ await workspaceStore.leaveWorkspace();
 Changes are committed every 10 seconds by default, and also when the last participant for the workspaces leaves the workspace. You can also commit the changes manually:
 
 ```ts
-await workspaceStore.commitChanges();
+await workspaceStore.commitChanges(
+    // This is an optional object to be able to store arbitrary information in the commit
+  { applicationDefinedField: 'somevalue'} 
+);
 ```

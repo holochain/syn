@@ -18,10 +18,6 @@ export async function spawnSyn(scenario: Scenario, playersCount: number): Promis
   let clients : CellClient[] = []
   for (let i=0;i<players.length; i+=1) {
     const player = players[i]
-    /*
-  player.setSignalHandler(signal => {
-    console.log('Received Signal for player:', signal.data.payload);
-  });*/
 
     const hcClient = new HolochainClient(player.conductor.appWs());
     clients.push(new CellClient(hcClient, player.cells[0]));

@@ -19,7 +19,7 @@ export default t => async (scenario: Scenario) => {
 
   const aliceRootStore = await aliceSyn.createDeterministicRoot(sampleGrammar);
   const bobRootStore = await bobSyn.createDeterministicRoot(sampleGrammar);
-  console.log(aliceRootStore.root.entryHash, bobRootStore.root.entryHash);
+
   t.ok(isEqual(aliceRootStore.root.entryHash, bobRootStore.root.entryHash));
 
   t.end();
