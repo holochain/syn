@@ -8,7 +8,7 @@ import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
 import { EntryHashB64 } from '@holochain-open-dev/core-types';
-import { EntryHashMap, serializeHash } from '@holochain-open-dev/utils';
+import { serializeHash, RecordBag } from '@holochain-open-dev/utils';
 
 import { Commit } from '@holochain-syn/client';
 import { RootStore } from '@holochain-syn/store';
@@ -45,7 +45,7 @@ export class CommitHistory extends ScopedElementsMixin(LitElement) {
     return this.selectedCommitHash ? [this.selectedCommitHash] : [];
   }
 
-  renderContent(allCommits: EntryHashMap<Commit>) {
+  renderContent(allCommits: RecordBag<Commit>) {
     const elements = getCommitGraph(allCommits);
     if (elements.length === 0)
       return html` <div
@@ -108,11 +108,11 @@ export class CommitHistory extends ScopedElementsMixin(LitElement) {
 }
 
 function getCommitGraph(
-  commits: EntryHashMap<Commit>
+  commits: RecordBag<Commit>
 ): Array<NodeDefinition | EdgeDefinition> {
   const elements: Array<NodeDefinition | EdgeDefinition> = [];
 
-  for (const [commitHash, commit] of commits.entries()) {
+  for (const [commitHash, commit] of commits.entryMap.entries()) {
     const strCommitHash = serializeHash(commitHash);
     elements.push({
       data: {

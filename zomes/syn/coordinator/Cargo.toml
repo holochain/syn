@@ -9,9 +9,11 @@ crate-type = ["cdylib", "rlib"]
 name = "hc_zome_syn_coordinator"
 
 [dependencies]
+chrono = {version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true}
 derive_more = "0.99.9"
-hdk = "0.0.154"
+itertools = "0.10.5"
 serde = "=1.0.136"
-chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
+
+hdk = "0.0.154"
 
 hc_zome_syn_integrity = {path = "../integrity"}

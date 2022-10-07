@@ -1,6 +1,6 @@
 import type { CellClient } from '@holochain-open-dev/cell-client';
 import type { AgentPubKey, EntryHash, Record } from '@holochain/client';
-import { decode } from '@msgpack/msgpack';
+import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
 
 import {
   Commit,
@@ -10,46 +10,66 @@ import {
   SendMessageInput,
   SynMessage,
   UpdateWorkspaceTipInput,
+  Workspace,
 } from './types';
 
 export class SynClient {
   constructor(public cellClient: CellClient, protected zomeName = 'syn') {}
 
   /** Roots */
-  public createRoot(commit: Commit): Promise<Record> {
-    return this.callZome('create_root', commit);
+  public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {
+    const record: Record = await this.callZome('create_root', commit);
+    return new EntryRecord(record);
   }
 
-  public async getAllRoots(): Promise<Array<Record>> {
-    return await this.callZome('get_all_roots', null);
+  public async getAllRoots(): Promise<RecordBag<Commit>> {
+    const roots = await this.callZome('get_all_roots', null);
+    return new RecordBag(roots);
   }
 
   /** Commits */
-  public createCommit(input: CreateCommitInput): Promise<Record> {
-    return this.callZome('create_commit', input);
+  public async createCommit(
+    input: CreateCommitInput
+  ): Promise<EntryRecord<Commit>> {
+    const record: Record = await this.callZome('create_commit', input);
+    return new EntryRecord(record);
   }
 
-  public async getCommit(commitHash: EntryHash): Promise<Commit | undefined> {
+  public async getCommit(
+    commitHash: EntryHash
+  ): Promise<EntryRecord<Commit> | undefined> {
     const record: Record | undefined = await this.callZome(
       'get_commit',
       commitHash
     );
     if (!record) return undefined;
-    const commit = decode((record.entry as any).Present.entry) as Commit;
-    return commit;
+
+    return new EntryRecord(record);
   }
 
-  public async getCommitsForRoot(root_hash: EntryHash): Promise<Array<Record>> {
-    return await this.callZome('get_commits_for_root', root_hash);
+  public async getCommitsForRoot(
+    root_hash: EntryHash
+  ): Promise<RecordBag<Commit>> {
+    const commits = await this.callZome('get_commits_for_root', root_hash);
+    return new RecordBag(commits);
   }
 
   /** Workspaces */
-  public async createWorkspace(input: CreateWorkspaceInput): Promise<Record> {
-    return this.callZome('create_workspace', input);
+  public async createWorkspace(
+    input: CreateWorkspaceInput
+  ): Promise<EntryRecord<Workspace>> {
+    const record: Record = await this.callZome('create_workspace', input);
+    return new EntryRecord(record);
   }
 
-  public getWorkspacesForRoot(root_hash: EntryHash): Promise<Array<Record>> {
-    return this.callZome('get_workspaces_for_root', root_hash);
+  public async getWorkspacesForRoot(
+    root_hash: EntryHash
+  ): Promise<RecordBag<Workspace>> {
+    const workspaces = await this.callZome(
+      'get_workspaces_for_root',
+      root_hash
+    );
+    return new RecordBag(workspaces);
   }
 
   public getWorkspaceParticipants(
@@ -62,9 +82,7 @@ export class SynClient {
     return this.callZome('get_workspace_tip', workspaceHash);
   }
 
-  public updateWorkspaceTip(
-    input: UpdateWorkspaceTipInput
-  ): Promise<Array<Record>> {
+  public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {
     return this.callZome('update_workspace_tip', input);
   }
 

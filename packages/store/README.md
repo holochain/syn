@@ -108,7 +108,7 @@ Now that you have defined your grammar, it's time to instantiate the store with 
 
 ```ts
 import { HolochainClient, CellClient } from '@holochain-open-dev/cell-client';
-import { SynStore } from '@holochain-syn/store';
+import { SynStore, RootStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 const appWebsocket = await AppWebsocket.connect(url);
@@ -136,27 +136,27 @@ const workspaceHash = await rootStore.createWorkspace(
   'main',
   rootStore.rootHash
 );
-const workspaceStore = await rootStore.joinWorkspace(workspaceHash);
+const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaceHash);
 ```
 
 If you want another peer to discover that documenta and join the same workspace, you can do this:
 
 ```ts
 import { get } from 'svelte/store';
-import { RootStore } from '@holochain-syn/store';
+import { Commit } from '@holochain-syn/client';
+import { RootStore, WorkspaceStore } from '@holochain-syn/store';
+import { RecordBag } from '@holochain-open-dev/utils';
 
-// Fetch all documents
-const documents = get(await store.fetchAllRoots());
-const [rootHash, rootCommit] = documents.entries()[0];
+// Fetch all roots
+const roots: RecordBag<Commit> = get(await store.fetchAllRoots());
 
 const rootStore = new RootStore(
   store.client,
   textEditorGrammar,
-  rootHash,
-  rootCommit
+  roots.entryRecords[0]
 );
-const workspaces = get(await rootStore.fetchWorkspaces());
-const workspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
+const workspaces: RecordBag<Workspace> = get(await rootStore.fetchWorkspaces());
+const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces.entryMap.keys()[0]);
 ```
 
 ### State and state changes

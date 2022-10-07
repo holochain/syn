@@ -1,4 +1,4 @@
-import type { SynGrammar } from '@holochain-syn/core';
+import type { SynGrammar } from '@holochain-syn/store';
 import Automerge from 'automerge';
 
 export enum TextEditorDeltaType {

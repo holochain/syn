@@ -1,11 +1,10 @@
 import { derived, Writable, writable } from 'svelte/store';
 import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
-import { Create } from '@holochain/client';
+import Automerge from 'automerge';
+import { RecordBag } from '@holochain-open-dev/utils';
 
 import type { SynGrammar } from './grammar';
-import { EntryHashMap } from '@holochain-open-dev/utils';
-import Automerge from 'automerge';
 import { RootStore } from './root-store';
 
 export const stateFromCommit = (commit: Commit) => {
@@ -16,7 +15,7 @@ export const stateFromCommit = (commit: Commit) => {
 
 export class SynStore {
   /** Public accessors */
-  knownRoots: Writable<EntryHashMap<Commit>> = writable(new EntryHashMap());
+  knownRoots: Writable<RecordBag<Commit>> = writable(new RecordBag());
 
   constructor(public client: SynClient) {}
 
@@ -27,16 +26,7 @@ export class SynStore {
   async fetchAllRoots() {
     const rootCommits = await this.client.getAllRoots();
 
-    this.knownRoots.update(c => {
-      for (const record of rootCommits) {
-        const entryHash = (record.signed_action.hashed.content as Create)
-          .entry_hash;
-        const commit = decode((record.entry as any).Present.entry) as Commit;
-        c.put(entryHash, commit);
-      }
-
-      return c;
-    });
+    this.knownRoots.set(rootCommits);
 
     return derived(this.knownRoots, i => i);
   }
@@ -61,24 +51,22 @@ export class SynStore {
       witnesses: [],
     };
 
-    const record = await this.client.createRoot(commit);
-    const entryHash = (record.signed_action.hashed.content as Create)
-      .entry_hash;
+    const commitRecord = await this.client.createRoot(commit);
 
     this.knownRoots.update(c => {
-      c.put(entryHash, commit);
+      c.add([commitRecord.record]);
       return c;
     });
 
-    return new RootStore(this.client, grammar, entryHash, commit);
+    return new RootStore(this.client, grammar, commitRecord);
   }
 
   async createDeterministicRoot<G extends SynGrammar<any, any>>(
     grammar: G,
     meta?: any
-  ): Promise<RootStore<G>>  {
+  ): Promise<RootStore<G>> {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'DETERMINISTIC'
+      actorId: 'DETERMINISTIC',
     });
 
     doc = Automerge.change(doc, d => grammar.initState(d));
@@ -95,16 +83,13 @@ export class SynStore {
       witnesses: [],
     };
 
-    const record = await this.client.createRoot(commit);
-    const entryHash = (record.signed_action.hashed.content as Create)
-      .entry_hash;
+    const commitRecord = await this.client.createRoot(commit);
 
     this.knownRoots.update(c => {
-      c.put(entryHash, commit);
+      c.add([commitRecord.record]);
       return c;
     });
 
-    return new RootStore(this.client, grammar, entryHash, commit);
-
+    return new RootStore(this.client, grammar, commitRecord);
   }
 }

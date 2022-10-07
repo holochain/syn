@@ -3,8 +3,8 @@ import { Scenario } from '@holochain/tryorama';
 import { get } from 'svelte/store';
 import { RootStore, SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
-import { TextEditorDeltaType } from '../grammar.js';
 
+import { TextEditorDeltaType } from '../grammar.js';
 import { delay, sampleGrammar } from '../common.js';
 import { spawnSyn } from './spawn.js';
 
@@ -30,7 +30,7 @@ export default t => async (scenario: Scenario) => {
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(
     'main',
-    aliceRootStore.rootHash
+    aliceRootStore.root.entryHash
   );
 
   const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
@@ -51,12 +51,10 @@ export default t => async (scenario: Scenario) => {
 
   const roots = get(await bobSyn.fetchAllRoots());
 
-  const [rootHash, rootCommit] = roots.entries()[0];
   const bobRootStore = new RootStore(
     bobSyn.client,
     sampleGrammar,
-    rootHash,
-    rootCommit
+    roots.entryRecords[0]
   );
 
   const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);

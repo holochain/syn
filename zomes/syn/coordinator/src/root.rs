@@ -5,6 +5,7 @@ use crate::{
 };
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
+use itertools::Itertools;
 
 fn all_roots_path() -> Path {
     Path::from("all_documents")
@@ -91,9 +92,11 @@ pub fn get_all_roots(_: ()) -> ExternResult<Vec<Record>> {
 
     let get_inputs = links
         .into_iter()
-        .map(|link| {
+        .map(|link| link.target)
+        .unique()
+        .map(|target| {
             GetInput::new(
-                AnyDhtHash::from(EntryHash::from(link.target)),
+                AnyDhtHash::from(EntryHash::from(target)),
                 GetOptions::default(),
             )
         })

@@ -461,7 +461,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
-    const currentTipCommit = get(this.rootStore.knownCommits).get(
+    const currentTipCommit = get(this.rootStore.knownCommits).entryMap.get(
       currentTip
     );
     if (currentTipCommit) {
@@ -490,18 +490,15 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     const newCommit = await this.rootStore.client.createCommit({
       commit,
-      root_hash: this.rootStore.rootHash,
+      root_hash: this.rootStore.root.entryHash,
     });
 
-    const newCommitHash = (newCommit.signed_action.hashed.content as Create)
-      .entry_hash;
-
     await this.rootStore.client.updateWorkspaceTip({
-      new_tip_hash: newCommitHash,
+      new_tip_hash: newCommit.entryHash,
       workspace_hash: this.workspaceHash,
     });
 
-    this._currentTip.set(newCommitHash);
+    this._currentTip.set(newCommit.entryHash);
   }
 
   private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {

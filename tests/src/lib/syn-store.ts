@@ -21,7 +21,7 @@ export default t => async (scenario: Scenario) => {
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(
     'main',
-    aliceRootStore.rootHash
+    aliceRootStore.root.entryHash
   );
 
   const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
@@ -34,19 +34,17 @@ export default t => async (scenario: Scenario) => {
 
   const roots = get(await bobSyn.fetchAllRoots());
 
-  const [rootHash, rootCommit] = roots.entries()[0];
   const bobRootStore = new RootStore(
     bobSyn.client,
     sampleGrammar,
-    rootHash,
-    rootCommit
+    roots.entryRecords[0]
   );
   
   const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
 
   aliceWorkspaceStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
-  await delay(5000);
+  await delay(7000);
 
   let participants = get(aliceWorkspaceStore.participants);
   t.equal(participants.active.length, 2);
@@ -112,7 +110,7 @@ export default t => async (scenario: Scenario) => {
   const commit = await aliceSyn.client.getCommit(getWorkspaceTip)
   t.ok(commit)
   if (commit) {
-    const state = stateFromCommit(commit)
+    const state = stateFromCommit(commit.entry)
     t.deepEqual(state,currentStateAlice)
   }
 
