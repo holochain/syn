@@ -12,7 +12,7 @@ name = "hc_zome_syn_coordinator"
 chrono = {version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true}
 derive_more = "0.99.9"
 itertools = "0.10.5"
-serde = "=1.0.136"
+serde = "1"
 
 hdk = "0.0.154"
 

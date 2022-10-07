@@ -10,5 +10,6 @@ name = "profiles_integrity"
 [dependencies]
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 derive_more = "0"
+serde = "1"
+
 hc_zome_profiles_integrity = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.0.154", package = "hc_zome_profiles_integrity"}
-serde = "=1.0.136"
