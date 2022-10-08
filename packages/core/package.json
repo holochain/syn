@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "type": "module",
@@ -27,7 +27,7 @@
     "@holochain-syn/store": "0.2.2",
     "@lit-labs/context": "^0.1.2",
     "@open-wc/scoped-elements": "^2.0.1",
-    "@scoped-elements/cytoscape": "^0.0.6",
+    "@scoped-elements/cytoscape": "^0.0.7",
     "@scoped-elements/material-web": "^0.0.19",
     "@scoped-elements/shoelace": "0.0.8",
     "lit": "^2.0.2",
