@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npm run network 2",
     "network": "npm run build:happ && concurrently-repeat \"npm run start:agent\"",
-    "start:agent": "cross-env HC_PORT=$(port) concurrently -k \"npm run dev:libs\" \"npm run start:happ\" \"sleep 5 && npm run start -w syntext\"",
+    "start:agent": "cross-env HC_PORT=$(port) concurrently \"npm run dev:libs\" \"npm run start:happ\" \"sleep 5 && npm run start -w syntext\"",
     "dev:libs": "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
     "prepare": "npm run build:libs",
     "build:libs": "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",

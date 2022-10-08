@@ -23,6 +23,8 @@ import { stateFromCommit } from './syn-store';
 import { RootStore } from './root-store';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
+  myPubKey: AgentPubKey;
+
   worskpace: WorkspaceStore<any>;
 
   state: Readable<Automerge.Doc<GrammarState<G>>>;
@@ -45,6 +47,7 @@ export function extractSlice<
   ) => Automerge.Doc<GrammarEphemeralState<G2>>
 ): SliceStore<G2> {
   return {
+    myPubKey: sliceStore.myPubKey,
     worskpace: sliceStore.worskpace as WorkspaceStore<G1>,
     state: derived(sliceStore.state, sliceState),
     ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),

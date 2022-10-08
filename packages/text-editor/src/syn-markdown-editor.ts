@@ -9,9 +9,7 @@ import {
 } from '@holochain-open-dev/profiles';
 import {
   sharedStyles,
-  synContext,
   getFolkColors,
-  SynStore,
   SliceStore,
 } from '@holochain-syn/core';
 import { contextProvided } from '@lit-labs/context';
@@ -31,10 +29,6 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
 
   @property({ attribute: 'debounce-ms' })
   debounceMs: number = 1000;
-
-  @contextProvided({ context: synContext, subscribe: true })
-  @property()
-  synStore!: SynStore;
 
   @contextProvided({ context: profilesStoreContext, subscribe: true })
   @state()
@@ -101,7 +95,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   }
 
   remoteCursors() {
-    const myPubKey = serializeHash(this.synStore.myPubKey);
+    const myPubKey = serializeHash(this.slice.myPubKey);
     if (!this._cursors.value) return [];
     return Object.entries(this._cursors.value)
       .filter(([pubKey, _]) => pubKey !== myPubKey)
@@ -126,7 +120,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
     if (this._state.value === undefined) return html``;
 
     const mySelection =
-      this._cursors.value[serializeHash(this.synStore.myPubKey)];
+      this._cursors.value[serializeHash(this.slice.myPubKey)];
 
     const myPosition =
       mySelection &&
