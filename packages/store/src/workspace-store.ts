@@ -1,8 +1,4 @@
-import {
-  Commit,
-  WorkspaceMessage,
-  SynSignal,
-} from '@holochain-syn/client';
+import { Commit, WorkspaceMessage, SynSignal } from '@holochain-syn/client';
 import { Readable, writable, Writable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
 import { AgentPubKeyMap, serializeHash } from '@holochain-open-dev/utils';
@@ -84,6 +80,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         .entries()
         .filter(([_, info]) => isActive(info.lastSeen))
         .map(([pubkey, _]) => pubkey);
+      active.push(this.myPubKey);
       const idle = i
         .entries()
         .filter(([_, info]) => isIdle(info.lastSeen))
@@ -130,67 +127,69 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const { unsubscribe } = this.rootStore.client.cellClient.addSignalHandler(signal => {
-      const synSignal: SynSignal = signal.data.payload;
+    const { unsubscribe } = this.rootStore.client.cellClient.addSignalHandler(
+      signal => {
+        const synSignal: SynSignal = signal.data.payload;
 
-      if (synSignal.message.type !== 'WorkspaceMessage') return;
+        if (synSignal.message.type !== 'WorkspaceMessage') return;
 
-      const message: WorkspaceMessage = synSignal.message;
-      if (message && isEqual(message.workspace_hash, workspaceHash)) {
-        if (message.payload.type === 'LeaveWorkspace') {
-          this.handleLeaveWorkspaceNotice(synSignal.provenance);
-          return;
-        }
+        const message: WorkspaceMessage = synSignal.message;
+        if (message && isEqual(message.workspace_hash, workspaceHash)) {
+          if (message.payload.type === 'LeaveWorkspace') {
+            this.handleLeaveWorkspaceNotice(synSignal.provenance);
+            return;
+          }
 
-        if (
-          message.payload.type === 'JoinWorkspace' ||
-          !get(this._participants).get(synSignal.provenance)
-        ) {
-          this.handleNewParticipant(synSignal.provenance);
-        } else {
-          this._participants.update(p => {
-            const participantInfo = p.get(synSignal.provenance);
-            participantInfo.lastSeen = Date.now();
-            p.put(synSignal.provenance, participantInfo);
+          if (
+            message.payload.type === 'JoinWorkspace' ||
+            !get(this._participants).get(synSignal.provenance)
+          ) {
+            this.handleNewParticipant(synSignal.provenance);
+          } else {
+            this._participants.update(p => {
+              const participantInfo = p.get(synSignal.provenance);
+              participantInfo.lastSeen = Date.now();
+              p.put(synSignal.provenance, participantInfo);
 
-            return p;
-          });
-        }
+              return p;
+            });
+          }
 
-        if (message.payload.type === 'ChangeNotice') {
-          this.handleChangeNotice(
-            synSignal.provenance,
-            message.payload.state_changes.map(
-              c => decode(c) as Automerge.BinaryChange
-            ),
-            message.payload.ephemeral_changes.map(
-              c => decode(c) as Automerge.BinaryChange
-            )
-          );
-        }
-        if (message.payload.type === 'SyncReq') {
-          this.handleSyncRequest(
-            synSignal.provenance,
-            message.payload.sync_message
-              ? (decode(
-                  message.payload.sync_message
-                ) as Automerge.BinarySyncMessage)
-              : undefined,
-            message.payload.ephemeral_sync_message
-              ? (decode(
-                  message.payload.ephemeral_sync_message
-                ) as Automerge.BinarySyncMessage)
-              : undefined
-          );
-        }
-        if (message.payload.type === 'Heartbeat') {
-          this.handleHeartbeat(
-            synSignal.provenance,
-            message.payload.known_participants
-          );
+          if (message.payload.type === 'ChangeNotice') {
+            this.handleChangeNotice(
+              synSignal.provenance,
+              message.payload.state_changes.map(
+                c => decode(c) as Automerge.BinaryChange
+              ),
+              message.payload.ephemeral_changes.map(
+                c => decode(c) as Automerge.BinaryChange
+              )
+            );
+          }
+          if (message.payload.type === 'SyncReq') {
+            this.handleSyncRequest(
+              synSignal.provenance,
+              message.payload.sync_message
+                ? (decode(
+                    message.payload.sync_message
+                  ) as Automerge.BinarySyncMessage)
+                : undefined,
+              message.payload.ephemeral_sync_message
+                ? (decode(
+                    message.payload.ephemeral_sync_message
+                  ) as Automerge.BinarySyncMessage)
+                : undefined
+            );
+          }
+          if (message.payload.type === 'Heartbeat') {
+            this.handleHeartbeat(
+              synSignal.provenance,
+              message.payload.known_participants
+            );
+          }
         }
       }
-    });
+    );
     this.unsubscribe = unsubscribe;
 
     const heartbeatInterval = setInterval(async () => {
@@ -240,11 +239,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.intervals.push(heartbeatInterval);
 
     const commitInterval = setInterval(async () => {
-      const activeParticipants = [
-        this.myPubKey,
-        ...get(this.participants).active,
-      ]
-        .map(p => serializeHash(p))
+      const activeParticipants = get(this.participants)
+        .active.map(p => serializeHash(p))
         .sort((p1, p2) => {
           if (p1 < p2) {
             return -1;
@@ -305,7 +301,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       config,
       workspaceHash,
       output.current_tip,
-      output.participants
+      output.participants.filter(p => !isEqual(rootStore.myPubKey, p))
     );
   }
 
@@ -318,7 +314,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = Automerge.change(newState, doc => {
             newEphemeralState = Automerge.change(newEphemeralState, eph => {
-              this.rootStore.grammar.applyDelta(changeRequested, doc, eph, this.myPubKey);
+              this.rootStore.grammar.applyDelta(
+                changeRequested,
+                doc,
+                eph,
+                this.myPubKey
+              );
             });
           });
         }
