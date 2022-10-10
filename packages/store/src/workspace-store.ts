@@ -78,9 +78,13 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
       const active = i
         .entries()
-        .filter(([_, info]) => isActive(info.lastSeen))
+        .filter(
+          ([pubkey, info]) =>
+            isActive(info.lastSeen) && !isEqual(pubkey, this.myPubKey)
+        )
         .map(([pubkey, _]) => pubkey);
       active.push(this.myPubKey);
+
       const idle = i
         .entries()
         .filter(([_, info]) => isIdle(info.lastSeen))
@@ -132,6 +136,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         const synSignal: SynSignal = signal.data.payload;
 
         if (synSignal.message.type !== 'WorkspaceMessage') return;
+        if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
         const message: WorkspaceMessage = synSignal.message;
         if (message && isEqual(message.workspace_hash, workspaceHash)) {
@@ -507,7 +512,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {
     this._participants.update(p => {
-      const newParticipants = participants.filter(maybeNew => !p.has(maybeNew));
+      const newParticipants = participants.filter(
+        maybeNew => !p.has(maybeNew) && !isEqual(maybeNew, this.myPubKey)
+      );
 
       for (const newParticipant of newParticipants) {
         p.put(newParticipant, {
@@ -528,7 +535,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   async leaveWorkspace(): Promise<void> {
     const participants = get(this.participants).active;
 
-    if (participants.length === 0) {
+    if (participants.length === 1) {
       await this.commitChanges();
     }
 
