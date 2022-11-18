@@ -17,10 +17,15 @@ export default t => async (scenario: Scenario) => {
   const aliceSyn = new SynStore(new SynClient(aliceClient));
   const bobSyn = new SynStore(new SynClient(bobClient));
 
-  const aliceRootStore = await aliceSyn.createDeterministicRoot(sampleGrammar);
-  const bobRootStore = await bobSyn.createDeterministicRoot(sampleGrammar);
+  const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
+  const bobRootStore = await bobSyn.createRoot(sampleGrammar);
 
-  t.ok(isEqual(aliceRootStore.root.entryHash, bobRootStore.root.entryHash));
+  t.ok(!isEqual(aliceRootStore.root.entryHash, bobRootStore.root.entryHash));
+
+  const aliceRootStoreD = await aliceSyn.createDeterministicRoot(sampleGrammar);
+  const bobRootStoreD = await bobSyn.createDeterministicRoot(sampleGrammar);
+
+  t.ok(isEqual(aliceRootStoreD.root.entryHash, bobRootStoreD.root.entryHash));
 
   t.end();
 };
