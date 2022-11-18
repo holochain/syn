@@ -123,7 +123,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   get myPubKey() {
     return this.rootStore.client.cellClient.cell.cell_id[1];
   }
-
+  private x = 0
   private constructor(
     protected rootStore: RootStore<G>,
     protected config: SynConfig,
@@ -134,7 +134,17 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     const { unsubscribe } = this.rootStore.client.cellClient.addSignalHandler(
       signal => {
         const synSignal: SynSignal = signal.data.payload;
-
+        console.log("Signal ", synSignal.message.type, this.x)
+        this.x+=1
+        if (synSignal.message.type == "WorkspaceMessage") {
+          console.log("from", serializeHash(synSignal.provenance), "for workspace", serializeHash(synSignal.message.workspace_hash ))
+          const payload = synSignal.message.payload
+          if (payload.type == 'Heartbeat') {
+            console.log("   peeps ", payload.known_participants.map(a=>serializeHash(a)))
+          } else {
+            console.log("PAYLOAD", payload)
+          }
+        }
         if (synSignal.message.type !== 'WorkspaceMessage') return;
         if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
