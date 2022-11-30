@@ -1,8 +1,12 @@
-import { derived, Writable, writable } from 'svelte/store';
+import { derived, get, Writable, writable } from 'svelte/store';
 import { Commit, SynClient, Workspace } from '@holochain-syn/client';
 import { EntryHash } from '@holochain/client';
 import merge from 'lodash-es/merge';
-import { EntryHashMap, EntryRecord, RecordBag } from '@holochain-open-dev/utils';
+import {
+  EntryHashMap,
+  EntryRecord,
+  RecordBag,
+} from '@holochain-open-dev/utils';
 
 import { defaultConfig, RecursivePartial, SynConfig } from './config';
 import type { SynGrammar } from './grammar';
@@ -54,6 +58,23 @@ export class RootStore<G extends SynGrammar<any, any>> {
     this.knownCommits.set(commits);
 
     return derived(this.knownCommits, i => i);
+  }
+
+  async fetchCommit(commitHash: EntryHash): Promise<Commit | undefined> {
+    const knownCommits = get(this.knownCommits);
+    if (knownCommits.entryMap.has(commitHash)) {
+      return knownCommits.entryMap.get(commitHash);
+    }
+
+    const commit = await this.client.getCommit(commitHash);
+
+    if (commit) {
+      this.knownCommits.update(c => {
+        c.add([commit.record]);
+        return c;
+      });
+    }
+    return commit?.entry;
   }
 
   async joinWorkspace(

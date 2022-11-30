@@ -470,9 +470,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
-    const currentTipCommit = get(this.rootStore.knownCommits).entryMap.get(
-      currentTip
-    );
+    const currentTipCommit = await this.rootStore.fetchCommit(currentTip);
     if (currentTipCommit) {
       if (
         isEqual(
