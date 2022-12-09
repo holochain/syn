@@ -101,7 +101,6 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
       .filter(([pubKey, _]) => pubKey !== myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
-
         const name = this._peersProfiles.get(deserializeHash(agentPubKey))
           ?.value?.nickname;
         return {

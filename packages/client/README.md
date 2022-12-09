@@ -9,7 +9,7 @@ import { HolochainClient, CellClient } from '@holochain-open-dev/cell-client';
 import { SynClient } from '@holochain-syn/client';
 
 const hcClient = await HolochainClient.connect(url, 'syn');
-const cellData = hcClient.cellDataByRoleId('syn');
+const cellData = hcClient.cellDataByRoleName('syn');
 const cellClient = hcClient.forCell(cellData);
 
 const client = new SynClient(cellClient, signal =>

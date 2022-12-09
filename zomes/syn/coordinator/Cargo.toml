@@ -14,6 +14,6 @@ derive_more = "0.99.9"
 itertools = "0.10.5"
 serde = "1"
 
-hdk = "0.0.154"
+hdk = "0.0.163"
 
 hc_zome_syn_integrity = {path = "../integrity"}

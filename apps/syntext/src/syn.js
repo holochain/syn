@@ -39,6 +39,6 @@ export async function createCellClient() {
 
   const client = new HolochainClient(appWebsocket);
 
-  const cellData = appInfo.cell_data.find(c => c.role_id === 'syn-test');
+  const cellData = appInfo.cell_data.find(c => c.role_name === 'syn-test');
   return new CellClient(client, cellData);
 }

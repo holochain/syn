@@ -120,7 +120,7 @@ const appInfo = await appWebsocket.appInfo({
 
 const installedCells = appInfo.cell_data;
 const notebooksCell = installedCells.find(
-  c => c.role_id === 'YOUR_ROLE_ID'
+  c => c.role_name === 'YOUR_ROLE_NAME'
 ) as InstalledCell;
 
 const cellClient = new CellClient(client, notebooksCell);

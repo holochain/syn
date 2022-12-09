@@ -1,6 +1,6 @@
 [package]
 authors = ["eric@harris-braun.com"]
-edition = "2018"
+edition = "2021"
 name = "profiles_coordinator"
 version = "0.0.1-alpha1"
 
@@ -12,4 +12,4 @@ name = "profiles_coordinator"
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 serde = "1"
 
-hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.0.154", package = "hc_zome_profiles_coordinator"}
+hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", tag = "for-hdk-v0.0.163", package = "hc_zome_profiles_coordinator"}
