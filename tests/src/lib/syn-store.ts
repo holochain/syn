@@ -16,25 +16,19 @@ process.on('unhandledRejection', error => {
 export default t => async (scenario: Scenario) => {
 
   try {
-  console.log("FISH-0")
 
   const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  console.log("FISH-1")
   const aliceSyn = new SynStore(new SynClient(aliceClient));
-  console.log("FISH-2")
   const bobSyn = new SynStore(new SynClient(bobClient));
-  console.log("FISH-3")
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(
     'main',
     aliceRootStore.root.entryHash
   );
-  console.log("FISH", workspaceHash)
   const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
     workspaceHash,
   );
-  console.log("FISH2", aliceWorkspaceStore)
 
   t.ok(aliceWorkspaceStore.workspaceHash);
 
