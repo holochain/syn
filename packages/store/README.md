@@ -114,7 +114,7 @@ import { SynClient } from '@holochain-syn/client';
 const appWs = await AppWebsocket.connect(url);
 const client = await AppAgentWebsocket.connect(appWs, 'YOUR_APP_ID')
 
-const synStore = new SynStore(new SynClient(client, 'YOUR_ROLE_NAME'));
+const synStore = new SynStore(new SynClient(client, 'YOUR_ZOME_NAME', 'YOUR_ROLE_NAME'));
 ```
 
 At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.
