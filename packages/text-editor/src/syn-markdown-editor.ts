@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { CodemirrorMarkdown } from '@scoped-elements/codemirror';
 import {
+//@ts-ignore
   Profile,
   ProfilesStore,
   profilesStoreContext,

@@ -120,7 +120,7 @@
   }
   onMount(async () => {
     const client = await createClient();
-    profilesStore = new ProfilesStore(new ProfilesService(client, 'profiles', 'syn-test'));
+    profilesStore = new ProfilesStore(new ProfilesService(client, 'syn-test'));
     await initSyn(client);
   });
 

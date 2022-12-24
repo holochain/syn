@@ -23,7 +23,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
-    "@holochain-open-dev/profiles": "^0.9.1",
+    "@holochain-open-dev/profiles": "^0.9.3",
     "@holochain-syn/core": "0.2.6",
     "@holochain-syn/text-editor": "0.2.4",
     "@holochain/client": "^0.11.9",

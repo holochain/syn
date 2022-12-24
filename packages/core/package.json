@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@holochain/client": "^0.11.9",
-    "@holochain-open-dev/profiles": "^0.9.1",
+    "@holochain-open-dev/profiles": "^0.9.3",
     "@holochain-open-dev/utils": "^0.7.2",
     "@holochain-syn/client": "0.2.2",
     "@holochain-syn/store": "0.2.5",
