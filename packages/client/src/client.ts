@@ -1,5 +1,4 @@
-import type { CellClient } from '@holochain-open-dev/cell-client';
-import type { AgentPubKey, EntryHash, Record } from '@holochain/client';
+import type { AgentPubKey, EntryHash, Record, AppAgentClient, AppAgentCallZomeRequest } from '@holochain/client';
 import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
 
 import {
@@ -14,7 +13,7 @@ import {
 } from './types';
 
 export class SynClient {
-  constructor(public cellClient: CellClient, protected zomeName = 'syn') {}
+  constructor(public client: AppAgentClient, protected zomeName = 'syn', protected roleName = 'syn') {}
 
   /** Roots */
   public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {
@@ -108,6 +107,12 @@ export class SynClient {
 
   /** Helpers */
   private async callZome(fnName: string, payload: any): Promise<any> {
-    return this.cellClient.callZome(this.zomeName, fnName, payload);
+    const req: AppAgentCallZomeRequest = {
+      role_name: this.roleName,
+      zome_name: this.zomeName,
+      fn_name: fnName,
+      payload
+    }
+    return this.client.callZome(req);
   }
 }

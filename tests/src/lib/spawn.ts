@@ -1,26 +1,26 @@
-import { CellClient, HolochainClient } from '@holochain-open-dev/cell-client';
-import { DnaSource } from '@holochain/client';
-import { Player, Scenario } from '@holochain/tryorama';
+import { AppAgentWebsocket, AppAgentClient, AppBundleSource} from '@holochain/client';
+import { AppOptions, Player, Scenario } from '@holochain/tryorama';
 import { synDna } from '../common.js';
 
-export async function spawnSyn(scenario: Scenario, playersCount: number): Promise<Array<CellClient>> {
+export async function spawnSyn(scenario: Scenario, playersCount: number): Promise<Array<AppAgentClient>> {
 
-  const dnas: DnaSource[] = [{ path: synDna }];
-  let dnasList: Array<DnaSource[]> = []
+  let bundleList: Array<{
+    appBundleSource: AppBundleSource;
+    options?: AppOptions;
+  }> = []
   
   for (let i=0; i< playersCount; i+=1) {
-    dnasList.push(dnas)
+    bundleList.push({appBundleSource: { path: synDna }, options: {installedAppId:'syn-test'}})
   }
 
-  const players: Player[] = await scenario.addPlayersWithHapps(dnasList);
+  const players: Player[] = await scenario.addPlayersWithApps(bundleList);
   await scenario.shareAllAgents();
 
-  let clients : CellClient[] = []
+  let clients : AppAgentClient[] = []
   for (let i=0;i<players.length; i+=1) {
     const player = players[i]
-
-    const hcClient = new HolochainClient(player.conductor.appWs());
-    clients.push(new CellClient(hcClient, player.cells[0]));
+    const client = await AppAgentWebsocket.connect(player.conductor.appWs(), 'syn-test')
+    clients.push(client);
   }
   return clients
 }

@@ -1,5 +1,4 @@
-import { AdminWebsocket, AppWebsocket } from '@holochain/client';
-import { HolochainClient, CellClient } from '@holochain-open-dev/cell-client';
+import { AppAgentClient, AppAgentWebsocket, AppWebsocket } from '@holochain/client';
 import { SynStore, SynClient, extractSlice } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 
@@ -30,15 +29,12 @@ export function textSlice(workspaceStore) {
   );
 }
 
-export async function createCellClient() {
+export async function createClient() {
   const url = `ws://localhost:${process.env.HC_PORT}`;
 
   const appWebsocket = await AppWebsocket.connect(url);
 
-  const appInfo = await appWebsocket.appInfo({ installed_app_id: 'syn' });
-
-  const client = new HolochainClient(appWebsocket);
-
-  const cellData = appInfo.cell_data.find(c => c.role_name === 'syn-test');
-  return new CellClient(client, cellData);
+  const client = await AppAgentWebsocket.connect(appWebsocket, 'syn');
+  
+  return client
 }

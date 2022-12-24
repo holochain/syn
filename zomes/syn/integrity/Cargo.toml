@@ -2,7 +2,7 @@
 authors = ["eric.harris-braun@holo.host"]
 edition = "2021"
 name = "hc_zome_syn_integrity"
-version = "0.0.1"
+version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -13,4 +13,4 @@ derive_more = "0.99.9"
 serde = "1"
 chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 
-hdi = "=0.1.10"
+hdi = { workspace = true }

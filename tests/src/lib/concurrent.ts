@@ -24,8 +24,8 @@ function bobPosition(text: string) {
 }
 export default t => async (scenario: Scenario) => {
   const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  const aliceSyn = new SynStore(new SynClient(aliceClient));
-  const bobSyn = new SynStore(new SynClient(bobClient));
+  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn','syn-test'));
+  const bobSyn = new SynStore(new SynClient(bobClient,'syn','syn-test'));
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(

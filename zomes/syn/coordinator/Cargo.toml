@@ -1,5 +1,8 @@
 [package]
-authors = ["guillem.cordoba@gmail.com"]
+authors = [
+    "guillem.cordoba@gmail.com",
+    "eric@harris-braun.com",
+    ]
 edition = "2021"
 name = "hc_zome_syn_coordinator"
 version = "0.0.2"
@@ -14,6 +17,6 @@ derive_more = "0.99.9"
 itertools = "0.10.5"
 serde = "1"
 
-hdk = "0.0.163"
+hdk = { workspace = true }
 
 hc_zome_syn_integrity = {path = "../integrity"}
