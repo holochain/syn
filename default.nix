@@ -11,4 +11,7 @@ in nixpkgs.mkShell {
     nodejs-16_x
     # any additional packages needed for this project, e. g. Nodejs
   ];
+  shellHook = ''
+    export GIO_MODULE_DIR="${nixpkgs.glib-networking}/lib/gio/modules/";
+  '';
 }
