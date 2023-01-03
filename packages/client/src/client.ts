@@ -13,7 +13,7 @@ import {
 } from './types';
 
 export class SynClient {
-  constructor(public client: AppAgentClient, protected zomeName = 'syn', protected roleName = 'syn') {}
+  constructor(public client: AppAgentClient, protected roleName, protected zomeName = 'syn') {}
 
   /** Roots */
   public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {

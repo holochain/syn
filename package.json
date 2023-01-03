@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "launch"      : "npm run build:happ && npm run build:libs && npm run build:ui && npm run launch:happ",
+    "launch"      : "npm run build:happ && npm run build:libs && npm run build:ui && WEBKIT_DISABLE_COMPOSITING_MODE=1 npm run launch:happ",
     "launch:happ" : "RUST_LOG=warn echo \"pass\" | hc launch --piped -n 2 workdir/syn-test.happ -w --ui-path apps/syntext/public network mdns",
     "start"       : "npm run network 2",
     "network"     : "npm run build:happ && concurrently-repeat \"npm run start:agent\"",

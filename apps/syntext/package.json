@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@holochain-open-dev/profiles": "^0.9.3",
-    "@holochain-syn/core": "0.3.0-alpha.1",
-    "@holochain-syn/text-editor": "0.3.0-alpha.1",
+    "@holochain-syn/core": "0.3.0-alpha.2",
+    "@holochain-syn/text-editor": "0.3.0-alpha.2",
     "@holochain/client": "^0.11.9",
     "@lit-labs/context": "^0.1.2",
     "lit": "^2.0.2",

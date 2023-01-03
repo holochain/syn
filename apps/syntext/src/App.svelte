@@ -93,7 +93,7 @@
   let workspaceStore;
 
   async function initSyn(client) {
-    const store = new SynStore(new SynClient(client, 'syn', 'syn-test'));
+    const store = new SynStore(new SynClient(client, 'syn-test'));
     const roots = get(await store.fetchAllRoots());
 
     if (roots.entryMap.keys().length === 0) {

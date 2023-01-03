@@ -1,6 +1,6 @@
 import { AppAgentWebsocket, AppAgentClient, AppBundleSource} from '@holochain/client';
 import { AppOptions, Player, Scenario } from '@holochain/tryorama';
-import { synDna } from '../common.js';
+import { synHapp } from '../common.js';
 
 export async function spawnSyn(scenario: Scenario, playersCount: number): Promise<Array<AppAgentClient>> {
 
@@ -10,7 +10,8 @@ export async function spawnSyn(scenario: Scenario, playersCount: number): Promis
   }> = []
   
   for (let i=0; i< playersCount; i+=1) {
-    bundleList.push({appBundleSource: { path: synDna }, options: {installedAppId:'syn-test'}})
+//    bundleList.push({appBundleSource: { path: synHapp }, options: {installedAppId:'syn-test'}})
+    bundleList.push({appBundleSource: { path: synHapp }, options: {installedAppId:'syn-test'}})
   }
 
   const players: Player[] = await scenario.addPlayersWithApps(bundleList);

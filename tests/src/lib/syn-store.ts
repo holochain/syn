@@ -18,8 +18,8 @@ export default t => async (scenario: Scenario) => {
   try {
 
   const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn','syn-test'));
-  const bobSyn = new SynStore(new SynClient(bobClient,'syn','syn-test'));
+  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn-test'));
+  const bobSyn = new SynStore(new SynClient(bobClient,'syn-test'));
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(

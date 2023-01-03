@@ -500,7 +500,7 @@ dependencies = [
 
 [[package]]
 name = "hc_zome_syn_coordinator"
-version = "0.0.2"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "derive_more",
