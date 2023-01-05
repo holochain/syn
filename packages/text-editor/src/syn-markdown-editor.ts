@@ -3,6 +3,7 @@ import { property, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements';
 import { CodemirrorMarkdown } from '@scoped-elements/codemirror';
 import {
+//@ts-ignore
   Profile,
   ProfilesStore,
   profilesStoreContext,
@@ -101,7 +102,6 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
       .filter(([pubKey, _]) => pubKey !== myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
-
         const name = this._peersProfiles.get(deserializeHash(agentPubKey))
           ?.value?.nickname;
         return {

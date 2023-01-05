@@ -121,7 +121,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   private intervals: any[] = [];
 
   get myPubKey() {
-    return this.rootStore.client.cellClient.cell.cell_id[1];
+    return this.rootStore.client.client.myPubKey;
   }
 
   private constructor(
@@ -131,7 +131,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const { unsubscribe } = this.rootStore.client.cellClient.addSignalHandler(
+    this.unsubscribe = this.rootStore.client.client.on('signal',
       signal => {
         const synSignal: SynSignal = signal.data.payload;
 
@@ -195,7 +195,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         }
       }
     );
-    this.unsubscribe = unsubscribe;
+    
 
     const heartbeatInterval = setInterval(async () => {
       const participants = await this.rootStore.client.getWorkspaceParticipants(

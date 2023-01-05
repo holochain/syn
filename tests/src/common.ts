@@ -8,6 +8,7 @@ import { SynGrammar } from '@holochain-syn/store';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+export const synHapp = path.join(__dirname, '../../workdir/syn-test.happ');
 export const synDna = path.join(__dirname, '../../workdir/syn-test.dna');
 
 export type Add = [number, string];

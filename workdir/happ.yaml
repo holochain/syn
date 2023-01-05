@@ -3,7 +3,7 @@ manifest_version: "1"
 name: syn-test
 description: ""
 roles:
-  - id: syn-test
+  - name: syn-test
     provisioning:
       strategy: create
       deferred: false

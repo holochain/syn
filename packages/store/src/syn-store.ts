@@ -20,7 +20,7 @@ export class SynStore {
   constructor(public client: SynClient) {}
 
   get myPubKey() {
-    return this.client.cellClient.cell.cell_id[1];
+    return this.client.client.myPubKey;
   }
 
   async fetchAllRoots() {

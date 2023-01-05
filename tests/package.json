@@ -9,11 +9,9 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
-    "@holochain/client": "^0.9.2",
-    "@holochain-open-dev/cell-client": "^0.8.0",
-    "@holochain-open-dev/core-types": "^0.5.0",
-    "@holochain-syn/core": "0.2.4",
-    "@holochain-syn/text-editor": "0.2.3",
+    "@holochain/client": "^0.11.9",
+    "@holochain-syn/core": "0.3.0-alpha.2",
+    "@holochain-syn/text-editor": "0.3.0-alpha.2",
     "@msgpack/msgpack": "^2.7.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
@@ -28,7 +26,7 @@
     "uuidv4": "^6.2.11"
   },
   "devDependencies": {
-    "@holochain/tryorama": "0.9.0",
+    "@holochain/tryorama": "0.10.1",
     "@types/lodash": "^4.14.171",
     "@types/node": "^15.14.2",
     "ava": "^3.15.0"

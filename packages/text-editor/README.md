@@ -12,9 +12,9 @@ You can use the text-editor and its grammar as the only state in your `syn` appl
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 import { SynStore } from '@holochain-syn/store';
 
-// ... instantiate the cellClient
+// ... instantiate the client
 
-const store = new SynStore(cellClient, textEditorGrammar);
+const store = new SynStore(client, textEditorGrammar);
 ```
 
 ### Including the Grammar into your own Grammar

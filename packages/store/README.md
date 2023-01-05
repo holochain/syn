@@ -107,25 +107,14 @@ With this, you'll have defined how `syn` is going to aggregate the changes that 
 Now that you have defined your grammar, it's time to instantiate the store with it:
 
 ```ts
-import { HolochainClient, CellClient } from '@holochain-open-dev/cell-client';
+import { AppWebsocket, AppAgentWebsocket } from '@holochain/client';
 import { SynStore, RootStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
-const appWebsocket = await AppWebsocket.connect(url);
-const client = new HolochainClient(appWebsocket);
+const appWs = await AppWebsocket.connect(url);
+const client = await AppAgentWebsocket.connect(appWs, 'YOUR_APP_ID')
 
-const appInfo = await appWebsocket.appInfo({
-  installed_app_id: 'YOUR_APP_ID',
-});
-
-const installedCells = appInfo.cell_data;
-const notebooksCell = installedCells.find(
-  c => c.role_id === 'YOUR_ROLE_ID'
-) as InstalledCell;
-
-const cellClient = new CellClient(client, notebooksCell);
-
-const synStore = new SynStore(new SynClient(cellClient));
+const synStore = new SynStore(new SynClient(client, 'YOUR_ZOME_NAME', 'YOUR_ROLE_NAME'));
 ```
 
 At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.

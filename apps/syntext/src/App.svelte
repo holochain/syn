@@ -8,7 +8,7 @@
     RootStore,
   } from '@holochain-syn/core';
   import { SynMarkdownEditor } from '@holochain-syn/text-editor';
-  import { createCellClient, DocumentGrammar, textSlice } from './syn';
+  import { createClient, DocumentGrammar, textSlice } from './syn';
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
   import {
@@ -92,8 +92,8 @@
   let profilesStore;
   let workspaceStore;
 
-  async function initSyn(cellClient) {
-    const store = new SynStore(new SynClient(cellClient));
+  async function initSyn(client) {
+    const store = new SynStore(new SynClient(client, 'syn-test'));
     const roots = get(await store.fetchAllRoots());
 
     if (roots.entryMap.keys().length === 0) {
@@ -119,9 +119,9 @@
     }
   }
   onMount(async () => {
-    const cellClient = await createCellClient();
-    profilesStore = new ProfilesStore(new ProfilesService(cellClient));
-    await initSyn(cellClient);
+    const client = await createClient();
+    profilesStore = new ProfilesStore(new ProfilesService(client, 'syn-test'));
+    await initSyn(client);
   });
 
   $: synStore, workspaceStore, profilesStore;

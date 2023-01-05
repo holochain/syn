@@ -7,7 +7,7 @@ import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
-import { EntryHashB64 } from '@holochain-open-dev/core-types';
+import { EntryHashB64 } from '@holochain/client';
 import { serializeHash, RecordBag } from '@holochain-open-dev/utils';
 
 import { Commit } from '@holochain-syn/client';

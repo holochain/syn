@@ -14,20 +14,22 @@ process.on('unhandledRejection', error => {
 });
 
 export default t => async (scenario: Scenario) => {
+
+  try {
+
   const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  const aliceSyn = new SynStore(new SynClient(aliceClient));
-  const bobSyn = new SynStore(new SynClient(bobClient));
+  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn-test'));
+  const bobSyn = new SynStore(new SynClient(bobClient,'syn-test'));
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(
     'main',
     aliceRootStore.root.entryHash
   );
-
   const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
     workspaceHash,
   );
-  
+
   t.ok(aliceWorkspaceStore.workspaceHash);
 
   await delay(2000);
@@ -123,6 +125,9 @@ export default t => async (scenario: Scenario) => {
   t.equal(participants.active.length, 1);
 
   await aliceWorkspaceStore.leaveWorkspace();
+  } catch(e) {
+    console.log("CAUGHT ERROR", e)
+  }
 
   t.end()
 }

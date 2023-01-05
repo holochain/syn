@@ -33,7 +33,7 @@ export class RootStore<G extends SynGrammar<any, any>> {
   }
 
   get myPubKey() {
-    return this.client.cellClient.cell.cell_id[1];
+    return this.client.client.myPubKey;
   }
 
   async fetchWorkspaces() {
