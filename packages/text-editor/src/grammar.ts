@@ -1,6 +1,5 @@
-import { serializeHash } from '@holochain-open-dev/utils';
 import type { SynGrammar } from '@holochain-syn/store';
-import { AgentPubKey } from '@holochain/client';
+import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
 import Automerge from 'automerge';
 
 export enum TextEditorDeltaType {
@@ -59,7 +58,7 @@ export const textEditorGrammar: TextEditorGrammar = {
         delta.position + delta.text.length - 1
       );
 
-      ephemeral[serializeHash(author)] = {
+      ephemeral[encodeHashToBase64(author)] = {
         left: false,
         position: elementId,
         characterCount: 0,
@@ -72,7 +71,7 @@ export const textEditorGrammar: TextEditorGrammar = {
       if (delta.position === 0) {
         const elementId = (state.text as any).getElemId(0);
 
-        ephemeral[serializeHash(author)] = {
+        ephemeral[encodeHashToBase64(author)] = {
           left: true,
           position: elementId,
           characterCount: 0,
@@ -80,7 +79,7 @@ export const textEditorGrammar: TextEditorGrammar = {
       } else {
         const elementId = (state.text as any).getElemId(delta.position - 1);
 
-        ephemeral[serializeHash(author)] = {
+        ephemeral[encodeHashToBase64(author)] = {
           left: false,
           position: elementId,
           characterCount: 0,
@@ -90,13 +89,13 @@ export const textEditorGrammar: TextEditorGrammar = {
       if (state.text.length === 0) {
 
       } else if (delta.position === state.text.length) {
-        ephemeral[serializeHash(author)] = {
+        ephemeral[encodeHashToBase64(author)] = {
           left: false,
           position: (state.text as any).getElemId(delta.position - 1),
           characterCount: delta.characterCount,
         };
       } else {
-        ephemeral[serializeHash(author)] = {
+        ephemeral[encodeHashToBase64(author)] = {
           left: true,
           position: (state.text as any).getElemId(delta.position),
           characterCount: delta.characterCount,

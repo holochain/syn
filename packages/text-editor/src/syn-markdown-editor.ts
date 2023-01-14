@@ -15,14 +15,11 @@ import {
 } from '@holochain-syn/core';
 import { contextProvided } from '@lit-labs/context';
 import { StoreSubscriber, TaskSubscriber } from 'lit-svelte-stores';
-import {
-  AgentPubKeyMap,
-  deserializeHash,
-  serializeHash,
-} from '@holochain-open-dev/utils';
+import { AgentPubKeyMap } from '@holochain-open-dev/utils';
 
 import { TextEditorDeltaType, TextEditorGrammar } from './grammar';
 import { elemIdToPosition } from './utils';
+import { decodeHashFromBase64, encodeHashToBase64 } from '@holochain/client';
 
 export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   @property({ type: Object })
@@ -96,13 +93,13 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
   }
 
   remoteCursors() {
-    const myPubKey = serializeHash(this.slice.myPubKey);
+    const myPubKey = encodeHashToBase64(this.slice.myPubKey);
     if (!this._cursors.value) return [];
     return Object.entries(this._cursors.value)
       .filter(([pubKey, _]) => pubKey !== myPubKey)
       .map(([agentPubKey, position]) => {
         const { r, g, b } = getFolkColors(agentPubKey);
-        const name = this._peersProfiles.get(deserializeHash(agentPubKey))
+        const name = this._peersProfiles.get(decodeHashFromBase64(agentPubKey))
           ?.value?.nickname;
         return {
           position: elemIdToPosition(
@@ -120,7 +117,7 @@ export class SynMarkdownEditor extends ScopedElementsMixin(LitElement) {
     if (this._state.value === undefined) return html``;
 
     const mySelection =
-      this._cursors.value[serializeHash(this.slice.myPubKey)];
+      this._cursors.value[encodeHashToBase64(this.slice.myPubKey)];
 
     const myPosition =
       mySelection &&

@@ -9,7 +9,7 @@
   "author": "",
   "license": "CAL-1.0",
   "dependencies": {
-    "@holochain/client": "^0.11.9",
+    "@holochain/client": "^0.11.10",
     "@holochain-syn/core": "0.3.0-alpha.2",
     "@holochain-syn/text-editor": "0.3.0-alpha.2",
     "@msgpack/msgpack": "^2.7.0",

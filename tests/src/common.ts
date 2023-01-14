@@ -31,7 +31,7 @@ export type Signal = {
 
 export const delay = ms => new Promise(r => setTimeout(r, ms));
 
-export function serializeHash(hash: Uint8Array): string {
+export function encodeHashToBase64(hash: Uint8Array): string {
   return `u${Base64.fromUint8Array(hash, true)}`;
 }
 

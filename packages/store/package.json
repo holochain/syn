@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/store",
-  "version": "0.3.0-alpha.2",
+  "version": "0.3.0-alpha.3",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -16,7 +16,7 @@
     "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
   },
   "dependencies": {
-    "@holochain/client": "^0.11.9",
+    "@holochain/client": "^0.11.10",
     "@holochain-open-dev/utils": "^0.7.2",
     "@holochain-syn/client": "0.3.0-alpha.2",
     "@msgpack/msgpack": "^2.7.2",

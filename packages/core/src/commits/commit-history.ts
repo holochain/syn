@@ -7,8 +7,8 @@ import { Card, CircularProgress } from '@scoped-elements/material-web';
 import { TaskSubscriber } from 'lit-svelte-stores';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
-import { EntryHashB64 } from '@holochain/client';
-import { serializeHash, RecordBag } from '@holochain-open-dev/utils';
+import { encodeHashToBase64, EntryHashB64 } from '@holochain/client';
+import { RecordBag } from '@holochain-open-dev/utils';
 
 import { Commit } from '@holochain-syn/client';
 import { RootStore } from '@holochain-syn/store';
@@ -113,7 +113,7 @@ function getCommitGraph(
   const elements: Array<NodeDefinition | EdgeDefinition> = [];
 
   for (const [commitHash, commit] of commits.entryMap.entries()) {
-    const strCommitHash = serializeHash(commitHash);
+    const strCommitHash = encodeHashToBase64(commitHash);
     elements.push({
       data: {
         id: strCommitHash,
@@ -121,7 +121,7 @@ function getCommitGraph(
     });
 
     for (const parentCommitHash of commit.previous_commit_hashes) {
-      const strParentCommitHash = serializeHash(parentCommitHash);
+      const strParentCommitHash = encodeHashToBase64(parentCommitHash);
 
       elements.push({
         data: {

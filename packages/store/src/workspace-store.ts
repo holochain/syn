@@ -1,10 +1,10 @@
 import { Commit, WorkspaceMessage, SynSignal } from '@holochain-syn/client';
 import { Readable, writable, Writable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
-import { AgentPubKeyMap, serializeHash } from '@holochain-open-dev/utils';
+import { AgentPubKeyMap } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
-import { AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
+import { encodeHashToBase64, AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
 import isEqual from 'lodash-es/isEqual';
 
 import type {
@@ -133,7 +133,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   ) {
     this.unsubscribe = this.rootStore.client.client.on('signal',
       signal => {
-        const synSignal: SynSignal = signal.data.payload;
+        const synSignal: SynSignal = signal.payload;
 
         if (synSignal.message.type !== 'WorkspaceMessage') return;
         if (isEqual(synSignal.provenance, this.myPubKey)) return;
@@ -245,7 +245,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     const commitInterval = setInterval(async () => {
       const activeParticipants = get(this.participants)
-        .active.map(p => serializeHash(p))
+        .active.map(p => encodeHashToBase64(p))
         .sort((p1, p2) => {
           if (p1 < p2) {
             return -1;
@@ -256,7 +256,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           return 0;
         });
 
-      if (activeParticipants[0] === serializeHash(this.myPubKey)) {
+      if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
         this.commitChanges();
       }
     }, this.config.commitStrategy.CommitEveryNMs);
