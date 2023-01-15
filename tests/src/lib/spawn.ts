@@ -1,4 +1,4 @@
-import { AppAgentWebsocket, AppAgentClient, AppBundleSource, AppBundle, AppRoleManifest, AppRoleDnaManifest} from '@holochain/client';
+import { AppAgentClient, AppBundleSource, AppBundle, AppRoleManifest, AppRoleDnaManifest} from '@holochain/client';
 import { AppOptions, Player, Scenario } from '@holochain/tryorama';
 import { Dictionary } from 'lodash';
 import { synDna } from '../common.js';
@@ -22,7 +22,7 @@ export async function spawnSyn(scenario: Scenario, playersCount: number): Promis
   let clients : AppAgentClient[] = []
   for (let i=0;i<players.length; i+=1) {
     const player = players[i]
-    const client = await AppAgentWebsocket.connect(player.conductor.appWs(), 'syn-test')
+    const client = player.conductor.appAgentWs()
     clients.push(client);
   }
   return clients
