@@ -13,4 +13,4 @@ derive_more = "0"
 serde = "1"
 hdi = { workspace = true }
 
-hc_zome_profiles_integrity = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.1.0-beta-rc.1", package = "hc_zome_profiles_integrity"}
+hc_zome_profiles_integrity = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.1.0-beta-rc.2", package = "hc_zome_profiles_integrity"}

@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/text-editor",
-  "version": "0.3.0-alpha.4",
+  "version": "0.3.0-alpha.5",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": [
@@ -13,10 +13,10 @@
   "type": "module",
   "dependencies": {
     "automerge": "^1.0.1-preview.7",
-    "@holochain/client": "^0.11.12",
-    "@holochain-open-dev/profiles": "^0.9.3",
-    "@holochain-open-dev/utils": "^0.7.2",
-    "@holochain-syn/core": "0.3.0-alpha.4",
+    "@holochain/client": "^0.11.13",
+    "@holochain-open-dev/profiles": "^0.9.4",
+    "@holochain-open-dev/utils": "^0.9.3",
+    "@holochain-syn/core": "0.3.0-alpha.5",
     "@lit-labs/context": "^0.1.2",
     "@open-wc/scoped-elements": "^2.1.0",
     "@scoped-elements/material-web": "^0.0.19",
