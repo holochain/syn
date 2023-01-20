@@ -134,6 +134,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     this.unsubscribe = this.rootStore.client.client.on('signal',
       signal => {
         console.log("SIGNAL", signal)
+        //@ts-ignore
         const synSignal: SynSignal = signal.payload;
 
         if (synSignal.message.type !== 'WorkspaceMessage') return;

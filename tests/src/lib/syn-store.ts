@@ -33,23 +33,18 @@ export default t => async (scenario: Scenario) => {
   t.ok(aliceWorkspaceStore.workspaceHash);
 
   await delay(2000);
-  console.log("FISH.-0")
 
   const roots = get(await bobSyn.fetchAllRoots());
-  console.log("FISH.0", roots)
 
   const bobRootStore = new RootStore(
     bobSyn.client,
     sampleGrammar,
     roots.entryRecords[0]
   );
-  console.log("FISH.1")
 
   const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
-  console.log("FISH.2")
 
   aliceWorkspaceStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
-  console.log("FISH.3")
 
   await delay(7000);
 
