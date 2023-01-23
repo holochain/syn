@@ -26,7 +26,7 @@
     "@holochain-open-dev/profiles": "^0.9.4",
     "@holochain-syn/core": "0.3.0-alpha.5",
     "@holochain-syn/text-editor": "0.3.0-alpha.5",
-    "@holochain/client": "^0.11.14",
+    "@holochain/client": "^0.11.15",
     "@lit-labs/context": "^0.1.2",
     "lit": "^2.0.2",
     "sirv-cli": "^1.0.0",
