@@ -10,8 +10,8 @@
   "license": "CAL-1.0",
   "dependencies": {
     "@holochain/client": "^0.11.16",
-    "@holochain-syn/core": "0.3.0-alpha.5",
-    "@holochain-syn/text-editor": "0.3.0-alpha.5",
+    "@holochain-syn/core": "0.3.0-alpha.6",
+    "@holochain-syn/text-editor": "0.3.0-alpha.6",
     "@msgpack/msgpack": "^2.7.0",
     "esm": "^3.2.25",
     "js-base64": "^3.6.1",
