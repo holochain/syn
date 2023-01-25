@@ -13,7 +13,7 @@
   "type": "module",
   "dependencies": {
     "automerge": "^1.0.1-preview.7",
-    "@holochain/client": "^0.11.15",
+    "@holochain/client": "^0.11.16",
     "@holochain-open-dev/profiles": "^0.9.4",
     "@holochain-open-dev/utils": "^0.9.3",
     "@holochain-syn/core": "0.3.0-alpha.5",
