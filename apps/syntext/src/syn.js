@@ -32,9 +32,7 @@ export function textSlice(workspaceStore) {
 export async function createClient() {
   //const url = `ws://localhost:${process.env.HC_PORT}`;
 
-  const appWebsocket = await AppWebsocket.connect(undefined);
-
-  const client = await AppAgentWebsocket.connect(appWebsocket, 'syn');
+  const client = await AppAgentWebsocket.connect(undefined, 'syn');
   
   return client
 }
