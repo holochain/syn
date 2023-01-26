@@ -142,9 +142,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     initialParticipants: Array<AgentPubKey>
   ) {
     this.unsubscribe = this.rootStore.client.client.on('signal', signal => {
-      console.log('SIGNAL', signal);
-      //@ts-ignore
-      const synSignal: SynSignal = signal.payload;
+      const synSignal: SynSignal = signal.payload as SynSignal;
 
       if (synSignal.message.type !== 'WorkspaceMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
@@ -311,6 +309,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     const participants = await rootStore.client.joinWorkspace(workspaceHash);
 
     const commits = await rootStore.client.getWorkspaceCommits(workspaceHash);
+
+    console.log("Tips found:", commits.length)
 
     const commitBag = new RecordBag<Commit>(commits);
 
