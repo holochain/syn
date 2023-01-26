@@ -113,7 +113,7 @@ export default t => async (scenario: Scenario) => {
     );
 
     await aliceWorkspaceStore.commitChanges();
-    const commits = await aliceSyn.client.getWorkspaceCommits(workspaceHash);
+    const commits = await aliceSyn.client.getWorkspaceTips(workspaceHash);
     t.notEqual(commits.length, 0);
 
     const commit = new EntryRecord<Commit>(commits[commits.length - 1]);

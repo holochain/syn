@@ -30,6 +30,7 @@ export interface CreateWorkspaceInput {
 export interface UpdateWorkspaceTipInput {
   workspace_hash: EntryHash;
   new_tip_hash: EntryHash;
+  previous_commit_hashes: Array<EntryHash>;
 }
 
 export type SynMessage =

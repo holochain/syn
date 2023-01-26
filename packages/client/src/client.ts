@@ -90,6 +90,11 @@ export class SynClient {
     return this.callZome('get_workspace_commits', workspaceHash);
   }
 
+  public getWorkspaceTips(workspaceHash: EntryHash): Promise<Record[]> {
+    return this.callZome('get_workspace_tips', workspaceHash);
+  }
+
+
   public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {
     return this.callZome('update_workspace_tip', input);
   }

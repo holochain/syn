@@ -65,15 +65,21 @@ pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>
 pub struct UpdateWorkspaceTipInput {
     workspace_hash: EntryHash,
     new_tip_hash: EntryHash,
+    previous_commit_hashes: Vec<EntryHash>,
 }
 
 #[hdk_extern]
 pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> {
+    let tag = match input.previous_commit_hashes.len() {
+        0 => LinkTag::new([]),
+        1 => LinkTag::new(input.previous_commit_hashes[0].as_ref()),
+        _ => LinkTag::new([input.previous_commit_hashes[0].as_ref(), input.previous_commit_hashes[1].as_ref()].concat()),
+    };
     create_link_relaxed(
         input.workspace_hash,
         input.new_tip_hash,
         LinkTypes::WorkspaceToTip,
-        (),
+        tag,
     )?;
 
     Ok(())
@@ -98,6 +104,44 @@ pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<Reco
 
     Ok(commits)
 }
+
+
+#[hdk_extern]
+pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>> {
+    let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
+
+    let mut tips = HashSet::new();
+    let mut tips_previous = HashSet::new();
+    for l in links {
+        tips.insert(EntryHash::from(l.target.clone()));
+   //     info!("TAG LEN: {}",l.tag.as_ref().len());
+        if l.tag.as_ref().len() == 39 {
+            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref().to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
+        }
+        if l.tag.as_ref().len() == 78 {
+            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref()[..39].to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
+            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref()[39..].to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
+        }
+    }
+    for p in tips_previous {
+        tips.remove(&p);
+    }
+    let commits_get_inputs = tips
+        .into_iter()
+        .map(|tip| {
+            GetInput::new(
+                AnyDhtHash::from(tip),
+                GetOptions::default(),
+            )
+        })
+        .collect();
+
+    let maybe_commits = HDK.with(|h| h.borrow().get(commits_get_inputs))?;
+    let commits: Vec<Record> = maybe_commits.into_iter().filter_map(|r| r).collect();
+
+    Ok(commits)
+}
+
 
 #[hdk_extern]
 pub fn get_workspace_participants(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {

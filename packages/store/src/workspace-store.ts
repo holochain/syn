@@ -308,7 +308,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   ): Promise<WorkspaceStore<G>> {
     const participants = await rootStore.client.joinWorkspace(workspaceHash);
 
-    const commits = await rootStore.client.getWorkspaceCommits(workspaceHash);
+    const commits = await rootStore.client.getWorkspaceTips(workspaceHash);
 
     console.log("Tips found:", commits.length)
 
@@ -316,11 +316,11 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     const tips = new EntryHashMap(commitBag.entryMap.entries());
 
-    for (const commit of commitBag.entryMap.values()) {
-      for (const previousCommitHash of commit.previous_commit_hashes) {
-        tips.delete(previousCommitHash);
-      }
-    }
+    // for (const commit of commitBag.entryMap.values()) {
+    //   for (const previousCommitHash of commit.previous_commit_hashes) {
+    //     tips.delete(previousCommitHash);
+    //   }
+    // }
 
     let currentTipHash = commitBag.entryActions.get(tips.keys()[0])[0];
     let currentTip: Record = commitBag.entryRecord(currentTipHash)!.record;
@@ -357,6 +357,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       await rootStore.client.updateWorkspaceTip({
         new_tip_hash: newCommit.entryHash,
         workspace_hash: workspaceHash,
+        previous_commit_hashes: tips.keys()
       });
     }
 
@@ -561,6 +562,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     await this.rootStore.client.updateWorkspaceTip({
       new_tip_hash: newCommit.entryHash,
       workspace_hash: this.workspaceHash,
+      previous_commit_hashes: [currentTip],
     });
 
     this._currentTip.set(newCommit.entryHash);
