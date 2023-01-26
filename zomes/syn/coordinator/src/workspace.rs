@@ -1,7 +1,10 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::{utils::{create_link_relaxed, create_relaxed}, messages::{SendMessageInput, SynMessage, MessagePayload, WorkspaceMessage, send_message}};
+use crate::{
+    messages::{send_message, MessagePayload, SendMessageInput, SynMessage, WorkspaceMessage},
+    utils::{create_link_relaxed, create_relaxed},
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
@@ -77,18 +80,23 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_workspace_tip(workspace_hash: EntryHash) -> ExternResult<EntryHash> {
+pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<Record>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
 
-    let maybe_latest_link = links
+    let commits_get_inputs = links
         .into_iter()
-        .max_by(|link_a, link_b| link_a.timestamp.cmp(&link_b.timestamp));
+        .map(|l| {
+            GetInput::new(
+                AnyDhtHash::from(EntryHash::from(l.target)),
+                GetOptions::default(),
+            )
+        })
+        .collect();
 
-    let latest_link = maybe_latest_link.ok_or(wasm_error!(WasmErrorInner::Guest(
-        "This workspace doesn't have any commit associated with it".into()
-    )))?;
+    let maybe_commits = HDK.with(|h| h.borrow().get(commits_get_inputs))?;
+    let commits: Vec<Record> = maybe_commits.into_iter().filter_map(|r| r).collect();
 
-    Ok(latest_link.target.into())
+    Ok(commits)
 }
 
 #[hdk_extern]
@@ -102,13 +110,8 @@ pub fn get_workspace_participants(workspace_hash: EntryHash) -> ExternResult<Vec
     Ok(participants)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct JoinWorkspaceOutput {
-    participants: Vec<AgentPubKey>,
-    current_tip: Record,
-}
 #[hdk_extern]
-pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOutput> {
+pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
     let participants = get_workspace_participants(workspace_hash.clone())?;
 
@@ -129,16 +132,7 @@ pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<JoinWorkspaceOu
         })?;
     }
 
-    let current_tip_hash = get_workspace_tip(workspace_hash)?;
-    let current_tip = get(current_tip_hash, GetOptions::default())?.ok_or(wasm_error!(
-        WasmErrorInner::Guest("Can't get the current tip for the workspace".into())
-    ))?;
-
-    let output = JoinWorkspaceOutput {
-        participants,
-        current_tip,
-    };
-    Ok(output)
+    Ok(participants)
 }
 
 #[hdk_extern]

@@ -23,9 +23,14 @@ function bobPosition(text: string) {
   return text.length;
 }
 export default t => async (scenario: Scenario) => {
-  const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn-test'));
-  const bobSyn = new SynStore(new SynClient(bobClient,'syn-test'));
+  const [alice, bob] = await spawnSyn(scenario, 2);
+  await scenario.shareAllAgents();
+  const aliceSyn = new SynStore(
+    new SynClient(alice.conductor.appAgentWs(), 'syn-test')
+  );
+  const bobSyn = new SynStore(
+    new SynClient(bob.conductor.appAgentWs(), 'syn-test')
+  );
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const workspaceHash = await aliceRootStore.createWorkspace(
@@ -33,9 +38,7 @@ export default t => async (scenario: Scenario) => {
     aliceRootStore.root.entryHash
   );
 
-  const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
-    workspaceHash
-  );
+  const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(workspaceHash);
 
   t.ok(aliceWorkspaceStore.workspaceHash);
 
@@ -110,5 +113,8 @@ ${bobLine}${bobLine}${bobLine}`;
 
   await aliceWorkspaceStore.leaveWorkspace();
   await bobWorkspaceStore.leaveWorkspace();
+
+  await bob.conductor.shutDown();
+  await alice.conductor.shutDown();
   t.end();
 };

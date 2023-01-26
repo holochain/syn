@@ -13,9 +13,14 @@ process.on('unhandledRejection', error => {
 });
 
 export default t => async (scenario: Scenario) => {
-  const [aliceClient, bobClient] = await spawnSyn(scenario, 2);
-  const aliceSyn = new SynStore(new SynClient(aliceClient,'syn-test'));
-  const bobSyn = new SynStore(new SynClient(bobClient,'syn-test'));
+  const [alice, bob] = await spawnSyn(scenario, 2);
+  await scenario.shareAllAgents();
+  const aliceSyn = new SynStore(
+    new SynClient(alice.conductor.appAgentWs(), 'syn-test')
+  );
+  const bobSyn = new SynStore(
+    new SynClient(bob.conductor.appAgentWs(), 'syn-test')
+  );
 
   const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
   const bobRootStore = await bobSyn.createRoot(sampleGrammar);
@@ -27,5 +32,7 @@ export default t => async (scenario: Scenario) => {
 
   t.ok(isEqual(aliceRootStoreD.root.entryHash, bobRootStoreD.root.entryHash));
 
+  await bob.conductor.shutDown();
+  await alice.conductor.shutDown();
   t.end();
 };

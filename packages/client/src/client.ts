@@ -1,11 +1,16 @@
-import type { AgentPubKey, EntryHash, Record, AppAgentClient, AppAgentCallZomeRequest } from '@holochain/client';
+import type {
+  AgentPubKey,
+  EntryHash,
+  Record,
+  AppAgentClient,
+  AppAgentCallZomeRequest,
+} from '@holochain/client';
 import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
 
 import {
   Commit,
   CreateCommitInput,
   CreateWorkspaceInput,
-  JoinWorkspaceOutput,
   SendMessageInput,
   SynMessage,
   UpdateWorkspaceTipInput,
@@ -13,7 +18,11 @@ import {
 } from './types';
 
 export class SynClient {
-  constructor(public client: AppAgentClient, protected roleName, protected zomeName = 'syn') {}
+  constructor(
+    public client: AppAgentClient,
+    protected roleName: string,
+    protected zomeName = 'syn'
+  ) {}
 
   /** Roots */
   public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {
@@ -77,8 +86,8 @@ export class SynClient {
     return this.callZome('get_workspace_participants', workspace_hash);
   }
 
-  public getWorkspaceTip(workspaceHash: EntryHash): Promise<EntryHash> {
-    return this.callZome('get_workspace_tip', workspaceHash);
+  public getWorkspaceCommits(workspaceHash: EntryHash): Promise<Record[]> {
+    return this.callZome('get_workspace_commits', workspaceHash);
   }
 
   public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {
@@ -87,7 +96,7 @@ export class SynClient {
 
   public async joinWorkspace(
     workspace_hash: EntryHash
-  ): Promise<JoinWorkspaceOutput> {
+  ): Promise<AgentPubKey[]> {
     return this.callZome('join_workspace', workspace_hash);
   }
 
@@ -111,8 +120,8 @@ export class SynClient {
       role_name: this.roleName,
       zome_name: this.zomeName,
       fn_name: fnName,
-      payload
-    }
+      payload,
+    };
     return this.client.callZome(req);
   }
 }

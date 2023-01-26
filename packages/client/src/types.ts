@@ -32,11 +32,6 @@ export interface UpdateWorkspaceTipInput {
   new_tip_hash: EntryHash;
 }
 
-export interface JoinWorkspaceOutput {
-  current_tip: Record;
-  participants: Array<AgentPubKey>;
-}
-
 export type SynMessage =
   | ({ type: 'WorkspaceMessage' } & WorkspaceMessage)
   | { type: 'NewRoot'; root: Record };

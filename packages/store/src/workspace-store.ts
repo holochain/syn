@@ -1,10 +1,20 @@
 import { Commit, WorkspaceMessage, SynSignal } from '@holochain-syn/client';
 import { Readable, writable, Writable } from 'svelte/store';
 import { derived, get } from 'svelte/store';
-import { AgentPubKeyMap } from '@holochain-open-dev/utils';
+import {
+  AgentPubKeyMap,
+  EntryHashMap,
+  RecordBag,
+} from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
-import { encodeHashToBase64, AgentPubKey, Create, EntryHash, Record } from '@holochain/client';
+import {
+  encodeHashToBase64,
+  AgentPubKey,
+  Create,
+  EntryHash,
+  Record,
+} from '@holochain/client';
 import isEqual from 'lodash-es/isEqual';
 
 import type {
@@ -131,73 +141,70 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    this.unsubscribe = this.rootStore.client.client.on('signal',
-      signal => {
-        console.log("SIGNAL", signal)
-        //@ts-ignore
-        const synSignal: SynSignal = signal.payload;
+    this.unsubscribe = this.rootStore.client.client.on('signal', signal => {
+      console.log('SIGNAL', signal);
+      //@ts-ignore
+      const synSignal: SynSignal = signal.payload;
 
-        if (synSignal.message.type !== 'WorkspaceMessage') return;
-        if (isEqual(synSignal.provenance, this.myPubKey)) return;
+      if (synSignal.message.type !== 'WorkspaceMessage') return;
+      if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
-        const message: WorkspaceMessage = synSignal.message;
-        if (message && isEqual(message.workspace_hash, workspaceHash)) {
-          if (message.payload.type === 'LeaveWorkspace') {
-            this.handleLeaveWorkspaceNotice(synSignal.provenance);
-            return;
-          }
+      const message: WorkspaceMessage = synSignal.message;
+      if (message && isEqual(message.workspace_hash, workspaceHash)) {
+        if (message.payload.type === 'LeaveWorkspace') {
+          this.handleLeaveWorkspaceNotice(synSignal.provenance);
+          return;
+        }
 
-          if (
-            message.payload.type === 'JoinWorkspace' ||
-            !get(this._participants).get(synSignal.provenance)
-          ) {
-            this.handleNewParticipant(synSignal.provenance);
-          } else {
-            this._participants.update(p => {
-              const participantInfo = p.get(synSignal.provenance);
-              participantInfo.lastSeen = Date.now();
-              p.put(synSignal.provenance, participantInfo);
+        if (
+          message.payload.type === 'JoinWorkspace' ||
+          !get(this._participants).get(synSignal.provenance)
+        ) {
+          this.handleNewParticipant(synSignal.provenance);
+        } else {
+          this._participants.update(p => {
+            const participantInfo = p.get(synSignal.provenance);
+            participantInfo.lastSeen = Date.now();
+            p.put(synSignal.provenance, participantInfo);
 
-              return p;
-            });
-          }
+            return p;
+          });
+        }
 
-          if (message.payload.type === 'ChangeNotice') {
-            this.handleChangeNotice(
-              synSignal.provenance,
-              message.payload.state_changes.map(
-                c => decode(c) as Automerge.BinaryChange
-              ),
-              message.payload.ephemeral_changes.map(
-                c => decode(c) as Automerge.BinaryChange
-              )
-            );
-          }
-          if (message.payload.type === 'SyncReq') {
-            this.handleSyncRequest(
-              synSignal.provenance,
-              message.payload.sync_message
-                ? (decode(
-                    message.payload.sync_message
-                  ) as Automerge.BinarySyncMessage)
-                : undefined,
-              message.payload.ephemeral_sync_message
-                ? (decode(
-                    message.payload.ephemeral_sync_message
-                  ) as Automerge.BinarySyncMessage)
-                : undefined
-            );
-          }
-          if (message.payload.type === 'Heartbeat') {
-            this.handleHeartbeat(
-              synSignal.provenance,
-              message.payload.known_participants
-            );
-          }
+        if (message.payload.type === 'ChangeNotice') {
+          this.handleChangeNotice(
+            synSignal.provenance,
+            message.payload.state_changes.map(
+              c => decode(c) as Automerge.BinaryChange
+            ),
+            message.payload.ephemeral_changes.map(
+              c => decode(c) as Automerge.BinaryChange
+            )
+          );
+        }
+        if (message.payload.type === 'SyncReq') {
+          this.handleSyncRequest(
+            synSignal.provenance,
+            message.payload.sync_message
+              ? (decode(
+                  message.payload.sync_message
+                ) as Automerge.BinarySyncMessage)
+              : undefined,
+            message.payload.ephemeral_sync_message
+              ? (decode(
+                  message.payload.ephemeral_sync_message
+                ) as Automerge.BinarySyncMessage)
+              : undefined
+          );
+        }
+        if (message.payload.type === 'Heartbeat') {
+          this.handleHeartbeat(
+            synSignal.provenance,
+            message.payload.known_participants
+          );
         }
       }
-    );
-    
+    });
 
     const heartbeatInterval = setInterval(async () => {
       const participants = await this.rootStore.client.getWorkspaceParticipants(
@@ -301,14 +308,64 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     config: SynConfig,
     workspaceHash: EntryHash
   ): Promise<WorkspaceStore<G>> {
-    const output = await rootStore.client.joinWorkspace(workspaceHash);
+    const participants = await rootStore.client.joinWorkspace(workspaceHash);
+
+    const commits = await rootStore.client.getWorkspaceCommits(workspaceHash);
+
+    const commitBag = new RecordBag<Commit>(commits);
+
+    const tips = new EntryHashMap(commitBag.entryMap.entries());
+
+    for (const commit of commitBag.entryMap.values()) {
+      for (const previousCommitHash of commit.previous_commit_hashes) {
+        tips.delete(previousCommitHash);
+      }
+    }
+
+    let currentTipHash = commitBag.entryActions.get(tips.keys()[0])[0];
+    let currentTip: Record = commitBag.entryRecord(currentTipHash)!.record;
+
+    // If there are more that one tip, merge them
+    if (tips.keys().length > 1) {
+      let mergeState = Automerge.merge(
+        Automerge.load(decode(tips.values()[0].state) as any),
+        Automerge.load(decode(tips.values()[1].state) as any)
+      );
+
+      for (let i = 2; i < tips.keys().length; i++) {
+        mergeState = Automerge.merge(
+          mergeState,
+          Automerge.load(decode(tips.values()[i].state) as any)
+        );
+      }
+
+      const commit: Commit = {
+        authors: [rootStore.client.client.myPubKey],
+        meta: encode('Merge commit'),
+        previous_commit_hashes: tips.keys(),
+        state: encode(Automerge.save(mergeState)),
+        witnesses: [],
+      };
+
+      const newCommit = await rootStore.client.createCommit({
+        commit,
+        root_hash: rootStore.root.entryHash,
+      });
+
+      currentTip = newCommit.record;
+
+      await rootStore.client.updateWorkspaceTip({
+        new_tip_hash: newCommit.entryHash,
+        workspace_hash: workspaceHash,
+      });
+    }
 
     return new WorkspaceStore(
       rootStore,
       config,
       workspaceHash,
-      output.current_tip,
-      output.participants.filter(p => !isEqual(rootStore.myPubKey, p))
+      currentTip,
+      participants.filter(p => !isEqual(rootStore.myPubKey, p))
     );
   }
 
@@ -443,7 +500,6 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
             );
 
           participantInfo.syncStates.state = nextSyncState;
-
           return nextDoc;
         });
       }
@@ -557,6 +613,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       });
       return p;
     });
+    this.requestSync(participant);
   }
 
   private handleLeaveWorkspaceNotice(participant: AgentPubKey) {
