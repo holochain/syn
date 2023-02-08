@@ -13,11 +13,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
+    "build:watch": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
     "@holochain/client": "^0.12.0",
     "@holochain-open-dev/utils": "^0.9.3",
+    "@holochain-open-dev/stores": "^0.2.0",
     "@holochain-syn/client": "0.3.0-alpha.7",
     "@msgpack/msgpack": "^2.7.2",
     "automerge": "^1.0.1-preview.7",
@@ -27,8 +28,6 @@
     "@types/lodash-es": "^4.17.6",
     "gh-pages": "^3.2.3",
     "rimraf": "^3.0.2",
-    "run-singleton-cli": "^0.0.5",
-    "svelte": "^3.38.2",
     "typescript": "^4.7.4"
   },
   "publishConfig": {

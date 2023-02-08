@@ -32,10 +32,6 @@ export class RootStore<G extends SynGrammar<any, any>> {
     this.knownCommits = writable(new RecordBag([root.record]));
   }
 
-  get myPubKey() {
-    return this.client.client.myPubKey;
-  }
-
   async fetchWorkspaces() {
     const workspaces = await this.client.getWorkspacesForRoot(
       this.root.entryHash
@@ -98,12 +94,6 @@ export class RootStore<G extends SynGrammar<any, any>> {
         initial_commit_hash: initialTipHash,
       },
       root_hash: this.root.entryHash,
-    });
-
-    this.knownWorkspaces.update(w => {
-      w.put(workspaceRecord.entryHash, workspaceRecord.entry);
-
-      return w;
     });
 
     return workspaceRecord.entryHash;

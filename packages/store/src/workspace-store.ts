@@ -310,7 +310,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     const commits = await rootStore.client.getWorkspaceTips(workspaceHash);
 
-    console.log("Tips found:", commits.length)
+    console.log('Tips found:', commits.length);
 
     const commitBag = new RecordBag<Commit>(commits);
 
@@ -357,7 +357,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       await rootStore.client.updateWorkspaceTip({
         new_tip_hash: newCommit.entryHash,
         workspace_hash: workspaceHash,
-        previous_commit_hashes: tips.keys()
+        previous_commit_hashes: tips.keys(),
       });
     }
 

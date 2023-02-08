@@ -1,11 +1,12 @@
-import { derived, Writable, writable } from 'svelte/store';
+import { derived, lazyLoadAndPoll } from '@holochain-open-dev/stores';
 import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
-import { RecordBag } from '@holochain-open-dev/utils';
+import { LazyHoloHashMap } from '@holochain-open-dev/utils';
 
 import type { SynGrammar } from './grammar';
 import { RootStore } from './root-store';
+import { EntryHash } from '@holochain/client';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
@@ -15,21 +16,14 @@ export const stateFromCommit = (commit: Commit) => {
 
 export class SynStore {
   /** Public accessors */
-  knownRoots: Writable<RecordBag<Commit>> = writable(new RecordBag());
 
   constructor(public client: SynClient) {}
 
-  get myPubKey() {
-    return this.client.client.myPubKey;
-  }
+  allRoots = lazyLoadAndPoll(async () => this.client.getAllRoots(), 1000);
 
-  async fetchAllRoots() {
-    const rootCommits = await this.client.getAllRoots();
-
-    this.knownRoots.set(rootCommits);
-
-    return derived(this.knownRoots, i => i);
-  }
+  commits = new LazyHoloHashMap((rootHash: EntryHash) =>
+    this.client.getCommit(rootHash)
+  );
 
   async createRoot<G extends SynGrammar<any, any>>(
     grammar: G,
@@ -53,11 +47,6 @@ export class SynStore {
 
     const commitRecord = await this.client.createRoot(commit);
 
-    this.knownRoots.update(c => {
-      c.add([commitRecord.record]);
-      return c;
-    });
-
     return new RootStore(this.client, grammar, commitRecord);
   }
 
@@ -66,7 +55,7 @@ export class SynStore {
     meta?: any
   ): Promise<RootStore<G>> {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'aa',      
+      actorId: 'aa',
     });
 
     doc = Automerge.change(doc, { time: 0 }, d => grammar.initState(d));
