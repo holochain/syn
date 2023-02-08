@@ -637,8 +637,9 @@ dependencies = [
 
 [[package]]
 name = "hc_zome_profiles_coordinator"
-version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.1.0-beta-rc.3#ee9cdbae44b4fb665aafa533f2645bfa6a25e624"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9460530f0ac152fcac325cc3b5239d97efd95576c8d4463b274abf3cc24f38d"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity",
@@ -648,8 +649,9 @@ dependencies = [
 
 [[package]]
 name = "hc_zome_profiles_integrity"
-version = "0.0.1"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.1.0-beta-rc.3#ee9cdbae44b4fb665aafa533f2645bfa6a25e624"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7749c3ce685dd07fc55efab8abd24ebba82460ff3e499c098cb224de39177ceb"
 dependencies = [
  "derive_more",
  "hdi",
@@ -672,7 +674,6 @@ dependencies = [
 name = "hc_zome_syn_integrity"
 version = "0.1.0"
 dependencies = [
- "chrono",
  "derive_more",
  "hdi",
  "serde",
@@ -1255,7 +1256,6 @@ dependencies = [
 name = "profiles_coordinator"
 version = "0.1.0-alpha.0"
 dependencies = [
- "chrono",
  "hc_zome_profiles_coordinator",
  "hdk",
  "serde",
@@ -1265,7 +1265,6 @@ dependencies = [
 name = "profiles_integrity"
 version = "0.1.0-alpha.0"
 dependencies = [
- "chrono",
  "derive_more",
  "hc_zome_profiles_integrity",
  "hdi",

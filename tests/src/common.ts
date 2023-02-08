@@ -1,15 +1,12 @@
-import { Base64 } from 'js-base64';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { TextEditorDelta, textEditorGrammar, TextEditorState } from './grammar.js';
+import {
+  TextEditorDelta,
+  textEditorGrammar,
+  TextEditorState,
+} from './grammar.js';
 import { AgentPubKey } from '@holochain/client';
 import { SynGrammar } from '@holochain-syn/store';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export const synHapp = path.join(__dirname, '../../workdir/syn-test.happ');
-export const synDna = path.join(__dirname, '../../workdir/syn-test.dna');
+export const synHapp = process.cwd() + '/../workdir/syn-test.happ';
 
 export type Add = [number, string];
 export type Delete = [number, number];
@@ -29,11 +26,7 @@ export type Signal = {
   };
 };
 
-export const delay = ms => new Promise(r => setTimeout(r, ms));
-
-export function encodeHashToBase64(hash: Uint8Array): string {
-  return `u${Base64.fromUint8Array(hash, true)}`;
-}
+export const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 /*
   Fake UI functions

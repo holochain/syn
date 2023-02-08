@@ -8,10 +8,7 @@ in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   packages = with nixpkgs; [
     niv
-    nodejs-16_x
+    nodejs-18_x
     # any additional packages needed for this project, e. g. Nodejs
   ];
-  shellHook = ''
-    export GIO_MODULE_DIR="${nixpkgs.glib-networking}/lib/gio/modules/";
-  '';
 }

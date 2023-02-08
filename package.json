@@ -1,47 +1,31 @@
 {
   "name": "@holochain-syn/dev",
   "private": true,
-  "version": "0.0.0",
   "scripts": {
-    "launch"      : "npm run build:happ && npm run build:libs && npm run build:ui && WEBKIT_DISABLE_COMPOSITING_MODE=1 npm run launch:happ",
-    "launch:happ" : "RUST_LOG=warn echo \"pass\" | hc launch --piped -n 2 workdir/syn-test.happ -w --ui-path apps/syntext/public network mdns",
-    "start"       : "npm run network 2",
-    "network"     : "npm run build:happ && concurrently-repeat \"npm run start:agent\"",
-    "start:agent" : "cross-env HC_PORT=$(port) concurrently \"npm run dev:libs\" \"npm run start:happ\" \"sleep 5 && npm run start -w syntext\"",
-    "dev:libs"    : "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
-    "prepare"     : "npm run build:libs",
-    "build:libs"  : "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",
-    "build:ui"    : "npm run build -w syntext",
-    "test"        : "npm run build:happ && npm run build:libs && npm test -w @holochain-syn/tests",
-    "start:happ"  : "echo \"pass\" | hc s --piped generate -r=$HC_PORT workdir/syn-test.happ -a syn network --bootstrap https://bootstrap-staging.holo.host/ quic",
-    "build:happ"  : "npm run build:dna && hc app pack workdir",
-    "build:dna"   : "npm run build:zome && hc dna pack workdir",
-    "build:zome"  : "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
+    "start": "AGENTS=2 npm run network 2",
+    "network": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run start:agent\"",
+    "launch": "npm run build:happ && npm run build:libs && npm run build:ui && npm run launch:happ",
+    "launch:happ": "RUST_LOG=warn echo \"pass\" | hc launch --piped -n 2 workdir/syn-test.happ -w --ui-port $UI_PORT network mdns",
+    "dev:libs": "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
+    "prepare": "npm run build:libs",
+    "build:libs": "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",
+    "build:ui": "npm run build -w syntext",
+    "test": "npm run build:happ && npm run build:libs && npm test -w tests",
+    "build:happ": "npm run build:dna && hc app pack workdir",
+    "build:dna": "npm run build:zome && hc dna pack workdir",
+    "build:zome": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
   },
-  "workspaces": [
-    "tests",
-    "packages/*",
-    "apps/*"
-  ],
+  "workspaces": ["tests", "packages/*", "apps/*"],
   "devDependencies": {
-    "@babel/runtime": "^7.14.0",
     "concurrently": "^6.2.1",
-    "concurrently-repeat": "^0.0.1",
-    "cross-env": "^7.0.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "lint-staged": "^11.1.2",
-    "new-port-cli": "^1.0.0",
     "prettier": "^2.3.2",
-    "repeating-cli": "^3.0.0",
-    "run-singleton-cli": "^0.0.7",
     "typescript": "4.7.4"
   },
   "eslintConfig": {
-    "extends": [
-      "@open-wc/eslint-config",
-      "eslint-config-prettier"
-    ]
+    "extends": ["@open-wc/eslint-config", "eslint-config-prettier"]
   },
   "prettier": {
     "singleQuote": true,

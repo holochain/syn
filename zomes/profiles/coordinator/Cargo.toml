@@ -9,8 +9,7 @@ crate-type = ["cdylib", "rlib"]
 name = "profiles_coordinator"
 
 [dependencies]
-chrono = { version = "0.4.22", default-features = false, features = ["clock", "std", "oldtime", "serde"], optional = true }
 serde = "1"
 hdk = { workspace = true }
 
-hc_zome_profiles_coordinator = {git = "https://github.com/holochain-open-dev/profiles", branch = "for-hdk-v0.1.0-beta-rc.3", package = "hc_zome_profiles_coordinator"}
+hc_zome_profiles_coordinator = "0.1"

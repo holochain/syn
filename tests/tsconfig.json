@@ -1,22 +1,9 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "outDir": "dist",
-    "declarationDir": "dist",
-    "declaration": true
-  },
-  "include": [
-    "./src/**/*"
-  ],
-  "exclude": [
-    "node_modules/**",
-    "**/node_modules/**",
-    "**/dist/**"
-  ],
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "target": "ES2017",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }
