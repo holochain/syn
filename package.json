@@ -15,7 +15,7 @@
     "build:dna": "npm run build:zome && hc dna pack workdir",
     "build:zome": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
   },
-  "workspaces": ["tests", "packages/*", "apps/*"],
+  "workspaces": ["tests", "libs/*", "ui"],
   "devDependencies": {
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
