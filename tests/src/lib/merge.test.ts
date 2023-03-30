@@ -70,6 +70,7 @@ test('check that the state of disconnected agents making changes converges after
     await bobWorkspaceStore.leaveWorkspace();
 
     await alice.conductor.startUp();
+    await alice.conductor.connectAppAgentInterface('syn-test');
     await scenario.shareAllAgents();
 
     aliceSyn = new SynStore(

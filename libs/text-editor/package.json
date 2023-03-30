@@ -22,7 +22,7 @@
     "@holochain/client": "^0.12.0",
     "@lit-labs/context": "^0.2.0",
     "@lit/localize": "^0.11.4",
-    "@scoped-elements/codemirror": "^0.0.4",
+    "@scoped-elements/codemirror": "^0.1.0",
     "@shoelace-style/shoelace": "^2.3.0",
     "automerge": "^1.0.1-preview.7",
     "lit": "^2.0.2",

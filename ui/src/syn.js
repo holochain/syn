@@ -1,4 +1,4 @@
-import { AppAgentClient, AppAgentWebsocket, AppWebsocket } from '@holochain/client';
+import { AppAgentWebsocket, AppWebsocket } from '@holochain/client';
 import { SynStore, SynClient, extractSlice } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 
@@ -12,7 +12,12 @@ export const DocumentGrammar = {
     if (delta.type === 'SetTitle') {
       state.title = delta.value;
     } else {
-      textEditorGrammar.applyDelta(delta.textEditorDelta, state.body, eph, author);
+      textEditorGrammar.applyDelta(
+        delta.textEditorDelta,
+        state.body,
+        eph,
+        author
+      );
     }
   },
 };
@@ -22,7 +27,7 @@ export function textSlice(workspaceStore) {
     workspaceStore,
     change => ({
       type: 'TextEditorDelta',
-      textEditorDelta: change
+      textEditorDelta: change,
     }),
     state => state.body,
     eph => eph
@@ -33,6 +38,6 @@ export async function createClient() {
   //const url = `ws://localhost:${process.env.HC_PORT}`;
 
   const client = await AppAgentWebsocket.connect(undefined, 'syn');
-  
-  return client
+
+  return client;
 }

@@ -1,7 +1,6 @@
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { CodemirrorMarkdown } from '@scoped-elements/codemirror';
-customElements.define('codemirror-markdown', CodemirrorMarkdown);
+import '@scoped-elements/codemirror';
 import {
   //@ts-ignore
   Profile,
@@ -86,18 +85,18 @@ export class SynMarkdownEditor extends LitElement {
           decodeHashFromBase64(agentPubKey)
         ).value;
         const name =
-          peerProfile.status === 'complete'
+          peerProfile?.status === 'complete'
             ? peerProfile.value
               ? peerProfile.value.nickname
               : msg('Unknown')
-            : 'Loading...';
+            : msg('Loading...');
         return {
           position: elemIdToPosition(
             position.left,
             position.position,
             this._state.value.text
           ),
-          color: `${r} ${g} ${b}`,
+          color: `rgb(${r}, ${g}, ${b})`,
           name: name,
         };
       });
@@ -125,32 +124,29 @@ export class SynMarkdownEditor extends LitElement {
       : undefined;
 
     return html`
-      <div
-        class="flex-scrollable-parent"
-        style="background-color: rgb(40, 44, 52);"
-      >
-        <div class="flex-scrollable-container">
-          <div class="flex-scrollable-y">
-            <codemirror-markdown
-              style="flex: 1; "
-              id="editor"
-              .state=${{
-                text: this._state.value.text.toString(),
-                selection,
-              }}
-              .additionalCursors=${this.remoteCursors()}
-              @text-inserted=${e =>
-                this.onTextInserted(e.detail.from, e.detail.text)}
-              @text-deleted=${e =>
-                this.onTextDeleted(e.detail.from, e.detail.characterCount)}
-              @selection-changed=${e =>
-                this.onSelectionChanged(e.detail.ranges)}
-            ></codemirror-markdown>
-          </div>
-        </div>
-      </div>
+      <codemirror-markdown
+        style="flex: 1; background-color: rgb(40, 44, 52);"
+        id="editor"
+        .state=${{
+          text: this._state.value.text.toString(),
+          selection,
+        }}
+        .additionalCursors=${this.remoteCursors()}
+        @text-inserted=${e => this.onTextInserted(e.detail.from, e.detail.text)}
+        @text-deleted=${e =>
+          this.onTextDeleted(e.detail.from, e.detail.characterCount)}
+        @selection-changed=${e => this.onSelectionChanged(e.detail.ranges)}
+      ></codemirror-markdown>
     `;
   }
 
-  static styles = [sharedStyles];
+  static styles = [
+    sharedStyles,
+    css`
+      :host {
+        display: flex;
+        flex: 1;
+      }
+    `,
+  ];
 }

@@ -75,17 +75,14 @@ const DocumentGrammar: DocumentGrammar = {
 2. Define the element:
 
 ```ts
-import { SynTextEditor } from '@holochain-syn/text-editor';
-customElements.define('syn-text-editor', SynTextEditor);
+import '@holochain-syn/text-editor/elements/syn-markdown-editor.js';
 ```
 
 3. Include it in your html:
 
 ```html
 <syn-context>
-  <context-provider>
-    <syn-text-editor id="text-editor"></syn-text-editor>
-  </context-provider>
+  <syn-markdown-editor id="text-editor"></syn-markdown-editor>
 </syn-context>
 ```
 
@@ -93,7 +90,7 @@ customElements.define('syn-text-editor', SynTextEditor);
 
 ```ts
 import { TextEditorGrammar } from '@holochain-syn/text-editor';
-import { derived } from 'svelte/store';
+import { derived } from '@holochain-open-dev/stores';
 
 function textEditorSlice(
   store: SynStore<DocumentGrammar>

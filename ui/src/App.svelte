@@ -9,13 +9,16 @@
   import '@holochain-syn/core/elements/workspace-participants.js'
   import '@holochain-syn/text-editor/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
+  import {toPromise} from '@holochain-open-dev/stores'
+  import {RecordBag} from '@holochain-open-dev/utils'
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
   import {
     ProfilesClient,
     ProfilesStore,
   } from '@holochain-open-dev/profiles';
-  import '@holochain-open-dev/elements/profiles-context.js'
+  import '@holochain-open-dev/profiles/elements/profiles-context.js'
+  import '@holochain-open-dev/profiles/elements/profile-prompt.js'
 
   $: disconnected = false;
   let syn;
@@ -94,9 +97,9 @@
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
-    const roots = get(await store.fetchAllRoots());
+    const roots = await toPromise(store.allRoots);
 
-    if (roots.entryMap.keys().length === 0) {
+    if (new RecordBag(roots.map(er => er.record)).entryMap.size === 0) {
       const rootStore = await store.createRoot(DocumentGrammar);
 
       const workspaceHash = await rootStore.createWorkspace(
@@ -108,13 +111,13 @@
       synStore = store;
     } else {
       const rootStore = new RootStore(
-        store.client,
+        store,
         DocumentGrammar,
-        roots.entryRecords[0]
+        roots[0]
       );
-      const workspaces = get(await rootStore.fetchWorkspaces());
+      const workspaces = await toPromise(rootStore.allWorkspaces);
 
-      workspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
+      workspaceStore = await rootStore.joinWorkspace(workspaces[0].entryHash);
       synStore = store;
     }
   }
@@ -146,8 +149,10 @@
           <Title />
         </div>
       </div>
-      <main>
-        <syn-markdown-editor slice={textSlice(workspaceStore)} />
+      <main style="display: flex; height: 400px">
+  <profile-prompt>
+        <syn-markdown-editor style="height: 400px" slice={textSlice(workspaceStore)}></syn-markdown-editor>
+    </profile-prompt>
       </main>
 
       <div class="folks-tray">
@@ -155,40 +160,6 @@
         <workspace-participants workspacestore={workspaceStore} />
       </div>
     </syn-context>
-    <div
-      class="tab"
-      class:shown={tabShown}
-      class:drawer-hidden={drawerHidden}
-      on:mouseenter={showTab}
-      on:mouseleave={hideTab}
-    >
-      <div
-        class="tab-inner"
-        class:shown={tabShown}
-        on:click={drawerHidden ? showDrawer() : hideDrawer()}
-      >
-        <i
-          class:drawer-hidden={drawerHidden}
-          class="tab-icon fas {drawerHidden
-            ? 'fa-chevron-up'
-            : 'fa-chevron-down'}"
-        />
-      </div>
-    </div>
-    <div
-      class="debug-drawer"
-      bind:this={resizeable}
-      use:initResizeable
-      on:mouseenter={showTab}
-      on:mouseleave={hideTab}
-      class:hidden={drawerHidden}
-    >
-      <div
-        class="handle"
-        bind:this={resizeHandle}
-        on:mousedown={startDragging}
-      />
-    </div>
   </profiles-context>
 {/if}
 
