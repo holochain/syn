@@ -1,12 +1,12 @@
-import { derived, lazyLoadAndPoll } from '@holochain-open-dev/stores';
+import { lazyLoadAndPoll, retryUntilSuccess } from '@holochain-open-dev/stores';
 import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
 import { LazyHoloHashMap } from '@holochain-open-dev/utils';
-
-import type { SynGrammar } from './grammar';
-import { RootStore } from './root-store';
 import { EntryHash } from '@holochain/client';
+
+import type { SynGrammar } from './grammar.js';
+import { RootStore } from './root-store.js';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
@@ -19,10 +19,14 @@ export class SynStore {
 
   constructor(public client: SynClient) {}
 
-  allRoots = lazyLoadAndPoll(async () => this.client.getAllRoots(), 1000);
+  allRoots = lazyLoadAndPoll(async () => this.client.getAllRoots(), 3000);
 
   commits = new LazyHoloHashMap((rootHash: EntryHash) =>
-    this.client.getCommit(rootHash)
+    retryUntilSuccess(async () => {
+      const commit = await this.client.getCommit(rootHash);
+      if (!commit) throw new Error('Commit not found yet');
+      return commit;
+    })
   );
 
   async createRoot<G extends SynGrammar<any, any>>(
@@ -47,7 +51,7 @@ export class SynStore {
 
     const commitRecord = await this.client.createRoot(commit);
 
-    return new RootStore(this.client, grammar, commitRecord);
+    return new RootStore(this, grammar, commitRecord);
   }
 
   async createDeterministicRoot<G extends SynGrammar<any, any>>(
@@ -73,11 +77,6 @@ export class SynStore {
 
     const commitRecord = await this.client.createRoot(commit);
 
-    this.knownRoots.update(c => {
-      c.add([commitRecord.record]);
-      return c;
-    });
-
-    return new RootStore(this.client, grammar, commitRecord);
+    return new RootStore(this, grammar, commitRecord);
   }
 }

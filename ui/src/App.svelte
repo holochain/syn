@@ -1,21 +1,21 @@
 <script>
   import Title from './Title.svelte';
   import {
-    SynContext,
-    WorkspaceParticipants,
     SynStore,
     SynClient,
     RootStore,
   } from '@holochain-syn/core';
-  import { SynMarkdownEditor } from '@holochain-syn/text-editor';
+  import '@holochain-syn/core/elements/syn-context.js'
+  import '@holochain-syn/core/elements/workspace-participants.js'
+  import '@holochain-syn/text-editor/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
   import {
-    ProfilesContext,
-    ProfilesService,
+    ProfilesClient,
     ProfilesStore,
   } from '@holochain-open-dev/profiles';
+  import '@holochain-open-dev/elements/profiles-context.js'
 
   $: disconnected = false;
   let syn;
@@ -120,16 +120,11 @@
   }
   onMount(async () => {
     const client = await createClient();
-    profilesStore = new ProfilesStore(new ProfilesService(client, 'syn-test'));
+    profilesStore = new ProfilesStore(new ProfilesClient(client, 'syn-test'));
     await initSyn(client);
   });
 
   $: synStore, workspaceStore, profilesStore;
-
-  customElements.define('syn-context', SynContext);
-  customElements.define('profiles-context', ProfilesContext);
-  customElements.define('workspace-participants', WorkspaceParticipants);
-  customElements.define('syn-markdown-editor', SynMarkdownEditor);
 
   setContext('workspaceStore', {
     getWorkspaceStore: () => workspaceStore,

@@ -1,11 +1,12 @@
-import { Commit, WorkspaceMessage, SynSignal } from '@holochain-syn/client';
-import { Readable, writable, Writable } from 'svelte/store';
-import { derived, get } from 'svelte/store';
+import { Commit, WorkspaceMessage } from '@holochain-syn/client';
+import { AgentPubKeyMap, RecordBag } from '@holochain-open-dev/utils';
 import {
-  AgentPubKeyMap,
-  EntryHashMap,
-  RecordBag,
-} from '@holochain-open-dev/utils';
+  Readable,
+  get,
+  derived,
+  Writable,
+  writable,
+} from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
 import {
@@ -15,18 +16,19 @@ import {
   EntryHash,
   Record,
 } from '@holochain/client';
-import isEqual from 'lodash-es/isEqual';
+import isEqual from 'lodash-es/isEqual.js';
+import { toPromise } from '@holochain-open-dev/stores';
 
 import type {
   GrammarState,
   GrammarDelta,
   SynGrammar,
   GrammarEphemeralState,
-} from './grammar';
+} from './grammar.js';
 
-import { SynConfig } from './config';
-import { stateFromCommit } from './syn-store';
-import { RootStore } from './root-store';
+import { SynConfig } from './config.js';
+import { stateFromCommit } from './syn-store.js';
+import { RootStore } from './root-store.js';
 
 export interface SliceStore<G extends SynGrammar<any, any>> {
   myPubKey: AgentPubKey;
@@ -86,8 +88,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       const isOffline = (lastSeen: number | undefined) =>
         !lastSeen || Date.now() - lastSeen > this.config.outOfSessionTimeout;
 
-      const active = i
-        .entries()
+      const active = Array.from(i.entries())
         .filter(
           ([pubkey, info]) =>
             isActive(info.lastSeen) && !isEqual(pubkey, this.myPubKey)
@@ -95,12 +96,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         .map(([pubkey, _]) => pubkey);
       active.push(this.myPubKey);
 
-      const idle = i
-        .entries()
+      const idle = Array.from(i.entries())
         .filter(([_, info]) => isIdle(info.lastSeen))
         .map(([pubkey, _]) => pubkey);
-      const offline = i
-        .entries()
+      const offline = Array.from(i.entries())
         .filter(([_, info]) => isOffline(info.lastSeen))
         .map(([pubkey, _]) => pubkey);
 
@@ -131,7 +130,11 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
   private intervals: any[] = [];
 
   get myPubKey() {
-    return this.rootStore.client.client.myPubKey;
+    return this.synClient.client.myPubKey;
+  }
+
+  get synClient() {
+    return this.rootStore.synStore.client;
   }
 
   private constructor(
@@ -141,9 +144,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     currentTip: Record,
     initialParticipants: Array<AgentPubKey>
   ) {
-    this.unsubscribe = this.rootStore.client.client.on('signal', signal => {
-      const synSignal: SynSignal = signal.payload as SynSignal;
-
+    this.unsubscribe = this.rootStore.synStore.client.onSignal(synSignal => {
       if (synSignal.message.type !== 'WorkspaceMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
@@ -163,7 +164,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           this._participants.update(p => {
             const participantInfo = p.get(synSignal.provenance);
             participantInfo.lastSeen = Date.now();
-            p.put(synSignal.provenance, participantInfo);
+            p.set(synSignal.provenance, participantInfo);
 
             return p;
           });
@@ -205,7 +206,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     const heartbeatInterval = setInterval(async () => {
-      const participants = await this.rootStore.client.getWorkspaceParticipants(
+      const participants = await this.synClient.getWorkspaceParticipants(
         workspaceHash
       );
 
@@ -215,7 +216,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         );
 
         for (const newParticipant of newParticipants) {
-          p.put(newParticipant, {
+          p.set(newParticipant, {
             lastSeen: undefined,
             syncStates: {
               state: Automerge.initSyncState(),
@@ -235,13 +236,13 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           }
         }
 
-        if (p.keys().length > 0) {
-          this.rootStore.client.sendMessage(p.keys(), {
+        if (p.size > 0) {
+          this.synClient.sendMessage(Array.from(p.keys()), {
             type: 'WorkspaceMessage',
             workspace_hash: workspaceHash,
             payload: {
               type: 'Heartbeat',
-              known_participants: p.keys(),
+              known_participants: Array.from(p.keys()),
             },
           });
         }
@@ -281,7 +282,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       new AgentPubKeyMap();
 
     for (const p of initialParticipants) {
-      participantsMap.put(p, {
+      participantsMap.set(p, {
         lastSeen: undefined,
         syncStates: {
           state: Automerge.initSyncState(),
@@ -306,58 +307,55 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     config: SynConfig,
     workspaceHash: EntryHash
   ): Promise<WorkspaceStore<G>> {
-    const participants = await rootStore.client.joinWorkspace(workspaceHash);
+    const participants = await rootStore.synStore.client.joinWorkspace(
+      workspaceHash
+    );
 
-    const commits = await rootStore.client.getWorkspaceTips(workspaceHash);
+    const commits = await rootStore.synStore.client.getWorkspaceTips(
+      workspaceHash
+    );
+    const commitBag = new RecordBag<Commit>(commits.map(er => er.record));
 
-    console.log('Tips found:', commits.length);
+    const tips = commitBag.entryMap;
 
-    const commitBag = new RecordBag<Commit>(commits);
-
-    const tips = new EntryHashMap(commitBag.entryMap.entries());
-
-    // for (const commit of commitBag.entryMap.values()) {
-    //   for (const previousCommitHash of commit.previous_commit_hashes) {
-    //     tips.delete(previousCommitHash);
-    //   }
-    // }
-
-    let currentTipHash = commitBag.entryActions.get(tips.keys()[0])[0];
+    let currentTipHash = commitBag.entryActions.get(
+      Array.from(tips.keys())[0]
+    )[0];
     let currentTip: Record = commitBag.entryRecord(currentTipHash)!.record;
 
     // If there are more that one tip, merge them
-    if (tips.keys().length > 1) {
+    if (tips.size > 1) {
       let mergeState = Automerge.merge(
         Automerge.load(decode(tips.values()[0].state) as any),
         Automerge.load(decode(tips.values()[1].state) as any)
       );
 
-      for (let i = 2; i < tips.keys().length; i++) {
+      for (let i = 2; i < tips.size; i++) {
         mergeState = Automerge.merge(
           mergeState,
-          Automerge.load(decode(tips.values()[i].state) as any)
+          Automerge.load(decode(Array.from(tips.values())[i].state) as any)
         );
       }
 
       const commit: Commit = {
-        authors: [rootStore.client.client.myPubKey],
+        authors: [rootStore.synStore.client.client.myPubKey],
         meta: encode('Merge commit'),
-        previous_commit_hashes: tips.keys(),
+        previous_commit_hashes: Array.from(tips.keys()),
         state: encode(Automerge.save(mergeState)),
         witnesses: [],
       };
 
-      const newCommit = await rootStore.client.createCommit({
+      const newCommit = await rootStore.synStore.client.createCommit({
         commit,
         root_hash: rootStore.root.entryHash,
       });
 
       currentTip = newCommit.record;
 
-      await rootStore.client.updateWorkspaceTip({
+      await rootStore.synStore.client.updateWorkspaceTip({
         new_tip_hash: newCommit.entryHash,
         workspace_hash: workspaceHash,
-        previous_commit_hashes: tips.keys(),
+        previous_commit_hashes: Array.from(tips.keys()),
       });
     }
 
@@ -366,7 +364,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       config,
       workspaceHash,
       currentTip,
-      participants.filter(p => !isEqual(rootStore.myPubKey, p))
+      participants.filter(
+        p =>
+          rootStore.synStore.client.client.myPubKey.toString() !== p.toString()
+      )
     );
   }
 
@@ -397,7 +398,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
         const participants = get(this._participants).keys();
 
-        this.rootStore.client.sendMessage(participants, {
+        this.rootStore.synStore.client.sendMessage(Array.from(participants), {
           type: 'WorkspaceMessage',
           workspace_hash: this.workspaceHash,
           payload: {
@@ -458,7 +459,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
     this._participants.update(p => {
       const info = p.get(participant);
-      p.put(participant, {
+      p.set(participant, {
         ...info,
         syncStates: {
           state: nextSyncState,
@@ -469,7 +470,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     });
 
     if (syncMessage || ephemeralSyncMessage) {
-      this.rootStore.client.sendMessage([participant], {
+      this.rootStore.synStore.client.sendMessage([participant], {
         type: 'WorkspaceMessage',
         workspace_hash: this.workspaceHash,
         payload: {
@@ -520,7 +521,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
         });
       }
 
-      p.put(from, participantInfo);
+      p.set(from, participantInfo);
       return p;
     });
 
@@ -529,11 +530,13 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
-    const currentTipCommit = await this.rootStore.fetchCommit(currentTip);
+    const currentTipCommit = await toPromise(
+      this.rootStore.synStore.commits.get(currentTip)
+    );
     if (currentTipCommit) {
       if (
         isEqual(
-          decode(currentTipCommit.state) as any,
+          decode(currentTipCommit.entry.state) as any,
           Automerge.save(get(this._state))
         )
       ) {
@@ -547,19 +550,19 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     }
 
     const commit: Commit = {
-      authors: get(this._participants).keys(),
+      authors: Array.from(get(this._participants).keys()),
       meta,
       previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
     };
 
-    const newCommit = await this.rootStore.client.createCommit({
+    const newCommit = await this.synClient.createCommit({
       commit,
       root_hash: this.rootStore.root.entryHash,
     });
 
-    await this.rootStore.client.updateWorkspaceTip({
+    await this.synClient.updateWorkspaceTip({
       new_tip_hash: newCommit.entryHash,
       workspace_hash: this.workspaceHash,
       previous_commit_hashes: [currentTip],
@@ -575,7 +578,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       );
 
       for (const newParticipant of newParticipants) {
-        p.put(newParticipant, {
+        p.set(newParticipant, {
           lastSeen: undefined,
           syncStates: {
             state: Automerge.initSyncState(),
@@ -597,7 +600,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
       await this.commitChanges();
     }
 
-    await this.rootStore.client.leaveWorkspace(this.workspaceHash);
+    await this.synClient.leaveWorkspace(this.workspaceHash);
     this.unsubscribe();
     for (const interval of this.intervals) {
       clearInterval(interval);
@@ -606,7 +609,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleNewParticipant(participant: AgentPubKey) {
     this._participants.update(p => {
-      p.put(participant, {
+      p.set(participant, {
         lastSeen: Date.now(),
         syncStates: {
           state: Automerge.initSyncState(),

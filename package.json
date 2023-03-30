@@ -3,8 +3,7 @@
   "private": true,
   "scripts": {
     "start": "AGENTS=2 npm run network 2",
-    "network": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run start:agent\"",
-    "launch": "npm run build:happ && npm run build:libs && npm run build:ui && npm run launch:happ",
+    "network": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run dev:libs\" \"npm run launch:happ\"",
     "launch:happ": "RUST_LOG=warn echo \"pass\" | hc launch --piped -n 2 workdir/syn-test.happ -w --ui-port $UI_PORT network mdns",
     "dev:libs": "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
     "prepare": "npm run build:libs",
@@ -15,7 +14,14 @@
     "build:dna": "npm run build:zome && hc dna pack workdir",
     "build:zome": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown"
   },
-  "workspaces": ["tests", "libs/*", "ui"],
+  "workspaces": [
+    "tests",
+    "libs/client",
+    "libs/store",
+    "libs/core",
+    "libs/text-editor",
+    "ui"
+  ],
   "devDependencies": {
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",

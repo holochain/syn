@@ -1,30 +1,32 @@
 {
   "name": "@holochain-syn/text-editor",
-  "version": "0.3.0-alpha.7",
+  "version": "0.3.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
-    "build:watch": "run-singleton \"tsc -w --preserveWatchOutput\""
+    "build:watch": "tsc -w --preserveWatchOutput"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./elements/*": "./dist/elements/*"
   },
   "type": "module",
   "dependencies": {
-    "automerge": "^1.0.1-preview.7",
+    "@holochain-open-dev/elements": "^0.3.11",
+    "@holochain-open-dev/profiles": "^0.12.0",
+    "@holochain-open-dev/stores": "^0.4.0",
+    "@holochain-open-dev/utils": "^0.13.0",
+    "@holochain-syn/core": "0.3.0",
     "@holochain/client": "^0.12.0",
-    "@holochain-open-dev/profiles": "^0.9.4",
-    "@holochain-open-dev/utils": "^0.9.3",
-    "@holochain-syn/core": "0.3.0-alpha.7",
-    "@lit-labs/context": "^0.1.2",
-    "@open-wc/scoped-elements": "^2.1.0",
-    "@scoped-elements/material-web": "^0.0.19",
+    "@lit-labs/context": "^0.2.0",
+    "@lit/localize": "^0.11.4",
     "@scoped-elements/codemirror": "^0.0.4",
+    "@shoelace-style/shoelace": "^2.3.0",
+    "automerge": "^1.0.1-preview.7",
     "lit": "^2.0.2",
-    "lit-svelte-stores": "^0.2.1",
-    "lodash-es": "^4.17.21",
-    "svelte": "^3.42.4"
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.6",

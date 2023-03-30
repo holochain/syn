@@ -3,9 +3,8 @@ import type {
   EntryHash,
   Record,
   AppAgentClient,
-  AppAgentCallZomeRequest,
 } from '@holochain/client';
-import { RecordBag, EntryRecord } from '@holochain-open-dev/utils';
+import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 
 import {
   Commit,
@@ -13,16 +12,19 @@ import {
   CreateWorkspaceInput,
   SendMessageInput,
   SynMessage,
+  SynSignal,
   UpdateWorkspaceTipInput,
   Workspace,
 } from './types';
 
-export class SynClient {
+export class SynClient extends ZomeClient<SynSignal> {
   constructor(
     public client: AppAgentClient,
-    protected roleName: string,
-    protected zomeName = 'syn'
-  ) {}
+    public roleName: string,
+    public zomeName = 'syn'
+  ) {
+    super(client, roleName, zomeName);
+  }
 
   /** Roots */
   public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {
@@ -30,9 +32,9 @@ export class SynClient {
     return new EntryRecord(record);
   }
 
-  public async getAllRoots(): Promise<RecordBag<Commit>> {
-    const roots = await this.callZome('get_all_roots', null);
-    return new RecordBag(roots);
+  public async getAllRoots(): Promise<Array<EntryRecord<Commit>>> {
+    const roots: Record[] = await this.callZome('get_all_roots', null);
+    return roots.map(r => new EntryRecord(r));
   }
 
   /** Commits */
@@ -57,9 +59,12 @@ export class SynClient {
 
   public async getCommitsForRoot(
     root_hash: EntryHash
-  ): Promise<RecordBag<Commit>> {
-    const commits = await this.callZome('get_commits_for_root', root_hash);
-    return new RecordBag(commits);
+  ): Promise<Array<EntryRecord<Commit>>> {
+    const commits: Record[] = await this.callZome(
+      'get_commits_for_root',
+      root_hash
+    );
+    return commits.map(c => new EntryRecord(c));
   }
 
   /** Workspaces */
@@ -72,12 +77,12 @@ export class SynClient {
 
   public async getWorkspacesForRoot(
     root_hash: EntryHash
-  ): Promise<RecordBag<Workspace>> {
+  ): Promise<Array<EntryRecord<Workspace>>> {
     const workspaces = await this.callZome(
       'get_workspaces_for_root',
       root_hash
     );
-    return new RecordBag(workspaces);
+    return workspaces.map((w: Record) => new EntryRecord(w));
   }
 
   public getWorkspaceParticipants(
@@ -86,14 +91,19 @@ export class SynClient {
     return this.callZome('get_workspace_participants', workspace_hash);
   }
 
-  public getWorkspaceCommits(workspaceHash: EntryHash): Promise<Record[]> {
-    return this.callZome('get_workspace_commits', workspaceHash);
+  public async getWorkspaceCommits(
+    workspaceHash: EntryHash
+  ): Promise<Array<EntryRecord<Commit>>> {
+    const records = await this.callZome('get_workspace_commits', workspaceHash);
+    return records.map(r => new EntryRecord(r));
   }
 
-  public getWorkspaceTips(workspaceHash: EntryHash): Promise<Record[]> {
-    return this.callZome('get_workspace_tips', workspaceHash);
+  public async getWorkspaceTips(
+    workspaceHash: EntryHash
+  ): Promise<Array<EntryRecord<Commit>>> {
+    const records = await this.callZome('get_workspace_tips', workspaceHash);
+    return records.map(r => new EntryRecord(r));
   }
-
 
   public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {
     return this.callZome('update_workspace_tip', input);
@@ -117,16 +127,5 @@ export class SynClient {
       recipients,
       message,
     } as SendMessageInput);
-  }
-
-  /** Helpers */
-  private async callZome(fnName: string, payload: any): Promise<any> {
-    const req: AppAgentCallZomeRequest = {
-      role_name: this.roleName,
-      zome_name: this.zomeName,
-      fn_name: fnName,
-      payload,
-    };
-    return this.client.callZome(req);
   }
 }

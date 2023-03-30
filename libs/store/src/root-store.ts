@@ -1,26 +1,16 @@
-import { derived, get, Writable, writable } from 'svelte/store';
-import { Commit, SynClient, Workspace } from '@holochain-syn/client';
+import { Commit } from '@holochain-syn/client';
 import { EntryHash } from '@holochain/client';
-import merge from 'lodash-es/merge';
-import {
-  EntryHashMap,
-  EntryRecord,
-  RecordBag,
-} from '@holochain-open-dev/utils';
+import { EntryRecord } from '@holochain-open-dev/utils';
+import { lazyLoadAndPoll } from '@holochain-open-dev/stores';
 
-import { defaultConfig, RecursivePartial, SynConfig } from './config';
-import type { SynGrammar } from './grammar';
-import { WorkspaceStore } from './workspace-store';
+import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
+import type { SynGrammar } from './grammar.js';
+import { WorkspaceStore } from './workspace-store.js';
+import { SynStore } from './syn-store.js';
 
 export class RootStore<G extends SynGrammar<any, any>> {
-  /** Public accessors */
-  knownWorkspaces: Writable<EntryHashMap<Workspace>> = writable(
-    new EntryHashMap()
-  );
-  knownCommits: Writable<RecordBag<Commit>>;
-
   constructor(
-    public client: SynClient,
+    public synStore: SynStore,
     public grammar: G,
     public root: EntryRecord<Commit>
   ) {
@@ -28,50 +18,16 @@ export class RootStore<G extends SynGrammar<any, any>> {
       throw new Error(
         'The given commit is not a root commit because it has previous commits'
       );
-
-    this.knownCommits = writable(new RecordBag([root.record]));
   }
 
-  async fetchWorkspaces() {
-    const workspaces = await this.client.getWorkspacesForRoot(
-      this.root.entryHash
-    );
-
-    this.knownWorkspaces.update(w => {
-      for (const [entryHash, workspace] of workspaces.entryMap.entries()) {
-        w.put(entryHash, workspace);
-      }
-
-      return w;
-    });
-
-    return derived(this.knownWorkspaces, i => i);
-  }
-
-  async fetchCommits() {
-    const commits = await this.client.getCommitsForRoot(this.root.entryHash);
-
-    this.knownCommits.set(commits);
-
-    return derived(this.knownCommits, i => i);
-  }
-
-  async fetchCommit(commitHash: EntryHash): Promise<Commit | undefined> {
-    const knownCommits = get(this.knownCommits);
-    if (knownCommits.entryMap.has(commitHash)) {
-      return knownCommits.entryMap.get(commitHash);
-    }
-
-    const commit = await this.client.getCommit(commitHash);
-
-    if (commit) {
-      this.knownCommits.update(c => {
-        c.add([commit.record]);
-        return c;
-      });
-    }
-    return commit?.entry;
-  }
+  allWorkspaces = lazyLoadAndPoll(
+    () => this.synStore.client.getWorkspacesForRoot(this.root.entryHash),
+    4000
+  );
+  allCommits = lazyLoadAndPoll(
+    () => this.synStore.client.getCommitsForRoot(this.root.entryHash),
+    4000
+  );
 
   async joinWorkspace(
     workspaceHash: EntryHash,
@@ -79,7 +35,7 @@ export class RootStore<G extends SynGrammar<any, any>> {
   ): Promise<WorkspaceStore<G>> {
     return WorkspaceStore.joinWorkspace(
       this,
-      merge(config, defaultConfig()),
+      { ...config, ...defaultConfig() },
       workspaceHash
     );
   }
@@ -88,7 +44,7 @@ export class RootStore<G extends SynGrammar<any, any>> {
     workspaceName: string,
     initialTipHash: EntryHash
   ): Promise<EntryHash> {
-    const workspaceRecord = await this.client.createWorkspace({
+    const workspaceRecord = await this.synStore.client.createWorkspace({
       workspace: {
         name: workspaceName,
         initial_commit_hash: initialTipHash,

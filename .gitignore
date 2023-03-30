@@ -9,6 +9,7 @@ ui/node
 *.happ
 .cargo
 /tmp/*
+dist/
 
 # Negative ignores last:
 !.gitkeep
