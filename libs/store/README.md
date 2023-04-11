@@ -136,19 +136,20 @@ If you want another peer to discover that documenta and join the same workspace,
 ```ts
 import { get } from 'svelte/store';
 import { Commit } from '@holochain-syn/client';
+import { EntryRecord, EntryHashMap } from '@holochain-open-dev/utils';
+import { toPromise } from '@holochain-open-dev/stores';
 import { RootStore, WorkspaceStore } from '@holochain-syn/store';
-import { RecordBag, EntryHashMap } from '@holochain-open-dev/utils';
 
 // Fetch all roots
-const roots: RecordBag<Commit> = get(await store.fetchAllRoots());
+const roots: Array<EntryRecord<Commit>> = await toPromise(synStore.allRoots);
 
 const rootStore = new RootStore(
-  store.client,
+  synStore,
   textEditorGrammar,
-  roots.entryRecords[0]
+  roots[0]
 );
-const workspaces: EntryHashMap<Workspace> = get(await rootStore.fetchWorkspaces());
-const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces.keys()[0]);
+const workspaces: Array<EntryRecord<Workspace>> = await toPromise(rootStore.allWorkspaces);
+const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces[0].entryHash);
 ```
 
 #### Deterministic Roots
