@@ -2,8 +2,6 @@ import { css, html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import '@scoped-elements/codemirror';
 import {
-  //@ts-ignore
-  Profile,
   ProfilesStore,
   profilesStoreContext,
 } from '@holochain-open-dev/profiles';
