@@ -75,7 +75,7 @@ const DocumentGrammar: DocumentGrammar = {
 2. Define the element:
 
 ```ts
-import '@holochain-syn/text-editor/elements/syn-markdown-editor.js';
+import '@holochain-syn/text-editor/dist/elements/syn-markdown-editor.js';
 ```
 
 3. Include it in your html:

@@ -18,10 +18,10 @@ First, you need to have instantiated a `SynStore` from [@holochain-syn/store](ht
 
 ```ts
 // Define the <profiles-context> element
-import '@holochain-open-dev/profiles/elements/profiles-context.js';
+import '@holochain-open-dev/profiles/dist/elements/profiles-context.js';
 
 // Define the <syn-context> element
-import '@holochain-syn/core/elements/syn-context.js';
+import '@holochain-syn/core/dist/elements/syn-context.js';
 ```
 
 Now define the <profiles-context> and the <syn-context> element and add it to your html wrapping the whole section of your page in which you are going to be placing the elements from @holochain-syn/elements:

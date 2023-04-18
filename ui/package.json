@@ -16,10 +16,10 @@
     "vite": "^4.0.4"
   },
   "dependencies": {
-    "@holochain-open-dev/profiles": "^0.12.0",
-    "@holochain-syn/core": "0.3.0",
-    "@holochain-syn/text-editor": "0.3.0",
-    "@holochain/client": "^0.12.0",
+    "@holochain-open-dev/profiles": "^0.13.0",
+    "@holochain-syn/core": "0.4.0",
+    "@holochain-syn/text-editor": "0.4.0",
+    "@holochain/client": "^0.13.0",
     "@lit-labs/context": "^0.2.0",
     "lit": "^2.0.2"
   },

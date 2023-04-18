@@ -5,9 +5,9 @@
     SynClient,
     RootStore,
   } from '@holochain-syn/core';
-  import '@holochain-syn/core/elements/syn-context.js'
-  import '@holochain-syn/core/elements/workspace-participants.js'
-  import '@holochain-syn/text-editor/elements/syn-markdown-editor.js';
+  import '@holochain-syn/core/dist/elements/syn-context.js'
+  import '@holochain-syn/core/dist/elements/workspace-participants.js'
+  import '@holochain-syn/text-editor/dist/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
   import {toPromise} from '@holochain-open-dev/stores'
   import {RecordBag} from '@holochain-open-dev/utils'
@@ -17,8 +17,8 @@
     ProfilesClient,
     ProfilesStore,
   } from '@holochain-open-dev/profiles';
-  import '@holochain-open-dev/profiles/elements/profiles-context.js'
-  import '@holochain-open-dev/profiles/elements/profile-prompt.js'
+  import '@holochain-open-dev/profiles/dist/elements/profiles-context.js'
+  import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js'
 
   $: disconnected = false;
   let syn;

@@ -7,10 +7,10 @@ import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 
-import '@holochain-open-dev/profiles/elements/agent-avatar.js';
+import { sharedStyles } from '@holochain-open-dev/elements';
+import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 
 import { synWorkspaceContext } from '../contexts.js';
-import { sharedStyles } from '@holochain-open-dev/elements';
 
 @customElement('workspace-participants')
 export class WorkspaceParticipants extends LitElement {
