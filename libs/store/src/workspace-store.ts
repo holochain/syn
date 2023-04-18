@@ -326,8 +326,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
     // If there are more that one tip, merge them
     if (tips.size > 1) {
       let mergeState = Automerge.merge(
-        Automerge.load(decode(tips.values()[0].state) as any),
-        Automerge.load(decode(tips.values()[1].state) as any)
+        Automerge.load(decode(Array.from(tips.values())[0].state) as any),
+        Automerge.load(decode(Array.from(tips.values())[1].state) as any)
       );
 
       for (let i = 2; i < tips.size; i++) {
