@@ -1,46 +1,121 @@
 import { css, html, LitElement } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import '@scoped-elements/codemirror';
-import {
-  ProfilesStore,
-  profilesStoreContext,
-} from '@holochain-open-dev/profiles';
-import { getFolkColors, SliceStore } from '@holochain-syn/core';
-import { consume } from '@lit-labs/context';
-import { StoreSubscriber } from 'lit-svelte-stores';
+import { customElement, property } from 'lit/decorators.js';
+import { SliceStore } from '@holochain-syn/core';
+import '@vanillawc/wc-codemirror/index.js';
 
-import { TextEditorDeltaType, TextEditorGrammar } from '../grammar.js';
+import {
+  AgentSelection,
+  TextEditorDeltaType,
+  TextEditorGrammar,
+} from '../grammar.js';
 import { elemIdToPosition } from '../utils.js';
 import {
   AgentPubKey,
   decodeHashFromBase64,
   encodeHashToBase64,
 } from '@holochain/client';
-import { LazyHoloHashMap } from '@holochain-open-dev/utils';
-import { msg } from '@lit/localize';
 import { sharedStyles } from '@holochain-open-dev/elements';
+import { derived, StoreSubscriber } from '@holochain-open-dev/stores';
+import { styleMap } from 'lit/directives/style-map.js';
+import './agent-cursor.js';
 
 @customElement('syn-markdown-editor')
 export class SynMarkdownEditor extends LitElement {
   @property({ type: Object })
   slice!: SliceStore<TextEditorGrammar>;
 
-  @property({ attribute: 'debounce-ms' })
-  debounceMs: number = 1000;
+  _state = new StoreSubscriber(
+    this,
+    () => this.slice.state,
+    () => [this.slice]
+  );
 
-  @consume({ context: profilesStoreContext, subscribe: true })
-  @state()
-  profilesStore!: ProfilesStore;
-
-  _state = new StoreSubscriber(this, () => this.slice.state);
-  _cursors = new StoreSubscriber(this, () => this.slice.ephemeral);
-  _peersProfiles = new LazyHoloHashMap(
-    (peer: AgentPubKey) =>
-      new StoreSubscriber(this, () => this.profilesStore.profiles.get(peer))
+  _cursors = new StoreSubscriber(
+    this,
+    () => this.slice.ephemeral,
+    () => [this.slice]
   );
 
   _lastCursorPosition = 0;
   _cursorPosition = 0;
+
+  editor: any;
+
+  get editorEl() {
+    return this.shadowRoot?.getElementById('editor')! as any;
+  }
+
+  firstUpdated() {
+    this.editor = this.editorEl.editor;
+
+    derived([this.slice.state, this.slice.ephemeral], i => i).subscribe(
+      ([state, cursors]) => {
+        console.log(state.text, 'ss');
+        const stateText = state.text.toString();
+        const myAgentSelection =
+          cursors[encodeHashToBase64(this.slice.myPubKey)];
+
+        if (this.editor.doc.getValue() !== stateText) {
+          this.editor.doc.setValue(stateText);
+        }
+        if (myAgentSelection) {
+          if (state.text.toString().length > 0) {
+            const position = elemIdToPosition(
+              myAgentSelection.left,
+              myAgentSelection.position,
+              state.text
+            )!;
+
+            this.editor.doc.setSelection(
+              this.editor.posFromIndex(position),
+              this.editor.posFromIndex(
+                position + myAgentSelection.characterCount
+              )
+            );
+          } else {
+            this.editor.doc.setSelection(
+              this.editor.posFromIndex(0),
+              this.editor.posFromIndex(0)
+            );
+          }
+        }
+      }
+    );
+
+    this.editor.on('beforeChange', (_, e) => {
+      if (e.origin === 'setValue') return;
+      e.cancel();
+      const fromIndex = this.editor.indexFromPos({
+        line: e.from.line,
+        ch: e.from.ch,
+      });
+      const toIndex = this.editor.indexFromPos({
+        line: e.to.line,
+        ch: e.to.ch,
+      });
+      if (toIndex > fromIndex) {
+        this.onTextDeleted(fromIndex, toIndex - fromIndex);
+      }
+
+      if (e.text[0] !== '' || e.text.length > 1) {
+        this.onTextInserted(
+          this.editor.indexFromPos(e.from),
+          e.text.join('\n')
+        );
+      }
+    });
+
+    this.editor.on('beforeSelectionChange', (_, e) => {
+      if (e.origin !== undefined) {
+        const ranges = e.ranges;
+        const transformedRanges = ranges.map(r => ({
+          from: this.editor.indexFromPos(r.anchor),
+          to: this.editor.indexFromPos(r.head),
+        }));
+        this.onSelectionChanged(transformedRanges);
+      }
+    });
+  }
 
   onTextInserted(from: number, text: string) {
     this.slice.requestChanges([
@@ -72,69 +147,57 @@ export class SynMarkdownEditor extends LitElement {
     ]);
   }
 
-  remoteCursors() {
-    const myPubKey = encodeHashToBase64(this.slice.myPubKey);
-    if (!this._cursors.value) return [];
-    return Object.entries(this._cursors.value)
-      .filter(([pubKey, _]) => pubKey !== myPubKey)
-      .map(([agentPubKey, position]) => {
-        const { r, g, b } = getFolkColors(agentPubKey);
-        const peerProfile = this._peersProfiles.get(
-          decodeHashFromBase64(agentPubKey)
-        ).value;
-        const name =
-          peerProfile?.status === 'complete'
-            ? peerProfile.value
-              ? peerProfile.value.nickname
-              : msg('Unknown')
-            : msg('Loading...');
-        return {
-          position: elemIdToPosition(
-            position.left,
-            position.position,
-            this._state.value.text
-          ),
-          color: `rgb(${r}, ${g}, ${b})`,
-          name: name,
-        };
-      });
+  renderCursor(agent: AgentPubKey, agentSelection: AgentSelection) {
+    const position = elemIdToPosition(
+      agentSelection.left,
+      agentSelection.position,
+      this._state.value.text
+    )!;
+    if (!this.editor) return html``;
+
+    if (this.editorEl.value.length < position) return html``;
+
+    const coords = this.editor.cursorCoords(
+      this.editor.posFromIndex(position),
+      'local'
+    );
+
+    if (!coords) return html``;
+
+    return html`<agent-cursor
+      style=${styleMap({
+        left: `${coords.left + 30}px`,
+        top: `${coords.top}px`,
+      })}
+      class="cursor"
+      .agent=${agent}
+    ></agent-cursor>`;
   }
 
   render() {
     if (this._state.value === undefined) return html``;
 
-    const mySelection =
-      this._cursors.value[encodeHashToBase64(this.slice.myPubKey)];
-
-    const myPosition =
-      mySelection &&
-      elemIdToPosition(
-        mySelection.left,
-        mySelection.position,
-        this._state.value.text
-      );
-
-    const selection = myPosition
-      ? {
-          from: myPosition,
-          to: myPosition + mySelection.characterCount,
-        }
-      : undefined;
-
     return html`
-      <codemirror-markdown
-        style="flex: 1; background-color: rgb(40, 44, 52);"
-        id="editor"
-        .state=${{
-          text: this._state.value.text.toString(),
-          selection,
-        }}
-        .additionalCursors=${this.remoteCursors()}
-        @text-inserted=${e => this.onTextInserted(e.detail.from, e.detail.text)}
-        @text-deleted=${e =>
-          this.onTextDeleted(e.detail.from, e.detail.characterCount)}
-        @selection-changed=${e => this.onSelectionChanged(e.detail.ranges)}
-      ></codemirror-markdown>
+      <div
+        style="position: relative; overflow: auto; flex: 1; background-color: white;"
+      >
+        <wc-codemirror
+          id="editor"
+          mode="markdown"
+          style="height: auto;"
+          viewport-margin="infinity"
+        >
+        </wc-codemirror>
+
+        ${Object.entries(this._cursors.value)
+          .filter(
+            ([pubKeyB64, _]) =>
+              pubKeyB64 !== encodeHashToBase64(this.slice.myPubKey)
+          )
+          .map(([pubKeyB64, position]) =>
+            this.renderCursor(decodeHashFromBase64(pubKeyB64), position)
+          )}
+      </div>
     `;
   }
 
@@ -144,6 +207,10 @@ export class SynMarkdownEditor extends LitElement {
       :host {
         display: flex;
         flex: 1;
+        position: relative;
+      }
+      .cursor {
+        position: absolute;
       }
     `,
   ];
