@@ -49,7 +49,6 @@ export class SynMarkdownEditor extends LitElement {
     this.editor = this.editorEl.editor;
 
     setTimeout(() => {
-      console.log(this.editor);
       this.editor.getInputField().click();
     }, 500);
     derived([this.slice.state, this.slice.ephemeral], i => i).subscribe(

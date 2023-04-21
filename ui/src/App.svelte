@@ -6,6 +6,7 @@
     RootStore,
   } from '@holochain-syn/core';
   import '@holochain-syn/core/dist/elements/syn-context.js'
+  import '@holochain-syn/core/dist/elements/commit-history.js'
   import '@holochain-syn/core/dist/elements/workspace-participants.js'
   import '@holochain-syn/text-editor/dist/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
@@ -94,13 +95,14 @@
   let synStore;
   let profilesStore;
   let workspaceStore;
+  let rootStore;
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
     const roots = await toPromise(store.allRoots);
 
     if (new RecordBag(roots.map(er => er.record)).entryMap.size === 0) {
-      const rootStore = await store.createRoot(DocumentGrammar);
+       rootStore = await store.createRoot(DocumentGrammar);
 
       const workspaceHash = await rootStore.createWorkspace(
         'main',
@@ -110,7 +112,7 @@
       workspaceStore = await rootStore.joinWorkspace(workspaceHash);
       synStore = store;
     } else {
-      const rootStore = new RootStore(
+       rootStore = new RootStore(
         store,
         DocumentGrammar,
         roots[0]
@@ -151,7 +153,10 @@
       </div>
       <main style="display: flex; height: 400px">
   <profile-prompt>
-        <syn-markdown-editor style="height: 400px" slice={textSlice(workspaceStore)}></syn-markdown-editor>
+      <div style="display: flex; flex-direction:row; flex: 1;">
+        <syn-markdown-editor style="flex: 1;" slice={textSlice(workspaceStore)}></syn-markdown-editor>
+        <commit-history rootstore={rootStore}></commit-history>
+      </div>
     </profile-prompt>
       </main>
 

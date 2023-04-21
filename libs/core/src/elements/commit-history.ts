@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { css, html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
 customElements.define('cytoscape-dagre', CytoscapeDagre);
 import { customElement, property } from 'lit/decorators.js';
@@ -92,14 +92,10 @@ export class CommitHistory extends LitElement {
         `;
       case 'complete':
         return html`<sl-card style="flex: 1;">
-          <div class="column" style="flex: 1;">
-            <span class="title" style="margin: 16px; margin-bottom: 4px;"
-              >Commit History</span
-            >
-            ${this.renderContent(
-              new RecordBag(this._allCommits.value.value.map(er => er.record))
-            )}
-          </div>
+          <span slot="header" class="title">${msg('Commit History')}</span>
+          ${this.renderContent(
+            new RecordBag(this._allCommits.value.value.map(er => er.record))
+          )}
         </sl-card>`;
       case 'error':
         return html`<display-error
@@ -109,7 +105,17 @@ export class CommitHistory extends LitElement {
     }
   }
 
-  static styles = [sharedStyles];
+  static styles = [
+    sharedStyles,
+    css`
+      :host {
+        display: flex;
+      }
+      sl-card::part(body) {
+        padding: 0;
+      }
+    `,
+  ];
 }
 
 function getCommitGraph(
