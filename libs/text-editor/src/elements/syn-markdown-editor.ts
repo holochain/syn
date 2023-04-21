@@ -48,9 +48,12 @@ export class SynMarkdownEditor extends LitElement {
   firstUpdated() {
     this.editor = this.editorEl.editor;
 
+    setTimeout(() => {
+      console.log(this.editor);
+      this.editor.getInputField().click();
+    }, 500);
     derived([this.slice.state, this.slice.ephemeral], i => i).subscribe(
       ([state, cursors]) => {
-        console.log(state.text, 'ss');
         const stateText = state.text.toString();
         const myAgentSelection =
           cursors[encodeHashToBase64(this.slice.myPubKey)];

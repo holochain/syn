@@ -32,7 +32,7 @@ export class AgentCursor extends LitElement {
     return html`<div
       class="cursor"
       style=${styleMap({
-        'background-color': `rgb(${this.color})`,
+        'background-color': this.color,
       })}
     ></div>`;
   }
