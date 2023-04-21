@@ -5,7 +5,11 @@ import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
-import { encodeHashToBase64, EntryHashB64 } from '@holochain/client';
+import {
+  encodeHashToBase64,
+  EntryHashB64,
+  decodeHashFromBase64,
+} from '@holochain/client';
 import { RecordBag } from '@holochain-open-dev/utils';
 
 import '@shoelace-style/shoelace/dist/components/card/card.js';
@@ -39,7 +43,7 @@ export class CommitHistory extends LitElement {
         bubbles: true,
         composed: true,
         detail: {
-          commitHash: nodeId,
+          commitHash: decodeHashFromBase64(nodeId),
         },
       })
     );
