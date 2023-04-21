@@ -4,7 +4,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,23 +14,27 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc -w --preserveWatchOutput"
+    "build": "vite build",
+    "build:watch": "vite build -w"
   },
   "dependencies": {
+    "@automerge/automerge": "^2.0.2",
     "@holochain-open-dev/stores": "^0.4.7",
     "@holochain-open-dev/utils": "^0.13.0",
     "@holochain-syn/client": "0.4.0",
     "@holochain/client": "^0.13.0",
     "@msgpack/msgpack": "^2.7.2",
-    "automerge": "^1.0.1-preview.7",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.6",
     "gh-pages": "^3.2.3",
     "rimraf": "^3.0.2",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "vite": "^4.3.1",
+    "vite-plugin-dts": "^2.3.0",
+    "vite-plugin-top-level-await": "^1.3.0",
+    "vite-plugin-wasm": "^3.2.2"
   },
   "publishConfig": {
     "access": "public"

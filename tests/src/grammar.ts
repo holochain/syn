@@ -1,5 +1,5 @@
 import type { SynGrammar } from '@holochain-syn/store';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge';
 
 export enum TextEditorDeltaType {
   Insert = 'insert',

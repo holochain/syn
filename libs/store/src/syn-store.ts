@@ -1,7 +1,7 @@
 import { lazyLoadAndPoll, retryUntilSuccess } from '@holochain-open-dev/stores';
 import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge';
 import { LazyHoloHashMap } from '@holochain-open-dev/utils';
 import { EntryHash } from '@holochain/client';
 
@@ -9,7 +9,7 @@ import type { SynGrammar } from './grammar.js';
 import { RootStore } from './root-store.js';
 
 export const stateFromCommit = (commit: Commit) => {
-  const commitState = decode(commit.state) as Automerge.BinaryDocument;
+  const commitState = decode(commit.state) as Uint8Array;
   const state = Automerge.load(commitState);
   return state;
 };
@@ -59,7 +59,7 @@ export class SynStore {
     meta?: any
   ): Promise<RootStore<G>> {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'aa',
+      actor: 'aa',
     });
 
     doc = Automerge.change(doc, { time: 0 }, d => grammar.initState(d));

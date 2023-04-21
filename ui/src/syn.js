@@ -1,17 +1,19 @@
 import { AppAgentWebsocket, AppWebsocket } from '@holochain/client';
 import { SynStore, SynClient, extractSlice } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
+import { Text } from '@automerge/automerge';
 
 export const DocumentGrammar = {
   initState(state) {
-    state.title = '';
     state.body = {};
-    textEditorGrammar.initState(state.body);
+    state.body.text = new Text();
   },
   applyDelta(delta, state, eph, author) {
     if (delta.type === 'SetTitle') {
       state.title = delta.value;
     } else {
+      console.log(state.body.text.get(0));
+      console.log(state.body.text);
       textEditorGrammar.applyDelta(
         delta.textEditorDelta,
         state.body,

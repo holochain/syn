@@ -1,4 +1,4 @@
-import Automerge from 'automerge';
+import { Text } from '@automerge/automerge';
 import { TextEditorDelta, TextEditorDeltaType } from './grammar';
 
 export function textEditorDeltaToCodemirrorDelta(delta: TextEditorDelta) {
@@ -19,7 +19,7 @@ export function textEditorDeltaToCodemirrorDelta(delta: TextEditorDelta) {
 export function elemIdToPosition(
   left: boolean,
   elemId: string,
-  text: Automerge.Text
+  text: Text
 ): number | undefined {
   for (let i = 0; i < text.length; i++) {
     if ((text as any).getElemId(i) === elemId) return left ? i : i + 1;

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import wasm from 'vite-plugin-wasm';
 
 const components = [
   'dialog',
@@ -29,9 +30,10 @@ export default defineConfig({
   optimizeDeps: {
     exclude: [
       ...exclude,
-      '@holochain-open-dev/elements/elements/display-error.js',
+      '@holochain-open-dev/elements/dist/elements/display-error.js',
+      '@automerge/automerge-wasm',
     ],
   },
 
-  plugins: [svelte()],
+  plugins: [svelte(), wasm()],
 });

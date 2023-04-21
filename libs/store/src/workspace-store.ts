@@ -8,7 +8,7 @@ import {
   writable,
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge';
 import {
   encodeHashToBase64,
   AgentPubKey,
@@ -174,10 +174,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           this.handleChangeNotice(
             synSignal.provenance,
             message.payload.state_changes.map(
-              c => decode(c) as Automerge.BinaryChange
+              c => decode(c) as Automerge.Change
             ),
             message.payload.ephemeral_changes.map(
-              c => decode(c) as Automerge.BinaryChange
+              c => decode(c) as Automerge.Change
             )
           );
         }
@@ -185,14 +185,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
           this.handleSyncRequest(
             synSignal.provenance,
             message.payload.sync_message
-              ? (decode(
-                  message.payload.sync_message
-                ) as Automerge.BinarySyncMessage)
+              ? (decode(message.payload.sync_message) as Automerge.SyncMessage)
               : undefined,
             message.payload.ephemeral_sync_message
               ? (decode(
                   message.payload.ephemeral_sync_message
-                ) as Automerge.BinarySyncMessage)
+                ) as Automerge.SyncMessage)
               : undefined
           );
         }
@@ -416,28 +414,38 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleChangeNotice(
     from: AgentPubKey,
-    stateChanges: Automerge.BinaryChange[],
-    ephemeralChanges: Automerge.BinaryChange[]
+    stateChanges: Automerge.Change[],
+    ephemeralChanges: Automerge.Change[]
   ) {
     let thereArePendingChanges = false;
 
     this._state.update(state => {
-      const stateChangesInfo = Automerge.applyChanges(state, stateChanges);
+      let patches: Automerge.Patch[] | undefined;
+      const stateChangesInfo = Automerge.applyChanges(state, stateChanges, {
+        patchCallback: p => {
+          patches = p;
+        },
+      });
 
       thereArePendingChanges =
-        thereArePendingChanges || stateChangesInfo[1].pendingChanges > 0;
+        thereArePendingChanges || (!!patches && patches.length > 0);
 
       return stateChangesInfo[0];
     });
 
     this._ephemeral.update(ephemeral => {
+      let patches: Automerge.Patch[] | undefined;
       const ephemeralChangesInfo = Automerge.applyChanges(
         ephemeral,
-        ephemeralChanges
+        ephemeralChanges,
+        {
+          patchCallback: p => {
+            patches = p;
+          },
+        }
       );
-
       thereArePendingChanges =
-        thereArePendingChanges || ephemeralChangesInfo[1].pendingChanges > 0;
+        thereArePendingChanges || (!!patches && patches.length > 0);
 
       return ephemeralChangesInfo[0];
     });
@@ -486,8 +494,8 @@ export class WorkspaceStore<G extends SynGrammar<any, any>>
 
   private handleSyncRequest(
     from: AgentPubKey,
-    syncMessage: Automerge.BinarySyncMessage | undefined,
-    ephemeralSyncMessage: Automerge.BinarySyncMessage | undefined
+    syncMessage: Automerge.SyncMessage | undefined,
+    ephemeralSyncMessage: Automerge.SyncMessage | undefined
   ) {
     this._participants.update(p => {
       const participantInfo = p.get(from);

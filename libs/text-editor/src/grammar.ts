@@ -1,6 +1,6 @@
 import type { SynGrammar } from '@holochain-syn/store';
 import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
-import Automerge from 'automerge';
+import { Text } from '@automerge/automerge';
 
 export enum TextEditorDeltaType {
   Insert = 'insert',
@@ -32,7 +32,7 @@ export interface AgentSelection {
 }
 
 export type TextEditorState = {
-  text: Automerge.Text;
+  text: Text;
 };
 export type TextEditorEphemeralState = { [key: string]: AgentSelection };
 
@@ -44,7 +44,7 @@ export type TextEditorGrammar = SynGrammar<
 
 export const textEditorGrammar: TextEditorGrammar = {
   initState(doc) {
-    doc.text = new Automerge.Text();
+    doc.text = new Text();
   },
   applyDelta(
     delta: TextEditorDelta,
@@ -54,19 +54,21 @@ export const textEditorGrammar: TextEditorGrammar = {
   ) {
     if (delta.type === TextEditorDeltaType.Insert) {
       state.text.insertAt!(delta.position, ...delta.text);
-      const elementId = (state.text as any).getElemId(
-        delta.position + delta.text.length - 1
-      );
+      // const elementId = (state.text as any).getElemId(
+      //   delta.position + delta.text.length - 1
+      // );
 
-      ephemeral[encodeHashToBase64(author)] = {
-        left: false,
-        position: elementId,
-        characterCount: 0,
-      };
+      // ephemeral[encodeHashToBase64(author)] = {
+      //   left: false,
+      //   position: elementId,
+      //   characterCount: 0,
+      // };
     } else if (delta.type === TextEditorDeltaType.Delete) {
       state.text.deleteAt!(delta.position, delta.characterCount);
-      
-      if (state.text.length === 0) return;
+
+      if (state.text.length === 0) {
+        return;
+      }
 
       if (delta.position === 0) {
         const elementId = (state.text as any).getElemId(0);
@@ -87,7 +89,6 @@ export const textEditorGrammar: TextEditorGrammar = {
       }
     } else {
       if (state.text.length === 0) {
-
       } else if (delta.position === state.text.length) {
         ephemeral[encodeHashToBase64(author)] = {
           left: false,

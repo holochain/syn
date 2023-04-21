@@ -13,6 +13,7 @@
   import {RecordBag} from '@holochain-open-dev/utils'
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
+  import * as Automerge from '@automerge/automerge'
   import {
     ProfilesClient,
     ProfilesStore,
@@ -97,10 +98,14 @@
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
+    console.log('hi1')
     const roots = await toPromise(store.allRoots);
+    console.log('hi2', roots)
 
     if (new RecordBag(roots.map(er => er.record)).entryMap.size === 0) {
+    console.log('hi3')
       const rootStore = await store.createRoot(DocumentGrammar);
+    console.log('hi4')
 
       const workspaceHash = await rootStore.createWorkspace(
         'main',
@@ -151,7 +156,7 @@
       </div>
       <main style="display: flex; height: 400px">
   <profile-prompt>
-        <syn-markdown-editor style="height: 400px" slice={textSlice(workspaceStore)}></syn-markdown-editor>
+        <syn-markdown-editor style="height: 400px; width: 700px" slice={textSlice(workspaceStore)}></syn-markdown-editor>
     </profile-prompt>
       </main>
 

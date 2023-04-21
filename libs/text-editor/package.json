@@ -14,6 +14,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@automerge/automerge": "^2.0.2",
     "@holochain-open-dev/elements": "^0.4.0",
     "@holochain-open-dev/profiles": "^0.13.0",
     "@holochain-open-dev/stores": "^0.4.0",
@@ -24,7 +25,6 @@
     "@lit/localize": "^0.11.4",
     "@shoelace-style/shoelace": "^2.3.0",
     "@vanillawc/wc-codemirror": "^2.1.0",
-    "automerge": "^1.0.1-preview.7",
     "lit": "^2.0.2",
     "lodash-es": "^4.17.21"
   },
