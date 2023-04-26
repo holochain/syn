@@ -47,11 +47,11 @@ pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>
 
     let workspaces_get_inputs = links
         .into_iter()
-        .map(|l| {
-            GetInput::new(
-                AnyDhtHash::from(EntryHash::from(l.target)),
+        .filter_map(|l| {
+            Some(GetInput::new(
+                AnyDhtHash::try_from(l.target).ok()?,
                 GetOptions::default(),
-            )
+            ))
         })
         .collect();
 
@@ -91,11 +91,11 @@ pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<Reco
 
     let commits_get_inputs = links
         .into_iter()
-        .map(|l| {
-            GetInput::new(
-                AnyDhtHash::from(EntryHash::from(l.target)),
+        .filter_map(|l| {
+            Some(GetInput::new(
+                AnyDhtHash::try_from(l.target).ok()?,
                 GetOptions::default(),
-            )
+            ))
         })
         .collect();
 
@@ -113,7 +113,9 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     let mut tips = HashSet::new();
     let mut tips_previous = HashSet::new();
     for l in links {
-        tips.insert(EntryHash::from(l.target.clone()));
+        tips.insert(EntryHash::try_from(l.target).map_err(|_e| wasm_error!(
+            WasmErrorInner::Guest("exepected an agent key".to_string())
+        ))?);
    //     info!("TAG LEN: {}",l.tag.as_ref().len());
         if l.tag.as_ref().len() == 39 {
             tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref().to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
@@ -149,7 +151,7 @@ pub fn get_workspace_participants(workspace_hash: EntryHash) -> ExternResult<Vec
 
     let participants: Vec<AgentPubKey> = links
         .into_iter()
-        .map(|l| AgentPubKey::from(EntryHash::from(l.target)))
+        .filter_map(|l| AgentPubKey::try_from(l.target).ok())
         .collect();
     Ok(participants)
 }
@@ -192,12 +194,16 @@ pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_links: Vec<Link> = links
         .clone()
         .into_iter()
-        .filter(|l| AgentPubKey::from(EntryHash::from(l.target.clone())).eq(&my_pub_key))
+        .filter(|l| 
+            AgentPubKey::try_from(l.target.clone())
+            .map(|agent| agent == my_pub_key)
+            .unwrap_or(false))
+//        .filter(|l| AgentPubKey::from(EntryHash::from(l.target.clone())).eq(&my_pub_key))
         .collect();
 
     let participants: Vec<AgentPubKey> = links
         .into_iter()
-        .map(|l| AgentPubKey::from(EntryHash::from(l.target.clone())))
+        .filter_map(|l: Link| AgentPubKey::try_from(l.target).ok())
         .filter(|agent_pub_key| !agent_pub_key.eq(&my_pub_key))
         .collect();
 

@@ -47,11 +47,11 @@ pub fn get_commits_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>> {
 
     let mut get_inputs: Vec<GetInput> = links
         .into_iter()
-        .map(|link| {
-            GetInput::new(
-                AnyDhtHash::from(EntryHash::from(link.target)),
+        .filter_map(|link| {
+            Some(GetInput::new(
+                AnyDhtHash::try_from(link.target).ok()?,
                 GetOptions::default(),
-            )
+            ))
         })
         .collect();
 
