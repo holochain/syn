@@ -113,9 +113,7 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     let mut tips = HashSet::new();
     let mut tips_previous = HashSet::new();
     for l in links {
-        tips.insert(EntryHash::try_from(l.target).map_err(|_e| wasm_error!(
-            WasmErrorInner::Guest("exepected an agent key".to_string())
-        ))?);
+        tips.insert(EntryHash::try_from(l.target).map_err(|e| wasm_error!(e))?);
    //     info!("TAG LEN: {}",l.tag.as_ref().len());
         if l.tag.as_ref().len() == 39 {
             tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref().to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);

@@ -833,7 +833,7 @@ dependencies = [
 [[package]]
 name = "hdi"
 version = "0.3.0-beta-rc.4"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "hdk_derive",
  "holo_hash",
@@ -849,7 +849,7 @@ dependencies = [
 [[package]]
 name = "hdk"
 version = "0.2.0-beta-rc.5"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "getrandom",
  "hdi",
@@ -868,7 +868,7 @@ dependencies = [
 [[package]]
 name = "hdk_derive"
 version = "0.2.0-beta-rc.4"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "darling",
  "heck",
@@ -919,12 +919,13 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 [[package]]
 name = "holo_hash"
 version = "0.2.0-beta-rc.4"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "base64",
  "blake2b_simd",
  "derive_more",
  "holochain_serialized_bytes",
+ "holochain_wasmer_common",
  "kitsune_p2p_dht_arc",
  "serde",
  "serde_bytes",
@@ -934,7 +935,7 @@ dependencies = [
 [[package]]
 name = "holochain_integrity_types"
 version = "0.2.0-beta-rc.4"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "holo_hash",
  "holochain_serialized_bytes",
@@ -1003,7 +1004,7 @@ dependencies = [
 [[package]]
 name = "holochain_zome_types"
 version = "0.2.0-beta-rc.5"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "holo_hash",
  "holochain_integrity_types",
@@ -1146,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "kitsune_p2p_bin_data"
 version = "0.2.0-beta-rc.2"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "base64",
  "derive_more",
@@ -1159,7 +1160,7 @@ dependencies = [
 [[package]]
 name = "kitsune_p2p_block"
 version = "0.2.0-beta-rc.3"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "kitsune_p2p_bin_data",
  "kitsune_p2p_timestamp",
@@ -1170,7 +1171,7 @@ dependencies = [
 [[package]]
 name = "kitsune_p2p_dht"
 version = "0.2.0-beta-rc.2"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "colored",
  "derivative",
@@ -1193,7 +1194,7 @@ dependencies = [
 [[package]]
 name = "kitsune_p2p_dht_arc"
 version = "0.2.0-beta-rc.2"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "derive_more",
  "gcollections",
@@ -1205,7 +1206,7 @@ dependencies = [
 [[package]]
 name = "kitsune_p2p_timestamp"
 version = "0.2.0-beta-rc.1"
-source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#270ff81b0f542f18e44c458ee25aa4f8fa205d29"
+source = "git+https://github.com/holochain/holochain?branch=holohash-usability-fix#c2200f81f9fc272710a05f43054299bb589fd4cb"
 dependencies = [
  "chrono",
  "derive_more",
