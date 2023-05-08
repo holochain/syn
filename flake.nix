@@ -12,7 +12,7 @@
     holochain-flake = {
       url = "github:holochain/holochain";
       inputs.versions.url = "github:holochain/holochain/?dir=versions/0_1";
-      inputs.holochain.url = "github:holochain/holochain/holohash-usability-fix";
+      inputs.holochain.url = "github:holochain/holochain/develop";
     };
   };
 
