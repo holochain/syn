@@ -5,8 +5,8 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hdi = {git = "https://github.com/holochain/holochain", branch="develop"}
-hdk = {git = "https://github.com/holochain/holochain", branch="develop"}
+hdi = {git = "https://github.com/holochain/holochain", rev="a92af07552c5cb70436c501b67e0c064ac699157"}
+hdk = {git = "https://github.com/holochain/holochain", rev="a92af07552c5cb70436c501b67e0c064ac699157"}
 
 [profile.dev]
 opt-level = "z"

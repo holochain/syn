@@ -829,7 +829,7 @@ source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.2
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity",
- "hdk",
+ "hdk 0.2.0",
  "serde",
 ]
 
@@ -839,7 +839,7 @@ version = "0.3.0"
 source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.2.0-beta-rc.5#f8649ce7a322528440c6d0b01448c707ef90862f"
 dependencies = [
  "derive_more",
- "hdi",
+ "hdi 0.3.0",
  "serde",
 ]
 
@@ -850,7 +850,7 @@ dependencies = [
  "chrono",
  "derive_more",
  "hc_zome_syn_integrity",
- "hdk",
+ "hdk 0.3.0-beta-dev.7",
  "itertools 0.10.5",
  "serde",
 ]
@@ -860,7 +860,7 @@ name = "hc_zome_syn_integrity"
 version = "0.1.0"
 dependencies = [
  "derive_more",
- "hdi",
+ "hdi 0.4.0-beta-dev.5",
  "serde",
 ]
 
@@ -869,9 +869,25 @@ name = "hdi"
 version = "0.3.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
 dependencies = [
- "hdk_derive",
- "holo_hash",
- "holochain_integrity_types",
+ "hdk_derive 0.2.0",
+ "holo_hash 0.2.0",
+ "holochain_integrity_types 0.2.0",
+ "holochain_wasmer_guest",
+ "paste",
+ "serde",
+ "serde_bytes",
+ "tracing",
+ "tracing-core",
+]
+
+[[package]]
+name = "hdi"
+version = "0.4.0-beta-dev.5"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "hdk_derive 0.3.0-beta-dev.5",
+ "holo_hash 0.3.0-beta-dev.4",
+ "holochain_integrity_types 0.3.0-beta-dev.5",
  "holochain_wasmer_guest",
  "paste",
  "serde",
@@ -886,11 +902,30 @@ version = "0.2.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
 dependencies = [
  "getrandom",
- "hdi",
- "hdk_derive",
- "holo_hash",
+ "hdi 0.3.0",
+ "hdk_derive 0.2.0",
+ "holo_hash 0.2.0",
  "holochain_wasmer_guest",
- "holochain_zome_types",
+ "holochain_zome_types 0.2.0",
+ "paste",
+ "serde",
+ "serde_bytes",
+ "thiserror",
+ "tracing",
+ "tracing-core",
+]
+
+[[package]]
+name = "hdk"
+version = "0.3.0-beta-dev.7"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "getrandom",
+ "hdi 0.4.0-beta-dev.5",
+ "hdk_derive 0.3.0-beta-dev.5",
+ "holo_hash 0.3.0-beta-dev.4",
+ "holochain_wasmer_guest",
+ "holochain_zome_types 0.3.0-beta-dev.6",
  "paste",
  "serde",
  "serde_bytes",
@@ -906,7 +941,22 @@ source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb2596
 dependencies = [
  "darling 0.14.4",
  "heck",
- "holochain_integrity_types",
+ "holochain_integrity_types 0.2.0",
+ "paste",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "hdk_derive"
+version = "0.3.0-beta-dev.5"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "darling 0.14.4",
+ "heck",
+ "holochain_integrity_types 0.3.0-beta-dev.5",
  "paste",
  "proc-macro-error",
  "proc-macro2",
@@ -960,7 +1010,23 @@ dependencies = [
  "derive_more",
  "holochain_serialized_bytes",
  "holochain_wasmer_common",
- "kitsune_p2p_dht_arc",
+ "kitsune_p2p_dht_arc 0.2.0",
+ "serde",
+ "serde_bytes",
+ "thiserror",
+]
+
+[[package]]
+name = "holo_hash"
+version = "0.3.0-beta-dev.4"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "base64",
+ "blake2b_simd",
+ "derive_more",
+ "holochain_serialized_bytes",
+ "holochain_wasmer_common",
+ "kitsune_p2p_dht_arc 0.3.0-beta-dev.3",
  "serde",
  "serde_bytes",
  "thiserror",
@@ -971,9 +1037,25 @@ name = "holochain_integrity_types"
 version = "0.2.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
 dependencies = [
- "holo_hash",
+ "holo_hash 0.2.0",
  "holochain_serialized_bytes",
- "kitsune_p2p_timestamp",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?branch=develop)",
+ "paste",
+ "serde",
+ "serde_bytes",
+ "subtle",
+ "tracing",
+]
+
+[[package]]
+name = "holochain_integrity_types"
+version = "0.3.0-beta-dev.5"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "holo_hash 0.3.0-beta-dev.4",
+ "holochain_serialized_bytes",
+ "kitsune_p2p_dht 0.3.0-beta-dev.3",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157)",
  "paste",
  "serde",
  "serde_bytes",
@@ -1040,14 +1122,35 @@ name = "holochain_zome_types"
 version = "0.2.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
 dependencies = [
- "holo_hash",
- "holochain_integrity_types",
+ "holo_hash 0.2.0",
+ "holochain_integrity_types 0.2.0",
  "holochain_serialized_bytes",
  "holochain_wasmer_common",
- "kitsune_p2p_bin_data",
- "kitsune_p2p_block",
- "kitsune_p2p_dht",
- "kitsune_p2p_timestamp",
+ "kitsune_p2p_bin_data 0.2.0",
+ "kitsune_p2p_block 0.2.0",
+ "kitsune_p2p_dht 0.2.0",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?branch=develop)",
+ "paste",
+ "serde",
+ "serde_bytes",
+ "subtle",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "holochain_zome_types"
+version = "0.3.0-beta-dev.6"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "holo_hash 0.3.0-beta-dev.4",
+ "holochain_integrity_types 0.3.0-beta-dev.5",
+ "holochain_serialized_bytes",
+ "holochain_wasmer_common",
+ "kitsune_p2p_bin_data 0.3.0-beta-dev.4",
+ "kitsune_p2p_block 0.3.0-beta-dev.4",
+ "kitsune_p2p_dht 0.3.0-beta-dev.3",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157)",
  "paste",
  "serde",
  "serde_bytes",
@@ -1185,7 +1288,20 @@ source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb2596
 dependencies = [
  "base64",
  "derive_more",
- "kitsune_p2p_dht_arc",
+ "kitsune_p2p_dht_arc 0.2.0",
+ "serde",
+ "serde_bytes",
+ "shrinkwraprs",
+]
+
+[[package]]
+name = "kitsune_p2p_bin_data"
+version = "0.3.0-beta-dev.4"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "base64",
+ "derive_more",
+ "kitsune_p2p_dht_arc 0.3.0-beta-dev.3",
  "serde",
  "serde_bytes",
  "shrinkwraprs",
@@ -1196,8 +1312,19 @@ name = "kitsune_p2p_block"
 version = "0.2.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
 dependencies = [
- "kitsune_p2p_bin_data",
- "kitsune_p2p_timestamp",
+ "kitsune_p2p_bin_data 0.2.0",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?branch=develop)",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "kitsune_p2p_block"
+version = "0.3.0-beta-dev.4"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "kitsune_p2p_bin_data 0.3.0-beta-dev.4",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157)",
  "serde",
  "serde_bytes",
 ]
@@ -1213,8 +1340,31 @@ dependencies = [
  "futures",
  "gcollections",
  "intervallum",
- "kitsune_p2p_dht_arc",
- "kitsune_p2p_timestamp",
+ "kitsune_p2p_dht_arc 0.2.0",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?branch=develop)",
+ "must_future",
+ "num-traits",
+ "once_cell",
+ "rand",
+ "serde",
+ "statrs",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "kitsune_p2p_dht"
+version = "0.3.0-beta-dev.3"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "colored",
+ "derivative",
+ "derive_more",
+ "futures",
+ "gcollections",
+ "intervallum",
+ "kitsune_p2p_dht_arc 0.3.0-beta-dev.3",
+ "kitsune_p2p_timestamp 0.2.0 (git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157)",
  "must_future",
  "num-traits",
  "once_cell",
@@ -1238,9 +1388,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitsune_p2p_dht_arc"
+version = "0.3.0-beta-dev.3"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
+dependencies = [
+ "derive_more",
+ "gcollections",
+ "intervallum",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
 name = "kitsune_p2p_timestamp"
 version = "0.2.0"
 source = "git+https://github.com/holochain/holochain?branch=develop#25dddddb259692d302d1fad8501301e28220997d"
+dependencies = [
+ "chrono",
+ "derive_more",
+ "serde",
+]
+
+[[package]]
+name = "kitsune_p2p_timestamp"
+version = "0.2.0"
+source = "git+https://github.com/holochain/holochain?rev=a92af07552c5cb70436c501b67e0c064ac699157#a92af07552c5cb70436c501b67e0c064ac699157"
 dependencies = [
  "chrono",
  "derive_more",
@@ -1614,7 +1786,7 @@ name = "profiles_coordinator"
 version = "0.1.0-alpha.0"
 dependencies = [
  "hc_zome_profiles_coordinator",
- "hdk",
+ "hdk 0.3.0-beta-dev.7",
  "serde",
 ]
 
@@ -1624,7 +1796,7 @@ version = "0.1.0-alpha.0"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity",
- "hdi",
+ "hdi 0.4.0-beta-dev.5",
  "serde",
 ]
 

@@ -2,27 +2,23 @@
   description = "Template for Holochain app development";
 
   inputs = {
-    nixpkgs.follows = "holochain-flake/nixpkgs";
-
-    # this can now be udpated directly, e.g.:
-    # nix flake lock --override-input holochain github:holochain/holochain/holochain-0.1.3
-    holochain.url = "github:holochain/holochain";
-    holochain.flake = false;
-
+    holochain-nix-versions.url  = "github:holochain/holochain/?dir=versions/0_2";
     holochain-flake = {
-      url = "github:holochain/holochain";
-      inputs.versions.url = "github:holochain/holochain/?dir=versions/0_1";
-      inputs.holochain.url = "github:holochain/holochain/develop";
+      url = "github:holochain/holochain/a92af07552c5cb70436c501b67e0c064ac699157";
+      inputs.versions.follows = "holochain-nix-versions";
     };
+
+    nixpkgs.follows = "holochain-flake/nixpkgs";
+    flake-parts.follows = "holochain-flake/flake-parts";
   };
 
-  outputs = inputs @ { ... }:
-    inputs.holochain-flake.inputs.flake-parts.lib.mkFlake
+  outputs = inputs @ { flake-parts, holochain-flake, ... }:
+    flake-parts.lib.mkFlake
       {
         inherit inputs;
       }
       {
-        systems = builtins.attrNames inputs.holochain-flake.devShells;
+        systems = builtins.attrNames holochain-flake.devShells;
         perSystem =
           { config
           , pkgs
@@ -30,12 +26,9 @@
           , ...
           }: {
             devShells.default = pkgs.mkShell {
-              inputsFrom = [ inputs.holochain-flake.devShells.${system}.holonix ];
-              packages = with pkgs; [
-                  # more packages go here
-                  pkgs.nodejs-18_x pkgs.binaryen 
-              ];
+              inputsFrom = [ holochain-flake.devShells.${system}.holonix ];
+              packages = [ pkgs.nodejs-18_x ];
             };
           };
       };
-}
+}   
