@@ -13,7 +13,7 @@ import { synContext } from '../contexts';
 export class SynContext extends LitElement {
   @provide({ context: synContext })
   @property()
-  synstore!: SynStore;
+  store!: SynStore;
 
   render() {
     return html` <slot></slot> `;
