@@ -32,10 +32,10 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     ]);
     await scenario.shareAllAgents();
     const aliceSyn = new SynStore(
-      new SynClient(alice.conductor.appAgentWs(), 'syn-test')
+      new SynClient(alice.appAgentWs as any, 'syn-test')
     );
     const bobSyn = new SynStore(
-      new SynClient(bob.conductor.appAgentWs(), 'syn-test')
+      new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
     const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);

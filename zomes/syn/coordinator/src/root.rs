@@ -20,7 +20,7 @@ pub fn get_all_participants() -> ExternResult<Vec<AgentPubKey>> {
 
     let roots_hashes: Vec<EntryHash> = links
         .into_iter()
-        .map(|link| EntryHash::from(link.target))
+        .filter_map(|link| EntryHash::try_from(link.target).ok())
         .collect();
 
     let mut participants: HashSet<AgentPubKey> = HashSet::new();
@@ -28,7 +28,7 @@ pub fn get_all_participants() -> ExternResult<Vec<AgentPubKey>> {
         let links = get_links(root_hash, LinkTypes::RootToWorkspaces, None)?;
         let workspaces_hashes: Vec<EntryHash> = links
             .into_iter()
-            .map(|link| EntryHash::from(link.target))
+            .filter_map(|link| EntryHash::try_from(link.target).ok())
             .collect();
 
         for workspace_hash in workspaces_hashes {
@@ -94,11 +94,11 @@ pub fn get_all_roots(_: ()) -> ExternResult<Vec<Record>> {
         .into_iter()
         .map(|link| link.target)
         .unique()
-        .map(|target| {
-            GetInput::new(
-                AnyDhtHash::from(EntryHash::from(target)),
+        .filter_map(|target| {
+            Some(GetInput::new(
+                AnyDhtHash::try_from(target).ok()?,
                 GetOptions::default(),
-            )
+            ))
         })
         .collect();
 

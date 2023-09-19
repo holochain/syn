@@ -2,9 +2,9 @@
   "name": "@holochain-syn/dev",
   "private": true,
   "scripts": {
-    "start": "AGENTS=2 npm run network",
+    "start": "AGENTS=2 BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) npm run network",
     "network": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run dev:libs\" \"npm run launch:happ\" \"npm start -w syntext\"",
-    "launch:happ": "echo \"pass\" | hc launch --piped -n $AGENTS workdir/syn-test.happ --ui-port $UI_PORT network mdns",
+    "launch:happ": "concurrently \"hc run-local-services --bootstrap-port $BOOTSTRAP_PORT --signal-port $SIGNAL_PORT\" \"echo pass | RUST_LOG=warn hc launch --piped -n $AGENTS workdir/syn-test.happ --ui-port $UI_PORT network --bootstrap http://127.0.0.1:\"$BOOTSTRAP_PORT\" webrtc ws://127.0.0.1:\"$SIGNAL_PORT\"\"",
     "dev:libs": "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
     "prepare": "npm run build:libs",
     "build:libs": "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",
@@ -27,6 +27,7 @@
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "lint-staged": "^11.1.2",
+    "new-port-cli": "^1.0.0",
     "prettier": "^2.3.2",
     "typescript": "^4.9.4"
   },

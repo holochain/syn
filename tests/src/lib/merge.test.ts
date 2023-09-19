@@ -19,11 +19,14 @@ test('check that the state of disconnected agents making changes converges after
     const [alice] = await scenario.addPlayersWithApps([appSource]);
 
     let aliceSyn = new SynStore(
-      new SynClient(alice.conductor.appAgentWs(), 'syn-test')
+      new SynClient(alice.appAgentWs as any, 'syn-test')
     );
 
+    // Alice creates a root commit
     let aliceRootStore = await aliceSyn.createDeterministicRoot(sampleGrammar);
     const rootHash = aliceRootStore.root.entryHash;
+
+    // And a workspace with pointing to it
     const workspaceHash = await aliceRootStore.createWorkspace(
       'main',
       rootHash
@@ -31,15 +34,20 @@ test('check that the state of disconnected agents making changes converges after
     let aliceWorkspaceStore = await aliceRootStore.joinWorkspace(workspaceHash);
 
     assert.ok(aliceWorkspaceStore.workspaceHash);
+
+    // Alice requests the change 'Alice'
     aliceWorkspaceStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 0, text: 'Alice' },
     ]);
 
+    // And commits it
     await aliceWorkspaceStore.commitChanges();
     await delay(100);
 
     let currentState = get(aliceWorkspaceStore.state);
     assert.equal(currentState.body.text.toString(), 'Alice');
+
+    // Now Alice goes offline
 
     await aliceWorkspaceStore.leaveWorkspace();
     await alice.conductor.shutDown();
@@ -47,11 +55,16 @@ test('check that the state of disconnected agents making changes converges after
     await delay(100);
     const [bob] = await scenario.addPlayersWithApps([appSource]);
     const bobSyn = new SynStore(
-      new SynClient(bob.conductor.appAgentWs(), 'syn-test')
+      new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
+    // Bob goes online and joins the same workspace
     let bobRootStore = await bobSyn.createDeterministicRoot(sampleGrammar);
-    await bobRootStore.createWorkspace('main', bobRootStore.root.entryHash);
+    const bobWorkspaceHash = await bobRootStore.createWorkspace(
+      'main',
+      bobRootStore.root.entryHash
+    );
+    assert.equal(bobWorkspaceHash.toString(), workspaceHash.toString());
     let bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
 
     const roots = await toPromise(bobSyn.allRoots);
@@ -70,12 +83,14 @@ test('check that the state of disconnected agents making changes converges after
     await bobWorkspaceStore.leaveWorkspace();
 
     await alice.conductor.startUp();
-    await alice.conductor.connectAppAgentInterface('syn-test');
+    const port = await alice.conductor.attachAppInterface();
+    const aliceAppWs = await alice.conductor.connectAppAgentWs(
+      port,
+      alice.appId
+    );
     await scenario.shareAllAgents();
 
-    aliceSyn = new SynStore(
-      new SynClient(alice.conductor.appAgentWs(), 'syn-test')
-    );
+    aliceSyn = new SynStore(new SynClient(aliceAppWs, 'syn-test'));
     aliceRootStore = new RootStore(aliceSyn, sampleGrammar, rootRecord);
     aliceWorkspaceStore = await aliceRootStore.joinWorkspace(workspaceHash);
 
@@ -84,6 +99,7 @@ test('check that the state of disconnected agents making changes converges after
     currentState = get(aliceWorkspaceStore.state);
 
     bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
+    await delay(5000);
     const bobcurrentState = get(bobWorkspaceStore.state);
     // Check that state converges
     assert.equal(

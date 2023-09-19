@@ -104,7 +104,7 @@ export class CommitHistory extends LitElement {
       case 'error':
         return html`<display-error
           .headline=${msg('Error fetching the commit history')}
-          .error=${this._allCommits.value.error.data.data}
+          .error=${this._allCommits.value.error}
         ></display-error>`;
     }
   }

@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/client",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "type": "module",
@@ -16,8 +16,8 @@
     "build:watch": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
-    "@holochain/client": "^0.13.0",
-    "@holochain-open-dev/utils": "^0.13.0",
+    "@holochain/client": "^0.16.1",
+    "@holochain-open-dev/utils": "^0.15.0",
     "@msgpack/msgpack": "^2.7.0",
     "automerge": "^1.0.1-preview.7",
     "lodash-es": "^4.17.21"

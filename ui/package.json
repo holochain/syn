@@ -6,10 +6,10 @@
     "build": "npm run check && vite build"
   },
   "dependencies": {
-    "@holochain-open-dev/profiles": "^0.14.0",
-    "@holochain-syn/core": "0.5.0",
-    "@holochain-syn/text-editor": "0.5.0",
-    "@holochain/client": "^0.14.1",
+    "@holochain-open-dev/profiles": "^0.16.1",
+    "@holochain-syn/core": "0.6.0",
+    "@holochain-syn/text-editor": "0.6.0",
+    "@holochain/client": "^0.16.1",
     "@lit-labs/context": "^0.2.0",
     "lit": "^2.0.2"
   },

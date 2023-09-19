@@ -22,7 +22,7 @@ export class AgentCursor extends LitElement {
   @consume({ context: profilesStoreContext, subscribe: true })
   profilesStore!: ProfilesStore;
 
-  _profile = new StoreSubscriber(
+  private _profile = new StoreSubscriber(
     this,
     () => this.profilesStore.profiles.get(this.agent),
     () => [this.agent]

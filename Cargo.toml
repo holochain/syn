@@ -1,12 +1,10 @@
 [workspace]
-members = [
-  "zomes/*/*",
-]
+members = ["zomes/*/*"]
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.2.4"
-hdk = "0.1.4"
+hdi = "0.3.2"
+hdk = "0.2.2"
 
 [profile.dev]
 opt-level = "z"
