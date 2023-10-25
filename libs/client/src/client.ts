@@ -85,12 +85,6 @@ export class SynClient extends ZomeClient<SynSignal> {
     return workspaces.map((w: Record) => new EntryRecord(w));
   }
 
-  public getWorkspaceParticipants(
-    workspace_hash: EntryHash
-  ): Promise<Array<AgentPubKey>> {
-    return this.callZome('get_workspace_participants', workspace_hash);
-  }
-
   public async getWorkspaceCommits(
     workspaceHash: EntryHash
   ): Promise<Array<EntryRecord<Commit>>> {
@@ -109,14 +103,26 @@ export class SynClient extends ZomeClient<SynSignal> {
     return this.callZome('update_workspace_tip', input);
   }
 
-  public async joinWorkspace(
+  public getWorkspaceSessionParticipants(
     workspace_hash: EntryHash
-  ): Promise<AgentPubKey[]> {
-    return this.callZome('join_workspace', workspace_hash);
+  ): Promise<Array<AgentPubKey>> {
+    return this.callZome('get_workspace_session_participants', workspace_hash);
   }
 
-  public async leaveWorkspace(workspace_hash: EntryHash): Promise<void> {
-    return this.callZome('leave_workspace', workspace_hash);
+  public getWorkspaceEditors(
+    workspace_hash: EntryHash
+  ): Promise<Array<AgentPubKey>> {
+    return this.callZome('get_workspace_editors', workspace_hash);
+  }
+
+  public async joinWorkspaceSession(
+    workspace_hash: EntryHash
+  ): Promise<AgentPubKey[]> {
+    return this.callZome('join_workspace_session', workspace_hash);
+  }
+
+  public async leaveWorkspaceSession(workspace_hash: EntryHash): Promise<void> {
+    return this.callZome('leave_workspace_session', workspace_hash);
   }
 
   public sendMessage(

@@ -29,17 +29,6 @@ export class RootStore<G extends SynGrammar<any, any>> {
     4000
   );
 
-  async joinWorkspace(
-    workspaceHash: EntryHash,
-    config?: RecursivePartial<SynConfig>
-  ): Promise<WorkspaceStore<G>> {
-    return WorkspaceStore.joinWorkspace(
-      this,
-      { ...config, ...defaultConfig() },
-      workspaceHash
-    );
-  }
-
   async createWorkspace(
     workspaceName: string,
     initialTipHash: EntryHash

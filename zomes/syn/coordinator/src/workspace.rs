@@ -1,5 +1,6 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
+use itertools::Itertools;
 
 use crate::{
     messages::{send_message, MessagePayload, SendMessageInput, SynMessage, WorkspaceMessage},
@@ -73,7 +74,13 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
     let tag = match input.previous_commit_hashes.len() {
         0 => LinkTag::new([]),
         1 => LinkTag::new(input.previous_commit_hashes[0].as_ref()),
-        _ => LinkTag::new([input.previous_commit_hashes[0].as_ref(), input.previous_commit_hashes[1].as_ref()].concat()),
+        _ => LinkTag::new(
+            [
+                input.previous_commit_hashes[0].as_ref(),
+                input.previous_commit_hashes[1].as_ref(),
+            ]
+            .concat(),
+        ),
     };
     create_link_relaxed(
         input.workspace_hash,
@@ -105,7 +112,6 @@ pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<Reco
     Ok(commits)
 }
 
-
 #[hdk_extern]
 pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
@@ -114,13 +120,21 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     let mut tips_previous = HashSet::new();
     for l in links {
         tips.insert(EntryHash::try_from(l.target).map_err(|e| wasm_error!(e))?);
-   //     info!("TAG LEN: {}",l.tag.as_ref().len());
         if l.tag.as_ref().len() == 39 {
-            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref().to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
+            tips_previous.insert(
+                EntryHash::from_raw_39(l.tag.as_ref().to_vec())
+                    .map_err(|e| wasm_error!("error converting link {:?}", e))?,
+            );
         }
         if l.tag.as_ref().len() == 78 {
-            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref()[..39].to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
-            tips_previous.insert(EntryHash::from_raw_39(l.tag.as_ref()[39..].to_vec()).map_err(|e| wasm_error!("error converting link {:?}", e))?);
+            tips_previous.insert(
+                EntryHash::from_raw_39(l.tag.as_ref()[..39].to_vec())
+                    .map_err(|e| wasm_error!("error converting link {:?}", e))?,
+            );
+            tips_previous.insert(
+                EntryHash::from_raw_39(l.tag.as_ref()[39..].to_vec())
+                    .map_err(|e| wasm_error!("error converting link {:?}", e))?,
+            );
         }
     }
     for p in tips_previous {
@@ -128,12 +142,7 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     }
     let commits_get_inputs = tips
         .into_iter()
-        .map(|tip| {
-            GetInput::new(
-                AnyDhtHash::from(tip),
-                GetOptions::default(),
-            )
-        })
+        .map(|tip| GetInput::new(AnyDhtHash::from(tip), GetOptions::default()))
         .collect();
 
     let maybe_commits = HDK.with(|h| h.borrow().get(commits_get_inputs))?;
@@ -142,22 +151,40 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     Ok(commits)
 }
 
-
 #[hdk_extern]
-pub fn get_workspace_participants(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
-    let links = get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
+pub fn get_workspace_editors(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
+    let links = get_link_details(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
 
     let participants: Vec<AgentPubKey> = links
+        .into_inner()
         .into_iter()
-        .filter_map(|l| AgentPubKey::try_from(l.target).ok())
+        .filter_map(|(action, _)| match action.action() {
+            Action::CreateLink(cl) => AgentPubKey::try_from(cl.target_address.clone()).ok(),
+            _ => None,
+        })
+        .unique()
         .collect();
     Ok(participants)
 }
 
 #[hdk_extern]
-pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
+pub fn get_workspace_session_participants(
+    workspace_hash: EntryHash,
+) -> ExternResult<Vec<AgentPubKey>> {
+    let links = get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
+
+    let participants: Vec<AgentPubKey> = links
+        .into_iter()
+        .filter_map(|l| AgentPubKey::try_from(l.target).ok())
+        .unique()
+        .collect();
+    Ok(participants)
+}
+
+#[hdk_extern]
+pub fn join_workspace_session(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
-    let participants = get_workspace_participants(workspace_hash.clone())?;
+    let participants = get_workspace_session_participants(workspace_hash.clone())?;
 
     if !participants.contains(&my_pub_key) {
         create_link_relaxed(
@@ -180,7 +207,7 @@ pub fn join_workspace(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey
 }
 
 #[hdk_extern]
-pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
+pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
     let links = get_links(
@@ -192,11 +219,12 @@ pub fn leave_workspace(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_links: Vec<Link> = links
         .clone()
         .into_iter()
-        .filter(|l| 
+        .filter(|l| {
             AgentPubKey::try_from(l.target.clone())
-            .map(|agent| agent == my_pub_key)
-            .unwrap_or(false))
-//        .filter(|l| AgentPubKey::from(EntryHash::from(l.target.clone())).eq(&my_pub_key))
+                .map(|agent| agent == my_pub_key)
+                .unwrap_or(false)
+        })
+        //        .filter(|l| AgentPubKey::from(EntryHash::from(l.target.clone())).eq(&my_pub_key))
         .collect();
 
     let participants: Vec<AgentPubKey> = links

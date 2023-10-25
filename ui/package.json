@@ -2,8 +2,7 @@
   "name": "syntext",
   "version": "0.0.1",
   "scripts": {
-    "start": "vite --clearScreen false --port $UI_PORT",
-    "build": "npm run check && vite build"
+    "start": "vite --clearScreen false --port $UI_PORT"
   },
   "dependencies": {
     "@holochain-open-dev/profiles": "^0.16.1",
