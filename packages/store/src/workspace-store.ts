@@ -3,39 +3,50 @@ import { EntryHash } from '@holochain/client';
 
 import type { SynGrammar } from './grammar.js';
 import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
-import { RootStore } from './root-store.js';
+import { DocumentStore } from './document-store.js';
 import { SessionStore } from './session-store.js';
 
 export class WorkspaceStore<G extends SynGrammar<any, any>> {
   constructor(
-    public rootStore: RootStore<G>,
-    public config: SynConfig,
+    public documentStore: DocumentStore<G>,
     public workspaceHash: EntryHash
   ) {}
 
+  /**
+   * Keeps an up to date array of the all the agents that have participated in
+   * the session of this workspace at any point in thime
+   */
   editors = lazyLoadAndPoll(
     () =>
-      this.rootStore.synStore.client.getWorkspaceEditors(this.workspaceHash),
+      this.documentStore.synStore.client.getWorkspaceEditors(this.workspaceHash),
     4000
   );
 
+  /**
+   * Keeps an up to date array of the all the agents that are currently participating in
+   * the session for this workspace
+   */
   sessionParticipants = lazyLoadAndPoll(
     () =>
-      this.rootStore.synStore.client.getWorkspaceSessionParticipants(
+      this.documentStore.synStore.client.getWorkspaceSessionParticipants(
         this.workspaceHash
       ),
     4000
   );
 
+  /**
+   * Keeps an up to date copy of the tip of the state for this workspace
+   */
   tip = pipe(
     lazyLoadAndPoll(
-      () => this.rootStore.synStore.client.getWorkspaceTips(this.workspaceHash),
+      () => this.documentStore.synStore.client.getWorkspaceTips(this.workspaceHash),
       4000
     ),
     commits => {
       if (commits.length > 1) throw new Error('There is a conflict!');
       return commits[0];
-    }
+    },
+    commit => this.documentStore.synStore.commits.get(commit)
   );
 
   async joinSession(

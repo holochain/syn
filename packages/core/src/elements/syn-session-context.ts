@@ -1,15 +1,15 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { WorkspaceStore } from '@holochain-syn/store';
+import type { SessionStore } from '@holochain-syn/store';
 import { provide } from '@lit-labs/context';
 
-import { synWorkspaceContext } from '../contexts';
+import { synSessionContext } from '../contexts.js';
 
-@customElement('syn-workspace-context')
-export class SynWorkspaceContext extends LitElement {
-  @provide({ context: synWorkspaceContext })
+@customElement('syn-session-context')
+export class SynSessionContext extends LitElement {
+  @provide({ context: synSessionContext })
   @property()
-  workspacestore!: WorkspaceStore<any>;
+  sessionstore!: SessionStore<any>;
 
   render() {
     return html`<slot></slot>`;

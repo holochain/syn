@@ -32,9 +32,8 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getAllRoots(): Promise<Array<EntryRecord<Commit>>> {
-    const roots: Record[] = await this.callZome('get_all_roots', null);
-    return roots.map(r => new EntryRecord(r));
+  public async getAllRoots(): Promise<Array<EntryHash>> {
+    return this.callZome('get_all_roots', null);
   }
 
   /** Commits */
@@ -59,12 +58,8 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public async getCommitsForRoot(
     root_hash: EntryHash
-  ): Promise<Array<EntryRecord<Commit>>> {
-    const commits: Record[] = await this.callZome(
-      'get_commits_for_root',
-      root_hash
-    );
-    return commits.map(c => new EntryRecord(c));
+  ): Promise<Array<EntryHash>> {
+    return this.callZome('get_commits_for_root', root_hash);
   }
 
   /** Workspaces */
@@ -75,28 +70,32 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
+  public async getWorkspace(
+    workspace_hash: EntryHash
+  ): Promise<EntryRecord<Workspace> | undefined> {
+    const workspace: Record | undefined = await this.callZome(
+      'get_workspace',
+      workspace_hash
+    );
+    return workspace ? new EntryRecord(workspace) : undefined;
+  }
+
   public async getWorkspacesForRoot(
     root_hash: EntryHash
-  ): Promise<Array<EntryRecord<Workspace>>> {
-    const workspaces = await this.callZome(
-      'get_workspaces_for_root',
-      root_hash
-    );
-    return workspaces.map((w: Record) => new EntryRecord(w));
+  ): Promise<Array<EntryHash>> {
+    return this.callZome('get_workspaces_for_root', root_hash);
   }
 
   public async getWorkspaceCommits(
     workspaceHash: EntryHash
-  ): Promise<Array<EntryRecord<Commit>>> {
-    const records = await this.callZome('get_workspace_commits', workspaceHash);
-    return records.map(r => new EntryRecord(r));
+  ): Promise<Array<EntryHash>> {
+    return this.callZome('get_workspace_commits', workspaceHash);
   }
 
   public async getWorkspaceTips(
     workspaceHash: EntryHash
-  ): Promise<Array<EntryRecord<Commit>>> {
-    const records = await this.callZome('get_workspace_tips', workspaceHash);
-    return records.map(r => new EntryRecord(r));
+  ): Promise<Array<EntryHash>> {
+    return this.callZome('get_workspace_tips', workspaceHash);
   }
 
   public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {

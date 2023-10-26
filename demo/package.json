@@ -1,11 +1,12 @@
 {
-  "name": "syntext",
+  "name": "demo",
   "version": "0.0.1",
   "scripts": {
     "start": "vite --clearScreen false --port $UI_PORT"
   },
   "dependencies": {
     "@holochain-open-dev/profiles": "^0.16.1",
+    "@holochain-open-dev/stores": "^0.7.4",
     "@holochain-syn/core": "0.6.0",
     "@holochain-syn/text-editor": "0.6.0",
     "@holochain/client": "^0.16.1",

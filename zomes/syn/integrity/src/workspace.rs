@@ -4,6 +4,6 @@ use hdi::prelude::*;
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct Workspace {
-  pub name: String,
-  pub initial_commit_hash: EntryHash,
+    pub name: String,
+    pub root_hash: EntryHash,
 }

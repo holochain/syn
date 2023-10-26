@@ -1,5 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import type { WorkspaceStore } from '@holochain-syn/store';
+import type { SessionStore } from '@holochain-syn/store';
 import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit-labs/context';
 import { AgentPubKey } from '@holochain/client';
@@ -10,20 +10,21 @@ import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import '@holochain-open-dev/profiles/dist/elements/agent-avatar.js';
 
-import { synWorkspaceContext } from '../contexts.js';
+import { synSessionContext } from '../contexts.js';
 
-@customElement('workspace-participants')
-export class WorkspaceParticipants extends LitElement {
-  @consume({ context: synWorkspaceContext, subscribe: true })
+@customElement('session-participants')
+export class SessionParticipants extends LitElement {
+  @consume({ context: synSessionContext, subscribe: true })
   @property()
-  workspacestore!: WorkspaceStore<any>;
+  sessionstore!: SessionStore<any>;
 
   @property()
   direction: 'column' | 'row' = 'column';
 
   _participants = new StoreSubscriber(
     this,
-    () => this.workspacestore.participants
+    () => this.sessionstore.participants,
+    () => [this.sessionstore]
   );
 
   renderParticipant(pubKey: AgentPubKey, idle: boolean) {

@@ -5,10 +5,10 @@
 
   let titleBeingTyped = ''
 
-  const { getWorkspaceStore } = getContext('workspaceStore');
+  const { getSessionStore } = getContext('sessionStore');
 
-  const workpsaceStore = getWorkspaceStore();
-  $: state = workpsaceStore.state;
+  const sessionStore = getSessionStore();
+  $: state = sessionStore.state;
 
   let editingTitle = false
   function saveTitle() {

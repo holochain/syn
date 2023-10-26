@@ -3,13 +3,18 @@ import { assert, test } from 'vitest';
 import { runScenario } from '@holochain/tryorama';
 import { get, toPromise } from '@holochain-open-dev/stores';
 
-import { SynStore, stateFromCommit, RootStore } from '@holochain-syn/store';
+import {
+  SynStore,
+  stateFromCommit,
+  DocumentStore,
+  WorkspaceStore,
+} from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
 import { delay, sampleGrammar, synHapp } from '../common.js';
 
-test('SynStore, RootStore and WorkspaceStore work', async () => {
+test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
     const appSource = { appBundleSource: { path: synHapp } };
@@ -28,109 +33,121 @@ test('SynStore, RootStore and WorkspaceStore work', async () => {
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
-    const workspaceHash = await aliceRootStore.createWorkspace(
-      'main',
-      aliceRootStore.root.entryHash
+    const rootHash = await aliceSyn.createDocument(sampleGrammar);
+    const aliceDocumentStore = new DocumentStore(
+      aliceSyn,
+      sampleGrammar,
+      rootHash
     );
-    const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
+    const workspaceHash = await aliceDocumentStore.createWorkspace(
+      'main',
+      rootHash
+    );
+    const aliceWorkspaceStore = new WorkspaceStore(
+      aliceDocumentStore,
       workspaceHash
     );
-
-    assert.ok(aliceWorkspaceStore.workspaceHash);
+    const aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
     await delay(2000);
 
     const roots = await toPromise(bobSyn.allRoots);
 
-    const bobRootStore = new RootStore(bobSyn, sampleGrammar, roots[0]);
+    const bobDocumentStore = new DocumentStore(
+      bobSyn,
+      sampleGrammar,
+      roots[0].entryHash
+    );
+    const bobWorkspaceStore = new WorkspaceStore(
+      bobDocumentStore,
+      workspaceHash
+    );
 
-    const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
+    const bobSessionStore = await bobWorkspaceStore.joinSession();
 
-    aliceWorkspaceStore.requestChanges([
-      { type: 'Title', value: 'A new title' },
-    ]);
+    aliceSessionStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
     await delay(7000);
 
-    let participants = get(aliceWorkspaceStore.participants);
+    let participants = get(aliceSessionStore.participants);
     assert.equal(participants.active.length, 2);
 
-    let currentState = get(bobWorkspaceStore.state);
+    let currentState = get(bobSessionStore.state);
     assert.equal(currentState.title, 'A new title');
 
-    aliceWorkspaceStore.requestChanges([
+    aliceSessionStore.requestChanges([
       { type: 'Title', value: 'Another thing' },
     ]);
 
     await delay(1000);
 
-    currentState = get(bobWorkspaceStore.state);
+    currentState = get(bobSessionStore.state);
     assert.equal(currentState.title, 'Another thing');
 
-    bobWorkspaceStore.requestChanges([
+    bobSessionStore.requestChanges([
       { type: 'Title', value: 'Bob is the boss' },
     ]);
 
     await delay(1000);
 
-    currentState = get(bobWorkspaceStore.state);
+    currentState = get(bobSessionStore.state);
     assert.equal(currentState.title, 'Bob is the boss');
 
-    currentState = get(aliceWorkspaceStore.state);
+    currentState = get(aliceSessionStore.state);
     assert.equal(currentState.title, 'Bob is the boss');
 
-    bobWorkspaceStore.requestChanges([
+    bobSessionStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 0, text: 'Hi ' },
       { type: TextEditorDeltaType.Insert, position: 3, text: 'there' },
     ]);
 
     await delay(1000);
 
-    currentState = get(aliceWorkspaceStore.state);
+    currentState = get(aliceSessionStore.state);
     assert.equal(currentState.body.text.toString(), 'Hi there');
 
-    currentState = get(bobWorkspaceStore.state);
+    currentState = get(bobSessionStore.state);
     assert.equal(currentState.body.text.toString(), 'Hi there');
 
     // Test concurrent
 
-    aliceWorkspaceStore.requestChanges([
+    aliceSessionStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 3, text: 'alice ' },
     ]);
-    bobWorkspaceStore.requestChanges([
+    bobSessionStore.requestChanges([
       { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
     ]);
 
     await delay(1000);
 
-    const currentStateAlice = get(aliceWorkspaceStore.state);
-    const currentStateBob = get(bobWorkspaceStore.state);
+    const currentStateAlice = get(aliceSessionStore.state);
+    const currentStateBob = get(bobSessionStore.state);
     assert.equal(
       currentStateAlice.body.text.toString(),
       currentStateBob.body.text.toString()
     );
 
-    await aliceWorkspaceStore.commitChanges();
-    const commits = await aliceSyn.client.getWorkspaceTips(workspaceHash);
-    assert.notEqual(commits.length, 0);
+    await aliceSessionStore.commitChanges();
+    const commitsHashes = await aliceSyn.client.getWorkspaceTips(workspaceHash);
+    assert.notEqual(commitsHashes.length, 0);
 
-    const commit = commits[commits.length - 1];
+    const commitHash = commitsHashes[commitsHashes.length - 1];
+    const commit = await aliceSyn.client.getCommit(commitHash);
 
-    assert.ok(commit);
+    assert.ok(commitHash);
     if (commit) {
       const state = stateFromCommit(commit.entry);
       assert.deepEqual(state, currentStateAlice);
     }
 
-    await bobWorkspaceStore.leaveWorkspace();
+    await bobSessionStore.leaveSession();
 
     await delay(1000);
 
-    participants = get(aliceWorkspaceStore.participants);
+    participants = get(aliceSessionStore.participants);
 
     assert.equal(participants.active.length, 1);
 
-    await aliceWorkspaceStore.leaveWorkspace();
+    await aliceSessionStore.leaveSession();
   });
 });

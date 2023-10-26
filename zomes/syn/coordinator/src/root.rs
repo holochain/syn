@@ -1,7 +1,7 @@
 use crate::{
     messages::{send_message, SendMessageInput, SynMessage},
     utils::*,
-    workspace::get_workspace_participants,
+    workspace::get_workspace_session_participants,
 };
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
@@ -32,7 +32,7 @@ pub fn get_all_participants() -> ExternResult<Vec<AgentPubKey>> {
             .collect();
 
         for workspace_hash in workspaces_hashes {
-            let p: Vec<AgentPubKey> = get_workspace_participants(workspace_hash)?;
+            let p: Vec<AgentPubKey> = get_workspace_session_participants(workspace_hash)?;
             for agent in p {
                 participants.insert(agent);
             }
@@ -83,28 +83,18 @@ pub fn create_root(root_commit: Commit) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_all_roots(_: ()) -> ExternResult<Vec<Record>> {
+pub fn get_all_roots(_: ()) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(
         all_roots_path().path_entry_hash()?,
         LinkTypes::PathToRoots,
         None,
     )?;
 
-    let get_inputs = links
+    let hashes = links
         .into_iter()
-        .map(|link| link.target)
+        .filter_map(|link| EntryHash::try_from(link.target).ok())
         .unique()
-        .filter_map(|target| {
-            Some(GetInput::new(
-                AnyDhtHash::try_from(target).ok()?,
-                GetOptions::default(),
-            ))
-        })
         .collect();
 
-    let maybe_records = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
-
-    let records: Vec<Record> = maybe_records.into_iter().filter_map(|e| e).collect();
-
-    Ok(records)
+    Ok(hashes)
 }

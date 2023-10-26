@@ -3,7 +3,8 @@
   import {
     SynStore,
     SynClient,
-    RootStore,
+    DocumentStore,
+    WorkspaceStore
   } from '@holochain-syn/core';
   import '@holochain-syn/core/dist/elements/syn-context.js'
   import '@holochain-syn/core/dist/elements/commit-history.js'
@@ -11,7 +12,6 @@
   import '@holochain-syn/text-editor/dist/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
   import {toPromise} from '@holochain-open-dev/stores'
-  import {RecordBag} from '@holochain-open-dev/utils'
   import { setContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
   import {
@@ -92,34 +92,38 @@
     tabShown = false;
   };
 
-  let synStore;
   let profilesStore;
+  let synStore;
+  let documentStore;
   let workspaceStore;
-  let rootStore;
+  let sessionStore;
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
     const roots = await toPromise(store.allRoots);
 
-    if (new RecordBag(roots.map(er => er.record)).entryMap.size === 0) {
-       rootStore = await store.createRoot(DocumentGrammar);
+    if (roots.length === 0) {
+      const rootHash = await store.createDocument(DocumentGrammar);
+      documentStore = new DocumentStore(store, DocumentGrammar, rootHash)
 
-      const workspaceHash = await rootStore.createWorkspace(
+      const workspaceHash = await documentStore.createWorkspace(
         'main',
-        rootStore.root.entryHash
+        rootHash
       );
 
-      workspaceStore = await rootStore.joinWorkspace(workspaceHash);
+      workspaceStore = new WorkspaceStore(documentStore, workspaceHash);
+      sessionStore = await workspaceStore.joinSession();
       synStore = store;
     } else {
-       rootStore = new RootStore(
+       documentStore = new DocumentStore(
         store,
         DocumentGrammar,
-        roots[0]
+        roots[0].entryHash
       );
-      const workspaces = await toPromise(rootStore.allWorkspaces);
+      const workspaces = await toPromise(documentStore.allWorkspaces);
 
-      workspaceStore = await rootStore.joinWorkspace(workspaces[0].entryHash);
+      workspaceStore = new WorkspaceStore(documentStore, workspaces[0].entryHash);
+      sessionStore = await workspaceStore.joinSession();
       synStore = store;
     }
   }
@@ -129,10 +133,10 @@
     await initSyn(client);
   });
 
-  $: synStore, workspaceStore, profilesStore;
+  $: synStore, workspaceStore, profilesStore, sessionStore;
 
-  setContext('workspaceStore', {
-    getWorkspaceStore: () => workspaceStore,
+  setContext('sessionStore', {
+    getSessionStore: () => sessionStore,
   });
 </script>
 
@@ -154,15 +158,15 @@
       <main style="display: flex; height: 400px">
   <profile-prompt>
       <div style="display: flex; flex-direction:row; flex: 1;">
-        <syn-markdown-editor style="flex: 1;" slice={textSlice(workspaceStore)}></syn-markdown-editor>
-        <commit-history rootstore={rootStore}></commit-history>
+        <syn-markdown-editor style="flex: 1;" slice={textSlice(sessionStore)}></syn-markdown-editor>
+        <commit-history documentstore={documentStore}></commit-history>
       </div>
     </profile-prompt>
       </main>
 
       <div class="folks-tray">
         <h3>Participants</h3>
-        <workspace-participants workspacestore={workspaceStore} />
+        <session-participants sessionstore={sessionStore} />
       </div>
     </syn-context>
   </profiles-context>

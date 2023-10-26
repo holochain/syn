@@ -1,5 +1,5 @@
-import { AppAgentWebsocket, AppWebsocket } from '@holochain/client';
-import { SynStore, SynClient, extractSlice } from '@holochain-syn/core';
+import { AppAgentWebsocket } from '@holochain/client';
+import { extractSlice } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 
 export const DocumentGrammar = {
@@ -22,9 +22,9 @@ export const DocumentGrammar = {
   },
 };
 
-export function textSlice(workspaceStore) {
+export function textSlice(sessionStore) {
   return extractSlice(
-    workspaceStore,
+    sessionStore,
     change => ({
       type: 'TextEditorDelta',
       textEditorDelta: change,

@@ -10,7 +10,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
     workspace: Workspace,
-    root_hash: EntryHash,
+    initial_commit_hash: EntryHash,
 }
 
 #[hdk_extern]
@@ -22,7 +22,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     )?;
 
     create_link_relaxed(
-        input.root_hash,
+        input.workspace.root_hash,
         entry_hash.clone(),
         LinkTypes::RootToWorkspaces,
         (),
@@ -30,7 +30,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 
     create_link_relaxed(
         entry_hash,
-        input.workspace.initial_commit_hash,
+        input.initial_commit_hash,
         LinkTypes::WorkspaceToTip,
         (),
     )?;
@@ -43,23 +43,20 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 }
 
 #[hdk_extern]
-pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>> {
+pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> {
+    get(workspace_hash, GetOptions::default())
+}
+
+#[hdk_extern]
+pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(root_hash, LinkTypes::RootToWorkspaces, None)?;
 
-    let workspaces_get_inputs = links
+    let hashes = links
         .into_iter()
-        .filter_map(|l| {
-            Some(GetInput::new(
-                AnyDhtHash::try_from(l.target).ok()?,
-                GetOptions::default(),
-            ))
-        })
+        .filter_map(|l| EntryHash::try_from(l.target).ok())
         .collect();
 
-    let maybe_workspaces_vec = HDK.with(|h| h.borrow().get(workspaces_get_inputs))?;
-    let workspaces_vec: Vec<Record> = maybe_workspaces_vec.into_iter().filter_map(|r| r).collect();
-
-    Ok(workspaces_vec)
+    Ok(hashes)
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -93,27 +90,19 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<Record>> {
+pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
 
-    let commits_get_inputs = links
+    let hashes = links
         .into_iter()
-        .filter_map(|l| {
-            Some(GetInput::new(
-                AnyDhtHash::try_from(l.target).ok()?,
-                GetOptions::default(),
-            ))
-        })
+        .filter_map(|l| EntryHash::try_from(l.target).ok())
         .collect();
 
-    let maybe_commits = HDK.with(|h| h.borrow().get(commits_get_inputs))?;
-    let commits: Vec<Record> = maybe_commits.into_iter().filter_map(|r| r).collect();
-
-    Ok(commits)
+    Ok(hashes)
 }
 
 #[hdk_extern]
-pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>> {
+pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
 
     let mut tips = HashSet::new();
@@ -140,15 +129,8 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Record>
     for p in tips_previous {
         tips.remove(&p);
     }
-    let commits_get_inputs = tips
-        .into_iter()
-        .map(|tip| GetInput::new(AnyDhtHash::from(tip), GetOptions::default()))
-        .collect();
 
-    let maybe_commits = HDK.with(|h| h.borrow().get(commits_get_inputs))?;
-    let commits: Vec<Record> = maybe_commits.into_iter().filter_map(|r| r).collect();
-
-    Ok(commits)
+    Ok(tips.into_iter().collect())
 }
 
 #[hdk_extern]

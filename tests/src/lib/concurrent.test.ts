@@ -2,8 +2,13 @@ import { assert, test } from 'vitest';
 
 import { runScenario } from '@holochain/tryorama';
 
-import { get, toPromise } from '@holochain-open-dev/stores';
-import { RootStore, SynStore } from '@holochain-syn/store';
+import { get } from '@holochain-open-dev/stores';
+import {
+  DocumentStore,
+  SessionStore,
+  SynStore,
+  WorkspaceStore,
+} from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 import { TextEditorDeltaType } from '../grammar.js';
@@ -38,19 +43,24 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const aliceRootStore = await aliceSyn.createRoot(sampleGrammar);
-    const workspaceHash = await aliceRootStore.createWorkspace(
-      'main',
-      aliceRootStore.root.entryHash
+    const rootHash = await aliceSyn.createDocument(sampleGrammar);
+    const aliceDocumentStore = new DocumentStore(
+      bobSyn,
+      sampleGrammar,
+      rootHash
     );
-
-    const aliceWorkspaceStore = await aliceRootStore.joinWorkspace(
+    const workspaceHash = await aliceDocumentStore.createWorkspace(
+      'main',
+      rootHash
+    );
+    const aliceWorkspaceStore = new WorkspaceStore(
+      aliceDocumentStore,
       workspaceHash
     );
 
-    assert.ok(aliceWorkspaceStore.workspaceHash);
+    const aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
-    aliceWorkspaceStore.requestChanges([
+    aliceSessionStore.requestChanges([
       {
         type: TextEditorDeltaType.Insert,
         position: 0,
@@ -60,21 +70,26 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 
     await delay(2000);
 
-    const roots = await toPromise(bobSyn.allRoots);
+    const bobDocumentStore = new DocumentStore(bobSyn, sampleGrammar, rootHash);
+    const bobWorkspaceStore = new WorkspaceStore(
+      bobDocumentStore,
+      workspaceHash
+    );
 
-    const bobRootStore = new RootStore(bobSyn, sampleGrammar, roots[0]);
+    const bobSessionStore = await bobWorkspaceStore.joinSession();
 
-    const bobWorkspaceStore = await bobRootStore.joinWorkspace(workspaceHash);
+    await waitForOtherParticipants(bobSessionStore, 1);
+    await waitForOtherParticipants(aliceSessionStore, 1);
 
     await delay(2000);
 
     async function simulateAlice() {
       for (let i = 0; i < aliceLine.length; i++) {
-        aliceWorkspaceStore.requestChanges([
+        aliceSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
             position: alicePosition(
-              get(aliceWorkspaceStore.state).body.text.toString()
+              get(aliceSessionStore.state).body.text.toString()
             ),
             text: aliceLine[i],
           },
@@ -85,8 +100,8 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 
     async function simulateBob() {
       for (let i = 0; i < bobLine.length; i++) {
-        let content = get(bobWorkspaceStore.state).body.text;
-        bobWorkspaceStore.requestChanges([
+        let content = get(bobSessionStore.state).body.text;
+        bobSessionStore.requestChanges([
           {
             type: TextEditorDeltaType.Insert,
             position: bobPosition(content.toString()),
@@ -109,13 +124,31 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
 
-    let currentState = get(aliceWorkspaceStore.state);
+    let currentState = get(bobSessionStore.state);
     assert.deepEqual(currentState.body.text.toString(), expectedText);
 
-    currentState = get(bobWorkspaceStore.state);
+    currentState = get(aliceSessionStore.state);
     assert.deepEqual(currentState.body.text.toString(), expectedText);
 
-    await aliceWorkspaceStore.leaveWorkspace();
-    await bobWorkspaceStore.leaveWorkspace();
+    await aliceSessionStore.leaveSession();
+    await bobSessionStore.leaveSession();
   });
 });
+
+export function waitForOtherParticipants(
+  sessionStore: SessionStore<any>,
+  otherParticipants: number,
+  timeout = 600000
+) {
+  return new Promise((resolve, reject) => {
+    sessionStore.participants.subscribe(p => {
+      if (
+        p.active.filter(p => p.toString() !== sessionStore.myPubKey.toString())
+          .length >= otherParticipants
+      ) {
+        resolve(undefined);
+      }
+    });
+    setTimeout(() => reject('Timeout'), timeout);
+  });
+}

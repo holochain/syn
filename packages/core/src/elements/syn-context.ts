@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import type { SynStore } from '@holochain-syn/store';
 import { provide } from '@lit-labs/context';
 
-import { synContext } from '../contexts';
+import { synContext } from '../contexts.js';
 
 /**
  * Context provider element to serve as a container for all the

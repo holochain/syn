@@ -13,7 +13,7 @@ export interface Commit {
 
 export interface Workspace {
   name: String;
-  initial_commit_hash: EntryHash;
+  root_hash: EntryHash;
 }
 
 /** Client API */
@@ -24,7 +24,7 @@ export interface CreateCommitInput {
 }
 export interface CreateWorkspaceInput {
   workspace: Workspace;
-  root_hash: EntryHash;
+  initial_commit_hash: EntryHash;
 }
 
 export interface UpdateWorkspaceTipInput {

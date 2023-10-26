@@ -102,55 +102,109 @@ With this, you'll have defined how `syn` is going to aggregate the changes that 
 
 ## Using the Store
 
+### High-level design
+
+These are the high level concepts that `syn` implements:
+
+- Each network that includes `syn` can manage multiple `document`s.
+- Each `document` is identified by its root commit hash.
+- Each `document` has multiple `workspaces` which can evolve independently of each other, and also fork and merge (eg. "main", "proposal"). 
+- Each `workspace` has a latest "tip" commit, which represents the latest snapshot of the state of the document in the workspace.
+- And each `workspace` has a `session`, which you can join to edit the state of the workspace collaborative with other agents.
+
+And at the level of code, these concepts translate to these classes:
+
+- `SynStore`: to create and fetch the documents in this network.
+- `DocumentStore`: to create and fetch the workspaces for the given document, and also its commits.
+- `WorkspaceStore`: to fetch the current state and also the previous commits for the given workspace.
+- `SessionStore`: to edit the state of the given workspace in a real-time collaborative session.
+
 ### Initialization
 
 Now that you have defined your grammar, it's time to instantiate the store with it:
 
 ```ts
 import { AppWebsocket, AppAgentWebsocket } from '@holochain/client';
-import { SynStore, RootStore, WorkspaceStore } from '@holochain-syn/store';
+import { SynStore, DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 const appWs = await AppWebsocket.connect(url);
 const client = await AppAgentWebsocket.connect(appWs, 'YOUR_APP_ID')
 
-const synStore = new SynStore(new SynClient(client, 'YOUR_ZOME_NAME', 'YOUR_ROLE_NAME'));
+const synStore = new SynStore(new SynClient(client, 'YOUR_ROLE_NAME', 'YOUR_ZOME_NAME'));
 ```
 
-At this point, no synchronization is happening yet. This is because first you need to create a root for a document, create a workspace for that root and finally join that workspace.
+At this point, you haven't created any documents yet. Let's start by creating one, and a `main` workspace for it:
 
 ```ts
-const rootStore = await synStore.createRoot(textEditorGrammar, 
+// Create the document
+const rootHash = await synStore.createDocument(textEditorGrammar, 
   // This is an optional object to be able to store arbitrary information in the commit
-  { applicationDefinedField: 'somevalue'} 
+  { applicationDefinedField: 'somevalue'}
 );
-const workspaceHash = await rootStore.createWorkspace(
+const documentStore = new DocumentStore(synStore, textEditorGrammar, rootHash);
+
+// Create the workspace for the document
+const workspaceStore = new documentStore.createWorkspace(
   'main',
-  rootStore.root.entryHash
+  documentStore.rootHash // The initial commit for the workspace
 );
-const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaceHash);
+const workspaceStore = new WorkspaceStore(documentStore, workspaceHash);
 ```
 
-If you want another peer to discover that documenta and join the same workspace, you can do this:
+At this point, no synchronization is happening yet. This is because you haven't joined the session for the newly created workspace. Let's join the session:
+
+```ts
+const sessionStore: SessionStore = await sessionStore.joinSession();
+```
+
+If you want another peer to discover that document and join the same session, you can do this:
 
 ```ts
 import { get } from 'svelte/store';
 import { Commit } from '@holochain-syn/client';
 import { EntryRecord, EntryHashMap } from '@holochain-open-dev/utils';
 import { toPromise } from '@holochain-open-dev/stores';
-import { RootStore, WorkspaceStore } from '@holochain-syn/store';
+import { DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 
 // Fetch all roots
 const roots: Array<EntryRecord<Commit>> = await toPromise(synStore.allRoots);
 
-const rootStore = new RootStore(
+const documentStore = new DocumentStore(
   synStore,
   textEditorGrammar,
   roots[0]
 );
-const workspaces: Array<EntryRecord<Workspace>> = await toPromise(rootStore.allWorkspaces);
-const workspaceStore: WorkspaceStore = await rootStore.joinWorkspace(workspaces[0].entryHash);
+// Fetch all workspaces for that root
+const workspaces: Array<EntryRecord<Workspace>> = await toPromise(documentStore.allWorkspaces);
+// Find the main workspace
+const mainWorkspace = workspaces.find(w => w.entry.name === 'main');
+const workspaceStore = new WorkspaceStore(documentStore, mainWorkspace.entryHash);
+
+// Join the session for the workspace
+const sessionStore = await workspaceStore.joinSession();
 ```
+
+Alternatively, you can also get information about the current state of the workspace without joining the session:
+
+```ts
+import { stateFromCommit } from '@holochain-syn/store';
+
+workspaceStore.tip.subscribe(tip => {
+  if (tip.status === 'complete') { // "status" can also be "pending" or "error"
+    console.log('current state of the workspace: ', stateFromCommit(tip));
+  }
+})
+
+workspaceStore.sessionParticipants.subscribe(participants => {
+  if (participants.status === 'complete') { // "status" can also be "pending" or "error"
+    console.log('current participants of the workspace session: ', participants);
+  }
+})
+
+```
+
+This is useful to display information about the current state of the workspace without having to join the session.
 
 #### Deterministic Roots
 
@@ -159,7 +213,7 @@ In some cases, you need a way to create global roots that are known in advance a
 To create a deterministic root:
 
 ```ts
-const rootStore = await synStore.createDeterministicRoot(textEditorGramma,
+const rootHash = await synStore.createDeterministicRoot(textEditorGramma,
   // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'} 
 );
@@ -170,29 +224,31 @@ const rootStore = await synStore.createDeterministicRoot(textEditorGramma,
 Now you are connected to all the peers in that same workspace, and can subscribe to the current state for the workspace and also request changes to the state:
 
 ```ts
-workspaceStore.state.subscribe(state => console.log('New State!', state));
+sessionStore.state.subscribe(state => console.log('New State!', state));
 
 // The input for the function needs to be an array of the delta type you have defined in your grammar
-workspaceStore.requestChanges([{
+sessionStore.requestChanges([{
   type: 'increment',
   amount: 10
 }]);
 ```
 
-### Leaving the workspace
+### Leaving the session
 
-When you are done with those changes, you need to explicitly leave the workspace:
+When you are done with those changes, you need to explicitly leave the session:
 
 ```ts
-await workspaceStore.leaveWorkspace();
+await sessionStore.leaveSession();
 ```
+
+If you don't, all other participants in the session will try to keep synchronizing with you.
 
 ### Committing
 
 Changes are committed every 10 seconds by default, and also when the last participant for the workspaces leaves the workspace. You can also commit the changes manually:
 
 ```ts
-await workspaceStore.commitChanges(
+await sessionStore.commitChanges(
     // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'} 
 );

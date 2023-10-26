@@ -6,6 +6,7 @@ import {
   derived,
   Writable,
   writable,
+  sliceAndJoin,
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
@@ -134,7 +135,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
   }
 
   get synClient() {
-    return this.workspaceStore.rootStore.synStore.client;
+    return this.workspaceStore.documentStore.synStore.client;
   }
 
   private constructor(
@@ -309,15 +310,20 @@ export class SessionStore<G extends SynGrammar<any, any>>
     config: SynConfig
   ): Promise<SessionStore<G>> {
     const participants =
-      await workspaceStore.rootStore.synStore.client.joinWorkspaceSession(
+      await workspaceStore.documentStore.synStore.client.joinWorkspaceSession(
         workspaceStore.workspaceHash
       );
 
-    const commits =
-      await workspaceStore.rootStore.synStore.client.getWorkspaceTips(
+    const commitsHashes =
+      await workspaceStore.documentStore.synStore.client.getWorkspaceTips(
         workspaceStore.workspaceHash
       );
-    const commitBag = new RecordBag<Commit>(commits.map(er => er.record));
+    const commits = await toPromise(
+      sliceAndJoin(workspaceStore.documentStore.synStore.commits, commitsHashes)
+    );
+    const commitBag = new RecordBag<Commit>(
+      Array.from(commits.values()).map(er => er.record)
+    );
 
     const tips = commitBag.entryMap;
 
@@ -344,7 +350,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
       }
 
       const commit: Commit = {
-        authors: [workspaceStore.rootStore.synStore.client.client.myPubKey],
+        authors: [workspaceStore.documentStore.synStore.client.client.myPubKey],
         meta: encode('Merge commit'),
         previous_commit_hashes: Array.from(tips.keys()),
         state: encode(Automerge.save(mergeState)),
@@ -352,14 +358,14 @@ export class SessionStore<G extends SynGrammar<any, any>>
       };
 
       const newCommit =
-        await workspaceStore.rootStore.synStore.client.createCommit({
+        await workspaceStore.documentStore.synStore.client.createCommit({
           commit,
-          root_hash: workspaceStore.rootStore.root.entryHash,
+          root_hash: workspaceStore.documentStore.rootHash,
         });
 
       currentTip = newCommit.record;
 
-      await workspaceStore.rootStore.synStore.client.updateWorkspaceTip({
+      await workspaceStore.documentStore.synStore.client.updateWorkspaceTip({
         new_tip_hash: newCommit.entryHash,
         workspace_hash: workspaceStore.workspaceHash,
         previous_commit_hashes: Array.from(tips.keys()),
@@ -372,7 +378,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
       currentTip,
       participants.filter(
         p =>
-          workspaceStore.rootStore.synStore.client.client.myPubKey.toString() !==
+          workspaceStore.documentStore.synStore.client.client.myPubKey.toString() !==
           p.toString()
       )
     );
@@ -387,7 +393,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
         for (const changeRequested of changes) {
           newState = Automerge.change(newState, doc => {
             newEphemeralState = Automerge.change(newEphemeralState, eph => {
-              this.workspaceStore.rootStore.grammar.applyDelta(
+              this.workspaceStore.documentStore.grammar.applyDelta(
                 changeRequested,
                 doc,
                 eph,
@@ -405,7 +411,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
 
         const participants = get(this._participants).keys();
 
-        this.workspaceStore.rootStore.synStore.client.sendMessage(
+        this.workspaceStore.documentStore.synStore.client.sendMessage(
           Array.from(participants),
           {
             type: 'WorkspaceMessage',
@@ -480,7 +486,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
     });
 
     if (syncMessage || ephemeralSyncMessage) {
-      this.workspaceStore.rootStore.synStore.client.sendMessage([participant], {
+      this.workspaceStore.documentStore.synStore.client.sendMessage([participant], {
         type: 'WorkspaceMessage',
         workspace_hash: this.workspaceStore.workspaceHash,
         payload: {
@@ -541,7 +547,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
     const currentTipCommit = await toPromise(
-      this.workspaceStore.rootStore.synStore.commits.get(currentTip)
+      this.workspaceStore.documentStore.synStore.commits.get(currentTip)
     );
     if (currentTipCommit) {
       if (
@@ -569,7 +575,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
 
     const newCommit = await this.synClient.createCommit({
       commit,
-      root_hash: this.workspaceStore.rootStore.root.entryHash,
+      root_hash: this.workspaceStore.documentStore.rootHash,
     });
 
     await this.synClient.updateWorkspaceTip({

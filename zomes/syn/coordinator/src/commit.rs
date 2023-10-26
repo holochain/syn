@@ -42,27 +42,14 @@ pub fn get_commit(commit_hash: EntryHash) -> ExternResult<Option<Record>> {
 }
 
 #[hdk_extern]
-pub fn get_commits_for_root(root_hash: EntryHash) -> ExternResult<Vec<Record>> {
+pub fn get_commits_for_root(root_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(root_hash.clone(), LinkTypes::RootToCommits, None)?;
 
-    let mut get_inputs: Vec<GetInput> = links
+    let mut hashes: Vec<EntryHash> = links
         .into_iter()
-        .filter_map(|link| {
-            Some(GetInput::new(
-                AnyDhtHash::try_from(link.target).ok()?,
-                GetOptions::default(),
-            ))
-        })
+        .filter_map(|link| EntryHash::try_from(link.target).ok())
         .collect();
+    hashes.push(root_hash);
 
-    get_inputs.push(GetInput::new(
-        AnyDhtHash::from(root_hash),
-        GetOptions::default(),
-    ));
-
-    let maybe_records = HDK.with(|hdk| hdk.borrow().get(get_inputs))?;
-
-    let records: Vec<Record> = maybe_records.into_iter().filter_map(|e| e).collect();
-
-    Ok(records)
+    Ok(hashes)
 }

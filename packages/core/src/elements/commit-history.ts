@@ -17,24 +17,28 @@ import '@shoelace-style/shoelace/dist/components/spinner/spinner.js';
 import '@holochain-open-dev/elements/dist/elements/display-error.js';
 
 import { Commit } from '@holochain-syn/client';
-import { RootStore } from '@holochain-syn/store';
+import { DocumentStore } from '@holochain-syn/store';
 import { StoreSubscriber } from '@holochain-open-dev/stores';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { localized, msg } from '@lit/localize';
 
-import { synRootContext } from '../contexts';
+import { synDocumentContext } from '../contexts.js';
 
 @localized()
 @customElement('commit-history')
 export class CommitHistory extends LitElement {
-  @consume({ context: synRootContext, subscribe: true })
+  @consume({ context: synDocumentContext, subscribe: true })
   @property()
-  rootstore!: RootStore<any>;
+  documentStore!: DocumentStore<any>;
 
   @property()
   selectedCommitHash: EntryHashB64 | undefined;
 
-  _allCommits = new StoreSubscriber(this, () => this.rootstore.allCommits);
+  private _allCommits = new StoreSubscriber(
+    this,
+    () => this.documentStore.allCommits,
+    () => []
+  );
 
   onNodeSelected(nodeId: string) {
     this.selectedCommitHash = nodeId;

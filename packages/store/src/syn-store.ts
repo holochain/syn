@@ -1,4 +1,9 @@
-import { lazyLoadAndPoll, retryUntilSuccess } from '@holochain-open-dev/stores';
+import {
+  lazyLoadAndPoll,
+  pipe,
+  retryUntilSuccess,
+  sliceAndJoin,
+} from '@holochain-open-dev/stores';
 import { Commit, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
@@ -6,7 +11,6 @@ import { LazyHoloHashMap } from '@holochain-open-dev/utils';
 import { EntryHash } from '@holochain/client';
 
 import type { SynGrammar } from './grammar.js';
-import { RootStore } from './root-store.js';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
@@ -19,20 +23,46 @@ export class SynStore {
 
   constructor(public client: SynClient) {}
 
-  allRoots = lazyLoadAndPoll(async () => this.client.getAllRoots(), 3000);
+  /**
+   * Keeps an up to date array of the entry hashes for all the roots in this network
+   */
+  allRootsHashes = lazyLoadAndPoll(async () => this.client.getAllRoots(), 3000);
 
-  commits = new LazyHoloHashMap((rootHash: EntryHash) =>
+  /**
+   * Keeps an up to date map of all the roots in this network
+   */
+  allRoots = pipe(
+    this.allRootsHashes,
+    hashes => sliceAndJoin(this.commits, hashes),
+    map => Array.from(map.values())
+  );
+
+  /**
+   * Lazy map of all the roots in this network
+   */
+  commits = new LazyHoloHashMap((commitHash: EntryHash) =>
     retryUntilSuccess(async () => {
-      const commit = await this.client.getCommit(rootHash);
+      const commit = await this.client.getCommit(commitHash);
       if (!commit) throw new Error('Commit not found yet');
       return commit;
     })
   );
 
-  async createRoot<G extends SynGrammar<any, any>>(
+  /**
+   * Lazy map of all the workspaces in this network
+   */
+  workspaces = new LazyHoloHashMap((workspaceHash: EntryHash) =>
+    retryUntilSuccess(async () => {
+      const workspace = await this.client.getWorkspace(workspaceHash);
+      if (!workspace) throw new Error('Workspace not found yet');
+      return workspace;
+    })
+  );
+
+  async createDocument<G extends SynGrammar<any, any>>(
     grammar: G,
     meta?: any
-  ): Promise<RootStore<G>> {
+  ): Promise<EntryHash> {
     let doc: Automerge.Doc<any> = Automerge.init();
 
     doc = Automerge.change(doc, d => grammar.initState(d));
@@ -51,13 +81,13 @@ export class SynStore {
 
     const commitRecord = await this.client.createRoot(commit);
 
-    return new RootStore(this, grammar, commitRecord);
+    return commitRecord.entryHash;
   }
 
-  async createDeterministicRoot<G extends SynGrammar<any, any>>(
+  async createDeterministicDocument<G extends SynGrammar<any, any>>(
     grammar: G,
     meta?: any
-  ): Promise<RootStore<G>> {
+  ): Promise<EntryHash> {
     let doc: Automerge.Doc<any> = Automerge.init({
       actorId: 'aa',
     });
@@ -77,6 +107,6 @@ export class SynStore {
 
     const commitRecord = await this.client.createRoot(commit);
 
-    return new RootStore(this, grammar, commitRecord);
+    return commitRecord.entryHash;
   }
 }
