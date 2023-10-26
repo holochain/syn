@@ -170,12 +170,13 @@ import { DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 // Fetch all roots
 const roots: Array<EntryRecord<Commit>> = await toPromise(synStore.allRoots);
 
+// Build the documentStore for the document with that root
 const documentStore = new DocumentStore(
   synStore,
   textEditorGrammar,
-  roots[0]
+  roots[0].entryHash
 );
-// Fetch all workspaces for that root
+// Fetch all workspaces for that document
 const workspaces: Array<EntryRecord<Workspace>> = await toPromise(documentStore.allWorkspaces);
 // Find the main workspace
 const mainWorkspace = workspaces.find(w => w.entry.name === 'main');
@@ -213,7 +214,7 @@ In some cases, you need a way to create global documents that are known in advan
 To create a deterministic root:
 
 ```ts
-const rootHash = await synStore.createDeterministicDocuments(textEditorGramma,
+const rootHash = await synStore.createDeterministicDocument(textEditorGramma,
   // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'} 
 );
