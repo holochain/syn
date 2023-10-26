@@ -2,17 +2,17 @@ import { assert, test } from 'vitest';
 
 import { runScenario } from '@holochain/tryorama';
 
-import { get } from '@holochain-open-dev/stores';
-import {
-  DocumentStore,
-  SessionStore,
-  SynStore,
-  WorkspaceStore,
-} from '@holochain-syn/store';
+import { get, toPromise } from '@holochain-open-dev/stores';
+import { DocumentStore, SynStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 import { TextEditorDeltaType } from '../grammar.js';
-import { delay, sampleGrammar, synHapp } from '../common.js';
+import {
+  delay,
+  sampleGrammar,
+  synHapp,
+  waitForOtherParticipants,
+} from '../common.js';
 
 const aliceLine = 'ALICE_HELLO_ALICE';
 const bobLine = 'BOB_HI_BOB';
@@ -45,7 +45,7 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 
     const rootHash = await aliceSyn.createDocument(sampleGrammar);
     const aliceDocumentStore = new DocumentStore(
-      bobSyn,
+      aliceSyn,
       sampleGrammar,
       rootHash
     );
@@ -69,8 +69,12 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     ]);
 
     await delay(2000);
+    const roots = await toPromise(bobSyn.allRoots);
+    assert.equal(roots[0].entryHash.toString(), rootHash.toString());
 
     const bobDocumentStore = new DocumentStore(bobSyn, sampleGrammar, rootHash);
+    const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
+    assert.equal(workspaces[0].entryHash.toString(), workspaceHash.toString());
     const bobWorkspaceStore = new WorkspaceStore(
       bobDocumentStore,
       workspaceHash
@@ -134,21 +138,3 @@ ${bobLine}${bobLine}${bobLine}`;
     await bobSessionStore.leaveSession();
   });
 });
-
-export function waitForOtherParticipants(
-  sessionStore: SessionStore<any>,
-  otherParticipants: number,
-  timeout = 600000
-) {
-  return new Promise((resolve, reject) => {
-    sessionStore.participants.subscribe(p => {
-      if (
-        p.active.filter(p => p.toString() !== sessionStore.myPubKey.toString())
-          .length >= otherParticipants
-      ) {
-        resolve(undefined);
-      }
-    });
-    setTimeout(() => reject('Timeout'), timeout);
-  });
-}

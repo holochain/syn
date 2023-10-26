@@ -7,8 +7,8 @@
   "dependencies": {
     "@holochain-open-dev/profiles": "^0.16.1",
     "@holochain-open-dev/stores": "^0.7.4",
-    "@holochain-syn/core": "0.6.0",
-    "@holochain-syn/text-editor": "0.6.0",
+    "@holochain-syn/core": "file:../packages/core",
+    "@holochain-syn/text-editor": "file:../packages/text-editor",
     "@holochain/client": "^0.16.1",
     "@lit-labs/context": "^0.2.0",
     "lit": "^2.0.2"

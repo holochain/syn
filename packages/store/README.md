@@ -206,14 +206,14 @@ workspaceStore.sessionParticipants.subscribe(participants => {
 
 This is useful to display information about the current state of the workspace without having to join the session.
 
-#### Deterministic Roots
+#### Deterministic Documents
 
-In some cases, you need a way to create global roots that are known in advance and that must exist for your application to work. In this cases, you need to be able to create roots in a deterministic way, so that if two agents have created the global root in parallel, the end result is only one root, with possibly multiple workspaces that need to be resolved at the app level.
+In some cases, you need a way to create global documents that are known in advance and that must exist for your application to work. In this cases, you need to be able to create roots in a deterministic way, so that if two agents have created the global root in parallel, the end result is only one root, with possibly multiple workspaces that need to be resolved at the app level.
 
 To create a deterministic root:
 
 ```ts
-const rootHash = await synStore.createDeterministicRoot(textEditorGramma,
+const rootHash = await synStore.createDeterministicDocuments(textEditorGramma,
   // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'} 
 );

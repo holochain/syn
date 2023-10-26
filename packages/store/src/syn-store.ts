@@ -1,13 +1,14 @@
 import {
+  AsyncReadable,
   lazyLoadAndPoll,
   pipe,
   retryUntilSuccess,
   sliceAndJoin,
 } from '@holochain-open-dev/stores';
-import { Commit, SynClient } from '@holochain-syn/client';
+import { Commit, SynClient, Workspace } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
-import { LazyHoloHashMap } from '@holochain-open-dev/utils';
+import { EntryRecord, LazyHoloHashMap } from '@holochain-open-dev/utils';
 import { EntryHash } from '@holochain/client';
 
 import type { SynGrammar } from './grammar.js';
@@ -31,7 +32,7 @@ export class SynStore {
   /**
    * Keeps an up to date map of all the roots in this network
    */
-  allRoots = pipe(
+  allRoots: AsyncReadable<Array<EntryRecord<Commit>>> = pipe(
     this.allRootsHashes,
     hashes => sliceAndJoin(this.commits, hashes),
     map => Array.from(map.values())
@@ -40,18 +41,22 @@ export class SynStore {
   /**
    * Lazy map of all the roots in this network
    */
-  commits = new LazyHoloHashMap((commitHash: EntryHash) =>
-    retryUntilSuccess(async () => {
-      const commit = await this.client.getCommit(commitHash);
-      if (!commit) throw new Error('Commit not found yet');
-      return commit;
-    })
+  commits = new LazyHoloHashMap<EntryHash, AsyncReadable<EntryRecord<Commit>>>(
+    (commitHash: EntryHash) =>
+      retryUntilSuccess(async () => {
+        const commit = await this.client.getCommit(commitHash);
+        if (!commit) throw new Error('Commit not found yet');
+        return commit;
+      })
   );
 
   /**
    * Lazy map of all the workspaces in this network
    */
-  workspaces = new LazyHoloHashMap((workspaceHash: EntryHash) =>
+  workspaces = new LazyHoloHashMap<
+    EntryHash,
+    AsyncReadable<EntryRecord<Workspace>>
+  >((workspaceHash: EntryHash) =>
     retryUntilSuccess(async () => {
       const workspace = await this.client.getWorkspace(workspaceHash);
       if (!workspace) throw new Error('Workspace not found yet');

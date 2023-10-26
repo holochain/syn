@@ -4,7 +4,7 @@ import {
   TextEditorState,
 } from './grammar.js';
 import { AgentPubKey } from '@holochain/client';
-import { SynGrammar } from '@holochain-syn/store';
+import { SessionStore, SynGrammar } from '@holochain-syn/store';
 
 export const synHapp = process.cwd() + '/../workdir/syn-test.happ';
 
@@ -68,3 +68,21 @@ export const sampleGrammar: SynGrammar<TextDelta, Content> = {
     }
   },
 };
+
+export function waitForOtherParticipants(
+  sessionStore: SessionStore<any>,
+  otherParticipants: number,
+  timeout = 600000
+) {
+  return new Promise((resolve, reject) => {
+    sessionStore.participants.subscribe(p => {
+      if (
+        p.active.filter(p => p.toString() !== sessionStore.myPubKey.toString())
+          .length >= otherParticipants
+      ) {
+        resolve(undefined);
+      }
+    });
+    setTimeout(() => reject('Timeout'), timeout);
+  });
+}

@@ -12,7 +12,12 @@ import {
 import { SynClient } from '@holochain-syn/client';
 import { TextEditorDeltaType } from '../grammar.js';
 
-import { delay, sampleGrammar, synHapp } from '../common.js';
+import {
+  waitForOtherParticipants,
+  delay,
+  sampleGrammar,
+  synHapp,
+} from '../common.js';
 
 test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
@@ -64,6 +69,8 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     );
 
     const bobSessionStore = await bobWorkspaceStore.joinSession();
+    await waitForOtherParticipants(aliceSessionStore, 1);
+    await waitForOtherParticipants(bobSessionStore, 1);
 
     aliceSessionStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
 
@@ -135,10 +142,9 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     const commit = await aliceSyn.client.getCommit(commitHash);
 
     assert.ok(commitHash);
-    if (commit) {
-      const state = stateFromCommit(commit.entry);
-      assert.deepEqual(state, currentStateAlice);
-    }
+    assert.ok(commit);
+    const state = stateFromCommit(commit!.entry);
+    assert.deepEqual(state, currentStateAlice);
 
     await bobSessionStore.leaveSession();
 

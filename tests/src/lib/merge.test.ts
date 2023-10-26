@@ -1,12 +1,17 @@
 import { assert, test } from 'vitest';
 
-import { runScenario } from '@holochain/tryorama';
+import { dhtSync, runScenario } from '@holochain/tryorama';
 
 import { toPromise, get } from '@holochain-open-dev/stores';
 import { SynStore, DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
-import { delay, sampleGrammar, synHapp } from '../common.js';
+import {
+  delay,
+  sampleGrammar,
+  synHapp,
+  waitForOtherParticipants,
+} from '../common.js';
 import { TextEditorDeltaType } from '../grammar.js';
 
 test('check that the state of disconnected agents making changes converges after connecting', async () => {
@@ -23,15 +28,22 @@ test('check that the state of disconnected agents making changes converges after
     );
 
     // Alice creates a root commit
-    const rootHash = await aliceSyn.createDeterministicRoot(sampleGrammar);
-    let aliceDocumentStore = new DocumentStore(aliceSyn, sampleGrammar, rootHash);
+    const rootHash = await aliceSyn.createDeterministicDocument(sampleGrammar);
+    let aliceDocumentStore = new DocumentStore(
+      aliceSyn,
+      sampleGrammar,
+      rootHash
+    );
 
     // And a workspace with pointing to it
     const workspaceHash = await aliceDocumentStore.createWorkspace(
       'main',
       rootHash
     );
-    let aliceWorkspaceStore = new WorkspaceStore(aliceDocumentStore, workspaceHash);
+    let aliceWorkspaceStore = new WorkspaceStore(
+      aliceDocumentStore,
+      workspaceHash
+    );
     assert.ok(aliceWorkspaceStore.workspaceHash);
     let aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
@@ -59,16 +71,23 @@ test('check that the state of disconnected agents making changes converges after
     );
 
     // Bob goes online and joins the same workspace
-    const bobRootHash = await bobSyn.createDeterministicRoot(sampleGrammar);
+    const bobRootHash = await bobSyn.createDeterministicDocument(sampleGrammar);
 
-    let bobDocumentStore = new DocumentStore(bobSyn, sampleGrammar, bobRootHash);
+    let bobDocumentStore = new DocumentStore(
+      bobSyn,
+      sampleGrammar,
+      bobRootHash
+    );
     const bobWorkspaceHash = await bobDocumentStore.createWorkspace(
       'main',
       bobDocumentStore.rootHash
     );
     assert.equal(bobRootHash.toString(), rootHash.toString());
     assert.equal(bobWorkspaceHash.toString(), workspaceHash.toString());
-    const bobWorkspaceStore = new WorkspaceStore(bobDocumentStore, workspaceHash);
+    const bobWorkspaceStore = new WorkspaceStore(
+      bobDocumentStore,
+      workspaceHash
+    );
     let bobSessionStore = await bobWorkspaceStore.joinSession();
 
     const roots = await toPromise(bobSyn.allRoots);
@@ -94,6 +113,8 @@ test('check that the state of disconnected agents making changes converges after
     );
     await scenario.shareAllAgents();
 
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
+
     aliceSyn = new SynStore(new SynClient(aliceAppWs, 'syn-test'));
     aliceDocumentStore = new DocumentStore(
       aliceSyn,
@@ -103,12 +124,13 @@ test('check that the state of disconnected agents making changes converges after
     aliceWorkspaceStore = new WorkspaceStore(aliceDocumentStore, workspaceHash);
     aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
-    await delay(2000);
+    bobSessionStore = await bobWorkspaceStore.joinSession();
+
+    await waitForOtherParticipants(aliceSessionStore, 1);
+    await waitForOtherParticipants(bobSessionStore, 1);
 
     currentState = get(aliceSessionStore.state);
 
-    bobSessionStore = await bobWorkspaceStore.joinSession();
-    await delay(10000);
     const bobcurrentState = get(bobSessionStore.state);
     // Check that state converges
     assert.equal(
