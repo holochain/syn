@@ -145,7 +145,7 @@ const rootHash = await synStore.createDocument(textEditorGrammar,
 const documentStore = new DocumentStore(synStore, textEditorGrammar, rootHash);
 
 // Create the workspace for the document
-const workspaceStore = new documentStore.createWorkspace(
+const workspaceHash = new documentStore.createWorkspace(
   'main',
   documentStore.rootHash // The initial commit for the workspace
 );
