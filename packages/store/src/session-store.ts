@@ -36,7 +36,7 @@ export interface SliceStore<G extends SynGrammar<any, any>> {
 
   workspace: SessionStore<any>;
 
-  state: Readable<Automerge.Doc<GrammarState<G>>>;
+  state: Readable<GrammarState<G>>;
   ephemeral: Readable<GrammarEphemeralState<G>>;
 
   requestChanges(changes: Array<GrammarDelta<G>>): void;
@@ -113,7 +113,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
   }
 
   _state: Writable<Automerge.Doc<GrammarState<G>>>;
-  get state() {
+  get state(): Readable<GrammarState<G>> {
     return derived(this._state, i => Automerge.clone(i));
   }
 
@@ -486,17 +486,20 @@ export class SessionStore<G extends SynGrammar<any, any>>
     });
 
     if (syncMessage || ephemeralSyncMessage) {
-      this.workspaceStore.documentStore.synStore.client.sendMessage([participant], {
-        type: 'WorkspaceMessage',
-        workspace_hash: this.workspaceStore.workspaceHash,
-        payload: {
-          type: 'SyncReq',
-          sync_message: syncMessage ? encode(syncMessage) : undefined,
-          ephemeral_sync_message: ephemeralSyncMessage
-            ? encode(ephemeralSyncMessage)
-            : undefined,
-        },
-      });
+      this.workspaceStore.documentStore.synStore.client.sendMessage(
+        [participant],
+        {
+          type: 'WorkspaceMessage',
+          workspace_hash: this.workspaceStore.workspaceHash,
+          payload: {
+            type: 'SyncReq',
+            sync_message: syncMessage ? encode(syncMessage) : undefined,
+            ephemeral_sync_message: ephemeralSyncMessage
+              ? encode(ephemeralSyncMessage)
+              : undefined,
+          },
+        }
+      );
     }
   }
 

@@ -5,6 +5,7 @@ import type { SynGrammar } from './grammar.js';
 import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
 import { DocumentStore } from './document-store.js';
 import { SessionStore } from './session-store.js';
+import { stateFromCommit } from './syn-store.js';
 
 export class WorkspaceStore<G extends SynGrammar<any, any>> {
   constructor(
@@ -18,7 +19,9 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
    */
   editors = lazyLoadAndPoll(
     () =>
-      this.documentStore.synStore.client.getWorkspaceEditors(this.workspaceHash),
+      this.documentStore.synStore.client.getWorkspaceEditors(
+        this.workspaceHash
+      ),
     4000
   );
 
@@ -35,11 +38,12 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
   );
 
   /**
-   * Keeps an up to date copy of the tip of the state for this workspace
+   * Keeps an up to date copy of the tip for this workspace
    */
   tip = pipe(
     lazyLoadAndPoll(
-      () => this.documentStore.synStore.client.getWorkspaceTips(this.workspaceHash),
+      () =>
+        this.documentStore.synStore.client.getWorkspaceTips(this.workspaceHash),
       4000
     ),
     commits => {
@@ -48,6 +52,11 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
     },
     commit => this.documentStore.synStore.commits.get(commit)
   );
+
+  /**
+   * Keeps an up to date copy of the state of the tip for this workspace
+   */
+  currentState = pipe(this.tip, commit => stateFromCommit(commit.entry));
 
   async joinSession(
     config?: RecursivePartial<SynConfig>
