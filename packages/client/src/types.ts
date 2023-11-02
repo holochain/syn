@@ -1,7 +1,13 @@
-import { AgentPubKey, EntryHash, Record } from '@holochain/client';
+import { AgentPubKey, AnyDhtHash, EntryHash } from '@holochain/client';
+
+export interface Document {
+  meta: Uint8Array | undefined;
+}
 
 export interface Commit {
   state: Uint8Array;
+
+  document_hash: AnyDhtHash;
 
   previous_commit_hashes: Array<EntryHash>;
 
@@ -13,36 +19,19 @@ export interface Commit {
 
 export interface Workspace {
   name: String;
-  root_hash: EntryHash;
+  document_hash: EntryHash;
 }
 
 /** Client API */
 
-export interface CreateCommitInput {
-  commit: Commit;
-  root_hash: EntryHash;
-}
-export interface CreateWorkspaceInput {
-  workspace: Workspace;
-  initial_commit_hash: EntryHash;
-}
-
-export interface UpdateWorkspaceTipInput {
-  workspace_hash: EntryHash;
-  new_tip_hash: EntryHash;
-  previous_commit_hashes: Array<EntryHash>;
-}
-
-export type SynMessage =
-  | ({ type: 'WorkspaceMessage' } & WorkspaceMessage)
-  | { type: 'NewRoot'; root: Record };
+export type SynMessage = { type: 'WorkspaceMessage' } & SessionMessage;
 
 export interface SendMessageInput {
   recipients: Array<AgentPubKey>;
   message: SynMessage;
 }
 
-export interface WorkspaceMessage {
+export interface SessionMessage {
   workspace_hash: EntryHash;
   payload: MessagePayload;
 }

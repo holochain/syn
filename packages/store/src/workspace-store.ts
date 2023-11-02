@@ -1,7 +1,7 @@
 import { lazyLoadAndPoll, pipe } from '@holochain-open-dev/stores';
 import { EntryHash } from '@holochain/client';
 
-import type { SynGrammar } from './grammar.js';
+import type { GrammarState, SynGrammar } from './grammar.js';
 import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
 import { DocumentStore } from './document-store.js';
 import { SessionStore } from './session-store.js';
@@ -12,18 +12,6 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
     public documentStore: DocumentStore<G>,
     public workspaceHash: EntryHash
   ) {}
-
-  /**
-   * Keeps an up to date array of the all the agents that have participated in
-   * the session of this workspace at any point in thime
-   */
-  editors = lazyLoadAndPoll(
-    () =>
-      this.documentStore.synStore.client.getWorkspaceEditors(
-        this.workspaceHash
-      ),
-    4000
-  );
 
   /**
    * Keeps an up to date array of the all the agents that are currently participating in
@@ -56,7 +44,10 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
   /**
    * Keeps an up to date copy of the state of the tip for this workspace
    */
-  currentState = pipe(this.tip, commit => stateFromCommit(commit.entry));
+  latestSnapshot = pipe(
+    this.tip,
+    commit => stateFromCommit(commit.entry) as GrammarState<G>
+  );
 
   async joinSession(
     config?: RecursivePartial<SynConfig>

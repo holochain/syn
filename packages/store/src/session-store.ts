@@ -1,4 +1,4 @@
-import { Commit, WorkspaceMessage } from '@holochain-syn/client';
+import { Commit, SessionMessage } from '@holochain-syn/client';
 import { AgentPubKeyMap, RecordBag } from '@holochain-open-dev/utils';
 import {
   Readable,
@@ -149,7 +149,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
       if (synSignal.message.type !== 'WorkspaceMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
-      const message: WorkspaceMessage = synSignal.message;
+      const message: SessionMessage = synSignal.message;
       if (
         message &&
         isEqual(message.workspace_hash, workspaceStore.workspaceHash)
@@ -349,27 +349,27 @@ export class SessionStore<G extends SynGrammar<any, any>>
         );
       }
 
+      const documentHash = workspaceStore.documentStore.documentHash;
+
       const commit: Commit = {
         authors: [workspaceStore.documentStore.synStore.client.client.myPubKey],
         meta: encode('Merge commit'),
         previous_commit_hashes: Array.from(tips.keys()),
         state: encode(Automerge.save(mergeState)),
         witnesses: [],
+        document_hash: documentHash,
       };
 
       const newCommit =
-        await workspaceStore.documentStore.synStore.client.createCommit({
-          commit,
-          root_hash: workspaceStore.documentStore.rootHash,
-        });
+        await workspaceStore.documentStore.synStore.client.createCommit(commit);
 
       currentTip = newCommit.record;
 
-      await workspaceStore.documentStore.synStore.client.updateWorkspaceTip({
-        new_tip_hash: newCommit.entryHash,
-        workspace_hash: workspaceStore.workspaceHash,
-        previous_commit_hashes: Array.from(tips.keys()),
-      });
+      await workspaceStore.documentStore.synStore.client.updateWorkspaceTip(
+        newCommit.entryHash,
+        workspaceStore.workspaceHash,
+        Array.from(tips.keys())
+      );
     }
 
     return new SessionStore(
@@ -574,18 +574,16 @@ export class SessionStore<G extends SynGrammar<any, any>>
       previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
+      document_hash: this.workspaceStore.documentStore.documentHash,
     };
 
-    const newCommit = await this.synClient.createCommit({
-      commit,
-      root_hash: this.workspaceStore.documentStore.rootHash,
-    });
+    const newCommit = await this.synClient.createCommit(commit);
 
-    await this.synClient.updateWorkspaceTip({
-      new_tip_hash: newCommit.entryHash,
-      workspace_hash: this.workspaceStore.workspaceHash,
-      previous_commit_hashes: [currentTip],
-    });
+    await this.synClient.updateWorkspaceTip(
+      this.workspaceStore.workspaceHash,
+      newCommit.entryHash,
+      [currentTip]
+    );
 
     this._currentTip.set(newCommit.entryHash);
   }

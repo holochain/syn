@@ -3,7 +3,7 @@ use hdk::prelude::*;
 use itertools::Itertools;
 
 use crate::{
-    messages::{send_message, MessagePayload, SendMessageInput, SynMessage, WorkspaceMessage},
+    messages::{send_message, MessagePayload, SendMessageInput, SessionMessage, SynMessage},
     utils::{create_link_relaxed, create_relaxed},
 };
 
@@ -22,9 +22,9 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
     )?;
 
     create_link_relaxed(
-        input.workspace.root_hash,
+        input.workspace.document_hash,
         entry_hash.clone(),
-        LinkTypes::RootToWorkspaces,
+        LinkTypes::DocumentToWorkspaces,
         (),
     )?;
 
@@ -48,8 +48,8 @@ pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> 
 }
 
 #[hdk_extern]
-pub fn get_workspaces_for_root(root_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
-    let links = get_links(root_hash, LinkTypes::RootToWorkspaces, None)?;
+pub fn get_workspaces_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<EntryHash>> {
+    let links = get_links(document_hash, LinkTypes::DocumentToWorkspaces, None)?;
 
     let hashes = links
         .into_iter()
@@ -90,18 +90,6 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_workspace_commits(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
-    let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
-
-    let hashes = links
-        .into_iter()
-        .filter_map(|l| EntryHash::try_from(l.target).ok())
-        .collect();
-
-    Ok(hashes)
-}
-
-#[hdk_extern]
 pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHash>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
 
@@ -134,22 +122,6 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHa
 }
 
 #[hdk_extern]
-pub fn get_workspace_editors(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
-    let links = get_link_details(workspace_hash, LinkTypes::WorkspaceToParticipant, None)?;
-
-    let participants: Vec<AgentPubKey> = links
-        .into_inner()
-        .into_iter()
-        .filter_map(|(action, _)| match action.action() {
-            Action::CreateLink(cl) => AgentPubKey::try_from(cl.target_address.clone()).ok(),
-            _ => None,
-        })
-        .unique()
-        .collect();
-    Ok(participants)
-}
-
-#[hdk_extern]
 pub fn get_workspace_session_participants(
     workspace_hash: EntryHash,
 ) -> ExternResult<Vec<AgentPubKey>> {
@@ -177,7 +149,7 @@ pub fn join_workspace_session(workspace_hash: EntryHash) -> ExternResult<Vec<Age
         )?;
         // Signal
         send_message(SendMessageInput {
-            message: SynMessage::WorkspaceMessage(WorkspaceMessage {
+            message: SynMessage::WorkspaceMessage(SessionMessage {
                 workspace_hash: workspace_hash.clone(),
                 payload: MessagePayload::JoinWorkspace,
             }),
@@ -221,7 +193,7 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
 
     // Signal
     send_message(SendMessageInput {
-        message: SynMessage::WorkspaceMessage(WorkspaceMessage {
+        message: SynMessage::WorkspaceMessage(SessionMessage {
             workspace_hash: workspace_hash.clone(),
             payload: MessagePayload::LeaveWorkspace,
         }),

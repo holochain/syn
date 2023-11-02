@@ -3,12 +3,13 @@ use hdi::prelude::*;
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct Commit {
-  pub state: SerializedBytes,
+    pub state: SerializedBytes,
 
-  pub previous_commit_hashes: Vec<EntryHash>,
+    pub document_hash: AnyDhtHash,
+    pub previous_commit_hashes: Vec<EntryHash>,
 
-  pub authors: Vec<AgentPubKey>,
-  pub witnesses: Vec<AgentPubKey>, // maybe?
+    pub authors: Vec<AgentPubKey>,
+    pub witnesses: Vec<AgentPubKey>, // maybe?
 
-  pub meta: Option<SerializedBytes>,
+    pub meta: Option<SerializedBytes>,
 }

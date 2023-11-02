@@ -2,8 +2,9 @@ use hdk::prelude::*;
 use messages::SynMessage;
 
 mod commit;
+mod document;
 mod messages;
-mod root;
+mod tags;
 mod utils;
 mod workspace;
 

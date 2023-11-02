@@ -19,7 +19,7 @@ pub enum MessagePayload {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WorkspaceMessage {
+pub struct SessionMessage {
     pub workspace_hash: EntryHash,
     pub payload: MessagePayload,
 }
@@ -27,8 +27,7 @@ pub struct WorkspaceMessage {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum SynMessage {
-    WorkspaceMessage(WorkspaceMessage),
-    NewRoot { root: Record },
+    WorkspaceMessage(SessionMessage),
 }
 
 #[derive(Serialize, Deserialize, Debug)]

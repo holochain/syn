@@ -138,16 +138,18 @@ At this point, you haven't created any documents yet. Let's start by creating on
 
 ```ts
 // Create the document
-const rootHash = await synStore.createDocument(textEditorGrammar, 
+const { documentHash, firstCommitHash } = await synStore.createDocument(textEditorGrammar, 
   // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'}
 );
-const documentStore = new DocumentStore(synStore, textEditorGrammar, rootHash);
+// Tag the document as "active" to allow other peers to discover it
+await synStore.client.tagDocument(documentHash, "active")
+const documentStore = new DocumentStore(synStore, textEditorGrammar, documentHash);
 
 // Create the workspace for the document
 const workspaceStore = new documentStore.createWorkspace(
   'main',
-  documentStore.rootHash // The initial commit for the workspace
+  firstCommitHash
 );
 const workspaceStore = new WorkspaceStore(documentStore, workspaceHash);
 ```
@@ -162,19 +164,19 @@ If you want another peer to discover that document and join the same session, yo
 
 ```ts
 import { get } from 'svelte/store';
+import { AnyDhtHash } from '@holochain/client'
 import { Commit } from '@holochain-syn/client';
 import { EntryRecord, EntryHashMap } from '@holochain-open-dev/utils';
-import { toPromise } from '@holochain-open-dev/stores';
 import { DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 
-// Fetch all roots
-const roots: Array<EntryRecord<Commit>> = await toPromise(synStore.allRoots);
+// Fetch all the active documents
+const documentsHashes: Array<AnyDhtHash> = await synStore.client.getDocumentsWithTag("active");
 
-// Build the documentStore for the document with that root
+// Build the documentStore for the document with the first document
 const documentStore = new DocumentStore(
   synStore,
   textEditorGrammar,
-  roots[0].entryHash
+  documentsHashes[0]
 );
 // Fetch all workspaces for that document
 const workspaces: Array<EntryRecord<Workspace>> = await toPromise(documentStore.allWorkspaces);
@@ -214,7 +216,7 @@ In some cases, you need a way to create global documents that are known in advan
 To create a deterministic root:
 
 ```ts
-const rootHash = await synStore.createDeterministicDocument(textEditorGramma,
+const { documentHash, firstCommitHash }= await synStore.createDeterministicDocument(textEditorGramma,
   // This is an optional object to be able to store arbitrary information in the commit
   { applicationDefinedField: 'somevalue'} 
 );

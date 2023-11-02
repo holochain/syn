@@ -29,14 +29,14 @@ import { synDocumentContext } from '../contexts.js';
 export class CommitHistory extends LitElement {
   @consume({ context: synDocumentContext, subscribe: true })
   @property()
-  documentStore!: DocumentStore<any>;
+  documentstore!: DocumentStore<any>;
 
   @property()
   selectedCommitHash: EntryHashB64 | undefined;
 
   private _allCommits = new StoreSubscriber(
     this,
-    () => this.documentStore.allCommits,
+    () => this.documentstore.allCommits,
     () => []
   );
 

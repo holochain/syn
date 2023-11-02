@@ -100,16 +100,17 @@
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
-    const roots = await toPromise(store.allRoots);
+    const documentsHashes= await toPromise(store.documentHashesByTag.get("active"));
 
-    if (roots.length === 0) {
-      const rootHash = await store.createDocument(DocumentGrammar);
-      documentStore = new DocumentStore(store, DocumentGrammar, rootHash)
+    if (documentsHashes.length === 0) {
+      const {documentHash, firstCommitHash} = await store.createDocument(DocumentGrammar);
+      documentStore = new DocumentStore(store, DocumentGrammar, documentHash)
 
       const workspaceHash = await documentStore.createWorkspace(
         'main',
-        rootHash
+        firstCommitHash
       );
+      await store.client.tagDocument(documentHash, 'active')
 
       workspaceStore = new WorkspaceStore(documentStore, workspaceHash);
       sessionStore = await workspaceStore.joinSession();
@@ -118,7 +119,7 @@
        documentStore = new DocumentStore(
         store,
         DocumentGrammar,
-        roots[0].entryHash
+        documentsHashes[0]
       );
       const workspaces = await toPromise(documentStore.allWorkspaces);
 

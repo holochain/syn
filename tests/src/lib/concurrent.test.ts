@@ -43,15 +43,17 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const rootHash = await aliceSyn.createDocument(sampleGrammar);
+    const { documentHash, firstCommitHash } = await aliceSyn.createDocument(
+      sampleGrammar
+    );
     const aliceDocumentStore = new DocumentStore(
       aliceSyn,
       sampleGrammar,
-      rootHash
+      documentHash
     );
     const workspaceHash = await aliceDocumentStore.createWorkspace(
       'main',
-      rootHash
+      firstCommitHash
     );
     const aliceWorkspaceStore = new WorkspaceStore(
       aliceDocumentStore,
@@ -69,10 +71,12 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     ]);
 
     await delay(2000);
-    const roots = await toPromise(bobSyn.allRoots);
-    assert.equal(roots[0].entryHash.toString(), rootHash.toString());
 
-    const bobDocumentStore = new DocumentStore(bobSyn, sampleGrammar, rootHash);
+    const bobDocumentStore = new DocumentStore(
+      bobSyn,
+      sampleGrammar,
+      documentHash
+    );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
     assert.equal(workspaces[0].entryHash.toString(), workspaceHash.toString());
     const bobWorkspaceStore = new WorkspaceStore(

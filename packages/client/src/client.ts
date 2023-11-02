@@ -3,19 +3,18 @@ import type {
   EntryHash,
   Record,
   AppAgentClient,
+  AnyDhtHash,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 
 import {
+  Document,
   Commit,
-  CreateCommitInput,
-  CreateWorkspaceInput,
   SendMessageInput,
   SynMessage,
   SynSignal,
-  UpdateWorkspaceTipInput,
   Workspace,
-} from './types';
+} from './types.js';
 
 export class SynClient extends ZomeClient<SynSignal> {
   constructor(
@@ -26,21 +25,54 @@ export class SynClient extends ZomeClient<SynSignal> {
     super(client, roleName, zomeName);
   }
 
-  /** Roots */
-  public async createRoot(commit: Commit): Promise<EntryRecord<Commit>> {
-    const record: Record = await this.callZome('create_root', commit);
+  /** Documents */
+
+  public async createDocument(
+    document: Document
+  ): Promise<EntryRecord<Document>> {
+    const record: Record = await this.callZome('create_document', document);
     return new EntryRecord(record);
   }
 
-  public async getAllRoots(): Promise<Array<EntryHash>> {
-    return this.callZome('get_all_roots', null);
+  public async getDocumentsWithTag(tag: string): Promise<Array<AnyDhtHash>> {
+    return this.callZome('get_documents_with_tag', tag);
+  }
+
+  public async getDocument(
+    documentHash: AnyDhtHash
+  ): Promise<EntryRecord<Document> | undefined> {
+    const record: Record | undefined = await this.callZome(
+      'get_document',
+      documentHash
+    );
+    if (!record) return undefined;
+
+    return new EntryRecord(record);
+  }
+
+  public async tagDocument(
+    documentHash: AnyDhtHash,
+    tag: string
+  ): Promise<void> {
+    return this.callZome('tag_document', {
+      document_hash: documentHash,
+      tag,
+    });
+  }
+
+  public async removeDocumentTag(
+    documentHash: AnyDhtHash,
+    tag: string
+  ): Promise<void> {
+    return this.callZome('remove_document_tag', {
+      document_hash: documentHash,
+      tag,
+    });
   }
 
   /** Commits */
-  public async createCommit(
-    input: CreateCommitInput
-  ): Promise<EntryRecord<Commit>> {
-    const record: Record = await this.callZome('create_commit', input);
+  public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
+    const record: Record = await this.callZome('create_commit', commit);
     return new EntryRecord(record);
   }
 
@@ -56,17 +88,21 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getCommitsForRoot(
-    root_hash: EntryHash
+  public async getCommitsForDocument(
+    documentHash: AnyDhtHash
   ): Promise<Array<EntryHash>> {
-    return this.callZome('get_commits_for_root', root_hash);
+    return this.callZome('get_commits_for_document', documentHash);
   }
 
   /** Workspaces */
   public async createWorkspace(
-    input: CreateWorkspaceInput
+    workspace: Workspace,
+    initial_commit_hash: EntryHash
   ): Promise<EntryRecord<Workspace>> {
-    const record: Record = await this.callZome('create_workspace', input);
+    const record: Record = await this.callZome('create_workspace', {
+      workspace,
+      initial_commit_hash,
+    });
     return new EntryRecord(record);
   }
 
@@ -80,16 +116,10 @@ export class SynClient extends ZomeClient<SynSignal> {
     return workspace ? new EntryRecord(workspace) : undefined;
   }
 
-  public async getWorkspacesForRoot(
-    root_hash: EntryHash
+  public async getWorkspacesForDocument(
+    documentHash: AnyDhtHash
   ): Promise<Array<EntryHash>> {
-    return this.callZome('get_workspaces_for_root', root_hash);
-  }
-
-  public async getWorkspaceCommits(
-    workspaceHash: EntryHash
-  ): Promise<Array<EntryHash>> {
-    return this.callZome('get_workspace_commits', workspaceHash);
+    return this.callZome('get_workspaces_for_document', documentHash);
   }
 
   public async getWorkspaceTips(
@@ -98,8 +128,16 @@ export class SynClient extends ZomeClient<SynSignal> {
     return this.callZome('get_workspace_tips', workspaceHash);
   }
 
-  public updateWorkspaceTip(input: UpdateWorkspaceTipInput): Promise<void> {
-    return this.callZome('update_workspace_tip', input);
+  public updateWorkspaceTip(
+    workspace_hash: EntryHash,
+    new_tip_hash: EntryHash,
+    previous_commit_hashes: Array<EntryHash>
+  ): Promise<void> {
+    return this.callZome('update_workspace_tip', {
+      workspace_hash,
+      new_tip_hash,
+      previous_commit_hashes,
+    });
   }
 
   public getWorkspaceSessionParticipants(

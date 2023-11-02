@@ -5,5 +5,5 @@ use hdi::prelude::*;
 #[derive(Clone)]
 pub struct Workspace {
     pub name: String,
-    pub root_hash: EntryHash,
+    pub document_hash: AnyDhtHash,
 }
