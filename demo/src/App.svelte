@@ -8,7 +8,7 @@
   } from '@holochain-syn/core';
   import '@holochain-syn/core/dist/elements/syn-context.js'
   import '@holochain-syn/core/dist/elements/commit-history.js'
-  import '@holochain-syn/core/dist/elements/workspace-participants.js'
+  import '@holochain-syn/core/dist/elements/session-participants.js'
   import '@holochain-syn/text-editor/dist/elements/syn-markdown-editor.js';
   import { createClient, DocumentGrammar, textSlice } from './syn';
   import {toPromise} from '@holochain-open-dev/stores'
