@@ -23,21 +23,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - uses: cachix/install-nix-action@v12
+      - name: Install nix
+        uses: cachix/install-nix-action@v18
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          install_url: https://releases.nixos.org/nix/nix-2.12.0/install
+          extra_nix_config: |
+            experimental-features = flakes nix-command
+                
+      - uses: cachix/cachix-action@v10
+        with:
+          name: holochain-ci
 
-      - name: cachix
+      - name: Install and test
         run: |
-          nix-env -iA cachix -f https://cachix.org/api/v1/install
-          cachix use holochain-ci
+          nix develop --command bash -c "npm i && npm t"
 
-      - name: build-holochain
-        run: |
-          cd $GITHUB_WORKSPACE
-          nix-shell . --run "npm run build:happ"
-          
-      - name: test-holochain
-        run: |
-          cd $GITHUB_WORKSPACE
-          nix-shell . --run "npm ci && npm run test"          

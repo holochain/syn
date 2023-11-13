@@ -78,7 +78,10 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       documentHash
     );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
-    assert.equal(workspaces[0].entryHash.toString(), workspaceHash.toString());
+    assert.equal(
+      new Buffer(Array.from(workspaces.keys())[0]).toString(),
+      workspaceHash.toString()
+    );
     const bobWorkspaceStore = new WorkspaceStore(
       bobDocumentStore,
       workspaceHash

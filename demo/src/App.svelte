@@ -100,7 +100,7 @@
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
-    const documentsHashes= await toPromise(store.documentHashesByTag.get("active"));
+    const documentsHashes= Array.from((await toPromise(store.documentsByTag.get("active"))).keys());
 
     if (documentsHashes.length === 0) {
       const {documentHash, firstCommitHash} = await store.createDocument(DocumentGrammar);
@@ -123,7 +123,7 @@
       );
       const workspaces = await toPromise(documentStore.allWorkspaces);
 
-      workspaceStore = new WorkspaceStore(documentStore, workspaces[0].entryHash);
+      workspaceStore = new WorkspaceStore(documentStore, Array.from(workspaces.keys())[0]);
       sessionStore = await workspaceStore.joinSession();
       synStore = store;
     }

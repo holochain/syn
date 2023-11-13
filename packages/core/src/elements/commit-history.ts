@@ -18,7 +18,7 @@ import '@holochain-open-dev/elements/dist/elements/display-error.js';
 
 import { Commit } from '@holochain-syn/client';
 import { DocumentStore } from '@holochain-syn/store';
-import { StoreSubscriber } from '@holochain-open-dev/stores';
+import { joinAsync, pipe, StoreSubscriber } from '@holochain-open-dev/stores';
 import { sharedStyles } from '@holochain-open-dev/elements';
 import { localized, msg } from '@lit/localize';
 
@@ -36,7 +36,10 @@ export class CommitHistory extends LitElement {
 
   private _allCommits = new StoreSubscriber(
     this,
-    () => this.documentstore.allCommits,
+    () =>
+      pipe(this.documentstore.allCommits, c =>
+        joinAsync(Array.from(c.values()))
+      ),
     () => []
   );
 

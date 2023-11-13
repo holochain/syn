@@ -163,11 +163,11 @@ const sessionStore: SessionStore = await sessionStore.joinSession();
 If you want another peer to discover that document and join the same session, you can do this:
 
 ```ts
-import { get } from 'svelte/store';
 import { AnyDhtHash } from '@holochain/client'
 import { Commit } from '@holochain-syn/client';
 import { EntryRecord, EntryHashMap } from '@holochain-open-dev/utils';
 import { DocumentStore, WorkspaceStore } from '@holochain-syn/store';
+import { toPromise, joinAsyncMap, pipe } from '@holochain-open-dev/stores';
 
 // Fetch all the active documents
 const documentsHashes: Array<AnyDhtHash> = await synStore.client.getDocumentsWithTag("active");
@@ -179,7 +179,7 @@ const documentStore = new DocumentStore(
   documentsHashes[0]
 );
 // Fetch all workspaces for that document
-const workspaces: Array<EntryRecord<Workspace>> = await toPromise(documentStore.allWorkspaces);
+const workspaces: ReadonlyMap<EntryHash, EntryRecord<Workspace>> = await toPromise(pipe(documentStore.allWorkspaces, joinAsyncMap));
 // Find the main workspace
 const mainWorkspace = workspaces.find(w => w.entry.name === 'main');
 const workspaceStore = new WorkspaceStore(documentStore, mainWorkspace.entryHash);
@@ -195,7 +195,13 @@ import { stateFromCommit } from '@holochain-syn/store';
 
 workspaceStore.tip.subscribe(tip => {
   if (tip.status === 'complete') { // "status" can also be "pending" or "error"
-    console.log('current state of the workspace: ', stateFromCommit(tip));
+    console.log('current tip of the workspace: ', tip);
+  }
+})
+
+workspaceStore.latestSnapshot.subscribe(latestSnapshot => {
+  if (latestSnapshot.status === 'complete') { // "status" can also be "pending" or "error"
+    console.log('current state of the workspace: ', latestSnapshot);
   }
 })
 

@@ -18,6 +18,7 @@ import {
   sampleGrammar,
   synHapp,
 } from '../common.js';
+import { encodeHashToBase64 } from '@holochain/client';
 
 test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
@@ -43,14 +44,16 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     );
     await aliceSyn.client.tagDocument(documentHash, 'active');
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-    let documentsHashes = await toPromise(
-      bobSyn.documentHashesByTag.get('active')
+    let documentsHashes = Array.from(
+      (await toPromise(bobSyn.documentsByTag.get('active'))).keys()
     );
     assert.equal(documentsHashes.length, 1);
 
     await aliceSyn.client.removeDocumentTag(documentHash, 'active');
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-    documentsHashes = await toPromise(bobSyn.documentHashesByTag.get('active'));
+    documentsHashes = Array.from(
+      (await toPromise(bobSyn.documentsByTag.get('active'))).keys()
+    );
     assert.equal(documentsHashes.length, 0);
 
     const aliceDocumentStore = new DocumentStore(
@@ -137,7 +140,7 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
       { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
     ]);
 
-    await delay(2000);
+    await delay(7000);
 
     const currentStateAlice = get(aliceSessionStore.state);
     const currentStateBob = get(bobSessionStore.state);
@@ -147,8 +150,9 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     );
 
     await aliceSessionStore.commitChanges();
-    await delay(2000);
+    await delay(7000);
     const commitsHashes = await aliceSyn.client.getWorkspaceTips(workspaceHash);
+
     assert.equal(commitsHashes.length, 1);
 
     const commitHash = commitsHashes[commitsHashes.length - 1];

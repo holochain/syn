@@ -11,7 +11,7 @@ import {
   Document,
   Commit,
   SendMessageInput,
-  SynMessage,
+  SessionMessage,
   SynSignal,
   Workspace,
 } from './types.js';
@@ -164,7 +164,7 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public sendMessage(
     recipients: Array<AgentPubKey>,
-    message: SynMessage
+    message: SessionMessage
   ): Promise<void> {
     return this.callZome('send_message', {
       recipients,

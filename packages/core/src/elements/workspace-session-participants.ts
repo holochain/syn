@@ -25,7 +25,7 @@ export class WorkspaceParticipants extends LitElement {
   @property()
   direction: 'column' | 'row' = 'column';
 
-  _participants = new StoreSubscriber(
+  private _participants = new StoreSubscriber(
     this,
     () => this.workspacestore.sessionParticipants,
     () => [this.workspacestore]

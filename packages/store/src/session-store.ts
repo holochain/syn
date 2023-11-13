@@ -146,7 +146,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
   ) {
     const workspaceHash = this.workspaceStore.workspaceHash;
     this.unsubscribe = this.synClient.onSignal(synSignal => {
-      if (synSignal.message.type !== 'WorkspaceMessage') return;
+      if (synSignal.type !== 'SessionMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
       const message: SessionMessage = synSignal.message;
@@ -154,13 +154,18 @@ export class SessionStore<G extends SynGrammar<any, any>>
         message &&
         isEqual(message.workspace_hash, workspaceStore.workspaceHash)
       ) {
-        if (message.payload.type === 'LeaveWorkspace') {
-          this.handleLeaveWorkspaceNotice(synSignal.provenance);
+        if (message.payload.type === 'LeaveSession') {
+          this.handleLeaveSessionNotice(synSignal.provenance);
+          return;
+        }
+
+        if (message.payload.type === 'NewCommit') {
+          this._currentTip.set(message.payload.new_commit_hash);
           return;
         }
 
         if (
-          message.payload.type === 'JoinWorkspace' ||
+          message.payload.type === 'JoinSession' ||
           !get(this._participants).get(synSignal.provenance)
         ) {
           this.handleNewParticipant(synSignal.provenance);
@@ -241,7 +246,6 @@ export class SessionStore<G extends SynGrammar<any, any>>
 
         if (p.size > 0) {
           this.synClient.sendMessage(onlineParticipants, {
-            type: 'WorkspaceMessage',
             workspace_hash: workspaceHash,
             payload: {
               type: 'Heartbeat',
@@ -319,7 +323,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
         workspaceStore.workspaceHash
       );
     const commits = await toPromise(
-      sliceAndJoin(workspaceStore.documentStore.synStore.commits, commitsHashes)
+      sliceAndJoin(workspaceStore.documentStore.commits, commitsHashes)
     );
     const commitBag = new RecordBag<Commit>(
       Array.from(commits.values()).map(er => er.record)
@@ -414,7 +418,6 @@ export class SessionStore<G extends SynGrammar<any, any>>
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           Array.from(participants),
           {
-            type: 'WorkspaceMessage',
             workspace_hash: this.workspaceStore.workspaceHash,
             payload: {
               type: 'ChangeNotice',
@@ -489,7 +492,6 @@ export class SessionStore<G extends SynGrammar<any, any>>
       this.workspaceStore.documentStore.synStore.client.sendMessage(
         [participant],
         {
-          type: 'WorkspaceMessage',
           workspace_hash: this.workspaceStore.workspaceHash,
           payload: {
             type: 'SyncReq',
@@ -550,7 +552,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
   async commitChanges(meta?: any) {
     const currentTip = get(this._currentTip);
     const currentTipCommit = await toPromise(
-      this.workspaceStore.documentStore.synStore.commits.get(currentTip)
+      this.workspaceStore.documentStore.commits.get(currentTip)
     );
     if (currentTipCommit) {
       if (
@@ -569,7 +571,10 @@ export class SessionStore<G extends SynGrammar<any, any>>
     }
 
     const commit: Commit = {
-      authors: Array.from(get(this._participants).keys()),
+      authors: [
+        ...Array.from(get(this._participants).keys()),
+        this.synClient.client.myPubKey,
+      ],
       meta,
       previous_commit_hashes: [currentTip],
       state: encode(Automerge.save(get(this._state))),
@@ -586,6 +591,16 @@ export class SessionStore<G extends SynGrammar<any, any>>
     );
 
     this._currentTip.set(newCommit.entryHash);
+    this.workspaceStore.documentStore.synStore.client.sendMessage(
+      Array.from(get(this._participants).keys()),
+      {
+        workspace_hash: this.workspaceStore.workspaceHash,
+        payload: {
+          type: 'NewCommit',
+          new_commit_hash: newCommit.entryHash,
+        },
+      }
+    );
   }
 
   private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {
@@ -640,7 +655,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
     this.requestSync(participant);
   }
 
-  private handleLeaveWorkspaceNotice(participant: AgentPubKey) {
+  private handleLeaveSessionNotice(participant: AgentPubKey) {
     this._participants.update(p => {
       p.delete(participant);
       return p;

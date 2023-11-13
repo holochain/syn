@@ -8,13 +8,13 @@ import {
 } from '@holochain/client';
 import {
   AsyncReadable,
-  lazyLoadAndPoll,
+  joinAsync,
+  liveLinksTargetsStore,
   pipe,
   retryUntilSuccess,
-  sliceAndJoin,
 } from '@holochain-open-dev/stores';
-import { EntryRecord } from '@holochain-open-dev/utils';
-import { Document } from '@holochain-syn/client';
+import { EntryRecord, LazyHoloHashMap, slice } from '@holochain-open-dev/utils';
+import { Commit, Document, Workspace } from '@holochain-syn/client';
 
 import type { SynGrammar } from './grammar.js';
 import { SynStore } from './syn-store.js';
@@ -26,57 +26,76 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
     public documentHash: AnyDhtHash
   ) {}
 
-  document: AsyncReadable<EntryRecord<Document>> = retryUntilSuccess(
-    async () => {
-      const d = await this.synStore.client.getDocument(this.documentHash);
-      if (!d) throw new Error('Could not find document');
-
-      return d;
-    }
+  document: AsyncReadable<EntryRecord<Document>> = this.synStore.documents.get(
+    this.documentHash
   );
 
   /**
-   * Keeps an up to date array of the entry hashes for all the workspaces for this root
-   */
-  allWorkspacesHashes = lazyLoadAndPoll(
-    () => this.synStore.client.getWorkspacesForDocument(this.documentHash),
-    4000
-  );
-
-  /**
-   * Keeps an up to date map of all the workspaces for this root
+   * Keeps an up to date map of all the workspaces for this document
    */
   allWorkspaces = pipe(
-    this.allWorkspacesHashes,
-    hashes => sliceAndJoin(this.synStore.workspaces, hashes),
-    workspaces => Array.from(workspaces.values())
+    liveLinksTargetsStore(
+      this.synStore.client,
+      this.documentHash,
+
+      () => this.synStore.client.getWorkspacesForDocument(this.documentHash),
+      'DocumentToWorkspaces'
+    ),
+    hashes => slice(this.workspaces, hashes)
   );
 
   /**
-   * Keeps an up to date array of the entry hashes for all the commits for this root
-   */
-  allCommitsHashes = lazyLoadAndPoll(
-    () => this.synStore.client.getCommitsForDocument(this.documentHash),
-    4000
-  );
-
-  /**
-   * Keeps an up to date map of all the commits for this root
+   * Keeps an up to date map of all the commits for this document
    */
   allCommits = pipe(
-    this.allCommitsHashes,
-    hashes => sliceAndJoin(this.synStore.commits, hashes),
-    commits => Array.from(commits.values())
+    liveLinksTargetsStore(
+      this.synStore.client,
+      this.documentHash,
+
+      () => this.synStore.client.getCommitsForDocument(this.documentHash),
+      'DocumentToCommits'
+    ),
+    hashes => slice(this.commits, hashes)
+  );
+
+  /**
+   * Lazy map of all the commits in this network
+   */
+  commits = new LazyHoloHashMap<EntryHash, AsyncReadable<EntryRecord<Commit>>>(
+    (commitHash: EntryHash) =>
+      retryUntilSuccess(async () => {
+        const commit = await this.synStore.client.getCommit(commitHash);
+        if (!commit) throw new Error('Commit not found yet');
+        return commit;
+      })
+  );
+
+  /**
+   * Lazy map of all the workspaces in this network
+   */
+  workspaces = new LazyHoloHashMap<
+    EntryHash,
+    AsyncReadable<EntryRecord<Workspace>>
+  >((workspaceHash: EntryHash) =>
+    retryUntilSuccess(async () => {
+      const workspace = await this.synStore.client.getWorkspace(workspaceHash);
+      if (!workspace) throw new Error('Workspace not found yet');
+      return workspace;
+    })
   );
 
   /**
    * Keeps an up to date array of the all the agents that have participated in any commit in this document
    */
-  allAuthors = pipe(this.allCommits, commits => {
-    const agents = commits.map(c => c.entry.authors);
-    const agentsFlat = ([] as AgentPubKey[]).concat(...agents);
-    return uniquify(agentsFlat);
-  });
+  allAuthors = pipe(
+    this.allCommits,
+    commits => joinAsync(Array.from(commits.values())),
+    commits => {
+      const agents = commits.map(c => c.entry.authors);
+      const agentsFlat = ([] as AgentPubKey[]).concat(...agents);
+      return uniquify(agentsFlat);
+    }
+  );
 
   async createWorkspace(
     workspaceName: string,
@@ -89,7 +108,6 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
       },
       initialTipHash
     );
-
     return workspaceRecord.entryHash;
   }
 }

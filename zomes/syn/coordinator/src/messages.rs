@@ -3,11 +3,14 @@ use hdk::prelude::*;
 #[derive(Serialize, Debug, Deserialize)]
 #[serde(tag = "type")]
 pub enum MessagePayload {
-    JoinWorkspace,
-    LeaveWorkspace,
+    JoinSession,
+    LeaveSession,
     ChangeNotice {
         state_changes: Vec<SerializedBytes>,
         ephemeral_changes: Vec<SerializedBytes>,
+    },
+    NewCommit {
+        new_commit_hash: EntryHash,
     },
     SyncReq {
         sync_message: Option<SerializedBytes>,
@@ -25,14 +28,8 @@ pub struct SessionMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "type")]
-pub enum SynMessage {
-    WorkspaceMessage(SessionMessage),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct SendMessageInput {
-    pub message: SynMessage,
+    pub message: SessionMessage,
     pub recipients: Vec<AgentPubKey>,
 }
 

@@ -16,7 +16,7 @@
   "dependencies": {
     "@holochain-open-dev/elements": "^0.7.0",
     "@holochain-open-dev/profiles": "^0.16.0",
-    "@holochain-open-dev/stores": "^0.7.0",
+    "@holochain-open-dev/stores": "^0.7.14",
     "@holochain-open-dev/utils": "^0.16.0",
     "@holochain-syn/client": "^0.7.0",
     "@holochain-syn/store": "^0.7.0",

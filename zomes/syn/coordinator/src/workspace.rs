@@ -3,7 +3,7 @@ use hdk::prelude::*;
 use itertools::Itertools;
 
 use crate::{
-    messages::{send_message, MessagePayload, SendMessageInput, SessionMessage, SynMessage},
+    messages::{send_message, MessagePayload, SendMessageInput, SessionMessage},
     utils::{create_link_relaxed, create_relaxed},
 };
 
@@ -117,7 +117,6 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<EntryHa
     for p in tips_previous {
         tips.remove(&p);
     }
-
     Ok(tips.into_iter().collect())
 }
 
@@ -149,10 +148,10 @@ pub fn join_workspace_session(workspace_hash: EntryHash) -> ExternResult<Vec<Age
         )?;
         // Signal
         send_message(SendMessageInput {
-            message: SynMessage::WorkspaceMessage(SessionMessage {
+            message: SessionMessage {
                 workspace_hash: workspace_hash.clone(),
-                payload: MessagePayload::JoinWorkspace,
-            }),
+                payload: MessagePayload::JoinSession,
+            },
             recipients: participants.clone(),
         })?;
     }
@@ -193,10 +192,10 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
 
     // Signal
     send_message(SendMessageInput {
-        message: SynMessage::WorkspaceMessage(SessionMessage {
+        message: SessionMessage {
             workspace_hash: workspace_hash.clone(),
-            payload: MessagePayload::LeaveWorkspace,
-        }),
+            payload: MessagePayload::LeaveSession,
+        },
         recipients: participants.clone(),
     })?;
 

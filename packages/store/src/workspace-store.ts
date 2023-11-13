@@ -1,4 +1,8 @@
-import { lazyLoadAndPoll, pipe } from '@holochain-open-dev/stores';
+import {
+  liveLinksAgentPubKeysTargetsStore,
+  liveLinksTargetsStore,
+  pipe,
+} from '@holochain-open-dev/stores';
 import { EntryHash } from '@holochain/client';
 
 import type { GrammarState, SynGrammar } from './grammar.js';
@@ -17,28 +21,33 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
    * Keeps an up to date array of the all the agents that are currently participating in
    * the session for this workspace
    */
-  sessionParticipants = lazyLoadAndPoll(
+  sessionParticipants = liveLinksAgentPubKeysTargetsStore(
+    this.documentStore.synStore.client,
+    this.workspaceHash,
     () =>
       this.documentStore.synStore.client.getWorkspaceSessionParticipants(
         this.workspaceHash
       ),
-    4000
+    'WorkspaceToParticipant'
   );
 
   /**
    * Keeps an up to date copy of the tip for this workspace
    */
   tip = pipe(
-    lazyLoadAndPoll(
+    liveLinksTargetsStore(
+      this.documentStore.synStore.client,
+      this.workspaceHash,
+
       () =>
         this.documentStore.synStore.client.getWorkspaceTips(this.workspaceHash),
-      4000
+      'WorkspaceToTip'
     ),
     commits => {
       if (commits.length > 1) throw new Error('There is a conflict!');
       return commits[0];
     },
-    commit => this.documentStore.synStore.commits.get(commit)
+    commit => this.documentStore.commits.get(commit)
   );
 
   /**
@@ -47,7 +56,7 @@ export class WorkspaceStore<G extends SynGrammar<any, any>> {
   latestSnapshot = pipe(
     this.tip,
     commit => stateFromCommit(commit.entry) as GrammarState<G>
-  );
+  ); // TODO: listen to signal!
 
   async joinSession(
     config?: RecursivePartial<SynConfig>

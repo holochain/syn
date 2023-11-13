@@ -1,3 +1,4 @@
+import { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import { AgentPubKey, AnyDhtHash, EntryHash } from '@holochain/client';
 
 export interface Document {
@@ -24,11 +25,9 @@ export interface Workspace {
 
 /** Client API */
 
-export type SynMessage = { type: 'WorkspaceMessage' } & SessionMessage;
-
 export interface SendMessageInput {
   recipients: Array<AgentPubKey>;
-  message: SynMessage;
+  message: SessionMessage;
 }
 
 export interface SessionMessage {
@@ -38,10 +37,14 @@ export interface SessionMessage {
 
 export type MessagePayload =
   | {
-      type: 'JoinWorkspace';
+      type: 'JoinSession';
     }
   | {
-      type: 'LeaveWorkspace';
+      type: 'LeaveSession';
+    }
+  | {
+      type: 'NewCommit';
+      new_commit_hash: EntryHash;
     }
   | {
       type: 'ChangeNotice';
@@ -58,7 +61,28 @@ export type MessagePayload =
       known_participants: Array<AgentPubKey>;
     };
 
-export interface SynSignal {
-  provenance: AgentPubKey;
-  message: SynMessage;
-}
+export type EntryTypes =
+  | ({
+      type: 'Commit';
+    } & Commit)
+  | ({
+      type: 'Document';
+    } & Document)
+  | ({
+      type: 'Workspace';
+    } & Workspace);
+
+export type LinkTypes =
+  | 'TagToDocument'
+  | 'DocumentToWorkspaces'
+  | 'DocumentToCommits'
+  | 'WorkspaceToTip'
+  | 'WorkspaceToParticipant';
+
+export type SynSignal =
+  | {
+      type: 'SessionMessage';
+      provenance: AgentPubKey;
+      message: SessionMessage;
+    }
+  | ActionCommittedSignal<EntryTypes, LinkTypes>;
