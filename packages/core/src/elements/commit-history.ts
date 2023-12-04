@@ -2,7 +2,7 @@ import { css, html, LitElement } from 'lit';
 import { CytoscapeDagre } from '@scoped-elements/cytoscape';
 customElements.define('cytoscape-dagre', CytoscapeDagre);
 import { customElement, property } from 'lit/decorators.js';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
 import {

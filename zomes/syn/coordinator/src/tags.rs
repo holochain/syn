@@ -1,6 +1,5 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
-use itertools::Itertools;
 
 use crate::utils::create_link_relaxed;
 
@@ -29,20 +28,12 @@ pub fn tag_document(input: TagDocumentInput) -> ExternResult<()> {
 }
 
 #[hdk_extern]
-pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<AnyDhtHash>> {
-    let links = get_links(
+pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
+    get_links(
         tag_path(tag).path_entry_hash()?,
         LinkTypes::TagToDocument,
         None,
-    )?;
-
-    let hashes = links
-        .into_iter()
-        .filter_map(|link| AnyDhtHash::try_from(link.target).ok())
-        .unique()
-        .collect();
-
-    Ok(hashes)
+    )
 }
 
 #[derive(Serialize, Deserialize, Debug)]

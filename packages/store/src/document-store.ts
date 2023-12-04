@@ -9,7 +9,7 @@ import {
 import {
   AsyncReadable,
   joinAsync,
-  liveLinksTargetsStore,
+  liveLinksStore,
   pipe,
   retryUntilSuccess,
 } from '@holochain-open-dev/stores';
@@ -34,28 +34,28 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
    * Keeps an up to date map of all the workspaces for this document
    */
   allWorkspaces = pipe(
-    liveLinksTargetsStore(
+    liveLinksStore(
       this.synStore.client,
       this.documentHash,
 
       () => this.synStore.client.getWorkspacesForDocument(this.documentHash),
       'DocumentToWorkspaces'
     ),
-    hashes => slice(this.workspaces, hashes)
+    links => slice(this.workspaces, uniquify(links.map(l => l.target)))
   );
 
   /**
    * Keeps an up to date map of all the commits for this document
    */
   allCommits = pipe(
-    liveLinksTargetsStore(
+    liveLinksStore(
       this.synStore.client,
       this.documentHash,
 
       () => this.synStore.client.getCommitsForDocument(this.documentHash),
       'DocumentToCommits'
     ),
-    hashes => slice(this.commits, hashes)
+    links => slice(this.commits, uniquify(links.map(l => l.target)))
   );
 
   /**

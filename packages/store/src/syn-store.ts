@@ -1,8 +1,9 @@
 import {
   AsyncReadable,
-  liveLinksTargetsStore,
+  liveLinksStore,
   pipe,
   retryUntilSuccess,
+  uniquify,
 } from '@holochain-open-dev/stores';
 import { Commit, SynClient, Document } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
@@ -35,13 +36,13 @@ export class SynStore {
    */
   documentsByTag = new LazyMap((tag: string) =>
     pipe(
-      liveLinksTargetsStore(
+      liveLinksStore(
         this.client,
         hashEntry(encodeAppEntry(`document_tags.${tag}`)),
         () => this.client.getDocumentsWithTag(tag),
         'TagToDocument'
       ),
-      hashes => slice(this.documents, hashes)
+      links => slice(this.documents, uniquify(links.map(l => l.target)))
     )
   );
 

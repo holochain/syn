@@ -1,5 +1,10 @@
 import { Commit, SessionMessage } from '@holochain-syn/client';
-import { AgentPubKeyMap, RecordBag } from '@holochain-open-dev/utils';
+import {
+  AgentPubKeyMap,
+  HashType,
+  RecordBag,
+  retype,
+} from '@holochain-open-dev/utils';
 import {
   Readable,
   get,
@@ -221,11 +226,13 @@ export class SessionStore<G extends SynGrammar<any, any>>
 
       this._participants.update(p => {
         const newParticipants = participants.filter(
-          maybeNew => !p.has(maybeNew) && !isEqual(this.myPubKey, maybeNew)
+          maybeNew =>
+            !p.has(retype(maybeNew.target, HashType.AGENT)) &&
+            !isEqual(this.myPubKey, retype(maybeNew.target, HashType.AGENT))
         );
 
         for (const newParticipant of newParticipants) {
-          p.set(newParticipant, {
+          p.set(retype(newParticipant.target, HashType.AGENT), {
             lastSeen: undefined,
             syncStates: {
               state: Automerge.initSyncState(),
@@ -233,7 +240,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
             },
           });
 
-          this.requestSync(newParticipant);
+          this.requestSync(retype(newParticipant.target, HashType.AGENT));
         }
 
         const onlineParticipants = Array.from(p.entries())
@@ -318,12 +325,15 @@ export class SessionStore<G extends SynGrammar<any, any>>
         workspaceStore.workspaceHash
       );
 
-    const commitsHashes =
+    const commitsLinks =
       await workspaceStore.documentStore.synStore.client.getWorkspaceTips(
         workspaceStore.workspaceHash
       );
     const commits = await toPromise(
-      sliceAndJoin(workspaceStore.documentStore.commits, commitsHashes)
+      sliceAndJoin(
+        workspaceStore.documentStore.commits,
+        commitsLinks.map(l => l.target)
+      )
     );
     const commitBag = new RecordBag<Commit>(
       Array.from(commits.values()).map(er => er.record)

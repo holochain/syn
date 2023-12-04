@@ -1,7 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { SessionStore } from '@holochain-syn/store';
-import { provide } from '@lit-labs/context';
+import { provide } from '@lit/context';
 
 import { synSessionContext } from '../contexts.js';
 

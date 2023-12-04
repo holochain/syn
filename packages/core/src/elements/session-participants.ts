@@ -1,7 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import type { SessionStore } from '@holochain-syn/store';
 import { customElement, property } from 'lit/decorators.js';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { AgentPubKey } from '@holochain/client';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';

@@ -28,13 +28,6 @@ pub fn get_commit(commit_hash: EntryHash) -> ExternResult<Option<Record>> {
 }
 
 #[hdk_extern]
-pub fn get_commits_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<EntryHash>> {
-    let links = get_links(document_hash.clone(), LinkTypes::DocumentToCommits, None)?;
-
-    let hashes: Vec<EntryHash> = links
-        .into_iter()
-        .filter_map(|link| EntryHash::try_from(link.target).ok())
-        .collect();
-
-    Ok(hashes)
+pub fn get_commits_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
+    get_links(document_hash.clone(), LinkTypes::DocumentToCommits, None)
 }

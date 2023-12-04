@@ -5,7 +5,7 @@ import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
 
 import '@shoelace-style/shoelace/dist/components/tooltip/tooltip.js';
 import { hashProperty } from '@holochain-open-dev/elements';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import {
   ProfilesStore,
   profilesStoreContext,
@@ -47,7 +47,7 @@ export class AgentCursor extends LitElement {
     if (this._profile.value.status === 'error') return msg('Error');
 
     if (!this._profile.value.value) return msg('Unknown');
-    return this._profile.value.value.nickname;
+    return this._profile.value.value.entry.nickname;
   }
 
   render() {

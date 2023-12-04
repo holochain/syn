@@ -1,9 +1,10 @@
-import type {
+import {
   AgentPubKey,
   EntryHash,
   Record,
   AppAgentClient,
   AnyDhtHash,
+  Link,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 
@@ -34,7 +35,7 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getDocumentsWithTag(tag: string): Promise<Array<AnyDhtHash>> {
+  public async getDocumentsWithTag(tag: string): Promise<Array<Link>> {
     return this.callZome('get_documents_with_tag', tag);
   }
 
@@ -90,7 +91,7 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public async getCommitsForDocument(
     documentHash: AnyDhtHash
-  ): Promise<Array<EntryHash>> {
+  ): Promise<Array<Link>> {
     return this.callZome('get_commits_for_document', documentHash);
   }
 
@@ -118,13 +119,13 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public async getWorkspacesForDocument(
     documentHash: AnyDhtHash
-  ): Promise<Array<EntryHash>> {
+  ): Promise<Array<Link>> {
     return this.callZome('get_workspaces_for_document', documentHash);
   }
 
   public async getWorkspaceTips(
     workspaceHash: EntryHash
-  ): Promise<Array<EntryHash>> {
+  ): Promise<Array<Link>> {
     return this.callZome('get_workspace_tips', workspaceHash);
   }
 
@@ -142,14 +143,8 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public getWorkspaceSessionParticipants(
     workspace_hash: EntryHash
-  ): Promise<Array<AgentPubKey>> {
+  ): Promise<Array<Link>> {
     return this.callZome('get_workspace_session_participants', workspace_hash);
-  }
-
-  public getWorkspaceEditors(
-    workspace_hash: EntryHash
-  ): Promise<Array<AgentPubKey>> {
-    return this.callZome('get_workspace_editors', workspace_hash);
   }
 
   public async joinWorkspaceSession(

@@ -18,7 +18,6 @@ import {
   sampleGrammar,
   synHapp,
 } from '../common.js';
-import { encodeHashToBase64 } from '@holochain/client';
 
 test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
@@ -151,11 +150,11 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
 
     await aliceSessionStore.commitChanges();
     await delay(7000);
-    const commitsHashes = await aliceSyn.client.getWorkspaceTips(workspaceHash);
+    const commitsLinks = await aliceSyn.client.getWorkspaceTips(workspaceHash);
 
-    assert.equal(commitsHashes.length, 1);
+    assert.equal(commitsLinks.length, 1);
 
-    const commitHash = commitsHashes[commitsHashes.length - 1];
+    const commitHash = commitsLinks[commitsLinks.length - 1].target;
     const commit = await aliceSyn.client.getCommit(commitHash);
 
     assert.ok(commitHash);

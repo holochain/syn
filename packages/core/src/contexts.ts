@@ -1,4 +1,4 @@
-import { createContext } from '@lit-labs/context';
+import { createContext } from '@lit/context';
 import type {
   SessionStore,
   WorkspaceStore,
@@ -8,14 +8,14 @@ import type {
 
 export const synContext = createContext<SynStore>('syn-context');
 
-export const synDocumentContext = createContext<DocumentStore<any> | undefined>(
+export const synDocumentContext = createContext<DocumentStore<any>>(
   'syn-document-context'
 );
 
-export const synWorkspaceContext = createContext<
-  WorkspaceStore<any> | undefined
->('syn-workspace-context');
+export const synWorkspaceContext = createContext<WorkspaceStore<any>>(
+  'syn-workspace-context'
+);
 
-export const synSessionContext = createContext<SessionStore<any> | undefined>(
+export const synSessionContext = createContext<SessionStore<any>>(
   'syn-session-context'
 );

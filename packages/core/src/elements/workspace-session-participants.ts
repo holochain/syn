@@ -1,7 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import type { WorkspaceStore } from '@holochain-syn/store';
 import { customElement, property } from 'lit/decorators.js';
-import { consume } from '@lit-labs/context';
+import { consume } from '@lit/context';
 import { msg } from '@lit/localize';
 import { classMap } from 'lit/directives/class-map.js';
 
@@ -68,14 +68,12 @@ export class WorkspaceParticipants extends LitElement {
     `;
   }
 
-  static get styles() {
-    return [
-      sharedStyles,
-      css`
-        .out-of-session {
-          opacity: 0.5;
-        }
-      `,
-    ];
-  }
+  static styles = [
+    sharedStyles,
+    css`
+      .out-of-session {
+        opacity: 0.5;
+      }
+    `,
+  ];
 }

@@ -1,6 +1,6 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { provide } from '@lit-labs/context';
+import { provide } from '@lit/context';
 
 import { DocumentStore } from '@holochain-syn/store';
 
