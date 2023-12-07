@@ -147,7 +147,7 @@ await synStore.client.tagDocument(documentHash, "active")
 const documentStore = new DocumentStore(synStore, textEditorGrammar, documentHash);
 
 // Create the workspace for the document
-const workspaceStore = new documentStore.createWorkspace(
+const workspaceHash = new documentStore.createWorkspace(
   'main',
   firstCommitHash
 );
