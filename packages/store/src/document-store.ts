@@ -1,32 +1,48 @@
 import {
+  ActionHash,
   AgentPubKey,
   AnyDhtHash,
-  decodeHashFromBase64,
-  encodeHashToBase64,
   EntryHash,
-  HoloHash,
 } from '@holochain/client';
 import {
-  alwaysSubscribed,
   AsyncReadable,
   joinAsync,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
-  toPromise,
+  uniquify,
 } from '@holochain-open-dev/stores';
-import { EntryRecord, LazyHoloHashMap, slice } from '@holochain-open-dev/utils';
-import { Commit, Document } from '@holochain-syn/client';
+import {
+  EntryRecord,
+  GetonlyMap,
+  LazyHoloHashMap,
+  slice,
+} from '@holochain-open-dev/utils';
+import { Commit } from '@holochain-syn/client';
 
 import { SynStore } from './syn-store.js';
 import { WorkspaceStore } from './workspace-store.js';
 
+export function sliceStrings<K extends string, V>(
+  map: GetonlyMap<K, V>,
+  keys: K[]
+): ReadonlyMap<K, V> {
+  const newMap = new Map<K, V>();
+
+  for (const key of keys) {
+    newMap.set(key, map.get(key));
+  }
+  return newMap;
+}
+
 export class DocumentStore<S, E> {
-  constructor(
-    public synStore: SynStore,
-    public documentHash: AnyDhtHash,
-    public documentRecord: EntryRecord<Document>
-  ) {}
+  constructor(public synStore: SynStore, public documentHash: AnyDhtHash) {}
+
+  record = retryUntilSuccess(async () => {
+    const document = await this.synStore.client.getDocument(this.documentHash);
+    if (!document) throw new Error('Document not found yet');
+    return document;
+  });
 
   /**
    * Keeps an up to date map of all the workspaces for this document
@@ -35,11 +51,14 @@ export class DocumentStore<S, E> {
     liveLinksStore(
       this.synStore.client,
       this.documentHash,
-
       () => this.synStore.client.getWorkspacesForDocument(this.documentHash),
       'DocumentToWorkspaces'
     ),
-    links => slice(this.workspaces, uniquify(links.map(l => l.target)))
+    links =>
+      slice(
+        this.workspaces,
+        links.map(l => l.target)
+      )
   );
 
   /**
@@ -60,7 +79,7 @@ export class DocumentStore<S, E> {
    * Lazy map of all the commits in this network
    */
   commits = new LazyHoloHashMap<EntryHash, AsyncReadable<EntryRecord<Commit>>>(
-    (commitHash: EntryHash) =>
+    (commitHash: ActionHash) =>
       retryUntilSuccess(async () => {
         const commit = await this.synStore.client.getCommit(commitHash);
         if (!commit) throw new Error('Commit not found yet');
@@ -71,19 +90,8 @@ export class DocumentStore<S, E> {
   /**
    * Lazy map of all the workspaces in this network
    */
-  workspaces = new LazyHoloHashMap<
-    EntryHash,
-    AsyncReadable<WorkspaceStore<S, E>>
-  >((workspaceHash: EntryHash) =>
-    alwaysSubscribed(
-      retryUntilSuccess(async () => {
-        const workspace = await this.synStore.client.getWorkspace(
-          workspaceHash
-        );
-        if (!workspace) throw new Error('Workspace not found yet');
-        return new WorkspaceStore<S, E>(this, workspace);
-      })
-    )
+  workspaces = new LazyHoloHashMap<EntryHash, WorkspaceStore<S, E>>(
+    (workspaceHash: EntryHash) => new WorkspaceStore<S, E>(this, workspaceHash)
   );
 
   /**
@@ -103,19 +111,13 @@ export class DocumentStore<S, E> {
     workspaceName: string,
     initialTipHash: EntryHash | undefined
   ): Promise<WorkspaceStore<S, E>> {
-    const workspaceRecord = await this.synStore.client.createWorkspace(
+    const workspace = await this.synStore.client.createWorkspace(
       {
         name: workspaceName,
         document_hash: this.documentHash,
       },
       initialTipHash
     );
-    return toPromise(this.workspaces.get(workspaceRecord.entryHash));
+    return this.workspaces.get(workspace.entryHash);
   }
-}
-
-export function uniquify(array: Array<HoloHash>): Array<HoloHash> {
-  const strArray = array.map(h => encodeHashToBase64(h));
-  const uniqueArray = [...new Set(strArray)];
-  return uniqueArray.map(h => decodeHashFromBase64(h));
 }

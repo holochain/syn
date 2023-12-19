@@ -71,14 +71,13 @@ import { toPromise, joinAsyncMap, pipe } from '@holochain-open-dev/stores';
 const documentsHashes: Array<AnyDhtHash> = await synStore.client.getDocumentsWithTag("active");
 
 // Build the documentStore for the document with the first document
-const documentStore = await toPromise(synStore.documents.documentsHashes[0]);
+const documentStore = synStore.documents.get(documentsHashes[0]);
 
 // Fetch all workspaces for that document
-const workspaces: ReadonlyMap<EntryHash, EntryRecord<Workspace>> = await toPromise(pipe(documentStore.allWorkspaces, joinAsyncMap));
+const workspaces: ReadonlyMap<EntryHash, WorkspaceStore> = await toPromise(documentStore.allWorkspaces);
 
-// Find the main workspace
-const mainWorkspace = workspaces.find(w => w.entry.name === 'main');
-const workspaceStore = await toPromise(documentStore.workspaces.get(mainWorkspace.entryHash));
+// Find the workspace
+const workspaceStore = Array.from(workspaces.entries())[0];
 
 // Join the session for the workspace
 const sessionStore = await workspaceStore.joinSession();

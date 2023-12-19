@@ -1,5 +1,10 @@
 import { ActionCommittedSignal } from '@holochain-open-dev/utils';
-import { AgentPubKey, AnyDhtHash, EntryHash } from '@holochain/client';
+import {
+  ActionHash,
+  AgentPubKey,
+  AnyDhtHash,
+  EntryHash,
+} from '@holochain/client';
 
 export interface Document {
   initial_state: Uint8Array;
@@ -11,7 +16,7 @@ export interface Commit {
 
   document_hash: AnyDhtHash;
 
-  previous_commit_hashes: Array<EntryHash>;
+  previous_commit_hashes: Array<ActionHash>;
 
   authors: Array<AgentPubKey>;
   witnesses: Array<AgentPubKey>;
@@ -45,7 +50,7 @@ export type MessagePayload =
     }
   | {
       type: 'NewCommit';
-      new_commit_hash: EntryHash;
+      new_commit_hash: ActionHash;
     }
   | {
       type: 'ChangeNotice';

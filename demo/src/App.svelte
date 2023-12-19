@@ -113,10 +113,10 @@
       sessionStore = await workspaceStore.joinSession();
       synStore = store;
     } else {
-      documentStore = await toPromise(store.documents.get(documentsHashes[0]));
+      documentStore = store.documents.get(documentsHashes[0]);
       const workspaces = await toPromise(documentStore.allWorkspaces);
 
-      workspaceStore = await toPromise(Array.from(workspaces.values())[0]);
+      workspaceStore = Array.from(workspaces.values())[0];
       sessionStore = await workspaceStore.joinSession();
       synStore = store;
     }

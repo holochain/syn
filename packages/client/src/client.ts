@@ -5,6 +5,7 @@ import {
   AppAgentClient,
   AnyDhtHash,
   Link,
+  ActionHash,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 
@@ -78,7 +79,7 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async getCommit(
-    commitHash: EntryHash
+    commitHash: ActionHash
   ): Promise<EntryRecord<Commit> | undefined> {
     const record: Record | undefined = await this.callZome(
       'get_commit',
@@ -98,7 +99,7 @@ export class SynClient extends ZomeClient<SynSignal> {
   /** Workspaces */
   public async createWorkspace(
     workspace: Workspace,
-    initial_commit_hash: EntryHash | undefined
+    initial_commit_hash: ActionHash | undefined
   ): Promise<EntryRecord<Workspace>> {
     const record: Record = await this.callZome('create_workspace', {
       workspace,
@@ -131,8 +132,8 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   public updateWorkspaceTip(
     workspace_hash: EntryHash,
-    new_tip_hash: EntryHash,
-    previous_commit_hashes: Array<EntryHash>
+    new_tip_hash: ActionHash,
+    previous_commit_hashes: Array<ActionHash>
   ): Promise<void> {
     return this.callZome('update_workspace_tip', {
       workspace_hash,

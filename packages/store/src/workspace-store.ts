@@ -4,6 +4,7 @@ import {
   derived,
   liveLinksStore,
   pipe,
+  retryUntilSuccess,
   sliceAndJoin,
   toPromise,
   uniquify,
@@ -11,14 +12,9 @@ import {
   writable,
 } from '@holochain-open-dev/stores';
 import { EntryHash, Link } from '@holochain/client';
-import {
-  EntryRecord,
-  HashType,
-  HoloHashMap,
-  retype,
-} from '@holochain-open-dev/utils';
+import { HashType, HoloHashMap, retype } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
-import { Commit, Workspace } from '@holochain-syn/client';
+import { Commit } from '@holochain-syn/client';
 import Automerge from 'automerge';
 
 import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
@@ -29,12 +25,18 @@ import { stateFromCommit, stateFromDocument } from './syn-store.js';
 export class WorkspaceStore<S, E> {
   constructor(
     public documentStore: DocumentStore<S, E>,
-    public workspaceRecord: EntryRecord<Workspace>
+    public workspaceHash: EntryHash
   ) {}
 
-  get workspaceHash() {
-    return this.workspaceRecord.entryHash;
-  }
+  record = retryUntilSuccess(async () => {
+    const workspace = await this.documentStore.synStore.client.getWorkspace(
+      this.workspaceHash
+    );
+    if (!workspace) throw new Error('Workspace not found yet');
+    return workspace;
+  });
+
+  name = pipe(this.record, workspace => workspace.entry.name);
 
   private _session: Writable<SessionStore<S, E> | undefined> =
     writable(undefined);
@@ -47,10 +49,10 @@ export class WorkspaceStore<S, E> {
   sessionParticipants = pipe(
     liveLinksStore(
       this.documentStore.synStore.client,
-      this.workspaceRecord.entryHash,
+      this.workspaceHash,
       () =>
         this.documentStore.synStore.client.getWorkspaceSessionParticipants(
-          this.workspaceRecord.entryHash
+          this.workspaceHash
         ),
       'WorkspaceToParticipant'
     ),
@@ -74,11 +76,11 @@ export class WorkspaceStore<S, E> {
         : pipe(
             liveLinksStore(
               this.documentStore.synStore.client,
-              this.workspaceRecord.entryHash,
+              this.workspaceHash,
 
               () =>
                 this.documentStore.synStore.client.getWorkspaceTips(
-                  this.workspaceRecord.entryHash
+                  this.workspaceHash
                 ),
               'WorkspaceToTip'
             ),
@@ -143,12 +145,12 @@ export class WorkspaceStore<S, E> {
                 await this.documentStore.synStore.client.createCommit(commit);
 
               await this.documentStore.synStore.client.updateWorkspaceTip(
-                newCommit.entryHash,
                 this.workspaceHash,
+                newCommit.actionHash,
                 tipsHashes
               );
 
-              return newCommit.entryHash;
+              return newCommit.actionHash;
             }
           ),
     commit => (commit ? this.documentStore.commits.get(commit) : undefined)
@@ -160,7 +162,10 @@ export class WorkspaceStore<S, E> {
   latestSnapshot: AsyncReadable<S> = pipe(this.tip, commit =>
     commit
       ? (stateFromCommit(commit.entry) as S)
-      : (stateFromDocument(this.documentStore.documentRecord.entry) as S)
+      : pipe(
+          this.documentStore.record,
+          document => stateFromDocument(document.entry) as S
+        )
   );
 
   /**

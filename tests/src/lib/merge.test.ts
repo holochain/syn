@@ -1,8 +1,8 @@
 import { assert, test } from 'vitest';
 
-import { dhtSync, runScenario } from '@holochain/tryorama';
+import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 
-import { get, toPromise } from '@holochain-open-dev/stores';
+import { get } from '@holochain-open-dev/stores';
 import { SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
@@ -70,8 +70,10 @@ test('check that the state of disconnected agents making changes converges after
       sampleGrammar.initialState()
     );
 
+    const workspaceName = 'main';
+
     let bobWorkspaceStore = await bobDocumentStore.createWorkspace(
-      'main',
+      workspaceName,
       undefined
     );
     assert.equal(
@@ -109,11 +111,11 @@ test('check that the state of disconnected agents making changes converges after
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
     aliceSyn = new SynStore(new SynClient(aliceAppWs, 'syn-test'));
-    aliceDocumentStore = await toPromise(
-      aliceSyn.documents.get(aliceDocumentStore.documentHash)
+    aliceDocumentStore = aliceSyn.documents.get(
+      aliceDocumentStore.documentHash
     );
-    aliceWorkspaceStore = await toPromise(
-      aliceDocumentStore.workspaces.get(aliceWorkspaceStore.workspaceHash)
+    aliceWorkspaceStore = aliceDocumentStore.workspaces.get(
+      bobWorkspaceStore.workspaceHash
     );
     aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
@@ -121,6 +123,8 @@ test('check that the state of disconnected agents making changes converges after
 
     await waitForOtherParticipants(aliceSessionStore, 1);
     await waitForOtherParticipants(bobSessionStore, 1);
+
+    await pause(1000);
 
     currentState = get(aliceSessionStore.state);
 

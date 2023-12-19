@@ -9,7 +9,12 @@ import {
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge, { FreezeObject } from 'automerge';
-import { encodeHashToBase64, AgentPubKey, EntryHash } from '@holochain/client';
+import {
+  encodeHashToBase64,
+  AgentPubKey,
+  EntryHash,
+  ActionHash,
+} from '@holochain/client';
 import isEqual from 'lodash-es/isEqual.js';
 import { toPromise } from '@holochain-open-dev/stores';
 
@@ -102,7 +107,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
-  _currentTip: Writable<EntryHash | undefined>;
+  _currentTip: Writable<ActionHash | undefined>;
   get currentTip() {
     return derived(this._currentTip, i => i);
   }
@@ -126,7 +131,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     currentTipHash: EntryHash | undefined,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const workspaceHash = this.workspaceStore.workspaceRecord.entryHash;
+    const workspaceHash = this.workspaceStore.workspaceHash;
     this.unsubscribe = this.synClient.onSignal(synSignal => {
       if (synSignal.type !== 'SessionMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
@@ -299,9 +304,9 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       );
 
     const currentTip = await toPromise(workspaceStore.tip);
-    let currentTipHash: EntryHash | undefined;
+    let currentTipHash: ActionHash | undefined;
     if (currentTip) {
-      currentTipHash = currentTip.entryHash;
+      currentTipHash = currentTip.actionHash;
     }
     const currentState: S = await toPromise(workspaceStore.latestSnapshot);
 
@@ -508,18 +513,18 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     await this.synClient.updateWorkspaceTip(
       this.workspaceStore.workspaceHash,
-      newCommit.entryHash,
+      newCommit.actionHash,
       currentTip ? [currentTip] : []
     );
 
-    this._currentTip.set(newCommit.entryHash);
+    this._currentTip.set(newCommit.actionHash);
     this.workspaceStore.documentStore.synStore.client.sendMessage(
       Array.from(get(this._participants).keys()),
       {
         workspace_hash: this.workspaceStore.workspaceHash,
         payload: {
           type: 'NewCommit',
-          new_commit_hash: newCommit.entryHash,
+          new_commit_hash: newCommit.actionHash,
         },
       }
     );

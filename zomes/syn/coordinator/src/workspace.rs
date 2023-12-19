@@ -6,13 +6,18 @@ use itertools::Itertools;
 
 use crate::{
     messages::{send_message, MessagePayload, SendMessageInput, SessionMessage},
-    utils::{create_link_relaxed, create_relaxed},
+    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
 };
+
+#[derive(Serialize, Deserialize, Debug, SerializedBytes)]
+pub struct DocumentToWorkspaceTag {
+    workspace_name: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
     workspace: Workspace,
-    initial_commit_hash: Option<EntryHash>,
+    initial_commit_hash: Option<ActionHash>,
 }
 
 #[hdk_extern]
@@ -27,7 +32,12 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
         input.workspace.document_hash,
         entry_hash.clone(),
         LinkTypes::DocumentToWorkspaces,
-        (),
+        SerializedBytes::try_from(DocumentToWorkspaceTag {
+            workspace_name: input.workspace.name,
+        })
+        .map_err(|err| wasm_error!(err))?
+        .bytes()
+        .clone(),
     )?;
 
     if let Some(commit_hash) = input.initial_commit_hash {
@@ -61,12 +71,12 @@ pub fn get_workspaces_for_document(document_hash: AnyDhtHash) -> ExternResult<Ve
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdateWorkspaceTipInput {
     workspace_hash: EntryHash,
-    new_tip_hash: EntryHash,
-    previous_commit_hashes: Vec<EntryHash>,
+    new_tip_hash: ActionHash,
+    previous_commit_hashes: Vec<ActionHash>,
 }
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
-pub struct PreviousCommitsTag(pub Vec<EntryHash>);
+pub struct PreviousCommitsTag(pub Vec<ActionHash>);
 
 #[hdk_extern]
 pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> {
@@ -87,11 +97,11 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
     let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
 
-    let mut tips: HashMap<EntryHash, Link> = HashMap::new();
+    let mut tips: HashMap<ActionHash, Link> = HashMap::new();
     let mut tips_previous = HashSet::new();
     for l in links {
         tips.insert(
-            EntryHash::try_from(l.target.clone()).map_err(|e| wasm_error!(e))?,
+            ActionHash::try_from(l.target.clone()).map_err(|e| wasm_error!(e))?,
             l.clone(),
         );
 
@@ -174,7 +184,7 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
         .collect();
 
     for my_link in my_links {
-        delete_link(my_link.create_link_hash)?;
+        delete_link_relaxed(my_link.create_link_hash)?;
     }
 
     // Signal

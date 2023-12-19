@@ -54,8 +54,10 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     );
     assert.equal(documentsHashes.length, 0);
 
+    const workspaceName = 'main';
+
     const aliceWorkspaceStore = await aliceDocumentStore.createWorkspace(
-      'main',
+      workspaceName,
       undefined
     );
     const workspaceHash = aliceWorkspaceStore.workspaceHash;
@@ -63,12 +65,8 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
 
     await delay(2000);
 
-    const bobDocumentStore = await toPromise(
-      bobSyn.documents.get(documentHash)
-    );
-    const bobWorkspaceStore = await toPromise(
-      bobDocumentStore.workspaces.get(workspaceHash)
-    );
+    const bobDocumentStore = bobSyn.documents.get(documentHash);
+    const bobWorkspaceStore = bobDocumentStore.workspaces.get(workspaceHash);
 
     const bobSessionStore = await bobWorkspaceStore.joinSession();
     await waitForOtherParticipants(aliceSessionStore, 1);

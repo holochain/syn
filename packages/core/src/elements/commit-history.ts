@@ -7,8 +7,8 @@ import type { NodeDefinition, EdgeDefinition } from 'cytoscape';
 
 import {
   encodeHashToBase64,
-  EntryHashB64,
   decodeHashFromBase64,
+  ActionHashB64,
 } from '@holochain/client';
 import { RecordBag } from '@holochain-open-dev/utils';
 
@@ -32,7 +32,7 @@ export class CommitHistory extends LitElement {
   documentstore!: DocumentStore<any, any>;
 
   @property()
-  selectedCommitHash: EntryHashB64 | undefined;
+  selectedCommitHash: ActionHashB64 | undefined;
 
   private _allCommits = new StoreSubscriber(
     this,
@@ -134,7 +134,7 @@ function getCommitGraph(
 ): Array<NodeDefinition | EdgeDefinition> {
   const elements: Array<NodeDefinition | EdgeDefinition> = [];
 
-  for (const [commitHash, commit] of commits.entryMap.entries()) {
+  for (const commitHash of commits.actionMap.keys()) {
     const strCommitHash = encodeHashToBase64(commitHash);
     elements.push({
       data: {
@@ -142,7 +142,8 @@ function getCommitGraph(
       },
     });
 
-    for (const parentCommitHash of commit.previous_commit_hashes) {
+    for (const parentCommitHash of commits.entryRecord(commitHash)?.entry
+      .previous_commit_hashes || []) {
       const strParentCommitHash = encodeHashToBase64(parentCommitHash);
 
       elements.push({

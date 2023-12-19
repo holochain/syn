@@ -1,12 +1,4 @@
-import {
-  alwaysSubscribed,
-  AsyncReadable,
-  liveLinksStore,
-  pipe,
-  retryUntilSuccess,
-  toPromise,
-  uniquify,
-} from '@holochain-open-dev/stores';
+import { liveLinksStore, pipe, uniquify } from '@holochain-open-dev/stores';
 import { Commit, Document, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
@@ -58,17 +50,9 @@ export class SynStore {
   /**
    * Lazy map of all the documents in this network
    */
-  documents = new LazyHoloHashMap<
-    EntryHash,
-    AsyncReadable<DocumentStore<any, any>>
-  >((documentHash: AnyDhtHash) =>
-    alwaysSubscribed(
-      retryUntilSuccess(async () => {
-        const document = await this.client.getDocument(documentHash);
-        if (!document) throw new Error('Document not found yet');
-        return new DocumentStore(this, documentHash, document);
-      })
-    )
+  documents = new LazyHoloHashMap<EntryHash, DocumentStore<any, any>>(
+    (documentHash: AnyDhtHash) =>
+      new DocumentStore<any, any>(this, documentHash)
   );
 
   async createDocument<S>(initialState: S, meta?: any) {
@@ -79,7 +63,7 @@ export class SynStore {
       initial_state: encode(Automerge.save(doc)),
     });
 
-    return toPromise(this.documents.get(documentRecord.actionHash));
+    return this.documents.get(documentRecord.actionHash);
   }
 
   async createDeterministicDocument<S>(initialState: S, meta?: any) {
@@ -96,6 +80,6 @@ export class SynStore {
       initial_state: encode(Automerge.save(doc)),
     });
 
-    return toPromise(this.documents.get(documentRecord.entryHash));
+    return this.documents.get(documentRecord.entryHash);
   }
 }
