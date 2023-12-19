@@ -25,7 +25,7 @@ export interface Commit {
 }
 
 export interface Workspace {
-  name: String;
+  name: string;
   document_hash: EntryHash;
 }
 
