@@ -12,7 +12,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CreateWorkspaceInput {
     workspace: Workspace,
-    initial_commit_hash: EntryHash,
+    initial_commit_hash: Option<EntryHash>,
 }
 
 #[hdk_extern]
@@ -30,14 +30,16 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
         (),
     )?;
 
-    let tag =
-        SerializedBytes::try_from(PreviousCommitsTag(vec![])).map_err(|err| wasm_error!(err))?;
-    create_link_relaxed(
-        entry_hash,
-        input.initial_commit_hash,
-        LinkTypes::WorkspaceToTip,
-        tag.bytes().clone(),
-    )?;
+    if let Some(commit_hash) = input.initial_commit_hash {
+        let tag = SerializedBytes::try_from(PreviousCommitsTag(vec![]))
+            .map_err(|err| wasm_error!(err))?;
+        create_link_relaxed(
+            entry_hash,
+            commit_hash,
+            LinkTypes::WorkspaceToTip,
+            tag.bytes().clone(),
+        )?;
+    }
 
     let record = get(action_hash, GetOptions::default())?;
 

@@ -100,30 +100,23 @@
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
-    const documentsHashes= Array.from((await toPromise(store.documentsByTag.get("active"))).keys());
+    const documentsHashes = Array.from((await toPromise(store.documentsByTag.get("active"))).keys());
 
     if (documentsHashes.length === 0) {
-      const {documentHash, firstCommitHash} = await store.createDocument(DocumentGrammar);
-      documentStore = new DocumentStore(store, DocumentGrammar, documentHash)
+      documentStore = await store.createDocument(DocumentGrammar.initialState());
 
-      const workspaceHash = await documentStore.createWorkspace(
-        'main',
-        firstCommitHash
+      await store.client.tagDocument(documentStore.documentHash, 'active')
+
+      workspaceStore = await documentStore.createWorkspace(
+        'main'
       );
-      await store.client.tagDocument(documentHash, 'active')
-
-      workspaceStore = new WorkspaceStore(documentStore, workspaceHash);
       sessionStore = await workspaceStore.joinSession();
       synStore = store;
     } else {
-       documentStore = new DocumentStore(
-        store,
-        DocumentGrammar,
-        documentsHashes[0]
-      );
+      documentStore = await toPromise(store.documents.get(documentsHashes[0]));
       const workspaces = await toPromise(documentStore.allWorkspaces);
 
-      workspaceStore = new WorkspaceStore(documentStore, Array.from(workspaces.keys())[0]);
+      workspaceStore = await toPromise(Array.from(workspaces.values())[0]);
       sessionStore = await workspaceStore.joinSession();
       synStore = store;
     }

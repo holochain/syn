@@ -1,72 +1,49 @@
 import { Commit, SessionMessage } from '@holochain-syn/client';
-import {
-  AgentPubKeyMap,
-  HashType,
-  RecordBag,
-  retype,
-} from '@holochain-open-dev/utils';
+import { AgentPubKeyMap, HashType, retype } from '@holochain-open-dev/utils';
 import {
   Readable,
   get,
   derived,
   Writable,
   writable,
-  sliceAndJoin,
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge from 'automerge';
-import {
-  encodeHashToBase64,
-  AgentPubKey,
-  Create,
-  EntryHash,
-  Record,
-} from '@holochain/client';
+import Automerge, { FreezeObject } from 'automerge';
+import { encodeHashToBase64, AgentPubKey, EntryHash } from '@holochain/client';
 import isEqual from 'lodash-es/isEqual.js';
 import { toPromise } from '@holochain-open-dev/stores';
 
-import type {
-  GrammarState,
-  GrammarDelta,
-  SynGrammar,
-  GrammarEphemeralState,
-} from './grammar.js';
-
 import { SynConfig } from './config.js';
-import { stateFromCommit } from './syn-store.js';
 import { WorkspaceStore } from './workspace-store.js';
 
-export interface SliceStore<G extends SynGrammar<any, any>> {
+export interface SliceStore<S, E> {
   myPubKey: AgentPubKey;
 
-  workspace: SessionStore<any>;
+  workspace: WorkspaceStore<S, E>;
 
-  state: Readable<GrammarState<G>>;
-  ephemeral: Readable<GrammarEphemeralState<G>>;
+  state: Readable<S>;
+  ephemeral: Readable<E>;
 
-  requestChanges(changes: Array<GrammarDelta<G>>): void;
+  change(updateFn: (state: S, ephemeral: E) => void): void;
 }
 
-export function extractSlice<
-  G1 extends SynGrammar<any, any>,
-  G2 extends SynGrammar<any, any>
->(
-  sliceStore: SliceStore<G1>,
-  wrapChange: (change: GrammarDelta<G2>) => GrammarDelta<G1>,
-  sliceState: (
-    state: Automerge.Doc<GrammarState<G1>>
-  ) => Automerge.Doc<GrammarState<G2>>,
-  sliceEphemeral: (
-    ephemeralState: Automerge.Doc<GrammarEphemeralState<G1>>
-  ) => Automerge.Doc<GrammarEphemeralState<G2>>
-): SliceStore<G2> {
+export function extractSlice<S1, E1, S2, E2>(
+  sliceStore: SliceStore<S1, E1>,
+  sliceState: (state: S1) => S2,
+  sliceEphemeral: (ephemeralState: E1) => E2
+): SliceStore<S2, E2> {
   return {
     myPubKey: sliceStore.myPubKey,
-    workspace: sliceStore.workspace as SessionStore<G1>,
+    workspace: sliceStore.workspace as any as WorkspaceStore<S2, E2>,
     state: derived(sliceStore.state, sliceState),
     ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),
-    requestChanges: changes =>
-      sliceStore.requestChanges(changes.map(wrapChange)),
+    change: updateFn =>
+      sliceStore.change((state1, eph1) => {
+        const state2 = sliceState(state1);
+        const eph2 = sliceEphemeral(eph1);
+
+        updateFn(state2, eph2);
+      }),
   };
 }
 
@@ -75,11 +52,9 @@ export interface SessionParticipant {
   syncStates: { state: Automerge.SyncState; ephemeral: Automerge.SyncState };
 }
 
-export class SessionStore<G extends SynGrammar<any, any>>
-  implements SliceStore<G>
-{
+export class SessionStore<S, E> implements SliceStore<S, E> {
   get workspace() {
-    return this;
+    return this.workspaceStore;
   }
 
   _participants: Writable<AgentPubKeyMap<SessionParticipant>>;
@@ -117,17 +92,17 @@ export class SessionStore<G extends SynGrammar<any, any>>
     });
   }
 
-  _state: Writable<Automerge.Doc<GrammarState<G>>>;
-  get state(): Readable<GrammarState<G>> {
-    return derived(this._state, i => Automerge.clone(i));
+  _state: Writable<Automerge.Doc<S>>;
+  get state(): Readable<S> {
+    return derived(this._state, i => Automerge.clone(i) as S);
   }
 
-  _ephemeral: Writable<Automerge.Doc<GrammarEphemeralState<G>>>;
-  get ephemeral() {
+  _ephemeral: Writable<Automerge.Doc<E>>;
+  get ephemeral(): Readable<E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
-  _currentTip: Writable<EntryHash>;
+  _currentTip: Writable<EntryHash | undefined>;
   get currentTip() {
     return derived(this._currentTip, i => i);
   }
@@ -144,12 +119,14 @@ export class SessionStore<G extends SynGrammar<any, any>>
   }
 
   private constructor(
-    protected workspaceStore: WorkspaceStore<G>,
+    protected workspaceStore: WorkspaceStore<S, E>,
+    protected onLeave: () => void,
     protected config: SynConfig,
-    currentTip: Record,
+    currentState: Automerge.Doc<S>,
+    currentTipHash: EntryHash | undefined,
     initialParticipants: Array<AgentPubKey>
   ) {
-    const workspaceHash = this.workspaceStore.workspaceHash;
+    const workspaceHash = this.workspaceStore.workspaceRecord.entryHash;
     this.unsubscribe = this.synClient.onSignal(synSignal => {
       if (synSignal.type !== 'SessionMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
@@ -284,13 +261,8 @@ export class SessionStore<G extends SynGrammar<any, any>>
     }, this.config.commitStrategy.CommitEveryNMs);
     this.intervals.push(commitInterval);
 
-    const commit = decode((currentTip.entry as any).Present.entry) as Commit;
-    const state = stateFromCommit(commit);
-
-    this._state = writable(state);
-    this._currentTip = writable(
-      (currentTip.signed_action.hashed.content as Create).entry_hash
-    );
+    this._state = writable(currentState);
+    this._currentTip = writable(currentTipHash);
 
     const participantsMap: AgentPubKeyMap<SessionParticipant> =
       new AgentPubKeyMap();
@@ -307,7 +279,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
 
     this._participants = writable(participantsMap);
 
-    let eph = Automerge.init();
+    let eph = Automerge.init() as FreezeObject<E>;
 
     this._ephemeral = writable(eph);
 
@@ -316,80 +288,29 @@ export class SessionStore<G extends SynGrammar<any, any>>
     }
   }
 
-  static async joinSession<G extends SynGrammar<any, any>>(
-    workspaceStore: WorkspaceStore<G>,
+  static async joinSession<S, E>(
+    workspaceStore: WorkspaceStore<S, E>,
+    onLeave: () => void,
     config: SynConfig
-  ): Promise<SessionStore<G>> {
+  ): Promise<SessionStore<S, E>> {
     const participants =
       await workspaceStore.documentStore.synStore.client.joinWorkspaceSession(
         workspaceStore.workspaceHash
       );
 
-    const commitsLinks =
-      await workspaceStore.documentStore.synStore.client.getWorkspaceTips(
-        workspaceStore.workspaceHash
-      );
-    const commits = await toPromise(
-      sliceAndJoin(
-        workspaceStore.documentStore.commits,
-        commitsLinks.map(l => l.target)
-      )
-    );
-    const commitBag = new RecordBag<Commit>(
-      Array.from(commits.values()).map(er => er.record)
-    );
-
-    const tips = commitBag.entryMap;
-
-    if (tips.size === 0)
-      throw new Error("Couldn't find any tips for this workspace.");
-
-    let currentTipHash = commitBag.entryActions.get(
-      Array.from(tips.keys())[0]
-    )[0];
-    let currentTip: Record = commitBag.entryRecord(currentTipHash)!.record;
-
-    // If there are more that one tip, merge them
-    if (tips.size > 1) {
-      let mergeState = Automerge.merge(
-        Automerge.load(decode(Array.from(tips.values())[0].state) as any),
-        Automerge.load(decode(Array.from(tips.values())[1].state) as any)
-      );
-
-      for (let i = 2; i < tips.size; i++) {
-        mergeState = Automerge.merge(
-          mergeState,
-          Automerge.load(decode(Array.from(tips.values())[i].state) as any)
-        );
-      }
-
-      const documentHash = workspaceStore.documentStore.documentHash;
-
-      const commit: Commit = {
-        authors: [workspaceStore.documentStore.synStore.client.client.myPubKey],
-        meta: encode('Merge commit'),
-        previous_commit_hashes: Array.from(tips.keys()),
-        state: encode(Automerge.save(mergeState)),
-        witnesses: [],
-        document_hash: documentHash,
-      };
-
-      const newCommit =
-        await workspaceStore.documentStore.synStore.client.createCommit(commit);
-
-      currentTip = newCommit.record;
-
-      await workspaceStore.documentStore.synStore.client.updateWorkspaceTip(
-        newCommit.entryHash,
-        workspaceStore.workspaceHash,
-        Array.from(tips.keys())
-      );
+    const currentTip = await toPromise(workspaceStore.tip);
+    let currentTipHash: EntryHash | undefined;
+    if (currentTip) {
+      currentTipHash = currentTip.entryHash;
     }
+    const currentState: S = await toPromise(workspaceStore.latestSnapshot);
 
     return new SessionStore(
       workspaceStore,
+      onLeave,
       config,
-      currentTip,
+      currentState as Automerge.Doc<S>,
+      currentTipHash,
       participants.filter(
         p =>
           workspaceStore.documentStore.synStore.client.client.myPubKey.toString() !==
@@ -398,24 +319,17 @@ export class SessionStore<G extends SynGrammar<any, any>>
     );
   }
 
-  requestChanges(changes: Array<GrammarDelta<G>>) {
+  change(updateFn: (state: S, ephemeral: E) => void) {
     this._state.update(state => {
       let newState = state;
       this._ephemeral.update(ephemeralState => {
         let newEphemeralState = ephemeralState;
 
-        for (const changeRequested of changes) {
-          newState = Automerge.change(newState, doc => {
-            newEphemeralState = Automerge.change(newEphemeralState, eph => {
-              this.workspaceStore.documentStore.grammar.applyDelta(
-                changeRequested,
-                doc,
-                eph,
-                this.myPubKey
-              );
-            });
+        newState = Automerge.change(newState, doc => {
+          newEphemeralState = Automerge.change(newEphemeralState, eph => {
+            updateFn(doc as S, eph as E);
           });
-        }
+        });
 
         const stateChanges = Automerge.getChanges(state, newState);
         const ephemeralChanges = Automerge.getChanges(
@@ -560,25 +474,23 @@ export class SessionStore<G extends SynGrammar<any, any>>
   }
 
   async commitChanges(meta?: any) {
-    const currentTip = get(this._currentTip);
-    const currentTipCommit = await toPromise(
-      this.workspaceStore.documentStore.commits.get(currentTip)
-    );
-    if (currentTipCommit) {
-      if (
-        isEqual(
-          decode(currentTipCommit.entry.state) as any,
-          Automerge.save(get(this._state))
-        )
-      ) {
-        // Nothing to commit, just return
-        return;
-      }
+    const latestSnapshot = await toPromise(this.workspaceStore.latestSnapshot);
+
+    if (
+      isEqual(
+        Automerge.save(latestSnapshot as Automerge.Doc<S>),
+        Automerge.save(get(this._state))
+      )
+    ) {
+      // Nothing to commit, just return
+      return;
     }
 
     if (meta) {
       meta = encode(meta);
     }
+
+    const currentTip = get(this._currentTip);
 
     const commit: Commit = {
       authors: [
@@ -586,7 +498,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
         this.synClient.client.myPubKey,
       ],
       meta,
-      previous_commit_hashes: [currentTip],
+      previous_commit_hashes: currentTip ? [currentTip] : [],
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
       document_hash: this.workspaceStore.documentStore.documentHash,
@@ -597,7 +509,7 @@ export class SessionStore<G extends SynGrammar<any, any>>
     await this.synClient.updateWorkspaceTip(
       this.workspaceStore.workspaceHash,
       newCommit.entryHash,
-      [currentTip]
+      currentTip ? [currentTip] : []
     );
 
     this._currentTip.set(newCommit.entryHash);

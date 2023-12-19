@@ -3,15 +3,10 @@ import { assert, test } from 'vitest';
 import { dhtSync, runScenario } from '@holochain/tryorama';
 import { get, toPromise } from '@holochain-open-dev/stores';
 
-import {
-  SynStore,
-  stateFromCommit,
-  DocumentStore,
-  WorkspaceStore,
-} from '@holochain-syn/store';
+import { SynStore, stateFromCommit } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
-import { TextEditorDeltaType } from '../grammar.js';
 
+import { textEditorGrammar } from '../text-editor-grammar.js';
 import {
   waitForOtherParticipants,
   delay,
@@ -38,9 +33,10 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const { documentHash, firstCommitHash } = await aliceSyn.createDocument(
-      sampleGrammar
+    const aliceDocumentStore = await aliceSyn.createDocument(
+      sampleGrammar.initialState()
     );
+    const documentHash = aliceDocumentStore.documentHash;
     await aliceSyn.client.tagDocument(documentHash, 'active');
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
     let documentsHashes = Array.from(
@@ -48,45 +44,37 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     );
     assert.equal(documentsHashes.length, 1);
 
-    await aliceSyn.client.removeDocumentTag(documentHash, 'active');
+    await aliceSyn.client.removeDocumentTag(
+      aliceDocumentStore.documentHash,
+      'active'
+    );
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
     documentsHashes = Array.from(
       (await toPromise(bobSyn.documentsByTag.get('active'))).keys()
     );
     assert.equal(documentsHashes.length, 0);
 
-    const aliceDocumentStore = new DocumentStore(
-      aliceSyn,
-      sampleGrammar,
-      documentHash
-    );
-    const workspaceHash = await aliceDocumentStore.createWorkspace(
+    const aliceWorkspaceStore = await aliceDocumentStore.createWorkspace(
       'main',
-      firstCommitHash
+      undefined
     );
-    const aliceWorkspaceStore = new WorkspaceStore(
-      aliceDocumentStore,
-      workspaceHash
-    );
+    const workspaceHash = aliceWorkspaceStore.workspaceHash;
     const aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
     await delay(2000);
 
-    const bobDocumentStore = new DocumentStore(
-      bobSyn,
-      sampleGrammar,
-      documentHash
+    const bobDocumentStore = await toPromise(
+      bobSyn.documents.get(documentHash)
     );
-    const bobWorkspaceStore = new WorkspaceStore(
-      bobDocumentStore,
-      workspaceHash
+    const bobWorkspaceStore = await toPromise(
+      bobDocumentStore.workspaces.get(workspaceHash)
     );
 
     const bobSessionStore = await bobWorkspaceStore.joinSession();
     await waitForOtherParticipants(aliceSessionStore, 1);
     await waitForOtherParticipants(bobSessionStore, 1);
 
-    aliceSessionStore.requestChanges([{ type: 'Title', value: 'A new title' }]);
+    aliceSessionStore.change(state => (state.title = 'A new title'));
 
     await delay(7000);
 
@@ -96,18 +84,14 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     let currentState = get(bobSessionStore.state);
     assert.equal(currentState.title, 'A new title');
 
-    aliceSessionStore.requestChanges([
-      { type: 'Title', value: 'Another thing' },
-    ]);
+    aliceSessionStore.change(state => (state.title = 'Another thing'));
 
     await delay(1000);
 
     currentState = get(bobSessionStore.state);
     assert.equal(currentState.title, 'Another thing');
 
-    bobSessionStore.requestChanges([
-      { type: 'Title', value: 'Bob is the boss' },
-    ]);
+    aliceSessionStore.change(state => (state.title = 'Bob is the boss'));
 
     await delay(1000);
 
@@ -117,10 +101,16 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     currentState = get(aliceSessionStore.state);
     assert.equal(currentState.title, 'Bob is the boss');
 
-    bobSessionStore.requestChanges([
-      { type: TextEditorDeltaType.Insert, position: 0, text: 'Hi ' },
-      { type: TextEditorDeltaType.Insert, position: 3, text: 'there' },
-    ]);
+    bobSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(bob.agentPubKey, state.body, eph)
+        .insert(0, 'Hi ')
+    );
+    bobSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(bob.agentPubKey, state.body, eph)
+        .insert(3, 'there')
+    );
 
     await delay(1000);
 
@@ -132,14 +122,19 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
 
     // Test concurrent
 
-    aliceSessionStore.requestChanges([
-      { type: TextEditorDeltaType.Insert, position: 3, text: 'alice ' },
-    ]);
-    bobSessionStore.requestChanges([
-      { type: TextEditorDeltaType.Insert, position: 3, text: 'bob ' },
-    ]);
+    aliceSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(alice.agentPubKey, state.body, eph)
+        .insert(3, 'alice ')
+    );
 
-    await delay(7000);
+    bobSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(bob.agentPubKey, state.body, eph)
+        .insert(3, 'bob ')
+    );
+
+    await delay(10000);
 
     const currentStateAlice = get(aliceSessionStore.state);
     const currentStateBob = get(bobSessionStore.state);

@@ -20,7 +20,7 @@ import { synWorkspaceContext } from '../contexts.js';
 export class WorkspaceParticipants extends LitElement {
   @consume({ context: synWorkspaceContext, subscribe: true })
   @property()
-  workspacestore!: WorkspaceStore<any>;
+  workspacestore!: WorkspaceStore<any, any>;
 
   @property()
   direction: 'column' | 'row' = 'column';

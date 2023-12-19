@@ -3,16 +3,16 @@ import { assert, test } from 'vitest';
 import { runScenario } from '@holochain/tryorama';
 
 import { get, toPromise } from '@holochain-open-dev/stores';
-import { DocumentStore, SynStore, WorkspaceStore } from '@holochain-syn/store';
+import { SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
-import { TextEditorDeltaType } from '../grammar.js';
 import {
   delay,
   sampleGrammar,
   synHapp,
   waitForOtherParticipants,
 } from '../common.js';
+import { textEditorGrammar } from '../text-editor-grammar.js';
 
 const aliceLine = 'ALICE_HELLO_ALICE';
 const bobLine = 'BOB_HI_BOB';
@@ -43,50 +43,35 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const { documentHash, firstCommitHash } = await aliceSyn.createDocument(
-      sampleGrammar
+    const aliceDocumentStore = await aliceSyn.createDocument(
+      sampleGrammar.initialState()
     );
-    const aliceDocumentStore = new DocumentStore(
-      aliceSyn,
-      sampleGrammar,
-      documentHash
-    );
-    const workspaceHash = await aliceDocumentStore.createWorkspace(
+    const aliceWorkspaceStore = await aliceDocumentStore.createWorkspace(
       'main',
-      firstCommitHash
-    );
-    const aliceWorkspaceStore = new WorkspaceStore(
-      aliceDocumentStore,
-      workspaceHash
+      undefined
     );
 
     const aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
-    aliceSessionStore.requestChanges([
-      {
-        type: TextEditorDeltaType.Insert,
-        position: 0,
-        text: '\n',
-      },
-    ]);
+    aliceSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(alice.agentPubKey, state.body, eph)
+        .insert(0, '\n')
+    );
 
     await delay(2000);
 
-    const bobDocumentStore = new DocumentStore(
-      bobSyn,
-      sampleGrammar,
-      documentHash
+    const bobDocumentStore = await toPromise(
+      bobSyn.documents.get(aliceDocumentStore.documentHash)
     );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
     assert.equal(
       new Buffer(Array.from(workspaces.keys())[0]).toString(),
-      workspaceHash.toString()
+      aliceWorkspaceStore.workspaceHash.toString()
     );
-    const bobWorkspaceStore = new WorkspaceStore(
-      bobDocumentStore,
-      workspaceHash
+    const bobWorkspaceStore = await toPromise(
+      bobDocumentStore.workspaces.get(aliceWorkspaceStore.workspaceHash)
     );
-
     const bobSessionStore = await bobWorkspaceStore.joinSession();
 
     await waitForOtherParticipants(bobSessionStore, 1);
@@ -96,15 +81,14 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 
     async function simulateAlice() {
       for (let i = 0; i < aliceLine.length; i++) {
-        aliceSessionStore.requestChanges([
-          {
-            type: TextEditorDeltaType.Insert,
-            position: alicePosition(
-              get(aliceSessionStore.state).body.text.toString()
-            ),
-            text: aliceLine[i],
-          },
-        ]);
+        aliceSessionStore.change((state, eph) =>
+          textEditorGrammar
+            .changes(alice.agentPubKey, state.body, eph)
+            .insert(
+              alicePosition(get(aliceSessionStore.state).body.text.toString()),
+              aliceLine[i]
+            )
+        );
         await delay(1000);
       }
     }
@@ -112,13 +96,11 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     async function simulateBob() {
       for (let i = 0; i < bobLine.length; i++) {
         let content = get(bobSessionStore.state).body.text;
-        bobSessionStore.requestChanges([
-          {
-            type: TextEditorDeltaType.Insert,
-            position: bobPosition(content.toString()),
-            text: bobLine[i],
-          },
-        ]);
+        bobSessionStore.change((state, eph) =>
+          textEditorGrammar
+            .changes(bob.agentPubKey, state.body, eph)
+            .insert(bobPosition(content.toString()), bobLine[i])
+        );
         await delay(1000);
       }
     }

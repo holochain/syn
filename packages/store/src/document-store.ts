@@ -7,28 +7,26 @@ import {
   HoloHash,
 } from '@holochain/client';
 import {
+  alwaysSubscribed,
   AsyncReadable,
   joinAsync,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
+  toPromise,
 } from '@holochain-open-dev/stores';
 import { EntryRecord, LazyHoloHashMap, slice } from '@holochain-open-dev/utils';
-import { Commit, Document, Workspace } from '@holochain-syn/client';
+import { Commit, Document } from '@holochain-syn/client';
 
-import type { SynGrammar } from './grammar.js';
 import { SynStore } from './syn-store.js';
+import { WorkspaceStore } from './workspace-store.js';
 
-export class DocumentStore<G extends SynGrammar<any, any>> {
+export class DocumentStore<S, E> {
   constructor(
     public synStore: SynStore,
-    public grammar: G,
-    public documentHash: AnyDhtHash
+    public documentHash: AnyDhtHash,
+    public documentRecord: EntryRecord<Document>
   ) {}
-
-  document: AsyncReadable<EntryRecord<Document>> = this.synStore.documents.get(
-    this.documentHash
-  );
 
   /**
    * Keeps an up to date map of all the workspaces for this document
@@ -75,13 +73,17 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
    */
   workspaces = new LazyHoloHashMap<
     EntryHash,
-    AsyncReadable<EntryRecord<Workspace>>
+    AsyncReadable<WorkspaceStore<S, E>>
   >((workspaceHash: EntryHash) =>
-    retryUntilSuccess(async () => {
-      const workspace = await this.synStore.client.getWorkspace(workspaceHash);
-      if (!workspace) throw new Error('Workspace not found yet');
-      return workspace;
-    })
+    alwaysSubscribed(
+      retryUntilSuccess(async () => {
+        const workspace = await this.synStore.client.getWorkspace(
+          workspaceHash
+        );
+        if (!workspace) throw new Error('Workspace not found yet');
+        return new WorkspaceStore<S, E>(this, workspace);
+      })
+    )
   );
 
   /**
@@ -99,8 +101,8 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
 
   async createWorkspace(
     workspaceName: string,
-    initialTipHash: EntryHash
-  ): Promise<EntryHash> {
+    initialTipHash: EntryHash | undefined
+  ): Promise<WorkspaceStore<S, E>> {
     const workspaceRecord = await this.synStore.client.createWorkspace(
       {
         name: workspaceName,
@@ -108,7 +110,7 @@ export class DocumentStore<G extends SynGrammar<any, any>> {
       },
       initialTipHash
     );
-    return workspaceRecord.entryHash;
+    return toPromise(this.workspaces.get(workspaceRecord.entryHash));
   }
 }
 

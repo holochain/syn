@@ -98,7 +98,7 @@ export class SynClient extends ZomeClient<SynSignal> {
   /** Workspaces */
   public async createWorkspace(
     workspace: Workspace,
-    initial_commit_hash: EntryHash
+    initial_commit_hash: EntryHash | undefined
   ): Promise<EntryRecord<Workspace>> {
     const record: Record = await this.callZome('create_workspace', {
       workspace,

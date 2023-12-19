@@ -9,7 +9,7 @@ import { synSessionContext } from '../contexts.js';
 export class SynSessionContext extends LitElement {
   @provide({ context: synSessionContext })
   @property()
-  sessionstore!: SessionStore<any>;
+  sessionstore!: SessionStore<any, any>;
 
   render() {
     return html`<slot></slot>`;

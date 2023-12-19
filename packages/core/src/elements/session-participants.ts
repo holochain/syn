@@ -16,7 +16,7 @@ import { synSessionContext } from '../contexts.js';
 export class SessionParticipants extends LitElement {
   @consume({ context: synSessionContext, subscribe: true })
   @property()
-  sessionstore!: SessionStore<any>;
+  sessionstore!: SessionStore<any, any>;
 
   @property()
   direction: 'column' | 'row' = 'column';

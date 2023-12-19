@@ -9,7 +9,7 @@ import { synWorkspaceContext } from '../contexts.js';
 export class SynWorkspaceContext extends LitElement {
   @provide({ context: synWorkspaceContext })
   @property()
-  workspacestore!: WorkspaceStore<any>;
+  workspacestore!: WorkspaceStore<any, any>;
 
   render() {
     return html`<slot></slot>`;

@@ -2,6 +2,7 @@ import { ActionCommittedSignal } from '@holochain-open-dev/utils';
 import { AgentPubKey, AnyDhtHash, EntryHash } from '@holochain/client';
 
 export interface Document {
+  initial_state: Uint8Array;
   meta: Uint8Array | undefined;
 }
 

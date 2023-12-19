@@ -1,15 +1,16 @@
 import {
+  alwaysSubscribed,
   AsyncReadable,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
+  toPromise,
   uniquify,
 } from '@holochain-open-dev/stores';
-import { Commit, SynClient, Document } from '@holochain-syn/client';
+import { Commit, Document, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
 import {
-  EntryRecord,
   LazyHoloHashMap,
   LazyMap,
   hashEntry,
@@ -18,11 +19,19 @@ import {
 } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
-import type { SynGrammar } from './grammar.js';
+import { DocumentStore } from './document-store.js';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
   const state = Automerge.load(commitState);
+  return state;
+};
+
+export const stateFromDocument = (document: Document) => {
+  const documentInitialState = decode(
+    document.initial_state
+  ) as Automerge.BinaryDocument;
+  const state = Automerge.load(documentInitialState);
   return state;
 };
 
@@ -51,65 +60,42 @@ export class SynStore {
    */
   documents = new LazyHoloHashMap<
     EntryHash,
-    AsyncReadable<EntryRecord<Document>>
+    AsyncReadable<DocumentStore<any, any>>
   >((documentHash: AnyDhtHash) =>
-    retryUntilSuccess(async () => {
-      const commit = await this.client.getDocument(documentHash);
-      if (!commit) throw new Error('Document not found yet');
-      return commit;
-    })
+    alwaysSubscribed(
+      retryUntilSuccess(async () => {
+        const document = await this.client.getDocument(documentHash);
+        if (!document) throw new Error('Document not found yet');
+        return new DocumentStore(this, documentHash, document);
+      })
+    )
   );
 
-  async createDocument<G extends SynGrammar<any, any>>(grammar: G, meta?: any) {
-    let doc: Automerge.Doc<any> = Automerge.init();
-
-    doc = Automerge.change(doc, d => grammar.initState(d));
+  async createDocument<S>(initialState: S, meta?: any) {
+    let doc: Automerge.Doc<any> = Automerge.from(initialState);
 
     const documentRecord = await this.client.createDocument({
       meta: meta ? encode(meta) : undefined,
+      initial_state: encode(Automerge.save(doc)),
     });
 
-    const commit = await this.client.createCommit({
-      authors: [],
-      document_hash: documentRecord.actionHash,
-      meta: undefined,
-      previous_commit_hashes: [],
-      state: encode(Automerge.save(doc)),
-      witnesses: [],
-    });
-
-    return {
-      documentHash: documentRecord.actionHash,
-      firstCommitHash: commit.entryHash,
-    };
+    return toPromise(this.documents.get(documentRecord.actionHash));
   }
 
-  async createDeterministicDocument<G extends SynGrammar<any, any>>(
-    grammar: G,
-    meta?: any
-  ) {
+  async createDeterministicDocument<S>(initialState: S, meta?: any) {
     let doc: Automerge.Doc<any> = Automerge.init({
       actorId: 'aa',
     });
 
-    doc = Automerge.change(doc, { time: 0 }, d => grammar.initState(d));
+    doc = Automerge.change(doc, { time: 0 }, d =>
+      Object.assign(d, initialState)
+    );
 
     const documentRecord = await this.client.createDocument({
       meta: meta ? encode(meta) : undefined,
+      initial_state: encode(Automerge.save(doc)),
     });
 
-    const commit = await this.client.createCommit({
-      authors: [],
-      document_hash: documentRecord.entryHash,
-      meta: undefined,
-      previous_commit_hashes: [],
-      state: encode(Automerge.save(doc)),
-      witnesses: [],
-    });
-
-    return {
-      documentHash: documentRecord.entryHash,
-      firstCommitHash: commit.entryHash,
-    };
+    return toPromise(this.documents.get(documentRecord.entryHash));
   }
 }

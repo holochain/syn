@@ -5,8 +5,9 @@ import '@vanillawc/wc-codemirror/index.js';
 
 import {
   AgentSelection,
-  TextEditorDeltaType,
-  TextEditorGrammar,
+  TextEditorEphemeralState,
+  TextEditorState,
+  textEditorGrammar,
 } from '../grammar.js';
 import { elemIdToPosition } from '../utils.js';
 import {
@@ -22,7 +23,7 @@ import './agent-cursor.js';
 @customElement('syn-markdown-editor')
 export class SynMarkdownEditor extends LitElement {
   @property({ type: Object })
-  slice!: SliceStore<TextEditorGrammar>;
+  slice!: SliceStore<TextEditorState, TextEditorEphemeralState>;
 
   _state = new StoreSubscriber(
     this,
@@ -61,7 +62,7 @@ export class SynMarkdownEditor extends LitElement {
           this.editor.doc.setValue(stateText);
         }
         if (myAgentSelection) {
-          if (state.text.toString().length > 0) {
+          if (state.toString().length > 0) {
             const position = elemIdToPosition(
               myAgentSelection.left,
               myAgentSelection.position,
@@ -120,33 +121,27 @@ export class SynMarkdownEditor extends LitElement {
   }
 
   onTextInserted(from: number, text: string) {
-    this.slice.requestChanges([
-      {
-        type: TextEditorDeltaType.Insert,
-        position: from,
-        text: text,
-      },
-    ]);
+    this.slice.change((state, eph) =>
+      textEditorGrammar
+        .changes(this.slice.myPubKey, state, eph)
+        .insert(from, text)
+    );
   }
 
   onTextDeleted(from: number, characterCount: number) {
-    this.slice.requestChanges([
-      {
-        type: TextEditorDeltaType.Delete,
-        position: from,
-        characterCount,
-      },
-    ]);
+    this.slice.change((state, eph) =>
+      textEditorGrammar
+        .changes(this.slice.myPubKey, state, eph)
+        .delete(from, characterCount)
+    );
   }
 
   onSelectionChanged(ranges: Array<{ from: number; to: number }>) {
-    this.slice.requestChanges([
-      {
-        type: TextEditorDeltaType.ChangeSelection,
-        position: ranges[0].from,
-        characterCount: ranges[0].to - ranges[0].from,
-      },
-    ]);
+    this.slice.change((state, eph) =>
+      textEditorGrammar
+        .changes(this.slice.myPubKey, state, eph)
+        .changeSelection(ranges[0].from, ranges[0].to - ranges[0].from)
+    );
   }
 
   renderCursor(agent: AgentPubKey, agentSelection: AgentSelection) {

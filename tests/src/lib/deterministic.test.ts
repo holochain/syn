@@ -27,22 +27,22 @@ test('two agents creating the same deterministic root get the same root hash', a
       new SynClient(bob.appAgentWs as any, 'syn-test')
     );
 
-    const aliceDocument = await aliceSyn.createDocument(sampleGrammar);
-    const bobDocument = await bobSyn.createDocument(sampleGrammar);
+    const aliceDocumentStore = await aliceSyn.createDocument(
+      sampleGrammar.initialState()
+    );
+    const bobDocumentStore = await bobSyn.createDocument(
+      sampleGrammar.initialState()
+    );
 
     assert.ok(
-      aliceDocument.documentHash.toString() !==
-        bobDocument.documentHash.toString()
-    );
-    assert.ok(
-      aliceDocument.firstCommitHash.toString() !==
-        bobDocument.firstCommitHash.toString()
+      aliceDocumentStore.documentHash.toString() !==
+        bobDocumentStore.documentHash.toString()
     );
 
     const aliceDeterministicDocument =
-      await aliceSyn.createDeterministicDocument(sampleGrammar);
+      await aliceSyn.createDeterministicDocument(sampleGrammar.initialState());
     const bobDeterministicDocument = await bobSyn.createDeterministicDocument(
-      sampleGrammar
+      sampleGrammar.initialState()
     );
 
     assert.ok(

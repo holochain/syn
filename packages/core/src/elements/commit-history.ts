@@ -29,7 +29,7 @@ import { synDocumentContext } from '../contexts.js';
 export class CommitHistory extends LitElement {
   @consume({ context: synDocumentContext, subscribe: true })
   @property()
-  documentstore!: DocumentStore<any>;
+  documentstore!: DocumentStore<any, any>;
 
   @property()
   selectedCommitHash: EntryHashB64 | undefined;

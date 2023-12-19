@@ -10,7 +10,7 @@ import { synDocumentContext } from '../contexts.js';
 export class SynDocumentContext extends LitElement {
   @provide({ context: synDocumentContext })
   @property()
-  documentstore!: DocumentStore<any>;
+  documentstore!: DocumentStore<any, any>;
 
   render() {
     return html`<slot></slot>`;

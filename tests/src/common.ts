@@ -1,10 +1,11 @@
+import { AgentPubKey } from '@holochain/client';
+import { SessionStore } from '@holochain-syn/store';
+
 import {
-  TextEditorDelta,
+  TextEditorEphemeralState,
   textEditorGrammar,
   TextEditorState,
-} from './grammar.js';
-import { AgentPubKey } from '@holochain/client';
-import { SessionStore, SynGrammar } from '@holochain-syn/store';
+} from './text-editor-grammar.js';
 
 export const synHapp = process.cwd() + '/../workdir/syn-test.happ';
 
@@ -40,37 +41,30 @@ export interface Content {
   body: TextEditorState;
 }
 
-export type TextDelta =
-  | {
-      type: 'Title';
-      value: string;
-    }
-  | TextEditorDelta;
-
-export const sampleGrammar: SynGrammar<TextDelta, Content> = {
-  initState(doc) {
-    doc.title = '';
-    doc.body = {} as any;
-    textEditorGrammar.initState(doc.body);
+export const sampleGrammar = {
+  initialState(): Content {
+    return {
+      title: '',
+      body: textEditorGrammar.initialState(),
+    };
   },
-  applyDelta(
-    delta: TextDelta,
-    content: Content,
-    eph: any,
-    author: AgentPubKey
+
+  changes(
+    myPubKey: AgentPubKey,
+    state: Content,
+    eph: TextEditorEphemeralState
   ) {
-    switch (delta.type) {
-      case 'Title':
-        content.title = delta.value;
-        break;
-      default:
-        textEditorGrammar.applyDelta(delta, content.body, eph, author);
-    }
+    return {
+      setTitle(title: string) {
+        state.title = title;
+      },
+      ...textEditorGrammar.changes(myPubKey, state.body, eph),
+    };
   },
 };
 
 export function waitForOtherParticipants(
-  sessionStore: SessionStore<any>,
+  sessionStore: SessionStore<any, any>,
   otherParticipants: number,
   timeout = 600000
 ) {
