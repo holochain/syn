@@ -10,6 +10,8 @@ ui/node
 .cargo
 /tmp/*
 dist/
+docs/.vitepress/dist
+docs/.vitepress/cache
 
 # Negative ignores last:
 !.gitkeep
