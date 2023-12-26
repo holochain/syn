@@ -28,4 +28,3 @@ features:
     details: Deep plumbing for reactive-friendly implementations
 ---
 
-testasdfasdf 
