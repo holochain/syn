@@ -6,4 +6,4 @@ Syn is a real-time shared-state engine for holochain. With syn, you can build co
 
 - Go to [design](/design) to get a conceptual overview of the design for syn.
 
-- Go to [building a simple kanban board app](/guides/building-a-simple-kanban-board-app) if you want a more detailed guide on how to build syn apps.
+- Go to [guides](/guides/setup) if you want a more detailed guide on how to build syn apps.

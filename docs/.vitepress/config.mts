@@ -2,14 +2,14 @@ import { defineConfig } from 'vitepress';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: 'Syn: real-time editing shared state hApps',
+  title: 'Syn: real-time shared state for hApps',
   description: 'Documentation for the syn holochain engine',
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/welcome-to-syn' },
-      { text: 'Guides', link: '/building-a-simple-kanban-board-app' },
+      { text: 'Guides', link: '/guides/setup' },
       { text: 'API', link: '/api/syn-store' },
     ],
 
@@ -26,16 +26,20 @@ export default defineConfig({
         text: 'Guides',
         items: [
           {
+            text: 'Getting ready to buld a syn hApp',
+            link: '/guides/setup',
+          },
+          {
             text: 'Building a simple kanban board app',
-            link: '/building-a-simple-kanban-board-app',
+            link: '/guides/building-a-simple-kanban-board-app',
           },
           {
             text: 'Building an app with ephemeral state',
-            link: '/markdown-examples',
+            link: '/guides/building-an-ephemeral-state-app',
           },
           {
             text: 'Building an app with text editors',
-            link: '/markdown-examples',
+            link: '/guides/building-app-with-text-editors',
           },
         ],
       },
