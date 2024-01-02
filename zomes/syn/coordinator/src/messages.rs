@@ -10,7 +10,7 @@ pub enum MessagePayload {
         ephemeral_changes: Vec<SerializedBytes>,
     },
     NewCommit {
-        new_commit_hash: ActionHash,
+        new_commit: Record,
     },
     SyncReq {
         sync_message: Option<SerializedBytes>,

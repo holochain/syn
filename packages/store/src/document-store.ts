@@ -80,11 +80,15 @@ export class DocumentStore<S, E> {
    */
   commits = new LazyHoloHashMap<EntryHash, AsyncReadable<EntryRecord<Commit>>>(
     (commitHash: ActionHash) =>
-      retryUntilSuccess(async () => {
-        const commit = await this.synStore.client.getCommit(commitHash);
-        if (!commit) throw new Error('Commit not found yet');
-        return commit;
-      })
+      retryUntilSuccess(
+        async () => {
+          const commit = await this.synStore.client.getCommit(commitHash);
+          if (!commit) throw new Error('Commit not found yet');
+          return commit;
+        },
+        700,
+        100
+      )
   );
 
   /**

@@ -114,7 +114,7 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     await delay(4000);
 
     await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(4000);
+    await delay(20000);
 
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
@@ -127,5 +127,10 @@ ${bobLine}${bobLine}${bobLine}`;
 
     await aliceSessionStore.leaveSession();
     await bobSessionStore.leaveSession();
+
+    const aliceTip = await toPromise(aliceWorkspaceStore.tip);
+    assert.ok(aliceTip);
+    const bobTip = await toPromise(bobWorkspaceStore.tip);
+    assert.ok(bobTip);
   });
 });

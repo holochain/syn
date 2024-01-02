@@ -8,6 +8,7 @@ import {
   ActionHash,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
+import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';
 
 import {
   Document,
@@ -74,8 +75,28 @@ export class SynClient extends ZomeClient<SynSignal> {
 
   /** Commits */
   public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
-    const record: Record = await this.callZome('create_commit', commit);
-    return new EntryRecord(record);
+    return new Promise((resolve, reject) => {
+      const unsubs = this.onSignal(signal => {
+        // TODO: better check?
+        if (
+          signal.type === 'EntryCreated' &&
+          signal.app_entry.type === 'Commit' &&
+          cleanNodeDecoding(commit.document_hash).toString() ===
+            cleanNodeDecoding(signal.app_entry.document_hash).toString()
+        ) {
+          unsubs();
+
+          this.getCommit(signal.action.hashed.hash)
+            .then(r => {
+              resolve(r!);
+            })
+            .catch(e => reject(e))
+            .finally(() => unsubs());
+        }
+      });
+      this.callZome('create_commit', commit).catch(e => reject(e));
+      setTimeout(() => reject('TIMEOUT'), 3000);
+    });
   }
 
   public async getCommit(

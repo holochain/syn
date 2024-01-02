@@ -11,8 +11,13 @@ import {
   Writable,
   writable,
 } from '@holochain-open-dev/stores';
-import { EntryHash, Link } from '@holochain/client';
-import { HashType, HoloHashMap, retype } from '@holochain-open-dev/utils';
+import { ActionHash, EntryHash, Link } from '@holochain/client';
+import {
+  EntryRecord,
+  HashType,
+  HoloHashMap,
+  retype,
+} from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import { Commit } from '@holochain-syn/client';
 import Automerge from 'automerge';
@@ -59,6 +64,50 @@ export class WorkspaceStore<S, E> {
     links => uniquify(links.map(l => retype(l.target, HashType.AGENT)))
   );
 
+  async merge(commitsHashes: Array<ActionHash>): Promise<EntryRecord<Commit>> {
+    const commits = await toPromise(
+      sliceAndJoin(this.documentStore.commits, commitsHashes)
+    );
+    // If there are more that one tip, merge them
+    let mergeState: Automerge.Doc<S> = Automerge.merge(
+      Automerge.load(
+        decode(Array.from(commits.values())[0].entry.state) as any
+      ),
+      Automerge.load(decode(Array.from(commits.values())[1].entry.state) as any)
+    );
+
+    for (let i = 2; i < commitsHashes.length; i++) {
+      mergeState = Automerge.merge(
+        mergeState,
+        Automerge.load(
+          decode(Array.from(commits.values())[i].entry.state) as any
+        )
+      );
+    }
+
+    const documentHash = this.documentStore.documentHash;
+
+    const commit: Commit = {
+      authors: [this.documentStore.synStore.client.client.myPubKey],
+      meta: encode('Merge commit'),
+      previous_commit_hashes: commitsHashes,
+      state: encode(Automerge.save(mergeState)),
+      witnesses: [],
+      document_hash: documentHash,
+    };
+
+    const newCommit = await this.documentStore.synStore.client.createCommit(
+      commit
+    );
+
+    await this.documentStore.synStore.client.updateWorkspaceTip(
+      this.workspaceHash,
+      newCommit.actionHash,
+      commitsHashes
+    );
+    return newCommit;
+  }
+
   /**
    * Keeps an up to date copy of the tip for this workspace
    */
@@ -85,15 +134,15 @@ export class WorkspaceStore<S, E> {
               'WorkspaceToTip'
             ),
             async commitsLinks => {
-              const tipsLinks = new HoloHashMap<EntryHash, Link>();
+              const tipsLinks = new HoloHashMap<ActionHash, Link>();
 
-              const tipsPrevious = new HoloHashMap<EntryHash, boolean>();
+              const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
 
               for (const commitLink of commitsLinks) {
                 tipsLinks.set(commitLink.target, commitLink);
-                const previousCommitsHashes: Array<EntryHash> = decode(
+                const previousCommitsHashes: Array<ActionHash> = decode(
                   commitLink.tag
-                ) as Array<EntryHash>;
+                ) as Array<ActionHash>;
 
                 for (const previousCommitHash of previousCommitsHashes) {
                   tipsPrevious.set(previousCommitHash, true);
@@ -108,52 +157,12 @@ export class WorkspaceStore<S, E> {
 
               if (tipsHashes.length === 1) return tipsHashes[0];
 
-              const tips = await toPromise(
-                sliceAndJoin(this.documentStore.commits, tipsHashes)
-              );
-              // If there are more that one tip, merge them
-              let mergeState: Automerge.Doc<S> = Automerge.merge(
-                Automerge.load(
-                  decode(Array.from(tips.values())[0].entry.state) as any
-                ),
-                Automerge.load(
-                  decode(Array.from(tips.values())[1].entry.state) as any
-                )
-              );
-
-              for (let i = 2; i < tipsLinks.size; i++) {
-                mergeState = Automerge.merge(
-                  mergeState,
-                  Automerge.load(
-                    decode(Array.from(tips.values())[i].entry.state) as any
-                  )
-                );
-              }
-
-              const documentHash = this.documentStore.documentHash;
-
-              const commit: Commit = {
-                authors: [this.documentStore.synStore.client.client.myPubKey],
-                meta: encode('Merge commit'),
-                previous_commit_hashes: tipsHashes,
-                state: encode(Automerge.save(mergeState)),
-                witnesses: [],
-                document_hash: documentHash,
-              };
-
-              const newCommit =
-                await this.documentStore.synStore.client.createCommit(commit);
-
-              await this.documentStore.synStore.client.updateWorkspaceTip(
-                this.workspaceHash,
-                newCommit.actionHash,
-                tipsHashes
-              );
-
+              const newCommit = await this.merge(tipsHashes);
               return newCommit.actionHash;
-            }
-          ),
-    commit => (commit ? this.documentStore.commits.get(commit) : undefined)
+            },
+            commit =>
+              commit ? this.documentStore.commits.get(commit) : undefined
+          )
   );
 
   /**

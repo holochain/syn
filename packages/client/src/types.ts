@@ -4,6 +4,7 @@ import {
   AgentPubKey,
   AnyDhtHash,
   EntryHash,
+  Record,
 } from '@holochain/client';
 
 export interface Document {
@@ -50,7 +51,7 @@ export type MessagePayload =
     }
   | {
       type: 'NewCommit';
-      new_commit_hash: ActionHash;
+      new_commit: Record;
     }
   | {
       type: 'ChangeNotice';

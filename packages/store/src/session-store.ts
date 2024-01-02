@@ -1,5 +1,10 @@
 import { Commit, SessionMessage } from '@holochain-syn/client';
-import { AgentPubKeyMap, HashType, retype } from '@holochain-open-dev/utils';
+import {
+  AgentPubKeyMap,
+  EntryRecord,
+  HashType,
+  retype,
+} from '@holochain-open-dev/utils';
 import {
   Readable,
   get,
@@ -9,12 +14,7 @@ import {
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge, { FreezeObject } from 'automerge';
-import {
-  encodeHashToBase64,
-  AgentPubKey,
-  EntryHash,
-  ActionHash,
-} from '@holochain/client';
+import { encodeHashToBase64, AgentPubKey } from '@holochain/client';
 import isEqual from 'lodash-es/isEqual.js';
 import { toPromise } from '@holochain-open-dev/stores';
 
@@ -66,10 +66,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
   get participants() {
     return derived(this._participants, i => {
       const isActive = (lastSeen: number | undefined) =>
-        lastSeen && Date.now() - lastSeen < this.config.hearbeatInterval * 2;
+        lastSeen && Date.now() - lastSeen < this.config.hearbeatInterval * 10;
       const isIdle = (lastSeen: number | undefined) =>
         lastSeen &&
-        Date.now() - lastSeen > this.config.hearbeatInterval * 2 &&
+        !isActive(lastSeen) &&
         Date.now() - lastSeen < this.config.outOfSessionTimeout;
       const isOffline = (lastSeen: number | undefined) =>
         !lastSeen || Date.now() - lastSeen > this.config.outOfSessionTimeout;
@@ -107,13 +107,14 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
-  _currentTip: Writable<ActionHash | undefined>;
+  _currentTip: Writable<EntryRecord<Commit> | undefined>;
   get currentTip() {
     return derived(this._currentTip, i => i);
   }
 
   private unsubscribe: () => void = () => {};
   private intervals: any[] = [];
+  private deltaCount = 0;
 
   get myPubKey() {
     return this.synClient.client.myPubKey;
@@ -128,11 +129,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     protected onLeave: () => void,
     protected config: SynConfig,
     currentState: Automerge.Doc<S>,
-    currentTipHash: EntryHash | undefined,
+    currentTip: EntryRecord<Commit> | undefined,
     initialParticipants: Array<AgentPubKey>
   ) {
     const workspaceHash = this.workspaceStore.workspaceHash;
-    this.unsubscribe = this.synClient.onSignal(synSignal => {
+    this.unsubscribe = this.synClient.onSignal(async synSignal => {
       if (synSignal.type !== 'SessionMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
 
@@ -143,11 +144,6 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       ) {
         if (message.payload.type === 'LeaveSession') {
           this.handleLeaveSessionNotice(synSignal.provenance);
-          return;
-        }
-
-        if (message.payload.type === 'NewCommit') {
-          this._currentTip.set(message.payload.new_commit_hash);
           return;
         }
 
@@ -164,6 +160,38 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
             return p;
           });
+        }
+
+        if (message.payload.type === 'NewCommit') {
+          const currentTip = get(this._currentTip);
+          let newCommit = new EntryRecord<Commit>(message.payload.new_commit);
+
+          if (
+            currentTip &&
+            !newCommit.entry.previous_commit_hashes.find(
+              previous_commit =>
+                previous_commit.toString() === currentTip.actionHash.toString()
+            )
+          ) {
+            newCommit = await this.workspaceStore.merge([
+              currentTip.actionHash,
+              newCommit.actionHash,
+            ]);
+
+            this.workspaceStore.documentStore.synStore.client.sendMessage(
+              Array.from(get(this._participants).keys()),
+              {
+                workspace_hash: this.workspaceStore.workspaceHash,
+                payload: {
+                  type: 'NewCommit',
+                  new_commit: newCommit.record,
+                },
+              }
+            );
+          }
+
+          this._currentTip.set(newCommit);
+          return;
         }
 
         if (message.payload.type === 'ChangeNotice') {
@@ -192,6 +220,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
               : undefined
           );
         }
+
         if (message.payload.type === 'Heartbeat') {
           this.handleHeartbeat(
             synSignal.provenance,
@@ -267,7 +296,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     this.intervals.push(commitInterval);
 
     this._state = writable(currentState);
-    this._currentTip = writable(currentTipHash);
+    this._currentTip = writable(currentTip);
 
     const participantsMap: AgentPubKeyMap<SessionParticipant> =
       new AgentPubKeyMap();
@@ -304,10 +333,6 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       );
 
     const currentTip = await toPromise(workspaceStore.tip);
-    let currentTipHash: ActionHash | undefined;
-    if (currentTip) {
-      currentTipHash = currentTip.actionHash;
-    }
     const currentState: S = await toPromise(workspaceStore.latestSnapshot);
 
     return new SessionStore(
@@ -315,7 +340,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       onLeave,
       config,
       currentState as Automerge.Doc<S>,
-      currentTipHash,
+      currentTip,
       participants.filter(
         p =>
           workspaceStore.documentStore.synStore.client.client.myPubKey.toString() !==
@@ -341,6 +366,13 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           ephemeralState,
           newEphemeralState
         );
+        this.deltaCount += stateChanges.length;
+        if (
+          this.config.commitStrategy.CommitEveryNDeltas &&
+          this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
+        ) {
+          this.commitChanges();
+        }
 
         const participants = get(this._participants).keys();
 
@@ -360,6 +392,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
       return newState;
     });
+
+    // if () {
+
+    // }
   }
 
   private handleChangeNotice(
@@ -367,6 +403,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     stateChanges: Automerge.BinaryChange[],
     ephemeralChanges: Automerge.BinaryChange[]
   ) {
+    this.deltaCount += stateChanges.length;
+
     let thereArePendingChanges = false;
 
     this._state.update(state => {
@@ -490,20 +528,21 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       // Nothing to commit, just return
       return;
     }
+    this.deltaCount = 0;
 
     if (meta) {
       meta = encode(meta);
     }
 
     const currentTip = get(this._currentTip);
-
+    const previous_commit_hashes = currentTip ? [currentTip.actionHash] : [];
     const commit: Commit = {
       authors: [
         ...Array.from(get(this._participants).keys()),
         this.synClient.client.myPubKey,
       ],
       meta,
-      previous_commit_hashes: currentTip ? [currentTip] : [],
+      previous_commit_hashes,
       state: encode(Automerge.save(get(this._state))),
       witnesses: [],
       document_hash: this.workspaceStore.documentStore.documentHash,
@@ -511,22 +550,22 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     const newCommit = await this.synClient.createCommit(commit);
 
-    await this.synClient.updateWorkspaceTip(
-      this.workspaceStore.workspaceHash,
-      newCommit.actionHash,
-      currentTip ? [currentTip] : []
-    );
-
-    this._currentTip.set(newCommit.actionHash);
+    this._currentTip.set(newCommit);
     this.workspaceStore.documentStore.synStore.client.sendMessage(
       Array.from(get(this._participants).keys()),
       {
         workspace_hash: this.workspaceStore.workspaceHash,
         payload: {
           type: 'NewCommit',
-          new_commit_hash: newCommit.actionHash,
+          new_commit: newCommit.record,
         },
       }
+    );
+
+    await this.synClient.updateWorkspaceTip(
+      this.workspaceStore.workspaceHash,
+      newCommit.actionHash,
+      previous_commit_hashes
     );
   }
 
