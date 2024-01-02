@@ -1,5 +1,12 @@
 # Quickstart
 
+
+## Installation
+::: warning
+This quickstart assumes you are allready familiar with Holochain hApp develpment.  If this is your first time building a Holochain
+hApp you probably want to start with one of our [guides](/guides/setup)!
+:::
+
 ## Initialization
 
 You can initialize a new document like this:

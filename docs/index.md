@@ -3,23 +3,28 @@
 layout: home
 
 hero:
-  name: "Syn: real-time editing shared state hApps"
-  text: "Documentation for the syn holochain engine"
-  tagline: My great project tagline
+  name: "Syn"
+  text: ""
+  tagline: Real-time shared state for Holochain hApps
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
+      text: Introduction
+      link: /welcome-to-syn
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: Quickstart
+      link: /quickstart
+    - theme: alt
+      text: Design
+      link: /design
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: Simple
+    details: Just mutate a javascript object, and syn takes care of everything else
+  - title: Agent Aware
+    details: Know participant's on/offline status, and who's participated in state changes
+  - title: Ephemeral State
+    details: Implement "cursor" positions and other non-committed data for great UX
+  - title: Reactive
+    details: Deep plumbing for reactive-friendly implementations
 ---
 
