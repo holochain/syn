@@ -1,12 +1,9 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::*;
-
 #[hdk_extern]
 pub fn create_document(document: Document) -> ExternResult<Record> {
-    let d = EntryTypes::Document(document.clone());
-    let document_hash = create_relaxed(d, document.clone().try_into()?)?;
+    let document_hash = create_entry(EntryTypes::Document(document.clone()))?;
 
     let maybe_record = get(document_hash, GetOptions::default())?;
     let record = maybe_record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(

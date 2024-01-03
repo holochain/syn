@@ -392,10 +392,6 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
       return newState;
     });
-
-    // if () {
-
-    // }
   }
 
   private handleChangeNotice(
