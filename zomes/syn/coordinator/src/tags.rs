@@ -1,7 +1,7 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::create_link_relaxed;
+use crate::utils::{create_link_relaxed, do_get_links};
 
 fn tag_path(tag: String) -> Path {
     Path::from(format!("document_tags.{}", tag))
@@ -29,10 +29,9 @@ pub fn tag_document(input: TagDocumentInput) -> ExternResult<()> {
 
 #[hdk_extern]
 pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
-    get_links(
+    do_get_links(
         tag_path(tag).path_entry_hash()?,
         LinkTypes::TagToDocument,
-        None,
     )
 }
 
@@ -44,10 +43,9 @@ pub struct RemoveDocumentTagInput {
 
 #[hdk_extern]
 pub fn remove_document_tag(input: RemoveDocumentTagInput) -> ExternResult<()> {
-    let links = get_links(
+    let links = do_get_links(
         tag_path(input.tag).path_entry_hash()?,
         LinkTypes::TagToDocument,
-        None,
     )?;
 
     for link in links {

@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 use crate::{
     messages::{send_message, MessagePayload, SendMessageInput, SessionMessage},
-    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
+    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed, do_get_links},
 };
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
@@ -65,7 +65,7 @@ pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> 
 
 #[hdk_extern]
 pub fn get_workspaces_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(document_hash, LinkTypes::DocumentToWorkspaces, None)
+    do_get_links(document_hash, LinkTypes::DocumentToWorkspaces)
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -95,7 +95,7 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 
 #[hdk_extern]
 pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
-    let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
+    let links = do_get_links(workspace_hash, LinkTypes::WorkspaceToTip)?;
 
     let mut tips: HashMap<ActionHash, Link> = HashMap::new();
     let mut tips_previous = HashSet::new();
@@ -122,7 +122,7 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> 
 
 #[hdk_extern]
 pub fn get_workspace_session_participants(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
-    get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)
+    do_get_links(workspace_hash, LinkTypes::WorkspaceToParticipant)
 }
 
 #[hdk_extern]
@@ -160,10 +160,9 @@ pub fn join_workspace_session(workspace_hash: EntryHash) -> ExternResult<Vec<Age
 pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
-    let links = get_links(
+    let links = do_get_links(
         workspace_hash.clone(),
         LinkTypes::WorkspaceToParticipant,
-        None,
     )?;
 
     let my_links: Vec<Link> = links

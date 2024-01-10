@@ -3,8 +3,9 @@ members = ["zomes/*/*"]
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.3.2"
-hdk = "0.2.2"
+hdi = "0.4.0-beta-dev.20"
+hdk = "0.3.0-beta-dev.25"
+serde = "1"
 
 [profile.dev]
 opt-level = "z"

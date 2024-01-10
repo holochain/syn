@@ -9,7 +9,5 @@ crate-type = ["cdylib", "rlib"]
 name = "hc_zome_syn_integrity"
 
 [dependencies]
-derive_more = "0.99.9"
-serde = "1"
-
+serde = { workspace = true }
 hdi = { workspace = true }

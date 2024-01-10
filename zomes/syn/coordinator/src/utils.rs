@@ -50,3 +50,8 @@ pub fn delete_link_relaxed(address: ActionHash) -> ExternResult<ActionHash> {
             .delete_link(DeleteLinkInput::new(address, ChainTopOrdering::Relaxed))
     })
 }
+
+pub fn do_get_links(base: impl Into<AnyLinkableHash>, link_type: impl LinkTypeFilterExt) -> ExternResult<Vec<Link>> {
+    let input = GetLinksInputBuilder::try_new(base, link_type)?.build();
+    get_links(input)
+}

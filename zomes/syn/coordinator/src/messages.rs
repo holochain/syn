@@ -35,7 +35,7 @@ pub struct SendMessageInput {
 
 #[hdk_extern]
 pub fn send_message(input: SendMessageInput) -> ExternResult<()> {
-    remote_signal(input.message, input.recipients)?;
+    send_remote_signal(input.message, input.recipients)?;
 
     Ok(())
 }
