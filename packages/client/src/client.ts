@@ -95,7 +95,7 @@ export class SynClient extends ZomeClient<SynSignal> {
         }
       });
       this.callZome('create_commit', commit).catch(e => reject(e));
-      setTimeout(() => reject('TIMEOUT'), 3000);
+      setTimeout(() => reject('TIMEOUT'), 30000);
     });
   }
 
