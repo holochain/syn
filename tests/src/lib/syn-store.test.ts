@@ -163,6 +163,14 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
 
     assert.equal(participants.active.length, 1);
 
+    let latestState = await toPromise(aliceWorkspaceStore.latestState);
+
+    assert.deepEqual(latestState, state);
+
     await aliceSessionStore.leaveSession();
+
+    latestState = await toPromise(aliceWorkspaceStore.latestState);
+
+    assert.deepEqual(latestState, state);
   });
 });

@@ -601,6 +601,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     for (const interval of this.intervals) {
       clearInterval(interval);
     }
+    this.onLeave();
   }
 
   private handleNewParticipant(participant: AgentPubKey) {

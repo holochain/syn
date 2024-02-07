@@ -2,6 +2,7 @@ import {
   AsyncReadable,
   AsyncStatus,
   derived,
+  deriveStore,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
@@ -176,6 +177,24 @@ export class WorkspaceStore<S, E> {
           document => stateFromDocument(document.entry) as S
         )
   );
+
+  /**
+   * Keeps an up to date copy of the state of the session if there is an active one,
+   * or the latest snapshot if there isn't a session
+   */
+  latestState: AsyncReadable<S> = deriveStore(this.session, session => {
+    if (session)
+      return derived(
+        session.state,
+        s =>
+          ({
+            status: 'complete',
+            value: s,
+          } as AsyncStatus<S>)
+      );
+
+    return this.latestSnapshot;
+  });
 
   /**
    * Joins the real-time collaborative session for this workspace
