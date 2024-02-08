@@ -68,7 +68,6 @@ export class DocumentStore<S, E> {
     liveLinksStore(
       this.synStore.client,
       this.documentHash,
-
       () => this.synStore.client.getCommitsForDocument(this.documentHash),
       'DocumentToCommits'
     ),
@@ -102,11 +101,13 @@ export class DocumentStore<S, E> {
    * Keeps an up to date array of the all the agents that have participated in any commit in this document
    */
   allAuthors = pipe(
-    this.allCommits,
-    commits => joinAsync(Array.from(commits.values())),
-    commits => {
+    joinAsync([this.record, this.allCommits]),
+    ([_document, commits]) => joinAsync(Array.from(commits.values())),
+    (commits, [document]) => {
       const agents = commits.map(c => c.entry.authors);
-      const agentsFlat = ([] as AgentPubKey[]).concat(...agents);
+      const agentsFlat = ([document.action.author] as AgentPubKey[]).concat(
+        ...agents
+      );
       return uniquify(agentsFlat);
     }
   );

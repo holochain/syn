@@ -230,7 +230,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       }
     });
 
-    const heartbeatInterval = setInterval(async () => {
+    const discoveryNewParticipants = setInterval(async () => {
       const participants = await this.synClient.getWorkspaceSessionParticipants(
         workspaceHash
       );
@@ -253,7 +253,13 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
           this.requestSync(retype(newParticipant.target, HashType.AGENT));
         }
+        return p;
+      });
+    }, config.newPeersDiscoveryInterval * 10);
+    this.intervals.push(discoveryNewParticipants);
 
+    const heartbeatInterval = setInterval(async () => {
+      this._participants.update(p => {
         const onlineParticipants = Array.from(p.entries())
           .filter(
             ([_participant, info]) =>

@@ -36,8 +36,32 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     const aliceDocumentStore = await aliceSyn.createDocument(
       sampleGrammar.initialState()
     );
+
+    const authors = await toPromise(aliceDocumentStore.allAuthors);
+
+    assert.equal(authors.length, 1);
+
     const documentHash = aliceDocumentStore.documentHash;
-    await aliceSyn.client.tagDocument(documentHash, 'active');
+
+    await new Promise(async (resolve, reject) => {
+      const unsubs = aliceSyn.documentsByTag.get('active').subscribe(value => {
+        if (value.status === 'complete') {
+          if (value.value.size === 1) {
+            // The document was added to the active documents by tag store via receiving the signal
+            resolve(undefined);
+            unsubs();
+          }
+        }
+      });
+
+      await aliceSyn.client.tagDocument(documentHash, 'active');
+
+      setTimeout(
+        () => reject('Took too long to update the documents by tag'),
+        1000
+      );
+    });
+
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
     let documentsHashes = Array.from(
       (await toPromise(bobSyn.documentsByTag.get('active'))).keys()

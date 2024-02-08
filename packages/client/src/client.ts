@@ -73,6 +73,10 @@ export class SynClient extends ZomeClient<SynSignal> {
     });
   }
 
+  public async tagPathEntryHash(tag: string): Promise<EntryHash> {
+    return this.callZome('tag_path_entry_hash', tag);
+  }
+
   /** Commits */
   public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
     return new Promise((resolve, reject) => {
