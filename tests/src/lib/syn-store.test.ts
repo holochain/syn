@@ -37,7 +37,7 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
       sampleGrammar.initialState()
     );
 
-    const authors = await toPromise(aliceDocumentStore.allAuthors);
+    let authors = await toPromise(aliceDocumentStore.allAuthors);
 
     assert.equal(authors.length, 1);
 
@@ -192,6 +192,10 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     assert.deepEqual(latestState, state);
 
     await aliceSessionStore.leaveSession();
+
+    authors = await toPromise(aliceDocumentStore.allAuthors);
+
+    assert.equal(authors.length, 2);
 
     latestState = await toPromise(aliceWorkspaceStore.latestState);
 

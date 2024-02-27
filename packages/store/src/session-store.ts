@@ -112,7 +112,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     return derived(this._currentTip, i => i);
   }
 
-  private unsubscribe: () => void = () => {};
+  private unsubscribe: () => void = () => { };
   private intervals: any[] = [];
   private deltaCount = 0;
 
@@ -173,21 +173,27 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
                 previous_commit.toString() === currentTip.actionHash.toString()
             )
           ) {
-            newCommit = await this.workspaceStore.merge([
-              currentTip.actionHash,
-              newCommit.actionHash,
-            ]);
+            // We are out of sync with the author of the commit: sync again
+            this.requestSync(message.payload.new_commit.signed_action.hashed.content.author);
 
-            this.workspaceStore.documentStore.synStore.client.sendMessage(
-              Array.from(get(this._participants).keys()),
-              {
-                workspace_hash: this.workspaceStore.workspaceHash,
-                payload: {
-                  type: 'NewCommit',
-                  new_commit: newCommit.record,
-                },
-              }
-            );
+            // TODO: This was old merge conflict management, lead to many commits being created
+            // What to do about this?
+
+            // newCommit = await this.workspaceStore.merge([
+            //   currentTip.actionHash,
+            //   newCommit.actionHash,
+            // ]);
+
+            // this.workspaceStore.documentStore.synStore.client.sendMessage(
+            //   Array.from(get(this._participants).keys()),
+            //   {
+            //     workspace_hash: this.workspaceStore.workspaceHash,
+            //     payload: {
+            //       type: 'NewCommit',
+            //       new_commit: newCommit.record,
+            //     },
+            //   }
+            // );
           }
 
           this._currentTip.set(newCommit);
@@ -210,13 +216,13 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
             synSignal.provenance,
             message.payload.sync_message
               ? (decode(
-                  message.payload.sync_message
-                ) as Automerge.BinarySyncMessage)
+                message.payload.sync_message
+              ) as Automerge.BinarySyncMessage)
               : undefined,
             message.payload.ephemeral_sync_message
               ? (decode(
-                  message.payload.ephemeral_sync_message
-                ) as Automerge.BinarySyncMessage)
+                message.payload.ephemeral_sync_message
+              ) as Automerge.BinarySyncMessage)
               : undefined
           );
         }
@@ -490,6 +496,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
               participantInfo.syncStates.state,
               syncMessage
             );
+          const changes = Automerge.getChanges(state, nextDoc);
+          this.deltaCount += changes.length;
 
           participantInfo.syncStates.state = nextSyncState;
           return nextDoc;
@@ -518,7 +526,16 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     this.requestSync(from);
   }
 
+  _previousCommitPromise: Promise<void> | undefined;
+
   async commitChanges(meta?: any) {
+    if (this._previousCommitPromise) await this._previousCommitPromise;
+    this._previousCommitPromise = this.commitChangesInternal(meta);
+
+    return this._previousCommitPromise;
+  }
+
+  private async commitChangesInternal(meta?: any) {
     const latestSnapshot = await toPromise(this.workspaceStore.latestSnapshot);
 
     if (
