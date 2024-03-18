@@ -10,7 +10,7 @@ use hdi::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
     Document(Document),
@@ -23,6 +23,7 @@ pub enum EntryTypes {
 #[hdk_link_types]
 pub enum LinkTypes {
     TagToDocument,
+    DocumentToAuthors,
     DocumentToWorkspaces,
     DocumentToCommits,
     WorkspaceToTip,

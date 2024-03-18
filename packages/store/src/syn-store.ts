@@ -1,14 +1,13 @@
-import { liveLinksStore, pipe, uniquify } from '@holochain-open-dev/stores';
+import {
+  liveLinksStore,
+  pipe,
+  retryUntilSuccess,
+  uniquify,
+} from '@holochain-open-dev/stores';
 import { Commit, Document, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
 import Automerge from 'automerge';
-import {
-  LazyHoloHashMap,
-  LazyMap,
-  hashEntry,
-  slice,
-  encodeAppEntry,
-} from '@holochain-open-dev/utils';
+import { LazyHoloHashMap, LazyMap, slice } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
 import { DocumentStore } from './document-store.js';
@@ -37,14 +36,20 @@ export class SynStore {
    */
   documentsByTag = new LazyMap((tag: string) =>
     pipe(
-      liveLinksStore(
-        this.client,
-        hashEntry(encodeAppEntry(`document_tags.${tag}`)),
-        () => this.client.getDocumentsWithTag(tag),
-        'TagToDocument'
-      ),
+      this.tagsEntryHash.get(tag),
+      tagPathEntryHash =>
+        liveLinksStore(
+          this.client,
+          tagPathEntryHash,
+          () => this.client.getDocumentsWithTag(tag),
+          'TagToDocument'
+        ),
       links => slice(this.documents, uniquify(links.map(l => l.target)))
     )
+  );
+
+  private tagsEntryHash = new LazyMap((tag: string) =>
+    retryUntilSuccess(() => this.client.tagPathEntryHash(tag))
   );
 
   /**

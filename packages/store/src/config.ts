@@ -1,5 +1,6 @@
 export interface SynConfig {
   hearbeatInterval: number;
+  newPeersDiscoveryInterval: number;
   outOfSessionTimeout: number;
   commitStrategy: CommitStrategy;
 }
@@ -13,6 +14,7 @@ export interface CommitStrategy {
 export function defaultConfig(): SynConfig {
   return {
     hearbeatInterval: 2 * 1000,
+    newPeersDiscoveryInterval: 20 * 1000,
     outOfSessionTimeout: 60 * 1000,
     commitStrategy: { CommitEveryNDeltas: 30, CommitEveryNMs: 1000 * 10 }, // TODO: reduce ms
   };

@@ -20,3 +20,4 @@ docs/.vitepress/cache
 *.iml
 *.tsbuildinfo
 .running
+.direnv

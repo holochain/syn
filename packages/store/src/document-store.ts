@@ -1,12 +1,10 @@
 import {
   ActionHash,
-  AgentPubKey,
   AnyDhtHash,
   EntryHash,
 } from '@holochain/client';
 import {
   AsyncReadable,
-  joinAsync,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
@@ -15,7 +13,9 @@ import {
 import {
   EntryRecord,
   GetonlyMap,
+  HashType,
   LazyHoloHashMap,
+  retype,
   slice,
 } from '@holochain-open-dev/utils';
 import { Commit } from '@holochain-syn/client';
@@ -36,7 +36,7 @@ export function sliceStrings<K extends string, V>(
 }
 
 export class DocumentStore<S, E> {
-  constructor(public synStore: SynStore, public documentHash: AnyDhtHash) {}
+  constructor(public synStore: SynStore, public documentHash: AnyDhtHash) { }
 
   record = retryUntilSuccess(async () => {
     const document = await this.synStore.client.getDocument(this.documentHash);
@@ -68,7 +68,6 @@ export class DocumentStore<S, E> {
     liveLinksStore(
       this.synStore.client,
       this.documentHash,
-
       () => this.synStore.client.getCommitsForDocument(this.documentHash),
       'DocumentToCommits'
     ),
@@ -87,7 +86,7 @@ export class DocumentStore<S, E> {
           return commit;
         },
         700,
-        100
+        10
       )
   );
 
@@ -102,14 +101,15 @@ export class DocumentStore<S, E> {
    * Keeps an up to date array of the all the agents that have participated in any commit in this document
    */
   allAuthors = pipe(
-    this.allCommits,
-    commits => joinAsync(Array.from(commits.values())),
-    commits => {
-      const agents = commits.map(c => c.entry.authors);
-      const agentsFlat = ([] as AgentPubKey[]).concat(...agents);
-      return uniquify(agentsFlat);
-    }
+    liveLinksStore(
+      this.synStore.client,
+      this.documentHash,
+      () => this.synStore.client.getAuthorsForDocument(this.documentHash),
+      'DocumentToAuthors'
+    ),
+    links => uniquify(links.map(l => retype(l.target, HashType.AGENT)))
   );
+
 
   async createWorkspace(
     workspaceName: string,

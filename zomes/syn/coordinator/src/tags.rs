@@ -28,6 +28,11 @@ pub fn tag_document(input: TagDocumentInput) -> ExternResult<()> {
 }
 
 #[hdk_extern]
+pub fn tag_path_entry_hash(tag: String) -> ExternResult<EntryHash> {
+    tag_path(tag).path_entry_hash()
+}
+
+#[hdk_extern]
 pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
     do_get_links(
         tag_path(tag).path_entry_hash()?,

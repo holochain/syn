@@ -1,3 +1,4 @@
+use commit::LinkDocumentToCommitInput;
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 use messages::SessionMessage;
@@ -106,6 +107,23 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
         }
         Action::Create(_create) => {
             if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
+                if let EntryTypes::Commit(commit) = &app_entry {
+                    let response = call_remote(
+                        agent_info()?.agent_latest_pubkey,
+                        zome_info()?.name,
+                        FunctionName::from("link_document_to_commit"),
+                        None,
+                        LinkDocumentToCommitInput {
+                            document_hash: commit.document_hash.clone(),
+                            commit_hash: action.hashed.hash.clone(),
+                        },
+                    )?;
+
+                    match response {
+                        ZomeCallResponse::Ok(_) => {}
+                        _ => error!("Error linking document to commit: {response:?}"),
+                    }
+                }
                 emit_signal(Signal::EntryCreated { action, app_entry })?;
             }
             Ok(())

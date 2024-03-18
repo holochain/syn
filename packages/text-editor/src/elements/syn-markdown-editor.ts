@@ -48,6 +48,7 @@ export class SynMarkdownEditor extends LitElement {
 
   firstUpdated() {
     this.editor = this.editorEl.editor;
+    this.editor.setOption('lineWrapping', true)
 
     setTimeout(() => {
       this.editor.getInputField().click();
