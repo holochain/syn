@@ -35,9 +35,8 @@ pub fn tag_path_entry_hash(tag: String) -> ExternResult<EntryHash> {
 #[hdk_extern]
 pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
     get_links(
-        tag_path(tag).path_entry_hash()?,
-        LinkTypes::TagToDocument,
-        None,
+        GetLinksInputBuilder::try_new(tag_path(tag).path_entry_hash()?, LinkTypes::TagToDocument)?
+            .build(),
     )
 }
 
@@ -50,9 +49,11 @@ pub struct RemoveDocumentTagInput {
 #[hdk_extern]
 pub fn remove_document_tag(input: RemoveDocumentTagInput) -> ExternResult<()> {
     let links = get_links(
-        tag_path(input.tag).path_entry_hash()?,
-        LinkTypes::TagToDocument,
-        None,
+        GetLinksInputBuilder::try_new(
+            tag_path(input.tag).path_entry_hash()?,
+            LinkTypes::TagToDocument,
+        )?
+        .build(),
     )?;
 
     for link in links {

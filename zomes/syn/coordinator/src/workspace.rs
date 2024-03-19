@@ -65,7 +65,9 @@ pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> 
 
 #[hdk_extern]
 pub fn get_workspaces_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(document_hash, LinkTypes::DocumentToWorkspaces, None)
+    get_links(
+        GetLinksInputBuilder::try_new(document_hash, LinkTypes::DocumentToWorkspaces)?.build(),
+    )
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -95,7 +97,9 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 
 #[hdk_extern]
 pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
-    let links = get_links(workspace_hash, LinkTypes::WorkspaceToTip, None)?;
+    let links = get_links(
+        GetLinksInputBuilder::try_new(workspace_hash, LinkTypes::WorkspaceToTip)?.build(),
+    )?;
 
     let mut tips: HashMap<ActionHash, Link> = HashMap::new();
     let mut tips_previous = HashSet::new();
@@ -122,7 +126,9 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> 
 
 #[hdk_extern]
 pub fn get_workspace_session_participants(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
-    get_links(workspace_hash, LinkTypes::WorkspaceToParticipant, None)
+    get_links(
+        GetLinksInputBuilder::try_new(workspace_hash, LinkTypes::WorkspaceToParticipant)?.build(),
+    )
 }
 
 #[hdk_extern]
@@ -161,9 +167,8 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
     let links = get_links(
-        workspace_hash.clone(),
-        LinkTypes::WorkspaceToParticipant,
-        None,
+        GetLinksInputBuilder::try_new(workspace_hash.clone(), LinkTypes::WorkspaceToParticipant)?
+            .build(),
     )?;
 
     let my_links: Vec<Link> = links

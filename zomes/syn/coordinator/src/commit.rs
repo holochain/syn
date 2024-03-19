@@ -58,5 +58,7 @@ pub fn get_commit(commit_hash: ActionHash) -> ExternResult<Option<Record>> {
 
 #[hdk_extern]
 pub fn get_commits_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(document_hash.clone(), LinkTypes::DocumentToCommits, None)
+    get_links(
+        GetLinksInputBuilder::try_new(document_hash.clone(), LinkTypes::DocumentToCommits)?.build(),
+    )
 }

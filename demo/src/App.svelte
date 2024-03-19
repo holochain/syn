@@ -122,7 +122,7 @@
     }
   }
   onMount(async () => {
-    const client = await createClient();
+    let client = await createClient();
     profilesStore = new ProfilesStore(new ProfilesClient(client, 'syn-test'));
     await initSyn(client);
   });

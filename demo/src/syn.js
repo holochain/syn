@@ -20,9 +20,7 @@ export function textSlice(sessionStore) {
 }
 
 export async function createClient() {
-  //const url = `ws://localhost:${process.env.HC_PORT}`;
-
-  const client = await AppAgentWebsocket.connect(undefined, 'syn');
+  const client = await AppAgentWebsocket.connect('syn');
 
   return client;
 }

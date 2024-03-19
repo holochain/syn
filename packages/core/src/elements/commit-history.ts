@@ -105,8 +105,8 @@ export class CommitHistory extends LitElement {
         return html`<sl-card style="flex: 1;">
           <span slot="header" class="title">${msg('Commit History')}</span>
           ${this.renderContent(
-            new RecordBag(this._allCommits.value.value.map(er => er.record))
-          )}
+          new RecordBag(this._allCommits.value.value.map(er => er.record))
+        )}
         </sl-card>`;
       case 'error':
         return html`<display-error

@@ -5,7 +5,7 @@ import {
   AppAgentClient,
   AnyDhtHash,
   Link,
-  ActionHash,
+  ActionHash
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';

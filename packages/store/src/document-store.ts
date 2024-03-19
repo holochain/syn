@@ -5,6 +5,7 @@ import {
 } from '@holochain/client';
 import {
   AsyncReadable,
+  immutableEntryStore,
   liveLinksStore,
   pipe,
   retryUntilSuccess,
@@ -77,15 +78,11 @@ export class DocumentStore<S, E> {
   /**
    * Lazy map of all the commits in this network
    */
-  commits = new LazyHoloHashMap<EntryHash, AsyncReadable<EntryRecord<Commit>>>(
+  commits = new LazyHoloHashMap<ActionHash, AsyncReadable<EntryRecord<Commit>>>(
     (commitHash: ActionHash) =>
-      retryUntilSuccess(
-        async () => {
-          const commit = await this.synStore.client.getCommit(commitHash);
-          if (!commit) throw new Error('Commit not found yet');
-          return commit;
-        },
-        700,
+      immutableEntryStore(
+        async () => this.synStore.client.getCommit(commitHash),
+        1000,
         10
       )
   );
