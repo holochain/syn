@@ -26,5 +26,13 @@ pub fn get_document(document_hash: AnyDhtHash) -> ExternResult<Option<Record>> {
 
 #[hdk_extern]
 pub fn get_authors_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(document_hash, LinkTypes::DocumentToAuthors, None)
+    get_links(GetLinksInput {
+        base_address: document_hash.try_into()?,
+        link_type: LinkTypes::DocumentToAuthors.try_into_filter()?,
+        tag_prefix: None,
+        get_options: GetOptions::default(),
+        after: None,
+        before: None,
+        author: None,
+    })
 }

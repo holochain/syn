@@ -797,7 +797,7 @@ checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 [[package]]
 name = "hc_zome_profiles_coordinator"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.0-beta-dev#540d63d147db6f274d507938c3ea8655560a0bf9"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.0-beta-dev.33#b680839a9cd55f994f96a957b63a78b5fa281622"
 dependencies = [
  "derive_more",
  "hc_zome_profiles_integrity",
@@ -808,7 +808,7 @@ dependencies = [
 [[package]]
 name = "hc_zome_profiles_integrity"
 version = "0.2.0"
-source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.0-beta-dev#540d63d147db6f274d507938c3ea8655560a0bf9"
+source = "git+https://github.com/holochain-open-dev/profiles?branch=for-hdk-v0.3.0-beta-dev.33#b680839a9cd55f994f96a957b63a78b5fa281622"
 dependencies = [
  "derive_more",
  "hdi",
