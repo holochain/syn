@@ -3,9 +3,9 @@ import {
   AsyncStatus,
   derived,
   deriveStore,
+  immutableEntryStore,
   liveLinksStore,
   pipe,
-  retryUntilSuccess,
   sliceAndJoin,
   toPromise,
   uniquify,
@@ -32,15 +32,11 @@ export class WorkspaceStore<S, E> {
   constructor(
     public documentStore: DocumentStore<S, E>,
     public workspaceHash: EntryHash
-  ) {}
+  ) { }
 
-  record = retryUntilSuccess(async () => {
-    const workspace = await this.documentStore.synStore.client.getWorkspace(
-      this.workspaceHash
-    );
-    if (!workspace) throw new Error('Workspace not found yet');
-    return workspace;
-  });
+  record = immutableEntryStore(async () => this.documentStore.synStore.client.getWorkspace(
+    this.workspaceHash
+  ));
 
   name = pipe(this.record, workspace => workspace.entry.name);
 
@@ -116,54 +112,54 @@ export class WorkspaceStore<S, E> {
     derived(
       this.session,
       s =>
-        ({ status: 'complete', value: s } as AsyncStatus<
-          SessionStore<S, E> | undefined
-        >)
+      ({ status: 'complete', value: s } as AsyncStatus<
+        SessionStore<S, E> | undefined
+      >)
     ),
     session =>
       session
         ? session.currentTip
         : pipe(
-            liveLinksStore(
-              this.documentStore.synStore.client,
-              this.workspaceHash,
+          liveLinksStore(
+            this.documentStore.synStore.client,
+            this.workspaceHash,
 
-              () =>
-                this.documentStore.synStore.client.getWorkspaceTips(
-                  this.workspaceHash
-                ),
-              'WorkspaceToTip'
-            ),
-            async commitsLinks => {
-              const tipsLinks = new HoloHashMap<ActionHash, Link>();
+            () =>
+              this.documentStore.synStore.client.getWorkspaceTips(
+                this.workspaceHash
+              ),
+            'WorkspaceToTip'
+          ),
+          async commitsLinks => {
+            const tipsLinks = new HoloHashMap<ActionHash, Link>();
 
-              const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
+            const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
 
-              for (const commitLink of commitsLinks) {
-                tipsLinks.set(commitLink.target, commitLink);
-                const previousCommitsHashes: Array<ActionHash> = decode(
-                  commitLink.tag
-                ) as Array<ActionHash>;
+            for (const commitLink of commitsLinks) {
+              tipsLinks.set(commitLink.target, commitLink);
+              const previousCommitsHashes: Array<ActionHash> = decode(
+                commitLink.tag
+              ) as Array<ActionHash>;
 
-                for (const previousCommitHash of previousCommitsHashes) {
-                  tipsPrevious.set(previousCommitHash, true);
-                }
+              for (const previousCommitHash of previousCommitsHashes) {
+                tipsPrevious.set(previousCommitHash, true);
               }
+            }
 
-              for (const overwrittenTip of tipsPrevious.keys()) {
-                tipsLinks.delete(overwrittenTip);
-              }
-              const tipsHashes = Array.from(tipsLinks.keys());
-              if (tipsHashes.length === 0) return undefined;
+            for (const overwrittenTip of tipsPrevious.keys()) {
+              tipsLinks.delete(overwrittenTip);
+            }
+            const tipsHashes = Array.from(tipsLinks.keys());
+            if (tipsHashes.length === 0) return undefined;
 
-              if (tipsHashes.length === 1) return tipsHashes[0];
+            if (tipsHashes.length === 1) return tipsHashes[0];
 
-              const newCommit = await this.merge(tipsHashes);
-              return newCommit.actionHash;
-            },
-            commit =>
-              commit ? this.documentStore.commits.get(commit) : undefined
-          )
+            const newCommit = await this.merge(tipsHashes);
+            return newCommit.actionHash;
+          },
+          commit =>
+            commit ? this.documentStore.commits.get(commit) : undefined
+        )
   );
 
   /**
@@ -173,9 +169,9 @@ export class WorkspaceStore<S, E> {
     commit
       ? (stateFromCommit(commit.entry) as S)
       : pipe(
-          this.documentStore.record,
-          document => stateFromDocument(document.entry) as S
-        )
+        this.documentStore.record,
+        document => stateFromDocument(document.entry) as S
+      )
   );
 
   /**
@@ -187,10 +183,10 @@ export class WorkspaceStore<S, E> {
       return derived(
         session.state,
         s =>
-          ({
-            status: 'complete',
-            value: s,
-          } as AsyncStatus<S>)
+        ({
+          status: 'complete',
+          value: s,
+        } as AsyncStatus<S>)
       );
 
     return this.latestSnapshot;

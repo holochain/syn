@@ -8,7 +8,6 @@ import {
   immutableEntryStore,
   liveLinksStore,
   pipe,
-  retryUntilSuccess,
   uniquify,
 } from '@holochain-open-dev/stores';
 import {
@@ -39,11 +38,7 @@ export function sliceStrings<K extends string, V>(
 export class DocumentStore<S, E> {
   constructor(public synStore: SynStore, public documentHash: AnyDhtHash) { }
 
-  record = retryUntilSuccess(async () => {
-    const document = await this.synStore.client.getDocument(this.documentHash);
-    if (!document) throw new Error('Document not found yet');
-    return document;
-  });
+  record = immutableEntryStore(async () => this.synStore.client.getDocument(this.documentHash));
 
   /**
    * Keeps an up to date map of all the workspaces for this document
