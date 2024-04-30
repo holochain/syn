@@ -25,6 +25,9 @@ export class SynMarkdownEditor extends LitElement {
   @property({ type: Object })
   slice!: SliceStore<TextEditorState, TextEditorEphemeralState>;
 
+  @property({type: Boolean})
+  autotype = false
+
   _state = new StoreSubscriber(
     this,
     () => this.slice.state,
@@ -45,11 +48,18 @@ export class SynMarkdownEditor extends LitElement {
   get editorEl() {
     return this.shadowRoot?.getElementById('editor')! as any;
   }
-
+  count = 0
   firstUpdated() {
     this.editor = this.editorEl.editor;
     this.editor.setOption('lineWrapping', true)
-
+    setInterval(()=>{
+      if (!this.autotype) return 
+      this.count+=1
+      this.onTextInserted(
+        0,
+        `[${this.slice ? encodeHashToBase64(this.slice.myPubKey).slice(-4): "x"} ${this.count}] `
+      );
+    },100)
     setTimeout(() => {
       this.editor.getInputField().click();
     }, 500);

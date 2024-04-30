@@ -1,6 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import { CytoscapeDagre } from '@scoped-elements/cytoscape';
-customElements.define('cytoscape-dagre', CytoscapeDagre);
+import '@scoped-elements/cytoscape';
 import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 import type { NodeDefinition, EdgeDefinition } from 'cytoscape';

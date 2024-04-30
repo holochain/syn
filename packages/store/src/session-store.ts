@@ -302,7 +302,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
         });
 
       if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
-        this.commitChanges();
+        this._commitChanges();
       }
     }, this.config.commitStrategy.CommitEveryNMs);
     this.intervals.push(commitInterval);
@@ -383,7 +383,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           this.config.commitStrategy.CommitEveryNDeltas &&
           this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
         ) {
-          this.commitChanges();
+          this._commitChanges();
         }
 
         const participants = get(this._participants).keys();
@@ -528,10 +528,28 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
   _previousCommitPromise: Promise<void> | undefined;
 
+  // This is the version public version of commitChanges that will
+  // await for any pending commit and issue a commit afterwards.
   async commitChanges(meta?: any) {
     if (this._previousCommitPromise) await this._previousCommitPromise;
     this._previousCommitPromise = this.commitChangesInternal(meta);
 
+    return this._previousCommitPromise;
+  }
+
+  // This is the version of commitChanges that is called by the
+  // periodic update manager.  if there is allready a commit in progress
+  // the request is ignored and it is assumed that it will be completed
+  // later
+  private async _commitChanges(meta?: any) {
+    if (this._previousCommitPromise) {
+      // console.log("prev commit promise exists, ignoring...")
+      await this._previousCommitPromise;
+      this._previousCommitPromise = undefined
+      return
+    }
+
+    this._previousCommitPromise = this.commitChangesInternal(meta);
     return this._previousCommitPromise;
   }
 

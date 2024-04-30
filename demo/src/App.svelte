@@ -129,6 +129,8 @@
 
   $: synStore, workspaceStore, profilesStore, sessionStore;
 
+  let autoType = false
+
   setContext('sessionStore', {
     getSessionStore: () => sessionStore,
   });
@@ -148,11 +150,12 @@
         <div>
           <Title />
         </div>
+        <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div>
       </div>
       <main style="display: flex; height: 400px">
   <profile-prompt>
       <div style="display: flex; flex-direction:row; flex: 1;">
-        <syn-markdown-editor style="flex: 1;" slice={textSlice(sessionStore)}></syn-markdown-editor>
+        <syn-markdown-editor autotype={autoType} style="flex: 1;" slice={textSlice(sessionStore)}></syn-markdown-editor>
         <commit-history documentstore={documentStore}></commit-history>
       </div>
     </profile-prompt>
