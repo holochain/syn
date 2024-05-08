@@ -86,8 +86,6 @@ export class SynClient extends ZomeClient<SynSignal> {
   public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
     return new Promise((resolve, reject) => {
       const unsubs = this.onSignal(signal => {
-        console.log("GOT SIGNAL 2", signal)
-
         // TODO: better check?
         if (
           signal.type === 'EntryCreated' &&
