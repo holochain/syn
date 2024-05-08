@@ -6,9 +6,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@holochain-open-dev/stores": "=0.300.0-dev.1",
-    "@holochain/client": "=0.17.0-dev.7",
-    "@holochain/tryorama": "^0.16.0-dev.1",
+    "@holochain-open-dev/stores": "^0.400.0-dev.0",
+    "@holochain/client": "^0.18.0-dev.0",
+    "@holochain/tryorama": "^0.17.0-dev.0",
     "@msgpack/msgpack": "^2.7.0",
     "vitest": "^0.28.4"
   },

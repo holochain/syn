@@ -12,12 +12,12 @@ hApp you probably want to start with one of our [guides](/guides/setup)!
 You can initialize a new document like this:
 
 ```ts
-import { AppWebsocket, AppAgentWebsocket } from '@holochain/client';
+import { AppWebsocket, AppWebsocket } from '@holochain/client';
 import { SynStore, DocumentStore, WorkspaceStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 const appWs = await AppWebsocket.connect(url);
-const client = await AppAgentWebsocket.connect(appWs, 'YOUR_APP_ID')
+const client = await AppWebsocket.connect(appWs, 'YOUR_APP_ID')
 
 const synStore = new SynStore(new SynClient(client, 'YOUR_ROLE_NAME', 'YOUR_ZOME_NAME'));
 

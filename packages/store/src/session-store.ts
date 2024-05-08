@@ -134,6 +134,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
   ) {
     const workspaceHash = this.workspaceStore.workspaceHash;
     this.unsubscribe = this.synClient.onSignal(async synSignal => {
+      console.log("GOT SIGNAL", synSignal)
       if (synSignal.type !== 'SessionMessage') return;
       if (isEqual(synSignal.provenance, this.myPubKey)) return;
 

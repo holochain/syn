@@ -24,7 +24,7 @@ test('check that the state of disconnected agents making changes converges after
     const [alice] = await scenario.addPlayersWithApps([appSource]);
 
     let aliceSyn = new SynStore(
-      new SynClient(alice.appAgentWs as any, 'syn-test')
+      new SynClient(alice.AppWs as any, 'syn-test')
     );
 
     // Alice creates a root commit
@@ -62,7 +62,7 @@ test('check that the state of disconnected agents making changes converges after
     await delay(100);
     const [bob] = await scenario.addPlayersWithApps([appSource]);
     const bobSyn = new SynStore(
-      new SynClient(bob.appAgentWs as any, 'syn-test')
+      new SynClient(bob.AppWs as any, 'syn-test')
     );
 
     // Bob goes online and joins the same workspace
@@ -102,7 +102,7 @@ test('check that the state of disconnected agents making changes converges after
 
     await alice.conductor.startUp();
     const port = await alice.conductor.attachAppInterface();
-    const aliceAppWs = await alice.conductor.connectAppAgentWs(
+    const aliceAppWs = await alice.conductor.connectAppWs(
       port,
       alice.appId
     );
