@@ -18,7 +18,7 @@
     "@holochain-open-dev/profiles": "^0.400.0-dev.1",
     "@holochain-open-dev/stores": "^0.400.0-dev.0",
     "@holochain-open-dev/utils": "^0.400.0-dev.0",
-    "@holochain/client": "^0.18.0-dev.0",
+    "@holochain/client": "^0.18.0-dev.3",
     "@holochain-syn/core": "^0.400.0-dev.0",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
