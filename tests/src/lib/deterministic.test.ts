@@ -21,11 +21,9 @@ test('two agents creating the same deterministic root get the same root hash', a
     await scenario.shareAllAgents();
     await scenario.shareAllAgents();
     const aliceSyn = new SynStore(
-      new SynClient(alice.AppWs as any, 'syn-test')
+      new SynClient(alice.appWs as any, 'syn-test')
     );
-    const bobSyn = new SynStore(
-      new SynClient(bob.AppWs as any, 'syn-test')
-    );
+    const bobSyn = new SynStore(new SynClient(bob.appWs as any, 'syn-test'));
 
     const aliceDocumentStore = await aliceSyn.createDocument(
       sampleGrammar.initialState()
