@@ -6,10 +6,10 @@
   },
   "dependencies": {
     "@holochain-open-dev/profiles": "^0.400.0-dev.1",
-    "@holochain-open-dev/stores": "^0.400.0-dev.0",
+    "@holochain-open-dev/stores": "^0.400.0-dev.2",
     "@holochain-syn/core": "file:../packages/core",
     "@holochain-syn/text-editor": "file:../packages/text-editor",
-    "@holochain/client": "=0.18.0-dev.0",
+    "@holochain/client": "0.18.0-dev.8",
     "@lit/context": "^1.0.0",
     "lit": "^3.0.0"
   },

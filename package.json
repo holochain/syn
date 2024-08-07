@@ -27,7 +27,7 @@
     "demo"
   ],
   "devDependencies": {
-    "@holochain/hc-spin": "^0.400.0-dev.0",
+    "@holochain/hc-spin": "^0.400.0-dev.2",
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
@@ -38,10 +38,7 @@
     "vitepress": "^1.0.0-rc.32"
   },
   "eslintConfig": {
-    "extends": [
-      "@open-wc/eslint-config",
-      "eslint-config-prettier"
-    ]
+    "extends": ["@open-wc/eslint-config", "eslint-config-prettier"]
   },
   "prettier": {
     "singleQuote": true,

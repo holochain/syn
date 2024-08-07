@@ -23,9 +23,7 @@ test('check that the state of disconnected agents making changes converges after
     // can be destructured.
     const [alice] = await scenario.addPlayersWithApps([appSource]);
 
-    let aliceSyn = new SynStore(
-      new SynClient(alice.AppWs as any, 'syn-test')
-    );
+    let aliceSyn = new SynStore(new SynClient(alice.appWs as any, 'syn-test'));
 
     // Alice creates a root commit
     let aliceDocumentStore = await aliceSyn.createDeterministicDocument(
@@ -61,9 +59,7 @@ test('check that the state of disconnected agents making changes converges after
 
     await delay(100);
     const [bob] = await scenario.addPlayersWithApps([appSource]);
-    const bobSyn = new SynStore(
-      new SynClient(bob.AppWs as any, 'syn-test')
-    );
+    const bobSyn = new SynStore(new SynClient(bob.appWs as any, 'syn-test'));
 
     // Bob goes online and joins the same workspace
     let bobDocumentStore = await bobSyn.createDeterministicDocument(
@@ -102,10 +98,7 @@ test('check that the state of disconnected agents making changes converges after
 
     await alice.conductor.startUp();
     const port = await alice.conductor.attachAppInterface();
-    const aliceAppWs = await alice.conductor.connectAppWs(
-      port,
-      alice.appId
-    );
+    const aliceAppWs = await alice.conductor.connectAppWs(port, alice.appId);
     await scenario.shareAllAgents();
 
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
