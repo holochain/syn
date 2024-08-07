@@ -2,10 +2,10 @@ import {
   AgentPubKey,
   EntryHash,
   Record,
-  AppAgentClient,
+  AppClient,
   AnyDhtHash,
   Link,
-  ActionHash
+  ActionHash,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
 import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';
@@ -21,7 +21,7 @@ import {
 
 export class SynClient extends ZomeClient<SynSignal> {
   constructor(
-    public client: AppAgentClient,
+    public client: AppClient,
     public roleName: string,
     public zomeName = 'syn'
   ) {
@@ -53,8 +53,9 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-
-  public async getAuthorsForDocument(documentHash: AnyDhtHash): Promise<Array<Link>> {
+  public async getAuthorsForDocument(
+    documentHash: AnyDhtHash
+  ): Promise<Array<Link>> {
     return this.callZome('get_authors_for_document', documentHash);
   }
 
@@ -91,7 +92,7 @@ export class SynClient extends ZomeClient<SynSignal> {
           signal.type === 'EntryCreated' &&
           signal.app_entry.type === 'Commit' &&
           cleanNodeDecoding(commit.document_hash).toString() ===
-          cleanNodeDecoding(signal.app_entry.document_hash).toString()
+            cleanNodeDecoding(signal.app_entry.document_hash).toString()
         ) {
           unsubs();
 
@@ -123,10 +124,15 @@ export class SynClient extends ZomeClient<SynSignal> {
   public async getCommitsForDocument(
     documentHash: AnyDhtHash
   ): Promise<Array<Link>> {
-    const commits: Array<Link> = await this.callZome('get_commits_for_document', documentHash);
+    const commits: Array<Link> = await this.callZome(
+      'get_commits_for_document',
+      documentHash
+    );
 
     if (commits.length > 600) {
-      console.warn(`THERE ARE ${commits.length} FOR THIS DOCUMENT. THIS SHOULDN'T HAPPEN! REPORT TO THE SYN DEVS ABOUT THIS (guillemcordoba)`);
+      console.warn(
+        `THERE ARE ${commits.length} FOR THIS DOCUMENT. THIS SHOULDN'T HAPPEN! REPORT TO THE SYN DEVS ABOUT THIS (guillemcordoba)`
+      );
     }
 
     return commits;

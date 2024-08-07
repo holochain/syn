@@ -19,7 +19,6 @@ pub enum EntryTypes {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "type")]
 #[hdk_link_types]
 pub enum LinkTypes {
     TagToDocument,

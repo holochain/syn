@@ -27,11 +27,9 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     ]);
     await scenario.shareAllAgents();
     const aliceSyn = new SynStore(
-      new SynClient(alice.appAgentWs as any, 'syn-test')
+      new SynClient(alice.appWs as any, 'syn-test')
     );
-    const bobSyn = new SynStore(
-      new SynClient(bob.appAgentWs as any, 'syn-test')
-    );
+    const bobSyn = new SynStore(new SynClient(bob.appWs as any, 'syn-test'));
 
     const aliceDocumentStore = await aliceSyn.createDocument(
       sampleGrammar.initialState()
