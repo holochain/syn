@@ -1,4 +1,4 @@
-import { AppAgentWebsocket } from '@holochain/client';
+import { AppWebsocket } from '@holochain/client';
 import { extractSlice } from '@holochain-syn/core';
 import { textEditorGrammar } from '@holochain-syn/text-editor';
 
@@ -20,7 +20,9 @@ export function textSlice(sessionStore) {
 }
 
 export async function createClient() {
-  const client = await AppAgentWebsocket.connect('syn');
+  // wait 10 seconds
+  await new Promise(resolve => setTimeout(resolve, 10000));
+  const client = await AppWebsocket.connect({});
 
   return client;
 }
