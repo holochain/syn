@@ -20,8 +20,6 @@ export function textSlice(sessionStore) {
 }
 
 export async function createClient() {
-  // wait 10 seconds
-  await new Promise(resolve => setTimeout(resolve, 10000));
   const client = await AppWebsocket.connect({});
 
   return client;
