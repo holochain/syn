@@ -66,7 +66,21 @@ export type MessagePayload =
   | {
       type: 'Heartbeat';
       known_participants: Array<AgentPubKey>;
-    };
+      clerk?: AgentPubKey;
+    }
+  | {
+      type: 'SendOperationsToClerk';
+      operations: Uint8Array[];
+      last_known_op_index: Uint8Array;
+  }
+  | {
+      type: 'ValidateOperationsAsClerk';
+      operations: Uint8Array[];
+  }
+  | {
+      type: 'SendOperationsAsClerk';
+      operations: Uint8Array[];
+  };
 
 export type EntryTypes =
   | ({

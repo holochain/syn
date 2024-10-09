@@ -10,15 +10,15 @@ import Automerge from 'automerge';
 import { LazyHoloHashMap, LazyMap, slice } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
-import { DocumentStore } from './document-store.js';
+import { OTDocumentStore } from './document-store-ot.js';
 
-export const stateFromCommit = (commit: Commit) => {
+export const stateFromCommitOT = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
   const state = Automerge.load(commitState);
   return state;
 };
 
-export const stateFromDocument = (document: Document) => {
+export const stateFromDocumentOT = (document: Document) => {
   const documentInitialState = decode(
     document.initial_state
   ) as Automerge.BinaryDocument;
@@ -26,18 +26,13 @@ export const stateFromDocument = (document: Document) => {
   return state;
 };
 
-type MergeMethod = {
-  type: 'CRDT'
-}
-| {
-  type: 'OT'
-  // , opsTransform: (localOps: any[], newOps: any[]) => []
-};
-
-export class SynStore {
+export class OTSynStore {
   /** Public accessors */
 
-  constructor(public client: SynClient, public mergeMethod: MergeMethod) {}
+  constructor(
+    public client: SynClient, 
+    // public opsTransformFunction: (ops1: any[], ops2: any[]) => any[]
+  ) {}
 
   /**
    * Keeps an up to date array of the entry hashes for all the roots in this network
@@ -63,12 +58,19 @@ export class SynStore {
   /**
    * Lazy map of all the documents in this network
    */
-  documents = new LazyHoloHashMap<EntryHash, DocumentStore<any, any>>(
+  documents = new LazyHoloHashMap<EntryHash, OTDocumentStore<any, any>>(
     (documentHash: AnyDhtHash) =>
-      new DocumentStore<any, any>(this, documentHash)
+      new OTDocumentStore<any, any>(this, documentHash)
   );
 
   async createDocument<S>(initialState: S, meta?: any) {
+    // let doc = ''
+    // const documentRecord = await this.client.createDocument({
+    //   meta: meta ? encode(meta) : undefined,
+    //   initial_state: encode(doc),
+    // });
+
+    // return this.documents.get(documentRecord.entryHash);
     let doc: Automerge.Doc<any> = Automerge.from(initialState);
     
     const documentRecord = await this.client.createDocument({

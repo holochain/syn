@@ -5,6 +5,16 @@ use hdk::prelude::*;
 pub enum MessagePayload {
     JoinSession,
     LeaveSession,
+    SendOperationsAsClerk {
+        operations: Vec<SerializedBytes>,
+    },
+    SendOperationsToClerk {
+        operations: Vec<SerializedBytes>,
+        last_known_op_index: SerializedBytes,
+    },
+    ValidateOperationsAsClerk {
+        operations: Vec<SerializedBytes>,
+    },
     ChangeNotice {
         state_changes: Vec<SerializedBytes>,
         ephemeral_changes: Vec<SerializedBytes>,
@@ -18,6 +28,7 @@ pub enum MessagePayload {
     },
     Heartbeat {
         known_participants: Vec<AgentPubKey>,
+        clerk: Option<AgentPubKey>,
     },
 }
 
