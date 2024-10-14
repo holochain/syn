@@ -5,6 +5,10 @@ use hdk::prelude::*;
 pub enum MessagePayload {
     JoinSession,
     LeaveSession,
+    ClerkAccepted,
+    ImNotTheClerk {
+        clerk: AgentPubKey,
+    },
     SendOperationsAsClerk {
         operations: Vec<SerializedBytes>,
     },
@@ -26,9 +30,31 @@ pub enum MessagePayload {
         sync_message: Option<SerializedBytes>,
         ephemeral_sync_message: Option<SerializedBytes>,
     },
+    ClerkReq {
+        clerk: AgentPubKey,
+    },
+    ClerkResp {
+        clerk: AgentPubKey,
+    },
+    InitiateElection {
+        previous_clerk: AgentPubKey,
+    },
+    VoteInElection {
+        previous_clerk: AgentPubKey,
+        nomination: AgentPubKey,
+    },
     Heartbeat {
         known_participants: Vec<AgentPubKey>,
         clerk: Option<AgentPubKey>,
+    },
+    VoteOfNoConfidence {
+        for_clerk: AgentPubKey,
+    },
+    RequestSyncAsNewClerk {
+        last_known_op_index: SerializedBytes,
+    },
+    InformClerk {
+        operations: Vec<SerializedBytes>,
     },
 }
 

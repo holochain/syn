@@ -50,6 +50,13 @@ export type MessagePayload =
       type: 'LeaveSession';
     }
   | {
+    type: 'ClerkAccepted';
+  }
+  | {
+    type: 'ImNotTheClerk';
+    clerk: AgentPubKey;
+  }
+  | {
       type: 'NewCommit';
       new_commit: Record;
     }
@@ -63,6 +70,31 @@ export type MessagePayload =
       sync_message: Uint8Array | undefined;
       ephemeral_sync_message: Uint8Array | undefined;
     }
+  | {
+    type: 'ClerkReq';
+    clerk: AgentPubKey;
+  }
+  | {
+    type: 'ClerkResp';
+    clerk: AgentPubKey;
+  }
+  // | {
+  //   type: 'InitiateNoConfidence';
+  //   clerk: AgentPubKey;
+  // }
+  | {
+    type: 'VoteOfNoConfidence';
+    for_clerk: AgentPubKey;
+  }
+  | {
+    type: 'InitiateElection';
+    previous_clerk: AgentPubKey;
+  }
+  | {
+    type: 'VoteInElection';
+    previous_clerk: AgentPubKey;
+    nomination: AgentPubKey;
+  }
   | {
       type: 'Heartbeat';
       known_participants: Array<AgentPubKey>;
@@ -80,7 +112,16 @@ export type MessagePayload =
   | {
       type: 'SendOperationsAsClerk';
       operations: Uint8Array[];
-  };
+  }
+  | {
+    type: 'RequestSyncAsNewClerk';
+    last_known_op_index: Uint8Array;
+  }
+  | {
+    type: 'InformClerk';
+    operations: Uint8Array[];
+  }
+  ;
 
 export type EntryTypes =
   | ({

@@ -217,6 +217,8 @@
   let clerkOperations = []
   let univerDoc;
   $: chronicle = sessionStore ? sessionStore.chronicle : null;
+  $: clerkLive = sessionStore ? sessionStore.clerk : null;
+  $: clerkStatus = sessionStore ? sessionStore.clerkStatus : null;
   let chronicleEstimation = []
   let chronicleEstimationLength = 0
   let lastSelection = {startOffset: 0, endOffset: 0}
@@ -264,7 +266,7 @@
 
       workspaceStore = Array.from(workspaces.values())[0];
       sessionStore = await workspaceStore.joinSession();
-      clerk = await sessionStore.getClerk();
+      clerk = await sessionStore.clerk;
       synStore = store;
     }
   }
@@ -283,6 +285,7 @@
   }
 
   function hackRefresh(selection) {
+    console.log("hack refresh selection", selection)
     const unitId = univerDoc.getUnitId()
 
     let underlineCommand = {
@@ -573,6 +576,7 @@
     return actions
   }
 import { encode, decode } from '@msgpack/msgpack';
+    import { encodeHashToBase64 } from '@holochain/client';
   
   onMount(async () => {
     let client = await createClient();
@@ -592,6 +596,7 @@ import { encode, decode } from '@msgpack/msgpack';
         startOffset: command.params.textRanges[0].startOffset,
         endOffset: command.params.textRanges[0].endOffset
       }
+      console.log("commandselection 1", commandSelection)
       let transformedCommand = extractActionsFromCommands([command])
       let lastKnownCommandIndex = chronicleEstimationLength - 1 //chronicleEstimation.length ? chronicleEstimation.length - 1 : -1;
       let lastKnownCommandId = chronicleEstimation[lastKnownCommandIndex]?.uniqueId;
@@ -626,6 +631,7 @@ import { encode, decode } from '@msgpack/msgpack';
         startOffset: TextX.transformPosition(localTransformsReverse, commandSelection.startOffset),
         endOffset: TextX.transformPosition(localTransformsReverse, commandSelection.endOffset)
       }
+      console.log("command selection 2", commandSelection)
 
       for (let i = 0; i < preOps.length; i++) {
         let c = preOps[i]
@@ -680,10 +686,12 @@ import { encode, decode } from '@msgpack/msgpack';
 
         // localTransforms = TextX.transform(localTransforms, transforms)
         
-        commandSelection = {
-          startOffset: TextX.transformPosition(transforms, commandSelection.startOffset),
-          endOffset: TextX.transformPosition(transforms, commandSelection.endOffset)
-        }
+        // commandSelection = {
+        //   startOffset: TextX.transformPosition(transforms, commandSelection.startOffset),
+        //   endOffset: TextX.transformPosition(transforms, commandSelection.endOffset)
+        // }
+
+        // console.log("command selection 3", commandSelection)
 
         chronicleEstimation.push({
           ...c,
@@ -703,7 +711,14 @@ import { encode, decode } from '@msgpack/msgpack';
       chronicleEstimation = [...chronicleEstimation];
       console.log("chronicleEstimation", chronicleEstimation)
       
+      console.log("last selection", lastSelection, "command selection", commandSelection, "localTransforms", localTransforms)
+
+      // hackRefresh({
+      //   startOffset: localTransforms[0].len + localTransforms[1].len,
+      //   endOffset: localTransforms[0].len + localTransforms[1].len
+      // })
       hackRefresh(lastSelection)
+
 
       // return error
       // throw new Error("error")
@@ -749,7 +764,7 @@ import { encode, decode } from '@msgpack/msgpack';
 </svelte:head>
 
 {#if synStore}
-  <profiles-context store={profilesStore}>
+  <!-- <profiles-context store={profilesStore}> -->
     <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
@@ -759,16 +774,23 @@ import { encode, decode } from '@msgpack/msgpack';
         <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div>
       </div>
       <main style="display: flex; height: 400px;">
-      <profile-prompt>
+      <!-- <profile-prompt> -->
         <div style="display:flex; flex-direction: column; width: 100%">
-          <div style="display: flex; flex-direction: column; width: 100px;">
-            {#if clerk && JSON.stringify(clerk) == JSON.stringify(sessionStore.myPubKey)}
-            ✅ CLERK
+            {#if clerkLive && encodeHashToBase64($clerkLive) == encodeHashToBase64(sessionStore.myPubKey)}
+            ✅ clerk
             {:else}
             ❌ clerk
             {/if}
+          <div style="display: flex; flex-direction: row; width: 100px;">
+            {$clerkStatus}: {encodeHashToBase64($clerkLive)}
+          </div>
+
+          <div style="display: flex; flex-direction: row; width: 100px;">
+            <button on:click={() => {sessionStore.handleVoteOfNoConfidence(sessionStore.myPubKey, get(sessionStore.clerk))}}>No confidence</button>
+            <button on:click={() => {sessionStore.handleElectionNotice(get(sessionStore.clerk))}}>Initiate election</button>
             <button on:click={() => {buildFromCommands(chronicleEstimation)}}>build</button>
-            <button on:click={() => {clerk = sessionStore.getClerk()}}>recheck</button>
+            <button on:click={() => {clerk = get(sessionStore.clerk)}}>recheck</button>
+            <button on:click={() => {sessionStore._clerk.set(sessionStore.myPubKey); clerk = sessionStore.myPubKey}}>set clerk to me</button>
             <button on:click={() => {hackRefresh2()}}>refresh</button>
             <button on:click={() => {
               let randomLetter = getRandomLetter();
@@ -810,15 +832,18 @@ import { encode, decode } from '@msgpack/msgpack';
             <commit-history documentstore={documentStore}></commit-history>
           </div>
         </div>
-      </profile-prompt>
+      <!-- </profile-prompt> -->
       </main>
 
       <div class="folks-tray">
         <h3>Participants</h3>
-        <session-participants sessionstore={sessionStore} />
+        {#each get(sessionStore.participants).active as participant}
+          <div>{encodeHashToBase64(participant)}</div>
+        {/each}
+        <!-- <session-participants sessionstore={sessionStore} /> -->
       </div>
     </syn-context>
-  </profiles-context>
+  <!-- </profiles-context> -->
 {/if}
 
 <style>
