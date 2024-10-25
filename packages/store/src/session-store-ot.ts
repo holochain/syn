@@ -181,11 +181,9 @@ export function extractSliceOT<S1, E1, S2, E2>(
           message &&
           isEqual(message.workspace_hash, workspaceStore.workspaceHash)
         ) {
-          console.log("new message", message.payload.type)
 
           if (message.payload.type === 'VoteOfNoConfidence') {
             if (get(this.clerkStatus) != "found") return;
-            console.log("receiving vote of no confidence")
             this.handleVoteOfNoConfidence(synSignal.provenance, message.payload.for_clerk);
           }
 
@@ -278,8 +276,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'SendOperationsToClerk') {
-            // console.log("clerk received operations raw", synSignal.provenance, message.payload, message.payload.last_known_op_index)
-            // console.log("decoded last known index", decode(message.payload.last_known_op_index) as number)
             this.intakeOperationsAsClerk(
               synSignal.provenance,
               message.payload.operations,
@@ -318,7 +314,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'InitiateElection') {
-            console.log("received election notice")
             if (get(this.clerkStatus) != "electing") {
               this._clerkStatus.set("electing");
               this.handleElectionNotice(message.payload.previous_clerk);
@@ -326,14 +321,12 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'RequestSyncAsNewClerk') {
-            console.log("received clerk accepted")
             if (get(this.clerkStatus) != "electing" && isEqual(get(this.clerk), synSignal.provenance)) {
               this.informClerk(synSignal.provenance, decode(message.payload.last_known_op_index) as number);
             };
           }
 
           if (message.payload.type === 'ClerkAccepted') {
-            console.log("received clerk accepted")
             if (get(this.clerkStatus) != "electing" && isEqual(get(this.clerk), synSignal.provenance)) {
               this._clerkStatus.set("found");
             };
@@ -360,7 +353,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
               syncStates: {
                 state: Automerge.initSyncState(),
                 ephemeral: Automerge.initSyncState(),
-                // lastOpIndex: 0
               },
             });
   
@@ -377,33 +369,34 @@ export function extractSliceOT<S1, E1, S2, E2>(
           await this.requestClerks();
         }
 
-        if (get(this.clerkStatus) != "found") return;
-        let currentClerk = get(this.clerk);
-        if (!currentClerk) {
-          currentClerk = this.getNewClerk();
-          this._clerk.set(currentClerk);
-        }
-        this._participants.update(p => {
-          const onlineParticipants = Array.from(p.entries())
-            .filter(
-              ([_participant, info]) =>
-                info.lastSeen &&
-                Date.now() - info.lastSeen < config.outOfSessionTimeout
-            )
-            .map(([p, _]) => p);
-  
-          if (p.size > 0) {
-            this.synClient.sendMessage(onlineParticipants, {
-              workspace_hash: workspaceHash,
-              payload: {
-                type: 'Heartbeat',
-                known_participants: onlineParticipants,
-                clerk: currentClerk
-              },
-            });
+        if (get(this.clerkStatus) == "found") {
+          let currentClerk = get(this.clerk);
+          if (!currentClerk) {
+            currentClerk = this.getNewClerk();
+            this._clerk.set(currentClerk);
           }
-          return p;
-        });
+          this._participants.update(p => {
+            const onlineParticipants = Array.from(p.entries())
+              .filter(
+                ([_participant, info]) =>
+                  info.lastSeen &&
+                  Date.now() - info.lastSeen < config.outOfSessionTimeout
+              )
+              .map(([p, _]) => p);
+    
+            if (p.size > 0) {
+              this.synClient.sendMessage(onlineParticipants, {
+                workspace_hash: workspaceHash,
+                payload: {
+                  type: 'Heartbeat',
+                  known_participants: onlineParticipants,
+                  clerk: currentClerk
+                },
+              });
+            }
+            return p;
+          });
+        }
       }, config.hearbeatInterval);
       this.intervals.push(heartbeatInterval);
   
@@ -486,7 +479,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
     }
   
     handleVoteOfNoConfidence(fromAgent: AgentPubKey, forClerk: AgentPubKey) {
-      console.log("handling vote of no confidence", fromAgent, forClerk)
       this._noConfidenceVotes.update(v => {
         v.push({
           fromAgent: fromAgent,
@@ -499,8 +491,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
       // only votes in the last minute
       let recentVotes = get(this.noConfidenceVotes).filter(v => Date.now() - v.timestamp < 60000);
 
-      console.log("recent votes", recentVotes)
-
       // only one vote per fromAgent
       let uniqueVotes: NoConfidenceVote[] = []
       recentVotes.forEach(v => {
@@ -508,8 +498,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           uniqueVotes.push(v);
         }
       });
-
-      console.log("filtered no confidence votes", get(this.noConfidenceVotes), uniqueVotes)
 
       let mostCommonForAgent = uniqueVotes.reduce((acc, curr) => {
         let agentString = encodeHashToBase64(curr.forClerk);
@@ -521,21 +509,15 @@ export function extractSliceOT<S1, E1, S2, E2>(
         return acc;
       }).forClerk;
 
-      console.log("most common for agent", mostCommonForAgent)
-
       // filter for only most common agent as forAgent
       let totalVotes = uniqueVotes.filter(v => isEqual(v.forClerk, mostCommonForAgent)).length;
 
-      console.log("total votes", totalVotes, get(this.participants).active.length, (totalVotes > (get(this.participants).active.length / 4)))
-
       if (totalVotes > (get(this.participants).active.length / 4)) {
-        console.log("vote of no confidence successful")
         this.initiateElection();
       }
     }
 
-    getNewClerk(ignore?: AgentPubKey[]): AgentPubKey {
-      console.log("ignore", ignore)
+    getNewClerk(): AgentPubKey {
       const activeParticipants = get(this.participants)
         .active.map(p => encodeHashToBase64(p))
         .sort((p1, p2) => {
@@ -552,11 +534,9 @@ export function extractSliceOT<S1, E1, S2, E2>(
   
     sendOperationsToClerk(operations: any[], last_known_op_index: number): Promise<any[]> {
       let clerkPubKey = get(this.clerk);
-      console.log("sending operations to clerk", clerkPubKey, this.workspaceStore.workspaceHash, operations, last_known_op_index, encode(last_known_op_index), operations.map(c => encode(c) as any))
       
       // if (encodeHashToBase64(clerkPubKey) === encodeHashToBase64(this.myPubKey)) {
       if (isEqual(clerkPubKey, this.myPubKey)) {
-        console.log("clerk is me, intaking operations as clerk")
         const newOps = this.intakeOperationsAsClerk(this.myPubKey, operations.map(c => encode(c) as any), last_known_op_index);
         return Promise.resolve(newOps.map(c => decode(c) as any[]));
       } else {
@@ -598,7 +578,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
               .catch(reject);      
             }
             if (message.payload.type === 'ValidateOperationsAsClerk') {
-              // console.log("clerk validated operations", synSignal.provenance, message.payload);
               let prevUnrecordedOps = message.payload.operations;
               this._chronicle.update(e => {
                 return [
@@ -618,7 +597,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
         const timeoutId = setTimeout(() => {
           unsub();
           // send vote of no confidence
-          console.log("sending vote of no confidence")
           this.workspaceStore.documentStore.synStore.client.sendMessage(
             get(this.participants).active,
             {
@@ -631,14 +609,26 @@ export function extractSliceOT<S1, E1, S2, E2>(
           );
           this.handleVoteOfNoConfidence(this.myPubKey, clerkPubKey);
           reject(new Error("Timeout waiting for clerk validation"));
-        }, 5000); // 5 seconds timeout
+        }, 3000); // 5 seconds timeout
       });
     }
+
+    broadcastNewOperations(operations: any[]) {
+      this.workspaceStore.documentStore.synStore.client.sendMessage(
+        get(this.participants).active,
+        {
+          workspace_hash: this.workspaceStore.workspaceHash,
+          payload: {
+            type: 'NewOperationsBroadcast',
+            operations: operations,
+          },
+        }
+      );
+    }
   
-    intakeOperationsAsClerk(fromAgent: AgentPubKey, newOperations: any[], lastKnownOpIndex: number) {//, lastKnownOpId: string) {
+    intakeOperationsAsClerk(fromAgent: AgentPubKey, newOperations: any[], lastKnownOpIndex: number) {
       // make sure I'm the clerk
       if (!isEqual(get(this.clerk), this.myPubKey)) {
-        console.log("I'm not the clerk, sending notice")
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           [fromAgent],
           {
@@ -655,53 +645,23 @@ export function extractSliceOT<S1, E1, S2, E2>(
       // let mergeMethod = this.workspaceStore.documentStore.synStore.mergeMethod;
       // let otTransformFunction = mergeMethod.type == 'OT' ? mergeMethod.opsTransform : undefined;
       // let transformedOperations = otTransformFunction ? otTransformFunction(previousOperations, newOperations) : [];
-  
-      console.log("intaking operations as clerk", fromAgent, newOperations)
-
       // let fromAgentInfo = get(this._participants).get(fromAgent);
 
       let previousOperations = get(this.chronicle);
       // let previousOperations = get(this.state);
-
-      console.log("all operations thus far length", previousOperations.length)
-      console.log("last known op index plus 1", lastKnownOpIndex + 1)
 
       let newOperationsForAgent: any[] = previousOperations
                                           // .slice(fromAgentInfo.syncStates.lastOpIndex + 1, previousOperations.length)
                                           .slice(lastKnownOpIndex + 1, previousOperations.length)
                                           .map(c => encode(c) as any)
 
-      console.log("new operations for agent", newOperationsForAgent)
-      //previousOperations.length > fromAgentInfo.syncStates.lastOpIndex ? previousOperations[fromAgentInfo.syncStates.lastOpIndex + 1, previousOperations.length - 1] : [];
-      
-      // transform the operations
-      // let transforms = this.workspaceStore.documentStore.synStore.opsTransformFunction(newOperations, newOperationsForAgent);
-
       // add to chronicle
       this._chronicle.update(e => {
-        // this._state.update(e => {
         e.push(...newOperations.map(c => decode(c) as any));
         return e;
       });
-  
-      // set a new lastOpIndex for the agent
-      // this._participants.update(p => {
-      //   const info = p.get(fromAgent);
-      //   p.set(fromAgent, {
-      //     ...info,
-      //     syncStates: {
-      //       ...info.syncStates,
-      //       lastOpIndex: Math.max(0, previousOperations.length - 1) + Math.max(0, newOperations.length - 1),
-      //     },
-      //   });
-      //   return p;
-      // });
-  
-      console.log("about to send operations as clerk, star upcoming", fromAgent, newOperationsForAgent)
 
-      // if (encodeHashToBase64(fromAgent) != encodeHashToBase64(this.myPubKey)) {
       if (!isEqual(fromAgent, this.myPubKey)) {
-        console.log("*")
         // respond to the client with the transformed operations
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           [fromAgent],
@@ -710,81 +670,21 @@ export function extractSliceOT<S1, E1, S2, E2>(
             payload: {
               type: 'ValidateOperationsAsClerk',
               operations: newOperationsForAgent,
-              // stateHash: 
             },
           }
         );
       }
-
-      console.log("sent operations as clerk if applicable", fromAgent, newOperationsForAgent.map(c => encode(c) as any))
   
+      // broadcast new operations
+      this.broadcastNewOperations(newOperations);
+
       // apply the transformed operations to the previousOperations object
       return newOperationsForAgent;
     }
 
-    // sendOperationsAsClerk(operations: any[], recipients: AgentPubKey[]) {
-    //   this.workspaceStore.documentStore.synStore.client.sendMessage(
-    //     recipients,
-    //     {
-    //       workspace_hash: this.workspaceStore.workspaceHash,
-    //       payload: {
-    //         type: 'SendOperationsAsClerk',
-    //         operations: operations.map(c => encode(c) as any),
-    //       },
-    //     }
-    //   );
-    // }
-
-    // change(updateFn: (state: S, ephemeral: E) => void) {
-    //   this._state.update(state => {
-    //     let newState = state;
-    //     console.log("updateFn", updateFn)
-    //     this._ephemeral.update(ephemeralState => {
-    //       let newEphemeralState = ephemeralState;
-  
-    //       newState = Automerge.change(newState, doc => {
-    //         newEphemeralState = Automerge.change(newEphemeralState, eph => {
-    //           updateFn(doc as S, eph as E);
-    //         });
-    //       });
-  
-    //       const stateChanges = Automerge.getChanges(state, newState);
-    //       const ephemeralChanges = Automerge.getChanges(
-    //         ephemeralState,
-    //         newEphemeralState
-    //       );
-    //       this.deltaCount += stateChanges.length;
-    //       if (
-    //         this.config.commitStrategy.CommitEveryNDeltas &&
-    //         this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
-    //       ) {
-    //         this._commitChanges();
-    //       }
-  
-    //       const participants = get(this._participants).keys();
-  
-    //       this.workspaceStore.documentStore.synStore.client.sendMessage(
-    //         Array.from(participants),
-    //         {
-    //           workspace_hash: this.workspaceStore.workspaceHash,
-    //           payload: {
-    //             type: 'ChangeNotice',
-    //             state_changes: stateChanges.map(c => encode(c) as any),
-    //             ephemeral_changes: ephemeralChanges.map(c => encode(c) as any),
-    //           },
-    //         }
-    //       );
-    //       return newEphemeralState;
-    //     });
-  
-    //     return newState;
-    //   });
-    // }
-  
     change(updateFn: (state: S, ephemeral: E) => void) {
       this._state.update(state => {
         let newState = state;
-        console.log("updateFn", updateFn)
         this._ephemeral.update(ephemeralState => {
           let newEphemeralState = ephemeralState;
   
@@ -975,7 +875,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
             isEqual(message.workspace_hash, this.workspaceStore.workspaceHash)
           ) {
             if (message.payload.type === 'ClerkResp') {
-              console.log("clerk response", synSignal.provenance, message.payload)
               clerkResponses.push(message.payload.clerk);
             }
           }
@@ -1010,13 +909,11 @@ export function extractSliceOT<S1, E1, S2, E2>(
 
             if (maxCount > totalVoteCount / 2) {
               this._clerk.set(maxClerk);
-              console.log("clerk resolved", maxClerk);
               this._clerkStatus.set("found");
               clearTimeout(requestClerksTimeoutId);
               resolve(maxClerk);
             } else {
               this.initiateElection();
-              console.log("no clerk consensus, initiating election", maxCount, maxClerk, totalVoteCount, clerkMap);
               clearTimeout(requestClerksTimeoutId);
               reject(new Error("No clerk consensus"));
             }
@@ -1026,14 +923,12 @@ export function extractSliceOT<S1, E1, S2, E2>(
           this._clerk.set(this.getNewClerk());
           this._clerkStatus.set("found");
           reject(new Error("No clerk resps in time"));
-        }, 10000); // 10 seconds timeout
+        }, 30000); // 3 seconds timeout
       });
     }
 
     async initiateElection() {
-      console.log("initiating election 0", get(this.clerkStatus))
       if (get(this.clerkStatus) == "electing") return;
-      console.log("initiating election")
       this._clerkStatus.set("electing");
       let participants = get(this.participants).active;
       this.workspaceStore.documentStore.synStore.client.sendMessage(
@@ -1050,12 +945,10 @@ export function extractSliceOT<S1, E1, S2, E2>(
     }
 
     async handleElectionNotice(previousClerk: AgentPubKey) {
-      console.log("handling election notice")
       this.listenForVotes();
 
       setTimeout(() => {
         let newClerk = this.getNewClerk();
-        console.log("sending vote for", encodeHashToBase64(newClerk))
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           get(this.participants).active,
           {
@@ -1071,16 +964,13 @@ export function extractSliceOT<S1, E1, S2, E2>(
     }
 
     async listenForVotes() {
-      console.log("LISTENING FOR VOTES")
       let votes = new Map<string, number>();
       let maxVotes = 0;
       let maxClerk = get(this.clerk);
       let maxClerkKey = encodeHashToBase64(maxClerk);
     
       const unsubElection = this.workspaceStore.documentStore.synStore.client.onSignal(synSignal => {
-        console.log("signal", synSignal)
         if (synSignal.type !== 'SessionMessage') return;
-        // if (isEqual(synSignal.provenance, this.myPubKey)) return;
     
         const message: SessionMessage = synSignal.message;
         if (
@@ -1088,7 +978,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           isEqual(message.workspace_hash, this.workspaceStore.workspaceHash)
         ) {
           if (message.payload.type === 'VoteInElection') {
-            console.log("found a vote from", encodeHashToBase64(synSignal.provenance), "for", encodeHashToBase64(message.payload.nomination))
             let nomination = message.payload.nomination;
             const nominationKey = encodeHashToBase64(nomination);
             let count = votes.get(nominationKey);
@@ -1103,19 +992,16 @@ export function extractSliceOT<S1, E1, S2, E2>(
       });
     
       setTimeout(() => {
-        console.log("vote results", votes, maxVotes, maxClerkKey)
         unsubElection();
         maxClerk = decodeHashFromBase64(maxClerkKey); // Decode back to Uint8Array
         this._clerk.set(maxClerk);
         if (isEqual(maxClerk, this.myPubKey)) {
-          console.log("I am the new clerk")
           this.acceptClerk();
         }
-      }, 10000); // 10 seconds timeout
+      }, 5000); // 5 seconds timeout
     }
   
     async acceptClerk() {
-      console.log("accepting clerk")
       this.workspaceStore.documentStore.synStore.client.sendMessage(
         get(this.participants).active,
         {
@@ -1153,7 +1039,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           e.push(...longestChronicleUpdate.map(c => decode(c) as any));
           return e;
         });
-        console.log("all operations thus far length after clerk sync ", get(this.chronicle).length)
         this._clerkStatus.set("found");
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           get(this.participants).active,
@@ -1168,7 +1053,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
     }
 
     async informClerk(clerk: AgentPubKey, lastOpIndex: number) {
-      console.log("informing clerk")
       this.workspaceStore.documentStore.synStore.client.sendMessage(
         [clerk],
         {
@@ -1284,13 +1168,12 @@ export function extractSliceOT<S1, E1, S2, E2>(
       });
 
       if (clerk && !isEqual(clerk, get(this.clerk)) && get(this.clerkStatus) == "found") {
-        this.handleClerkDisagreement(clerk);
+        this.handleClerkDisagreement();
       }
     }
   
-    private async handleClerkDisagreement(clerk: AgentPubKey) {
+    private async handleClerkDisagreement() {
       this._clerkStatus.set("disagreement");
-      console.log("clerk disagreement", clerk)
       const newClerk = await this.requestClerks();
       if (newClerk) {
         this._clerk.set(newClerk);

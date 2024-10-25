@@ -131,7 +131,7 @@ export class SynClient extends ZomeClient<SynSignal> {
 
     if (commits.length > 600) {
       console.warn(
-        `THERE ARE ${commits.length} FOR THIS DOCUMENT. THIS SHOULDN'T HAPPEN! REPORT TO THE SYN DEVS ABOUT THIS (guillemcordoba)`
+        `THERE ARE ${commits.length} FOR THIS DOCUMENT. THIS SHOULDN'T HAPPEN! REPORT TO THE SYN DEVS ABOUT THIS (leosprograms)`
       );
     }
 

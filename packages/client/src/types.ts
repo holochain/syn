@@ -78,13 +78,13 @@ export type MessagePayload =
     type: 'ClerkResp';
     clerk: AgentPubKey;
   }
-  // | {
-  //   type: 'InitiateNoConfidence';
-  //   clerk: AgentPubKey;
-  // }
   | {
     type: 'VoteOfNoConfidence';
     for_clerk: AgentPubKey;
+  }
+  | {
+    type: 'NewOperationsBroadcast';
+    operations: Uint8Array[];
   }
   | {
     type: 'InitiateElection';

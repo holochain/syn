@@ -50,6 +50,9 @@ pub enum MessagePayload {
     VoteOfNoConfidence {
         for_clerk: AgentPubKey,
     },
+    NewOperationsBroadcast {
+        operations: Vec<SerializedBytes>,
+    },
     RequestSyncAsNewClerk {
         last_known_op_index: SerializedBytes,
     },
