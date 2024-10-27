@@ -327,7 +327,8 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'ClerkAccepted') {
-            if (get(this.clerkStatus) != "electing" && isEqual(get(this.clerk), synSignal.provenance)) {
+            console.log("received clerk accepted", synSignal.provenance, this.clerk, this.clerkStatus)
+            if (get(this.clerkStatus) == "electing" && isEqual(get(this.clerk), synSignal.provenance)) {
               this._clerkStatus.set("found");
             };
           }
@@ -365,8 +366,13 @@ export function extractSliceOT<S1, E1, S2, E2>(
   
       const heartbeatInterval = setInterval(async () => {
         if (get(this.clerkStatus) == "unassigned") {
-          this._clerkStatus.set("searching");
-          await this.requestClerks();
+          if (get(this.participants).active.length > 0) {
+            this._clerkStatus.set("searching");
+            await this.requestClerks();
+          } else {
+            this._clerkStatus.set("found");
+            this._clerk.set(this.myPubKey);
+          }
         }
 
         if (get(this.clerkStatus) == "found") {
@@ -531,6 +537,17 @@ export function extractSliceOT<S1, E1, S2, E2>(
         });
       return decodeHashFromBase64(activeParticipants[0]) as AgentPubKey;
     }
+
+    saveOperationsToChronicle(operations: any[]) {
+      this._chronicle.update(e => {
+        e.push(...operations);
+        return e;
+      });
+    }
+
+    resetChronicle() {
+      this._chronicle.set([]);
+    }
   
     sendOperationsToClerk(operations: any[], last_known_op_index: number): Promise<any[]> {
       let clerkPubKey = get(this.clerk);
@@ -579,13 +596,11 @@ export function extractSliceOT<S1, E1, S2, E2>(
             }
             if (message.payload.type === 'ValidateOperationsAsClerk') {
               let prevUnrecordedOps = message.payload.operations;
-              this._chronicle.update(e => {
-                return [
-                  ...e,
-                  ...prevUnrecordedOps.map(c => decode(c) as any),
-                  ...operations,
-                ]
-              })
+              // TODO: make sure this is the right place to save the operations
+              // this.saveOperationsToChronicle([
+              //   ...prevUnrecordedOps.map(c => decode(c) as any),
+              //   ...operations,
+              // ])
               unsub();
               clearTimeout(timeoutId); // Clear the timeout
               resolve(prevUnrecordedOps.map(c => decode(c) as any[]));
@@ -613,9 +628,12 @@ export function extractSliceOT<S1, E1, S2, E2>(
       });
     }
 
-    broadcastNewOperations(operations: any[]) {
+    broadcastNewOperations(operations: any[], excludeAgent: AgentPubKey) {
+      const activeParticipants = get(this.participants).active.filter(
+        participant => !isEqual(participant, excludeAgent)
+      );
       this.workspaceStore.documentStore.synStore.client.sendMessage(
-        get(this.participants).active,
+        activeParticipants,
         {
           workspace_hash: this.workspaceStore.workspaceHash,
           payload: {
@@ -656,10 +674,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
                                           .map(c => encode(c) as any)
 
       // add to chronicle
-      this._chronicle.update(e => {
-        e.push(...newOperations.map(c => decode(c) as any));
-        return e;
-      });
+      this.saveOperationsToChronicle(newOperations.map(c => decode(c) as any))
 
       if (!isEqual(fromAgent, this.myPubKey)) {
         // respond to the client with the transformed operations
@@ -676,7 +691,9 @@ export function extractSliceOT<S1, E1, S2, E2>(
       }
   
       // broadcast new operations
-      this.broadcastNewOperations(newOperations);
+      if (newOperations.length > 0) {
+        this.broadcastNewOperations(newOperations, fromAgent);
+      }
 
       // apply the transformed operations to the previousOperations object
       return newOperationsForAgent;
@@ -859,6 +876,8 @@ export function extractSliceOT<S1, E1, S2, E2>(
         }
       );
 
+      console.log("listening for clerks")
+
       // listen for messages
       return new Promise((resolve, reject) => {
         let clerkResponses: AgentPubKey[] = [];
@@ -881,6 +900,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
         });
     
         const requestClerksTimeoutId = setTimeout(() => {
+          console.log("done listening for clerks")
           unsub();
           
           if (clerkResponses.length > 0) {
@@ -917,13 +937,15 @@ export function extractSliceOT<S1, E1, S2, E2>(
               clearTimeout(requestClerksTimeoutId);
               reject(new Error("No clerk consensus"));
             }
+          } else {
+            // if no responses, just make the best guess
+            this._clerk.set(this.getNewClerk());
+            this._clerkStatus.set("found");
+            clearTimeout(requestClerksTimeoutId);
+            reject(new Error("No clerk resps in time"));
           }
 
-          // if no responses, just make the best guess
-          this._clerk.set(this.getNewClerk());
-          this._clerkStatus.set("found");
-          reject(new Error("No clerk resps in time"));
-        }, 30000); // 3 seconds timeout
+        }, 3000); // 3 seconds timeout
       });
     }
 
@@ -948,6 +970,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
       this.listenForVotes();
 
       setTimeout(() => {
+        console.log("sending my vote")
         let newClerk = this.getNewClerk();
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           get(this.participants).active,
@@ -960,7 +983,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
             },
           }
         );
-      }, 5000); // 5 seconds timeout
+      },2500); // 5 seconds timeout
     }
 
     async listenForVotes() {
@@ -992,13 +1015,14 @@ export function extractSliceOT<S1, E1, S2, E2>(
       });
     
       setTimeout(() => {
+        console.log("counting votes")
         unsubElection();
         maxClerk = decodeHashFromBase64(maxClerkKey); // Decode back to Uint8Array
         this._clerk.set(maxClerk);
         if (isEqual(maxClerk, this.myPubKey)) {
           this.acceptClerk();
         }
-      }, 5000); // 5 seconds timeout
+      }, 5000); // 10 seconds timeout
     }
   
     async acceptClerk() {
@@ -1035,10 +1059,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
       setTimeout(() => {
         // add longestChronicleUpdate to chronicle
         unsubClerkSync();
-        this._chronicle.update(e => {
-          e.push(...longestChronicleUpdate.map(c => decode(c) as any));
-          return e;
-        });
+        this.saveOperationsToChronicle(longestChronicleUpdate.map(c => decode(c) as any))
         this._clerkStatus.set("found");
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           get(this.participants).active,
@@ -1049,7 +1070,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
             },
           }
         )
-        }, 10000); // 10 seconds timeout
+        }, 5000); // 10 seconds timeout
     }
 
     async informClerk(clerk: AgentPubKey, lastOpIndex: number) {
