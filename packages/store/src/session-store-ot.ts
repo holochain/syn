@@ -282,15 +282,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
               decode(message.payload.last_known_op_index) as number
             );
           }
-
-          // if (message.payload.type === 'ValidateOperationsAsClerk') {
-          //   console.log("clerk validated operations", synSignal.provenance, message.payload)
-          //   let operations = message.payload.operations;
-          //   this._ephemeral.update(e => {
-          //     e.push(...operations.map(c => decode(c) as any));
-          //     return e;
-          //   });
-          // }
   
           if (message.payload.type === 'Heartbeat') {
             this.handleHeartbeat(
@@ -327,7 +318,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'ClerkAccepted') {
-            console.log("received clerk accepted", synSignal.provenance, this.clerk, this.clerkStatus)
             if (get(this.clerkStatus) == "electing" && isEqual(get(this.clerk), synSignal.provenance)) {
               this._clerkStatus.set("found");
             };
@@ -437,7 +427,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           syncStates: {
             state: Automerge.initSyncState(),
             ephemeral: Automerge.initSyncState(),
-            // lastOpIndex: 0
           },
         });
       }
@@ -463,8 +452,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           workspaceStore.workspaceHash
         );
   
-      // const hostPubKey = participants[0];
-      // const hostPubKey = await toPromise(workspaceStore.hosts[0]);
       const currentTip = await toPromise(workspaceStore.tip);
       const currentState: S = await toPromise(workspaceStore.latestSnapshot);
       const clerk = participants[0];
@@ -552,7 +539,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
     sendOperationsToClerk(operations: any[], last_known_op_index: number): Promise<any[]> {
       let clerkPubKey = get(this.clerk);
       
-      // if (encodeHashToBase64(clerkPubKey) === encodeHashToBase64(this.myPubKey)) {
       if (isEqual(clerkPubKey, this.myPubKey)) {
         const newOps = this.intakeOperationsAsClerk(this.myPubKey, operations.map(c => encode(c) as any), last_known_op_index);
         return Promise.resolve(newOps.map(c => decode(c) as any[]));
@@ -659,17 +645,9 @@ export function extractSliceOT<S1, E1, S2, E2>(
         );
         return [];
       }
-
-      // let mergeMethod = this.workspaceStore.documentStore.synStore.mergeMethod;
-      // let otTransformFunction = mergeMethod.type == 'OT' ? mergeMethod.opsTransform : undefined;
-      // let transformedOperations = otTransformFunction ? otTransformFunction(previousOperations, newOperations) : [];
-      // let fromAgentInfo = get(this._participants).get(fromAgent);
-
       let previousOperations = get(this.chronicle);
-      // let previousOperations = get(this.state);
 
       let newOperationsForAgent: any[] = previousOperations
-                                          // .slice(fromAgentInfo.syncStates.lastOpIndex + 1, previousOperations.length)
                                           .slice(lastKnownOpIndex + 1, previousOperations.length)
                                           .map(c => encode(c) as any)
 
@@ -876,7 +854,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
         }
       );
 
-      console.log("listening for clerks")
 
       // listen for messages
       return new Promise((resolve, reject) => {
@@ -900,7 +877,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
         });
     
         const requestClerksTimeoutId = setTimeout(() => {
-          console.log("done listening for clerks")
           unsub();
           
           if (clerkResponses.length > 0) {
@@ -970,7 +946,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
       this.listenForVotes();
 
       setTimeout(() => {
-        console.log("sending my vote")
         let newClerk = this.getNewClerk();
         this.workspaceStore.documentStore.synStore.client.sendMessage(
           get(this.participants).active,
@@ -1015,7 +990,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
       });
     
       setTimeout(() => {
-        console.log("counting votes")
         unsubElection();
         maxClerk = decodeHashFromBase64(maxClerkKey); // Decode back to Uint8Array
         this._clerk.set(maxClerk);
@@ -1178,7 +1152,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
             syncStates: {
               state: Automerge.initSyncState(),
               ephemeral: Automerge.initSyncState(),
-              // lastOpIndex: 0
             },
           });
   
@@ -1227,7 +1200,6 @@ export function extractSliceOT<S1, E1, S2, E2>(
           syncStates: {
             state: Automerge.initSyncState(),
             ephemeral: Automerge.initSyncState(),
-            // lastOpIndex: 0
           },
         });
         return p;
