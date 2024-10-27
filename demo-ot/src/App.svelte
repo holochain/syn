@@ -19,7 +19,7 @@
     ProfilesStore,
   } from '@holochain-open-dev/profiles';
   import '@holochain-open-dev/profiles/dist/elements/profiles-context.js'
-  import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js'
+  // import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js'
   import { v1 as uuidv1 } from "uuid";
 
   // ============= UNIVER IMPORTS =============

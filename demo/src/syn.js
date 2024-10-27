@@ -20,7 +20,7 @@ export function textSlice(sessionStore) {
 }
 
 export async function createClient() {
-  const client = await AppWebsocket.connect({});
+  const client = await AppWebsocket.connect();
 
   return client;
 }
