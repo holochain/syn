@@ -13,13 +13,13 @@
   import { createClient, DocumentGrammar, textSlice } from './syn';
   import {toPromise} from '@holochain-open-dev/stores'
   import { setContext, onMount } from 'svelte';
-  import { get } from 'svelte/store';
-  import {
-    ProfilesClient,
-    ProfilesStore,
-  } from '@holochain-open-dev/profiles';
-  import '@holochain-open-dev/profiles/dist/elements/profiles-context.js'
-  import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js'
+  // import { get } from 'svelte/store';
+  // import {
+  //   ProfilesClient,
+  //   ProfilesStore,
+  // } from '@holochain-open-dev/profiles';
+  // import '@holochain-open-dev/profiles/dist/elements/profiles-context.js'
+  // import '@holochain-open-dev/profiles/dist/elements/profile-prompt.js'
 
   $: disconnected = false;
   let syn;
@@ -92,11 +92,12 @@
     tabShown = false;
   };
 
-  let profilesStore;
+  // let profilesStore;
   let synStore;
   let documentStore;
   let workspaceStore;
   let sessionStore;
+  $: deltaCount = sessionStore ? sessionStore.deltaCount : null;
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
@@ -123,11 +124,12 @@
   }
   onMount(async () => {
     let client = await createClient();
-    profilesStore = new ProfilesStore(new ProfilesClient(client, 'syn-test'));
+    // profilesStore = new ProfilesStore(new ProfilesClient(client, 'syn-test'));
     await initSyn(client);
   });
 
-  $: synStore, workspaceStore, profilesStore, sessionStore;
+  // $: synStore, workspaceStore, profilesStore, sessionStore;
+  $: synStore, workspaceStore, sessionStore;
 
   let autoType = false
 
@@ -143,7 +145,7 @@
 </svelte:head>
 
 {#if synStore}
-  <profiles-context store={profilesStore}>
+  <!-- <profiles-context store={profilesStore}> -->
     <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
@@ -155,7 +157,7 @@
       <main style="display: flex; height: 400px">
   <profile-prompt>
       <div style="display: flex; flex-direction:row; flex: 1;">
-        <syn-markdown-editor autotype={autoType} style="flex: 1;" slice={textSlice(sessionStore)}></syn-markdown-editor>
+        <syn-markdown-editor autotype={autoType} style="flex: 1; witdh: 200px; height: 200px;" slice={textSlice(sessionStore)}></syn-markdown-editor>
         <commit-history documentstore={documentStore}></commit-history>
       </div>
     </profile-prompt>
@@ -166,7 +168,7 @@
         <session-participants sessionstore={sessionStore} />
       </div>
     </syn-context>
-  </profiles-context>
+  <!-- </profiles-context> -->
 {/if}
 
 <style>

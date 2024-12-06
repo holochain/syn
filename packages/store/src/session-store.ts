@@ -114,7 +114,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
   private unsubscribe: () => void = () => { };
   private intervals: any[] = [];
-  private deltaCount = 0;
+  deltaCount = 0;
 
   get myPubKey() {
     return this.synClient.client.myPubKey;
@@ -379,11 +379,24 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           newEphemeralState
         );
         this.deltaCount += stateChanges.length;
-        if (
-          this.config.commitStrategy.CommitEveryNDeltas &&
-          this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
-        ) {
-          this._commitChanges();
+        const activeParticipants = get(this.participants)
+          .active.map(p => encodeHashToBase64(p))
+          .sort((p1, p2) => {
+            if (p1 < p2) {
+              return -1;
+            }
+            if (p1 > p2) {
+              return 1;
+            }
+            return 0;
+          });
+        if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
+          if (
+            this.config.commitStrategy.CommitEveryNDeltas &&
+            this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
+          ) {
+            this._commitChanges();
+          }
         }
 
         const participants = get(this._participants).keys();

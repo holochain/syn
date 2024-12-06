@@ -26,18 +26,10 @@ export const stateFromDocument = (document: Document) => {
   return state;
 };
 
-type MergeMethod = {
-  type: 'CRDT'
-}
-| {
-  type: 'OT'
-  // , opsTransform: (localOps: any[], newOps: any[]) => []
-};
-
 export class SynStore {
   /** Public accessors */
 
-  constructor(public client: SynClient, public mergeMethod: MergeMethod) {}
+  constructor(public client: SynClient) {}
 
   /**
    * Keeps an up to date array of the entry hashes for all the roots in this network

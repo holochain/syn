@@ -276,11 +276,14 @@ export function extractSliceOT<S1, E1, S2, E2>(
           }
 
           if (message.payload.type === 'SendOperationsToClerk') {
-            this.intakeOperationsAsClerk(
-              synSignal.provenance,
-              message.payload.operations,
-              decode(message.payload.last_known_op_index) as number
-            );
+            // make sure this message didn't come from me
+            if (!isEqual(synSignal.provenance, this.myPubKey)) {
+              this.intakeOperationsAsClerk(
+                synSignal.provenance,
+                message.payload.operations,
+                decode(message.payload.last_known_op_index) as number
+              );
+            }
           }
   
           if (message.payload.type === 'Heartbeat') {
@@ -356,7 +359,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
   
       const heartbeatInterval = setInterval(async () => {
         if (get(this.clerkStatus) == "unassigned") {
-          if (get(this.participants).active.length > 0) {
+          if (get(this.participants).active.length > 1) {
             this._clerkStatus.set("searching");
             await this.requestClerks();
           } else {
@@ -527,8 +530,11 @@ export function extractSliceOT<S1, E1, S2, E2>(
 
     saveOperationsToChronicle(operations: any[]) {
       this._chronicle.update(e => {
-        e.push(...operations);
-        return e;
+        // push all that, if they have an uniqueId, have an uniqueId that is not in chroncile
+        return e.concat(operations.filter(op => {
+          if (!op.uniqueId) return true;
+          return !e.find(c => c.uniqueId === op.uniqueId);
+        }));
       });
     }
 
@@ -610,7 +616,7 @@ export function extractSliceOT<S1, E1, S2, E2>(
           );
           this.handleVoteOfNoConfidence(this.myPubKey, clerkPubKey);
           reject(new Error("Timeout waiting for clerk validation"));
-        }, 3000); // 5 seconds timeout
+        }, 5000); // 5 seconds timeout
       });
     }
 
@@ -695,11 +701,24 @@ export function extractSliceOT<S1, E1, S2, E2>(
             newEphemeralState
           );
           this.deltaCount += stateChanges.length;
-          if (
-            this.config.commitStrategy.CommitEveryNDeltas &&
-            this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
-          ) {
-            this._commitChanges();
+          const activeParticipants = get(this.participants)
+            .active.map(p => encodeHashToBase64(p))
+            .sort((p1, p2) => {
+              if (p1 < p2) {
+                return -1;
+              }
+              if (p1 > p2) {
+                return 1;
+              }
+              return 0;
+            });
+          if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
+            if (
+              this.config.commitStrategy.CommitEveryNDeltas &&
+              this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
+            ) {
+              this._commitChanges();
+            }
           }
   
           const participants = get(this._participants).keys();

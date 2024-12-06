@@ -31,7 +31,6 @@ export class OTSynStore {
 
   constructor(
     public client: SynClient, 
-    // public opsTransformFunction: (ops1: any[], ops2: any[]) => any[]
   ) {}
 
   /**
