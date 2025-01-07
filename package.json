@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "start": "AGENTS=2 BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) npm run network",
+    "start-ot": "AGENTS=2 BOOTSTRAP_PORT=$(port) SIGNAL_PORT=$(port) npm run network-ot",
     "network": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run dev:libs\" \"npm run launch:happ\" \"npm start -w demo\"",
+    "network-ot": "hc s clean && npm run build:happ && UI_PORT=8887 concurrently \"npm run dev:libs\" \"npm run launch:happ\" \"npm start -w demo-ot\"",
     "launch:happ": "concurrently \"hc-spin -n $AGENTS workdir/syn-test.happ --ui-port $UI_PORT \"",
     "dev:libs": "concurrently \"npm run build:watch -w @holochain-syn/client\" \"npm run build:watch -w @holochain-syn/store\" \"npm run build:watch -w @holochain-syn/core\" \"npm run build:watch -w @holochain-syn/text-editor\"",
     "prepare": "npm run build:libs",
