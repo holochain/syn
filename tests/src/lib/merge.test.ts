@@ -98,10 +98,7 @@ test('check that the state of disconnected agents making changes converges after
 
     await alice.conductor.startUp();
     const port = await alice.conductor.attachAppInterface();
-    const tokenResp = await alice.conductor.adminWs().issueAppAuthenticationToken({
-      installed_app_id: alice.appId,
-    });
-    const aliceAppWs = await alice.conductor.connectAppWs(tokenResp.token, port);
+    const aliceAppWs = await alice.conductor.connectAppWs(port, alice.appId);
     await scenario.shareAllAgents();
 
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
