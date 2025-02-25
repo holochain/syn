@@ -203,4 +203,47 @@ export class SynClient extends ZomeClient<SynSignal> {
       message,
     } as SendMessageInput);
   }
+
+  public async callZome(fnname, payload) {
+    try {
+      const result = await super.callZome(fnname, payload);
+      return result;
+    } catch (e) {
+      const state = await this.dumpSynState();
+      const dumpState = {
+        state,
+        error: JSON.stringify(e),
+      };
+
+      const alert = document.createElement('div');
+      alert.innerHTML = `<sl-alert open>
+      There was an error calling a zome function for syn.
+      <sl-button id="syn-error-alert-button">Download syn state</sl-button>
+
+      </sl-alert>`;
+      document.body.appendChild(alert);
+      const button = document.getElementById('syn-error-alert-button');
+      button?.addEventListener('click', () => {
+        downloadObjectAsJson(dumpState, 'syn-state.json');
+      });
+
+      throw e;
+    }
+  }
+
+  private async dumpSynState() {
+    // Get all documents, commits and workspace
+  }
+}
+
+function downloadObjectAsJson(exportObj, exportName) {
+  var dataStr =
+    'data:text/json;charset=utf-8,' +
+    encodeURIComponent(JSON.stringify(exportObj));
+  var downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute('href', dataStr);
+  downloadAnchorNode.setAttribute('download', exportName + '.json');
+  document.body.appendChild(downloadAnchorNode); // required for firefox
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
 }
