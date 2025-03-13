@@ -213,18 +213,32 @@ export class SynClient extends ZomeClient<SynSignal> {
       const dumpState = {
         state,
         error: JSON.stringify(e),
+        userNote: '',
       };
 
       const alert = document.createElement('div');
+      const id = 'syn-error-alert-' + Math.random().toString(36).substr(2, 9);
+      alert.id = id;
       alert.innerHTML = `<sl-alert open>
       There was an error calling a zome function for syn.
+      <br>
+      <small>${JSON.stringify(e)}</small>
+      <br>
+      <textarea id="syn-error-note" placeholder="Please leave a note describing what you were doing when this error occurred." style="width: 100%; height: 100px;"></textarea>
+      <br>
+      <sl-button id="dismiss-error-alert-button" type="primary" >Dismiss</sl-button>
       <sl-button id="syn-error-alert-button">Download syn state</sl-button>
-
       </sl-alert>`;
       document.body.appendChild(alert);
       const button = document.getElementById('syn-error-alert-button');
       button?.addEventListener('click', () => {
+        const note = (document.getElementById('syn-error-note') as HTMLTextAreaElement).value;
+        dumpState.userNote = note;
         downloadObjectAsJson(dumpState, 'syn-state.json');
+      });
+      const dismissButton = document.getElementById('dismiss-error-alert-button');
+      dismissButton?.addEventListener('click', () => {
+        document.getElementById(id)?.remove();
       });
 
       throw e;
@@ -240,6 +254,7 @@ function downloadObjectAsJson(exportObj, exportName) {
   var dataStr =
     'data:text/json;charset=utf-8,' +
     encodeURIComponent(JSON.stringify(exportObj));
+  console.log(dataStr);
   var downloadAnchorNode = document.createElement('a');
   downloadAnchorNode.setAttribute('href', dataStr);
   downloadAnchorNode.setAttribute('download', exportName + '.json');
