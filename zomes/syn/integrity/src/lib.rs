@@ -68,13 +68,20 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             },
             LinkTypes::DocumentToCommits => {
                 // make sure commit references document it is linking from
-                let entry_hash = target_address
-                    .into_entry_hash()
+                let commit_action_hash = target_address
+                    .into_action_hash()
                     .ok_or(wasm_error!(WasmErrorInner::Guest(
-                        "No entry hash associated with DocumentToCommits link".to_string()
+                        "No action hash associated with WorkspaceToTip target address".to_string()
                     )))?;
-                let commit_entry = must_get_entry(entry_hash)?;
-                let commit = crate::Commit::try_from(commit_entry)?;
+                let commit_record = must_get_valid_record(commit_action_hash)?;
+                let commit: Commit = commit_record
+                    .entry()
+                    .to_app_option()
+                    .map_err(|e| wasm_error!(e))?
+                    .ok_or(wasm_error!(WasmErrorInner::Guest(
+                        "Commit entry not found".to_string()
+                    )))?;
+
                 let document_hash = commit.document_hash;
                 let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
                     .into_action_hash()

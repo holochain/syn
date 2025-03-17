@@ -103,6 +103,7 @@ export class SynClient extends ZomeClient<SynSignal> {
             .finally(() => unsubs());
         }
       });
+      console.log("creating a commit")
       this.callZome('create_commit', commit).catch(e => reject(e));
       setTimeout(() => reject('TIMEOUT'), 30000);
     });
@@ -205,20 +206,30 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async callZome(fnname, payload) {
+    console.log('Calling zome function', fnname, payload);
     try {
       const result = await super.callZome(fnname, payload);
       return result;
     } catch (e) {
-      const state = await this.dumpSynState();
-      const dumpState = {
-        state,
-        error: JSON.stringify(e),
-        userNote: '',
-      };
+      console.log('Error calling zome function', fnname, e);
 
       const alert = document.createElement('div');
-      const id = 'syn-error-alert-' + Math.random().toString(36).substr(2, 9);
-      alert.id = id;
+      alert.style.position = 'fixed';
+      alert.style.top = '0';
+      alert.style.left = '0';
+      alert.style.right = '0';
+      alert.style.zIndex = '1000';
+      alert.style.backgroundColor = 'white';
+      alert.style.padding = '20px';
+      alert.style.border = '1px solid red';
+      alert.style.boxShadow = '0 0 10px 0 rgba(0,0,0,0.1)';
+      alert.style.margin = '20px';
+      alert.style.borderRadius = '5px';
+      alert.style.maxWidth = '600px';
+      alert.style.margin = 'auto';
+      alert.style.marginTop = '20px';
+      const id = Math.random().toString(36).substr(2, 9);
+      alert.id = 'syn-error-alert-' + id;
       alert.innerHTML = `<sl-alert open>
       There was an error calling a zome function for syn.
       <br>
@@ -226,27 +237,68 @@ export class SynClient extends ZomeClient<SynSignal> {
       <br>
       <textarea id="syn-error-note" placeholder="Please leave a note describing what you were doing when this error occurred." style="width: 100%; height: 100px;"></textarea>
       <br>
-      <sl-button id="dismiss-error-alert-button" type="primary" >Dismiss</sl-button>
-      <sl-button id="syn-error-alert-button">Download syn state</sl-button>
+      <sl-button id="dismiss-error-alert-button-${id}" type="primary" >Dismiss</sl-button>
+      <sl-button id="syn-error-alert-button-${id}">Download syn state</sl-button>
       </sl-alert>`;
       document.body.appendChild(alert);
-      const button = document.getElementById('syn-error-alert-button');
-      button?.addEventListener('click', () => {
+      const button = document.getElementById('syn-error-alert-button-' + id);
+      button?.addEventListener('click', async() => {
         const note = (document.getElementById('syn-error-note') as HTMLTextAreaElement).value;
+        const state = await this.dumpSynState();
+        console.log('Dumping state', state);
+        const dumpState = {
+          state,
+          error: JSON.stringify(e),
+          userNote: '',
+        };
         dumpState.userNote = note;
         downloadObjectAsJson(dumpState, 'syn-state.json');
       });
-      const dismissButton = document.getElementById('dismiss-error-alert-button');
+      const dismissButton = document.getElementById('dismiss-error-alert-button-' + id);
       dismissButton?.addEventListener('click', () => {
-        document.getElementById(id)?.remove();
+        console.log('Dismissing error alert');
+        document.getElementById('syn-error-alert-' + id)?.remove();
       });
 
       throw e;
     }
   }
 
+  /**
+   * Dumps the current state of Syn, including all documents, commits, authors, and workspaces.
+   * This method is used for debugging purposes to capture the state when an error occurs.
+   */
   private async dumpSynState() {
-    // Get all documents, commits and workspace
+    try {
+      // Get all documents, commits and workspace
+      const activeDocs = await this.getDocumentsWithTag('active');
+      const archivedDocs = await this.getDocumentsWithTag('archived');
+      const allDocs = activeDocs.concat(archivedDocs);
+      const allDocsRecords = await Promise.all(
+        allDocs.map(doc => this.getDocument(doc.target))
+      );
+      const allDocsCommits = await Promise.all(
+        allDocs.map(doc => this.getCommitsForDocument(doc.target))
+      );
+      const allDocsAuthors = await Promise.all(
+        allDocs.map(doc => this.getAuthorsForDocument(doc.target))
+      );
+      const allDocsWorkspaces = await Promise.all(
+        allDocs.map(doc => this.getWorkspacesForDocument(doc.target))
+      );
+      const output = {
+        allDocs: allDocsRecords,
+        allDocsCommits,
+        allDocsAuthors,
+        allDocsWorkspaces,
+      };
+      return output;
+    } catch (e) {
+      console.error('Error dumping syn state', e);
+      return {
+        error: JSON.stringify(e),
+      };
+    }
   }
 }
 
