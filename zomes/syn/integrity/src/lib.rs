@@ -4,6 +4,7 @@ mod workspace;
 
 pub use commit::*;
 pub use document::*;
+use holochain_integrity_types::action;
 pub use workspace::*;
 
 use hdi::prelude::*;
@@ -32,8 +33,64 @@ pub enum LinkTypes {
 #[hdk_extern]
 pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {
-        FlatOp::StoreRecord(_) => Ok(ValidateCallbackResult::Valid),
-        FlatOp::StoreEntry(_) => Ok(ValidateCallbackResult::Valid),
+        FlatOp::StoreRecord(store_record) => {
+            match store_record {
+                OpRecord::CreateEntry { app_entry, action } => {
+                    match app_entry {
+                        EntryTypes::Commit(commit) => {
+                            for previous_commit_hash in commit.previous_commit_hashes.iter() {
+                                let previous_commit_record = must_get_valid_record(previous_commit_hash.clone())?;
+                                let previous_commit: Commit = previous_commit_record
+                                    .entry()
+                                    .to_app_option()
+                                    .map_err(|e| wasm_error!(e))?
+                                    .ok_or(wasm_error!(WasmErrorInner::Guest(
+                                        "Commit entry not found".to_string()
+                                    )))?;
+                                if previous_commit.document_hash != commit.document_hash {
+                                    return Ok(ValidateCallbackResult::Invalid(
+                                        "Previous commit does not reference the same document_hash".to_string(),
+                                    ));
+                                }
+                            }
+                            Ok(ValidateCallbackResult::Valid)
+                        },
+                        _ => Ok(ValidateCallbackResult::Valid),
+                    }
+                },
+                OpRecord::UpdateEntry { .. } => Ok(ValidateCallbackResult::Valid),
+                _ => Ok(ValidateCallbackResult::Valid),
+            }
+        },
+        FlatOp::StoreEntry(store_entry) => {
+            match store_entry {
+                OpEntry::CreateEntry { app_entry, action } => {
+                    match app_entry {
+                        EntryTypes::Commit(commit) => {
+                            for previous_commit_hash in commit.previous_commit_hashes.iter() {
+                                let previous_commit_record = must_get_valid_record(previous_commit_hash.clone())?;
+                                let previous_commit: Commit = previous_commit_record
+                                    .entry()
+                                    .to_app_option()
+                                    .map_err(|e| wasm_error!(e))?
+                                    .ok_or(wasm_error!(WasmErrorInner::Guest(
+                                        "Commit entry not found".to_string()
+                                    )))?;
+                                if previous_commit.document_hash != commit.document_hash {
+                                    return Ok(ValidateCallbackResult::Invalid(
+                                        "Previous commit does not reference the same document_hash".to_string(),
+                                    ));
+                                }
+                            }
+                            Ok(ValidateCallbackResult::Valid)
+                        },
+                        _ => Ok(ValidateCallbackResult::Valid),
+                    }
+                },
+                OpEntry::UpdateEntry { .. } => Ok(ValidateCallbackResult::Valid),
+                _ => Ok(ValidateCallbackResult::Valid),
+            }
+        },
         FlatOp::RegisterUpdate { .. } => Ok(ValidateCallbackResult::Valid),
         FlatOp::RegisterAgentActivity { .. } => Ok(ValidateCallbackResult::Valid),
         FlatOp::RegisterCreateLink {
