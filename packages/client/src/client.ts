@@ -103,7 +103,6 @@ export class SynClient extends ZomeClient<SynSignal> {
             .finally(() => unsubs());
         }
       });
-      console.log("creating a commit")
       this.callZome('create_commit', commit).catch(e => reject(e));
       setTimeout(() => reject('TIMEOUT'), 30000);
     });
@@ -205,8 +204,54 @@ export class SynClient extends ZomeClient<SynSignal> {
     } as SendMessageInput);
   }
 
+  public async openDebugger(): Promise<void> {
+    const alert = document.createElement('div');
+    alert.style.position = 'fixed';
+    alert.style.top = '0';
+    alert.style.left = '0';
+    alert.style.right = '0';
+    alert.style.zIndex = '1000';
+    alert.style.backgroundColor = 'white';
+    alert.style.padding = '20px';
+    alert.style.border = '1px solid red';
+    alert.style.boxShadow = '0 0 10px 0 rgba(0,0,0,0.1)';
+    alert.style.margin = '20px';
+    alert.style.borderRadius = '5px';
+    alert.style.maxWidth = '600px';
+    alert.style.margin = 'auto';
+    alert.style.marginTop = '20px';
+    const id = Math.random().toString(36).substr(2, 9);
+    alert.id = 'syn-error-alert-' + id;
+    alert.innerHTML = `<sl-alert open>
+    There was an error calling a zome function for syn.
+    <br>
+    <br>
+    <textarea id="syn-error-note" placeholder="Please leave a note describing what you were doing when this error occurred." style="width: 100%; height: 100px;"></textarea>
+    <br>
+    <sl-button id="dismiss-error-alert-button-${id}" type="primary" >Dismiss</sl-button>
+    <sl-button id="syn-error-alert-button-${id}">Download syn state</sl-button>
+    </sl-alert>`;
+    document.body.appendChild(alert);
+    const button = document.getElementById('syn-error-alert-button-' + id);
+    button?.addEventListener('click', async() => {
+      const note = (document.getElementById('syn-error-note') as HTMLTextAreaElement).value;
+      const state = await this.dumpSynState();
+      console.log('Dumping state', state);
+      const dumpState = {
+        state,
+        userNote: '',
+      };
+      dumpState.userNote = note;
+      downloadObjectAsJson(dumpState, 'syn-state.json');
+    });
+    const dismissButton = document.getElementById('dismiss-error-alert-button-' + id);
+    dismissButton?.addEventListener('click', () => {
+      console.log('Dismissing error alert');
+      document.getElementById('syn-error-alert-' + id)?.remove();
+    });
+  }
+
   public async callZome(fnname, payload) {
-    console.log('Calling zome function', fnname, payload);
     try {
       const result = await super.callZome(fnname, payload);
       return result;
