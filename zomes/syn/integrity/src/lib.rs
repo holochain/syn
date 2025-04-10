@@ -115,10 +115,12 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
                     .into_action_hash()
                     .ok_or(wasm_error!(WasmErrorInner::Guest("Invalid base address".to_string())))?;
-                if document_hash != base_address.into() {
+                if document_hash != base_address.clone().into() {
                     return Ok(ValidateCallbackResult::Invalid(
-                        "Workspace document_hash does not match the document being linked from"
-                            .to_string(),
+                        format!(
+                            "Workspace document_hash ({:?}) does not match the document being linked from ({:?})",
+                            document_hash, base_address
+                        ),
                     ));
                 }
                 Ok(ValidateCallbackResult::Valid)
@@ -171,12 +173,14 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     .ok_or(wasm_error!(WasmErrorInner::Guest(
                         "No entry hash associated with WorkspaceToTip base address".to_string()
                     )))?;
-                let workspace_entry = must_get_entry(workspace_entry_hash)?;
+                let workspace_entry = must_get_entry(workspace_entry_hash.clone())?;
                 let workspace: Workspace = crate::Workspace::try_from(workspace_entry)?;
                 if commit.document_hash != workspace.document_hash {
                     return Ok(ValidateCallbackResult::Invalid(
-                        "Commit document_hash does not match the document_hash of the workspace being linked to"
-                            .to_string(),
+                        format!(
+                            "Commit document_hash ({:?}) does not match the document_hash ({:?}) of the workspace ({:?}) being linked to ",
+                            commit.document_hash, workspace.document_hash, workspace_entry_hash
+                        ),
                     ));
                 }
                 Ok(ValidateCallbackResult::Valid)
