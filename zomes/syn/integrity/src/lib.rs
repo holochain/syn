@@ -178,8 +178,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 if commit.document_hash != workspace.document_hash {
                     return Ok(ValidateCallbackResult::Invalid(
                         format!(
-                            "Commit document_hash ({:?}) does not match the document_hash ({:?}) of the workspace ({:?}) being linked to ",
-                            commit.document_hash, workspace.document_hash, workspace_entry_hash
+                            "Commit document_hash ({:?}) does not match the document_hash ({:?}) of the workspace ({:?}) being linked to. 
+                            Full Commit: {:?},
+                            Full Workspace: {:?}",
+                            commit.document_hash, workspace.document_hash, workspace_entry_hash, commit, workspace
                         ),
                     ));
                 }
