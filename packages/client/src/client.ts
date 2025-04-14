@@ -5,10 +5,10 @@ import {
   AppClient,
   AnyDhtHash,
   Link,
-  ActionHash
+  ActionHash,
+  encodeHashToBase64,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
-import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';
 
 import {
   Document,
@@ -90,8 +90,8 @@ export class SynClient extends ZomeClient<SynSignal> {
         if (
           signal.type === 'EntryCreated' &&
           signal.app_entry.type === 'Commit' &&
-          cleanNodeDecoding(commit.document_hash).toString() ===
-          cleanNodeDecoding(signal.app_entry.document_hash).toString()
+          encodeHashToBase64(commit.document_hash) ===
+          encodeHashToBase64(signal.app_entry.document_hash)
         ) {
           unsubs();
 
