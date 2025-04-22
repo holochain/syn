@@ -115,7 +115,7 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
             if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
                 if let EntryTypes::Commit(commit) = &app_entry {
                     let response = call_remote(
-                        agent_info()?.agent_latest_pubkey,
+                        agent_info()?.agent_initial_pubkey,
                         zome_info()?.name,
                         FunctionName::from("link_document_to_commit"),
                         None,

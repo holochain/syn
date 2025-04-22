@@ -6,7 +6,7 @@ pub fn create_document(document: Document) -> ExternResult<Record> {
     let document_hash = create_entry(EntryTypes::Document(document.clone()))?;
     create_link(
         document_hash.clone(),
-        agent_info()?.agent_latest_pubkey,
+        agent_info()?.agent_initial_pubkey,
         LinkTypes::DocumentToAuthors,
         (),
     )?;
