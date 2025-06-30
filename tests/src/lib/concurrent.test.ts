@@ -13,6 +13,7 @@ import {
   waitForOtherParticipants,
 } from '../common.js';
 import { textEditorGrammar } from '../text-editor-grammar.js';
+import { AppBundleSource } from '@holochain/client';
 
 const aliceLine = 'ALICE_HELLO_ALICE';
 const bobLine = 'BOB_HI_BOB';
@@ -27,7 +28,7 @@ function bobPosition(text: string) {
 test('the state of two agents making lots of concurrent changes converges', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { type:"path", value:synHapp } };
+    const appSource = { appBundleSource: { type:"path", value:synHapp }  as AppBundleSource };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.

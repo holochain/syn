@@ -13,11 +13,12 @@ import {
   waitForOtherParticipants,
 } from '../common.js';
 import { textEditorGrammar } from '../text-editor-grammar.js';
+import { AppBundleSource } from '@holochain/client';
 
 test('check that the state of disconnected agents making changes converges after connecting', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: {type:"path", value: synHapp } };
+    const appSource = { appBundleSource: {type:"path", value: synHapp } as AppBundleSource };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
@@ -98,7 +99,11 @@ test('check that the state of disconnected agents making changes converges after
 
     await alice.conductor.startUp();
     const port = await alice.conductor.attachAppInterface();
-    const aliceAppWs = await alice.conductor.connectAppWs(port, alice.appId);
+    const adminWs = alice.conductor.adminWs();
+    const issued = await adminWs.issueAppAuthenticationToken({
+      installed_app_id: alice.appId,
+    });
+    const aliceAppWs = await alice.conductor.connectAppWs(issued.token, port);
     await scenario.shareAllAgents();
 
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
