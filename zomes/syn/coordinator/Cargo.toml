@@ -10,8 +10,8 @@ name = "hc_zome_syn_coordinator"
 
 [dependencies]
 itertools = "0.10"
-serde = "1"
-
 hdk = { workspace = true }
+serde = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
 
 hc_zome_syn_integrity = { path = "../integrity" }
