@@ -9,6 +9,6 @@ crate-type = ["cdylib", "rlib"]
 name = "hc_zome_syn_integrity"
 
 [dependencies]
-serde = "1"
-
+serde = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
 hdi = { workspace = true }
