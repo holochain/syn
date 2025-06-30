@@ -17,7 +17,7 @@ import { textEditorGrammar } from '../text-editor-grammar.js';
 test('check that the state of disconnected agents making changes converges after connecting', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { path: synHapp } };
+    const appSource = { appBundleSource: {type:"path", value: synHapp } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
