@@ -16,7 +16,7 @@
     "build:watch": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
-    "@holochain-open-dev/stores": "^0.500.1",
+    "@holochain-open-dev/stores": "^0.500.2",
     "@holochain-open-dev/utils": "^0.500.2",
     "@holochain-syn/client": "^0.500.1",
     "@holochain/client": "^0.19.1",
