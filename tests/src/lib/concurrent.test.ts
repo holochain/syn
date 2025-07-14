@@ -27,7 +27,7 @@ function bobPosition(text: string) {
 test('the state of two agents making lots of concurrent changes converges', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { path: synHapp } };
+    const appSource = { appBundleSource: {  type: "path" as const, value: synHapp } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
@@ -65,6 +65,7 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       aliceDocumentStore.documentHash
     );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
+    console.log('Workspaces:', JSON.stringify(workspaces));
     assert.equal(
       Array.from(workspaces.values())[0].workspaceHash.toString(),
       aliceWorkspaceStore.workspaceHash.toString()

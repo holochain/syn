@@ -10,6 +10,7 @@
     "publish": "npm run build:libs && cd packages/client && npm run build && npm publish --access=public && cd ../store && npm run build && npm publish --access=public && cd ../core && npm run build && npm publish --access=public && cd ../text-editor && npm run build && npm publish --access=public",
     "build:libs": "npm run build -w @holochain-syn/client -w @holochain-syn/store -w @holochain-syn/core -w @holochain-syn/text-editor",
     "build:ui": "npm run build -w syntext",
+    "test-quick": "npm test -w tests",
     "test": "npm run build:happ && npm run build:libs && npm test -w tests",
     "build:happ": "npm run build:dna && hc app pack workdir",
     "build:dna": "npm run build:zome && hc dna pack workdir",

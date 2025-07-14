@@ -111,9 +111,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 let workspace_entry = must_get_entry(entry_hash)?;
                 let workspace = crate::Workspace::try_from(workspace_entry)?;
                 let document_hash = workspace.document_hash;
-                let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
-                    .into_action_hash()
-                    .ok_or(wasm_error!(WasmErrorInner::Guest("Invalid base address".to_string())))?;
+                let base_address = match base_address.into_action_hash() {
+                    Some(hash) => hash,
+                    None => return Ok(ValidateCallbackResult::Valid),
+                };
                 if document_hash != base_address.clone().into() {
                     return Ok(ValidateCallbackResult::Invalid(
                         format!(

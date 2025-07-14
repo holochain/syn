@@ -17,7 +17,7 @@ import {
 test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { path: synHapp } };
+    const appSource = { appBundleSource: {  type: "path" as const, value: synHapp } };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
