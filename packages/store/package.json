@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/store",
-  "version": "0.500.1",
+  "version": "0.501.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -16,9 +16,9 @@
     "build:watch": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
-    "@holochain-open-dev/stores": "^0.500.2",
+    "@holochain-open-dev/stores": "^0.500.3",
     "@holochain-open-dev/utils": "^0.500.2",
-    "@holochain-syn/client": "^0.500.1",
+    "@holochain-syn/client": "^0.501.0",
     "@holochain/client": "^0.19.1",
     "@msgpack/msgpack": "^2.7.2",
     "automerge": "^1.0.1-preview.7",

@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/client",
-  "version": "0.500.1",
+  "version": "0.501.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "type": "module",

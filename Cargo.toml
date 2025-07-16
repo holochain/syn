@@ -3,8 +3,8 @@ members = ["zomes/*/*"]
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.6.3"
-hdk = "0.5.3"
+hdi = "0.6.4"
+hdk = "0.5.4"
 holochain_serialized_bytes = "0.0.56"
 serde = "1"
 

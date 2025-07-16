@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/text-editor",
-  "version": "0.500.1",
+  "version": "0.501.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "files": ["dist"],
@@ -16,10 +16,10 @@
   "dependencies": {
     "@holochain-open-dev/elements": "^0.500.1",
     "@holochain-open-dev/profiles": "^0.501.2",
-    "@holochain-open-dev/stores": "^0.500.2",
+    "@holochain-open-dev/stores": "^0.500.3",
     "@holochain-open-dev/utils": "^0.500.2",
     "@holochain/client": "^0.19.1",
-    "@holochain-syn/core": "^0.500.1",
+    "@holochain-syn/core": "^0.501.0",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
     "@shoelace-style/shoelace": "^2.3.0",

@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/core",
-  "version": "0.500.1",
+  "version": "0.501.0",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "type": "module",
@@ -16,11 +16,11 @@
   "dependencies": {
     "@holochain-open-dev/elements": "^0.500.1",
     "@holochain-open-dev/profiles": "^0.501.2",
-    "@holochain-open-dev/stores": "^0.500.2",
+    "@holochain-open-dev/stores": "^0.500.3",
     "@holochain-open-dev/utils": "^0.500.2",
     "@holochain/client": "^0.19.1",
-    "@holochain-syn/client": "^0.500.1",
-    "@holochain-syn/store": "^0.500.1",
+    "@holochain-syn/client": "^0.501.0",
+    "@holochain-syn/store": "^0.501.0",
     "@lit/context": "^1.0.0",
     "@lit/localize": "^0.12.0",
     "@scoped-elements/cytoscape": "^0.2.0",
