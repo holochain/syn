@@ -111,10 +111,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 let workspace_entry = must_get_entry(entry_hash)?;
                 let workspace = crate::Workspace::try_from(workspace_entry)?;
                 let document_hash = workspace.document_hash;
-                let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
-                    .into_action_hash()
-                    .ok_or(wasm_error!(WasmErrorInner::Guest("Invalid base address".to_string())))?;
-                if document_hash != base_address.clone().into() {
+                let base_address = base_address.clone()
+                    .into_any_dht_hash()
+                    .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Invalid base address {:?}", base_address).to_string())))?;
+                if document_hash != base_address {
                     return Ok(ValidateCallbackResult::Invalid(
                         format!(
                             "Workspace document_hash ({:?}) does not match the document being linked from ({:?})",
@@ -141,10 +141,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     )))?;
 
                 let document_hash = commit.document_hash;
-                let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
-                    .into_action_hash()
-                    .ok_or(wasm_error!(WasmErrorInner::Guest("Invalid base address".to_string())))?;
-                if document_hash != base_address.into() {
+                let base_address= base_address.clone()
+                    .into_any_dht_hash()
+                    .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Invalid base address {:?}", base_address).to_string())))?;
+                if document_hash != base_address {
                     return Ok(ValidateCallbackResult::Invalid(
                         "Commit document_hash does not match the document being linked from"
                             .to_string(),

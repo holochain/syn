@@ -36,7 +36,7 @@ export class WorkspaceStore<S, E> {
 
   record = immutableEntryStore(async () => this.documentStore.synStore.client.getWorkspace(
     this.workspaceHash
-  ));
+  ), 1000, 10);
 
   name = pipe(this.record, workspace => workspace.entry.name);
 

@@ -38,7 +38,7 @@ export function sliceStrings<K extends string, V>(
 export class DocumentStore<S, E> {
   constructor(public synStore: SynStore, public documentHash: AnyDhtHash) { }
 
-  record = immutableEntryStore(async () => this.synStore.client.getDocument(this.documentHash));
+  record = immutableEntryStore(async () => this.synStore.client.getDocument(this.documentHash), 1000, 10);
 
   /**
    * Keeps an up to date map of all the workspaces for this document
