@@ -67,8 +67,6 @@ test('the state of two agents making lots of concurrent changes converges', asyn
       aliceDocumentStore.documentHash
     );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
-      console.log('Workspaces:', JSON.stringify(workspaces));
-      console.log('Workspaces values:', JSON.stringify(Array.from(workspaces.values())));
     if (Array.from(workspaces.values())[0] === undefined)
       assert.equal(false,true)
     assert.equal(

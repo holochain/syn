@@ -19,6 +19,7 @@ test('two agents creating the same deterministic root get the same root hash', a
       appSource,
       appSource,
     ]);
+    console.log('Players added:', alice.agentPubKey, bob.agentPubKey);
     await scenario.shareAllAgents();
     await scenario.shareAllAgents();
     const aliceSyn = new SynStore(
