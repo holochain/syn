@@ -1,6 +1,8 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
+use crate::utils::ZomeFnInput;
+
 #[hdk_extern]
 pub fn create_document(document: Document) -> ExternResult<Record> {
     let document_hash = create_entry(EntryTypes::Document(document.clone()))?;
@@ -25,6 +27,7 @@ pub fn get_document(document_hash: AnyDhtHash) -> ExternResult<Option<Record>> {
 }
 
 #[hdk_extern]
-pub fn get_authors_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(GetLinksInputBuilder::try_new(document_hash, LinkTypes::DocumentToAuthors)?.build())
+pub fn get_authors_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
+    let strategy = document_hash.get_strategy();
+    get_links(GetLinksInputBuilder::try_new(document_hash.input, LinkTypes::DocumentToAuthors)?.get_options(strategy).build())
 }

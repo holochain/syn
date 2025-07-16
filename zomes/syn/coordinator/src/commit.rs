@@ -8,7 +8,7 @@ pub fn create_commit(commit: Commit) -> ExternResult<Record> {
     let c = EntryTypes::Commit(commit.clone());
     let action_hash = create_relaxed(c, commit.clone().try_into()?)?;
 
-    let current_authors_links = get_authors_for_document(commit.document_hash.clone())?;
+    let current_authors_links = get_authors_for_document(ZomeFnInput::new(commit.document_hash.clone(), Some(true)))?;  // TODO: fix when on sharded DHT
 
     let current_authors: Vec<AgentPubKey> = current_authors_links
         .into_iter()
@@ -57,8 +57,8 @@ pub fn get_commit(commit_hash: ActionHash) -> ExternResult<Option<Record>> {
 }
 
 #[hdk_extern]
-pub fn get_commits_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
+pub fn get_commits_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
     get_links(
-        GetLinksInputBuilder::try_new(document_hash.clone(), LinkTypes::DocumentToCommits)?.build(),
+        GetLinksInputBuilder::try_new(document_hash.input.clone(), LinkTypes::DocumentToCommits)?.get_options(document_hash.get_strategy()).build(),
     )
 }

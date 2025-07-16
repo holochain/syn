@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 use crate::{
     messages::{send_message, MessagePayload, SendMessageInput, SessionMessage},
-    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed},
+    utils::{create_link_relaxed, create_relaxed, delete_link_relaxed, ZomeFnInput},
 };
 
 #[derive(Serialize, Deserialize, Debug, SerializedBytes)]
@@ -64,9 +64,10 @@ pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> 
 }
 
 #[hdk_extern]
-pub fn get_workspaces_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
+pub fn get_workspaces_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
+    let strategy = document_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(document_hash, LinkTypes::DocumentToWorkspaces)?.build(),
+        GetLinksInputBuilder::try_new(document_hash.input, LinkTypes::DocumentToWorkspaces)?.get_options(strategy).build(),
     )
 }
 
@@ -96,9 +97,10 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 }
 
 #[hdk_extern]
-pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
+pub fn get_workspace_tips(workspace_hash: ZomeFnInput<EntryHash>) -> ExternResult<Vec<Link>> {
+    let strategy = workspace_hash.get_strategy();
     let links = get_links(
-        GetLinksInputBuilder::try_new(workspace_hash, LinkTypes::WorkspaceToTip)?.build(),
+        GetLinksInputBuilder::try_new(workspace_hash.input, LinkTypes::WorkspaceToTip)?.get_options(strategy).build(),
     )?;
 
     let mut tips: HashMap<ActionHash, Link> = HashMap::new();
@@ -125,16 +127,17 @@ pub fn get_workspace_tips(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> 
 }
 
 #[hdk_extern]
-pub fn get_workspace_session_participants(workspace_hash: EntryHash) -> ExternResult<Vec<Link>> {
+pub fn get_workspace_session_participants(workspace_hash: ZomeFnInput<EntryHash>) -> ExternResult<Vec<Link>> {
+    let strategy = workspace_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(workspace_hash, LinkTypes::WorkspaceToParticipant)?.build(),
+        GetLinksInputBuilder::try_new(workspace_hash.input, LinkTypes::WorkspaceToParticipant)?.get_options(strategy).build(),
     )
 }
 
 #[hdk_extern]
 pub fn join_workspace_session(workspace_hash: EntryHash) -> ExternResult<Vec<AgentPubKey>> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
-    let participants_links = get_workspace_session_participants(workspace_hash.clone())?;
+    let participants_links = get_workspace_session_participants(ZomeFnInput::new(workspace_hash.clone(), None ))?;
 
     let participants: Vec<AgentPubKey> = participants_links
         .into_iter()

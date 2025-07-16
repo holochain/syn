@@ -37,8 +37,8 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getDocumentsWithTag(tag: string): Promise<Array<Link>> {
-    return this.callZome('get_documents_with_tag', tag);
+  public async getDocumentsWithTag(tag: string, local?: boolean): Promise<Array<Link>> {
+    return this.callZome('get_documents_with_tag', {input: tag, local});
   }
 
   public async getDocument(
@@ -54,8 +54,8 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
 
-  public async getAuthorsForDocument(documentHash: AnyDhtHash): Promise<Array<Link>> {
-    return this.callZome('get_authors_for_document', documentHash);
+  public async getAuthorsForDocument(documentHash: AnyDhtHash, local?: boolean): Promise<Array<Link>> {
+    return this.callZome('get_authors_for_document', {input: documentHash, local});
   }
 
   public async tagDocument(
@@ -121,9 +121,10 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async getCommitsForDocument(
-    documentHash: AnyDhtHash
+    documentHash: AnyDhtHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    const commits: Array<Link> = await this.callZome('get_commits_for_document', documentHash);
+    const commits: Array<Link> = await this.callZome('get_commits_for_document', {input: documentHash, local});
 
     if (commits.length > 600) {
       console.warn(`THERE ARE ${commits.length} FOR THIS DOCUMENT. THIS SHOULDN'T HAPPEN! REPORT TO THE SYN DEVS ABOUT THIS (guillemcordoba)`);
@@ -155,15 +156,17 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async getWorkspacesForDocument(
-    documentHash: AnyDhtHash
+    documentHash: AnyDhtHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspaces_for_document', documentHash);
+    return this.callZome('get_workspaces_for_document', {input: documentHash, local});
   }
 
   public async getWorkspaceTips(
-    workspaceHash: EntryHash
+    workspaceHash: EntryHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspace_tips', workspaceHash);
+    return this.callZome('get_workspace_tips', {input: workspaceHash, local});
   }
 
   public updateWorkspaceTip(
@@ -179,9 +182,10 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public getWorkspaceSessionParticipants(
-    workspace_hash: EntryHash
+    workspace_hash: EntryHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspace_session_participants', workspace_hash);
+    return this.callZome('get_workspace_session_participants', {input: workspace_hash, local});
   }
 
   public async joinWorkspaceSession(

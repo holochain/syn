@@ -34,7 +34,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {
         FlatOp::StoreRecord(store_record) => {
             match store_record {
-                OpRecord::CreateEntry { app_entry, action } => {
+                OpRecord::CreateEntry { app_entry, action: _ } => {
                     match app_entry {
                         EntryTypes::Commit(commit) => {
                             for previous_commit_hash in commit.previous_commit_hashes.iter() {
@@ -63,7 +63,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         },
         FlatOp::StoreEntry(store_entry) => {
             match store_entry {
-                OpEntry::CreateEntry { app_entry, action } => {
+                OpEntry::CreateEntry { app_entry, action:_ } => {
                     match app_entry {
                         EntryTypes::Commit(commit) => {
                             for previous_commit_hash in commit.previous_commit_hashes.iter() {
@@ -96,8 +96,8 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             link_type,
             base_address,
             target_address,
-            tag,
-            action,
+            tag: _,
+            action: _,
         } => match link_type {
             LinkTypes::TagToDocument => Ok(ValidateCallbackResult::Valid),
             LinkTypes::DocumentToAuthors => Ok(ValidateCallbackResult::Valid),

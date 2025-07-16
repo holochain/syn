@@ -70,13 +70,13 @@ impl<T> ZomeFnInput<T> {
         }
     }
 
-    pub fn get_options(&self) -> GetOptions {
-        let local = self.local.unwrap_or(false);
-        match local {
-            true => GetOptions::local(),
-            false => GetOptions::network(),
-        }
-    }
+    // pub fn get_options(&self) -> GetOptions {
+    //     let local = self.local.unwrap_or(false);
+    //     match local {
+    //         true => GetOptions::local(),
+    //         false => GetOptions::network(),
+    //     }
+    // }
 }
 
 impl<T> Into<GetStrategy> for ZomeFnInput<T> {

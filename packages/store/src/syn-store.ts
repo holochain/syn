@@ -11,6 +11,7 @@ import { LazyHoloHashMap, LazyMap, slice } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
 import { DocumentStore } from './document-store.js';
+import { LINKS_POLL_INTERVAL_MS } from './config.js';
 
 export const stateFromCommit = (commit: Commit) => {
   const commitState = decode(commit.state) as Automerge.BinaryDocument;
@@ -42,7 +43,9 @@ export class SynStore {
           this.client,
           tagPathEntryHash,
           () => this.client.getDocumentsWithTag(tag),
-          'TagToDocument'
+          'TagToDocument',
+          LINKS_POLL_INTERVAL_MS,
+          () => this.client.getDocumentsWithTag(tag, true),
         ),
       links => slice(this.documents, uniquify(links.map(l => l.target)))
     )

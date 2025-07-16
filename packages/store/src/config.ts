@@ -27,3 +27,5 @@ export type RecursivePartial<T> = {
     ? RecursivePartial<T[P]>
     : T[P];
 };
+
+export const LINKS_POLL_INTERVAL_MS = 20000
