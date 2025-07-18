@@ -23,7 +23,7 @@ import { decode, encode } from '@msgpack/msgpack';
 import { Commit } from '@holochain-syn/client';
 import Automerge from 'automerge';
 
-import { defaultConfig, RecursivePartial, SynConfig } from './config.js';
+import { defaultConfig, LINKS_POLL_INTERVAL_MS, RecursivePartial, SynConfig } from './config.js';
 import { DocumentStore } from './document-store.js';
 import { SessionStore } from './session-store.js';
 import { stateFromCommit, stateFromDocument } from './syn-store.js';
@@ -36,7 +36,7 @@ export class WorkspaceStore<S, E> {
 
   record = immutableEntryStore(async () => this.documentStore.synStore.client.getWorkspace(
     this.workspaceHash
-  ));
+  ), 1000, 10);
 
   name = pipe(this.record, workspace => workspace.entry.name);
 
@@ -56,7 +56,12 @@ export class WorkspaceStore<S, E> {
         this.documentStore.synStore.client.getWorkspaceSessionParticipants(
           this.workspaceHash
         ),
-      'WorkspaceToParticipant'
+      'WorkspaceToParticipant',
+      LINKS_POLL_INTERVAL_MS,
+      () =>
+        this.documentStore.synStore.client.getWorkspaceSessionParticipants(
+          this.workspaceHash, true
+        ),
     ),
     links => uniquify(links.map(l => retype(l.target, HashType.AGENT)))
   );
@@ -123,12 +128,16 @@ export class WorkspaceStore<S, E> {
           liveLinksStore(
             this.documentStore.synStore.client,
             this.workspaceHash,
-
             () =>
               this.documentStore.synStore.client.getWorkspaceTips(
                 this.workspaceHash
               ),
-            'WorkspaceToTip'
+            'WorkspaceToTip',
+            LINKS_POLL_INTERVAL_MS,
+            () =>
+              this.documentStore.synStore.client.getWorkspaceTips(
+                this.workspaceHash, true
+              ),
           ),
           async commitsLinks => {
             const tipsLinks = new HoloHashMap<ActionHash, Link>();

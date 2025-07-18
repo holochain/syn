@@ -34,7 +34,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {
         FlatOp::StoreRecord(store_record) => {
             match store_record {
-                OpRecord::CreateEntry { app_entry, action } => {
+                OpRecord::CreateEntry { app_entry, action: _ } => {
                     match app_entry {
                         EntryTypes::Commit(commit) => {
                             for previous_commit_hash in commit.previous_commit_hashes.iter() {
@@ -63,7 +63,7 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
         },
         FlatOp::StoreEntry(store_entry) => {
             match store_entry {
-                OpEntry::CreateEntry { app_entry, action } => {
+                OpEntry::CreateEntry { app_entry, action:_ } => {
                     match app_entry {
                         EntryTypes::Commit(commit) => {
                             for previous_commit_hash in commit.previous_commit_hashes.iter() {
@@ -96,8 +96,8 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             link_type,
             base_address,
             target_address,
-            tag,
-            action,
+            tag: _,
+            action: _,
         } => match link_type {
             LinkTypes::TagToDocument => Ok(ValidateCallbackResult::Valid),
             LinkTypes::DocumentToAuthors => Ok(ValidateCallbackResult::Valid),
@@ -111,11 +111,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 let workspace_entry = must_get_entry(entry_hash)?;
                 let workspace = crate::Workspace::try_from(workspace_entry)?;
                 let document_hash = workspace.document_hash;
-                let base_address = match base_address.into_action_hash() {
-                    Some(hash) => hash,
-                    None => return Ok(ValidateCallbackResult::Valid),
-                };
-                if document_hash != base_address.clone().into() {
+                let base_address = base_address.clone()
+                    .into_any_dht_hash()
+                    .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Invalid base address {:?}", base_address).to_string())))?;
+                if document_hash != base_address {
                     return Ok(ValidateCallbackResult::Invalid(
                         format!(
                             "Workspace document_hash ({:?}) does not match the document being linked from ({:?})",
@@ -142,10 +141,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     )))?;
 
                 let document_hash = commit.document_hash;
-                let base_address: HoloHash<hdi::prelude::hash_type::Action> = base_address
-                    .into_action_hash()
-                    .ok_or(wasm_error!(WasmErrorInner::Guest("Invalid base address".to_string())))?;
-                if document_hash != base_address.into() {
+                let base_address= base_address.clone()
+                    .into_any_dht_hash()
+                    .ok_or(wasm_error!(WasmErrorInner::Guest(format!("Invalid base address {:?}", base_address).to_string())))?;
+                if document_hash != base_address {
                     return Ok(ValidateCallbackResult::Invalid(
                         "Commit document_hash does not match the document being linked from"
                             .to_string(),

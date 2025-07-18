@@ -1,7 +1,7 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::create_link_relaxed;
+use crate::utils::{create_link_relaxed, ZomeFnInput};
 
 fn tag_path(tag: String) -> Path {
     Path::from(format!("document_tags.{}", tag))
@@ -33,9 +33,11 @@ pub fn tag_path_entry_hash(tag: String) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
+pub fn get_documents_with_tag(tag: ZomeFnInput<String>) -> ExternResult<Vec<Link>> {
+    let strategy = tag.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(tag_path(tag).path_entry_hash()?, LinkTypes::TagToDocument)?
+        GetLinksInputBuilder::try_new(tag_path(tag.input).path_entry_hash()?, LinkTypes::TagToDocument)?
+            .get_options(strategy)
             .build(),
     )
 }

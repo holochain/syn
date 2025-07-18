@@ -14,13 +14,14 @@ import {
   waitForOtherParticipants,
 } from '../common.js';
 import { textEditorGrammar } from '../text-editor-grammar.js';
+import { AppBundleSource } from '@holochain/client';
 
 test('check that the state of disconnected agents making changes converges after connecting', async () => {
   console.log('Running concurrent test...');
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: {  type: "path" as const, value: synHapp } };
-    console.log('App source:', appSource);
+    const appSource = { appBundleSource: {type:"path", value: synHapp } as AppBundleSource };
+
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
     const [alice] = await scenario.addPlayersWithApps([appSource]);
@@ -107,10 +108,11 @@ test('check that the state of disconnected agents making changes converges after
     console.log('Bob session store left');
     await alice.conductor.startUp();
     const port = await alice.conductor.attachAppInterface();
-    let tokenResp = await alice.conductor.adminWs().issueAppAuthenticationToken({
+    const adminWs = alice.conductor.adminWs();
+    const issued = await adminWs.issueAppAuthenticationToken({
       installed_app_id: alice.appId,
     });
-    const aliceAppWs = await alice.conductor.connectAppWs(tokenResp.token, port);
+    const aliceAppWs = await alice.conductor.connectAppWs(issued.token, port);
     await scenario.shareAllAgents();
     console.log('Alice conductor started up');
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);

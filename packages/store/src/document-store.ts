@@ -22,6 +22,7 @@ import { Commit } from '@holochain-syn/client';
 
 import { SynStore } from './syn-store.js';
 import { WorkspaceStore } from './workspace-store.js';
+import { LINKS_POLL_INTERVAL_MS } from './config.js';
 
 export function sliceStrings<K extends string, V>(
   map: GetonlyMap<K, V>,
@@ -38,7 +39,7 @@ export function sliceStrings<K extends string, V>(
 export class DocumentStore<S, E> {
   constructor(public synStore: SynStore, public documentHash: AnyDhtHash) { }
 
-  record = immutableEntryStore(async () => this.synStore.client.getDocument(this.documentHash));
+  record = immutableEntryStore(async () => this.synStore.client.getDocument(this.documentHash), 1000, 10);
 
   /**
    * Keeps an up to date map of all the workspaces for this document
@@ -48,7 +49,9 @@ export class DocumentStore<S, E> {
       this.synStore.client,
       this.documentHash,
       () => this.synStore.client.getWorkspacesForDocument(this.documentHash),
-      'DocumentToWorkspaces'
+      'DocumentToWorkspaces',
+      LINKS_POLL_INTERVAL_MS,
+      () => this.synStore.client.getWorkspacesForDocument(this.documentHash,true),
     ),
     links =>
       slice(
@@ -65,7 +68,9 @@ export class DocumentStore<S, E> {
       this.synStore.client,
       this.documentHash,
       () => this.synStore.client.getCommitsForDocument(this.documentHash),
-      'DocumentToCommits'
+      'DocumentToCommits',
+      LINKS_POLL_INTERVAL_MS,
+      () => this.synStore.client.getCommitsForDocument(this.documentHash,true),
     ),
     links => slice(this.commits, uniquify(links.map(l => l.target)))
   );
@@ -97,7 +102,9 @@ export class DocumentStore<S, E> {
       this.synStore.client,
       this.documentHash,
       () => this.synStore.client.getAuthorsForDocument(this.documentHash),
-      'DocumentToAuthors'
+      'DocumentToAuthors',
+      LINKS_POLL_INTERVAL_MS,
+      () => this.synStore.client.getAuthorsForDocument(this.documentHash, true),
     ),
     links => uniquify(links.map(l => retype(l.target, HashType.AGENT)))
   );

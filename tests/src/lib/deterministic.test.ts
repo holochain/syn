@@ -6,12 +6,13 @@ import { SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
 
 import { sampleGrammar, synHapp } from '../common.js';
+import { AppBundleSource } from '@holochain/client';
 
 test('two agents creating the same deterministic root get the same root hash', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { type: "path" as const, value: synHapp } };
-    
+    const appSource = { appBundleSource: { type:"path", value: synHapp }  as AppBundleSource };
+
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
     const [alice, bob] = await scenario.addPlayersWithApps([

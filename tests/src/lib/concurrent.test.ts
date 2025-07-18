@@ -1,6 +1,6 @@
 import { assert, test } from 'vitest';
 
-import { runScenario } from '@holochain/tryorama';
+import { dhtSync, runScenario } from '@holochain/tryorama';
 
 import { get, toPromise } from '@holochain-open-dev/stores';
 import { SynStore } from '@holochain-syn/store';
@@ -13,6 +13,7 @@ import {
   waitForOtherParticipants,
 } from '../common.js';
 import { textEditorGrammar } from '../text-editor-grammar.js';
+import { AppBundleSource } from '@holochain/client';
 
 const aliceLine = 'ALICE_HELLO_ALICE';
 const bobLine = 'BOB_HI_BOB';
@@ -27,7 +28,7 @@ function bobPosition(text: string) {
 test('the state of two agents making lots of concurrent changes converges', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: {  type: "path" as const, value: synHapp } };
+    const appSource = { appBundleSource: { type:"path", value:synHapp }  as AppBundleSource };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
@@ -59,13 +60,15 @@ test('the state of two agents making lots of concurrent changes converges', asyn
         .insert(0, '\n')
     );
 
-    await delay(2000);
+    //await delay(5000);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
     const bobDocumentStore = bobSyn.documents.get(
       aliceDocumentStore.documentHash
     );
     const workspaces = await toPromise(bobDocumentStore.allWorkspaces);
-    console.log('Workspaces:', JSON.stringify(workspaces));
+    if (Array.from(workspaces.values())[0] === undefined)
+      assert.equal(false,true)
     assert.equal(
       Array.from(workspaces.values())[0].workspaceHash.toString(),
       aliceWorkspaceStore.workspaceHash.toString()
@@ -78,7 +81,8 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     await waitForOtherParticipants(bobSessionStore, 1);
     await waitForOtherParticipants(aliceSessionStore, 1);
 
-    await delay(2000);
+    //await delay(2000);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
     async function simulateAlice() {
       for (let i = 0; i < aliceLine.length; i++) {
@@ -113,7 +117,8 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     await delay(4000);
 
     await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(20000);
+    //await delay(20000);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
     const expectedText = `${aliceLine}${aliceLine}${aliceLine}
 ${bobLine}${bobLine}${bobLine}`;
