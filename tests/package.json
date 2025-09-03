@@ -7,8 +7,8 @@
   },
   "dependencies": {
     "@holochain-open-dev/stores": "^0.500.3",
-    "@holochain/client": "^0.19.1",
-    "@holochain/tryorama": "^0.18.2",
+    "@holochain/client": "^0.19.2",
+    "@holochain/tryorama": "^0.18.3",
     "@msgpack/msgpack": "^2.7.0",
     "vitest": "^0.28.4"
   },
