@@ -565,7 +565,6 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       // Nothing to commit, just return
       return;
     }
-    this.deltaCount = 0;
 
     if (meta) {
       meta = encode(meta);
@@ -585,25 +584,32 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       document_hash: this.workspaceStore.documentStore.documentHash,
     };
 
-    const newCommit = await this.synClient.createCommit(commit);
+    try {
+      const newCommit = await this.synClient.createCommit(commit);
 
-    this._currentTip.set(newCommit);
-    this.workspaceStore.documentStore.synStore.client.sendMessage(
-      Array.from(get(this._participants).keys()),
-      {
-        workspace_hash: this.workspaceStore.workspaceHash,
-        payload: {
-          type: 'NewCommit',
-          new_commit: newCommit.record,
-        },
-      }
-    );
+      this._currentTip.set(newCommit);
+      this.workspaceStore.documentStore.synStore.client.sendMessage(
+        Array.from(get(this._participants).keys()),
+        {
+          workspace_hash: this.workspaceStore.workspaceHash,
+          payload: {
+            type: 'NewCommit',
+            new_commit: newCommit.record,
+          },
+        }
+      );
 
-    await this.synClient.updateWorkspaceTip(
-      this.workspaceStore.workspaceHash,
-      newCommit.actionHash,
-      previous_commit_hashes
-    );
+      await this.synClient.updateWorkspaceTip(
+        this.workspaceStore.workspaceHash,
+        newCommit.actionHash,
+        previous_commit_hashes
+      );
+
+      this.deltaCount = 0;
+    } catch (error) {
+      this._previousCommitPromise = undefined;
+      throw error;
+    }
   }
 
   private handleHeartbeat(_from: AgentPubKey, participants: AgentPubKey[]) {

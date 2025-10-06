@@ -85,7 +85,25 @@ export class SynClient extends ZomeClient<SynSignal> {
   /** Commits */
   public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
     return new Promise((resolve, reject) => {
-      const unsubs = this.onSignal(signal => {
+      let timeoutId: NodeJS.Timeout;
+      let unsubs: (() => void) | undefined;
+
+      const cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (unsubs) unsubs();
+      };
+
+      const rejectWithCleanup = (error: any) => {
+        cleanup();
+        reject(error);
+      };
+
+      const resolveWithCleanup = (result: EntryRecord<Commit>) => {
+        cleanup();
+        resolve(result);
+      };
+
+      unsubs = this.onSignal(signal => {
         // TODO: better check?
         if (
           signal.type === 'EntryCreated' &&
@@ -93,18 +111,27 @@ export class SynClient extends ZomeClient<SynSignal> {
           encodeHashToBase64(commit.document_hash) ===
           encodeHashToBase64(signal.app_entry.document_hash)
         ) {
-          unsubs();
-
           this.getCommit(signal.action.hashed.hash)
             .then(r => {
-              resolve(r!);
+              if (r) {
+                // check that the previous commit hashes are equal
+                const commitPreviousHashes = commit.previous_commit_hashes || [];
+                const signalPreviousHashes = r.entry.previous_commit_hashes || [];
+                if (commitPreviousHashes.length === signalPreviousHashes.length &&
+                  commitPreviousHashes.every((val, index) => encodeHashToBase64(val) === encodeHashToBase64(signalPreviousHashes[index]))
+                ) {
+                  resolveWithCleanup(r);
+                }
+              } else {
+                rejectWithCleanup(new Error('Commit not found after creation'));
+              }
             })
-            .catch(e => reject(e))
-            .finally(() => unsubs());
+            .catch(e => rejectWithCleanup(e))
         }
       });
-      this.callZome('create_commit', commit).catch(e => reject(e));
-      setTimeout(() => reject('TIMEOUT'), 30000);
+
+      this.callZome('create_commit', commit).catch(e => rejectWithCleanup(e));
+      timeoutId = setTimeout(() => rejectWithCleanup(new Error('Commit creation timed out after 30 seconds')), 30000);
     });
   }
 
