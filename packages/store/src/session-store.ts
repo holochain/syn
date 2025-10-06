@@ -29,6 +29,8 @@ export interface SliceStore<S, E> {
   state: Readable<S>;
   ephemeral: Readable<E>;
 
+  syncStatus: Readable<'synced' | 'syncing' | 'error'>;
+
   change(updateFn: (state: S, ephemeral: E) => void): void;
 }
 
@@ -42,6 +44,7 @@ export function extractSlice<S1, E1, S2, E2>(
     workspace: sliceStore.workspace as any as WorkspaceStore<S2, E2>,
     state: derived(sliceStore.state, sliceState),
     ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),
+    syncStatus: sliceStore.syncStatus,
     change: updateFn =>
       sliceStore.change((state1, eph1) => {
         const state2 = sliceState(state1);
@@ -105,6 +108,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
   _ephemeral: Writable<Automerge.Doc<E>>;
   get ephemeral(): Readable<E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
+  }
+
+  _syncStatus: Writable<'synced' | 'syncing' | 'error'> = writable('synced');
+  get syncStatus() {
+    return derived(this._syncStatus, i => i);
   }
 
   _currentTip: Writable<EntryRecord<Commit> | undefined>;
@@ -606,8 +614,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       );
 
       this.deltaCount = 0;
+      this._syncStatus.set('synced');
     } catch (error) {
       this._previousCommitPromise = undefined;
+      this._syncStatus.set('error');
       throw error;
     }
   }
