@@ -97,6 +97,7 @@
   let documentStore;
   let workspaceStore;
   let sessionStore;
+  let sessionStatus;
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
@@ -118,6 +119,7 @@
 
       workspaceStore = Array.from(workspaces.values())[0];
       sessionStore = await workspaceStore.joinSession();
+      sessionStatus = sessionStore.sessionStatus
       synStore = store;
     }
   }
@@ -147,6 +149,9 @@
     <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
+        {$sessionStatus?.code}
+        {$sessionStatus?.lastSave}
+        {$sessionStatus?.error}
         <div>
           <Title />
         </div>

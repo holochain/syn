@@ -21,6 +21,12 @@ import { toPromise } from '@holochain-open-dev/stores';
 import { SynConfig } from './config.js';
 import { WorkspaceStore } from './workspace-store.js';
 
+export type SessionStatus = {
+  code: 'ok' | 'error';
+  lastSave?: string;
+  error?: string;
+}
+
 export interface SliceStore<S, E> {
   myPubKey: AgentPubKey;
 
@@ -29,7 +35,7 @@ export interface SliceStore<S, E> {
   state: Readable<S>;
   ephemeral: Readable<E>;
 
-  syncStatus: Readable<'synced' | 'syncing' | 'error'>;
+  sessionStatus: Readable<SessionStatus>;
 
   change(updateFn: (state: S, ephemeral: E) => void): void;
 }
@@ -44,7 +50,7 @@ export function extractSlice<S1, E1, S2, E2>(
     workspace: sliceStore.workspace as any as WorkspaceStore<S2, E2>,
     state: derived(sliceStore.state, sliceState),
     ephemeral: derived(sliceStore.ephemeral, sliceEphemeral),
-    syncStatus: sliceStore.syncStatus,
+    sessionStatus: sliceStore.sessionStatus,
     change: updateFn =>
       sliceStore.change((state1, eph1) => {
         const state2 = sliceState(state1);
@@ -110,9 +116,9 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
-  _syncStatus: Writable<'synced' | 'syncing' | 'error'> = writable('synced');
-  get syncStatus() {
-    return derived(this._syncStatus, i => i);
+  _sessionStatus: Writable<SessionStatus> = writable({ code: 'ok' });
+  get sessionStatus() {
+    return derived(this._sessionStatus, i => i);
   }
 
   _currentTip: Writable<EntryRecord<Commit> | undefined>;
@@ -309,8 +315,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           return 0;
         });
 
+      const lastSave = await toPromise(this.workspaceStore.tip);
       if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
         this._commitChanges();
+      } else {
+        this._sessionStatus.set({ code: 'ok', lastSave: (lastSave ? new Date(lastSave.action.timestamp).toLocaleTimeString() : 'never') });
       }
     }, this.config.commitStrategy.CommitEveryNMs);
     this.intervals.push(commitInterval);
@@ -551,14 +560,18 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
   // later
   private async _commitChanges(meta?: any) {
     if (this._previousCommitPromise) {
-      // console.log("prev commit promise exists, ignoring...")
-      await this._previousCommitPromise;
-      this._previousCommitPromise = undefined
-      return
+      return;
     }
 
     this._previousCommitPromise = this.commitChangesInternal(meta);
-    return this._previousCommitPromise;
+    
+    try {
+      await this._previousCommitPromise;
+    } catch (error) {
+      console.error('Commit failed in _commitChanges:', error);
+    } finally {
+      this._previousCommitPromise = undefined;
+    }
   }
 
   private async commitChangesInternal(meta?: any) {
@@ -594,6 +607,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     try {
       const newCommit = await this.synClient.createCommit(commit);
+      console.log('New commit created');
 
       this._currentTip.set(newCommit);
       this.workspaceStore.documentStore.synStore.client.sendMessage(
@@ -614,10 +628,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       );
 
       this.deltaCount = 0;
-      this._syncStatus.set('synced');
+      this._sessionStatus.set({ code: 'ok', lastSave: new Date(newCommit.action.timestamp).toLocaleTimeString()});
     } catch (error) {
+      console.error('Error committing changes:', error);
       this._previousCommitPromise = undefined;
-      this._syncStatus.set('error');
+      this._sessionStatus.set({ code: 'error', error: (error as Error)?.message, lastSave: get(this.sessionStatus).lastSave });
       throw error;
     }
   }
