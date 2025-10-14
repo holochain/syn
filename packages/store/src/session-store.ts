@@ -116,14 +116,14 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     return derived(this._ephemeral, i => JSON.parse(JSON.stringify(i)));
   }
 
-  _sessionStatus: Writable<SessionStatus> = writable({ code: 'ok' });
-  get sessionStatus() {
-    return derived(this._sessionStatus, i => i);
-  }
-
   _currentTip: Writable<EntryRecord<Commit> | undefined>;
   get currentTip() {
     return derived(this._currentTip, i => i);
+  }
+
+  _sessionStatus: Writable<SessionStatus> = writable({ code: 'ok' });
+  get sessionStatus() {
+    return derived(this._sessionStatus, i => i);
   }
 
   private unsubscribe: () => void = () => { };
@@ -144,8 +144,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     protected config: SynConfig,
     currentState: Automerge.Doc<S>,
     currentTip: EntryRecord<Commit> | undefined,
+    sessionStatus: SessionStatus = { code: 'ok', lastSave: currentTip ? new Date(currentTip.action.timestamp).toISOString() : '' },
     initialParticipants: Array<AgentPubKey>
   ) {
+    this._sessionStatus.set(sessionStatus);
     const workspaceHash = this.workspaceStore.workspaceHash;
     this.unsubscribe = this.synClient.onSignal(async synSignal => {
       if (synSignal.type !== 'SessionMessage') return;
@@ -315,11 +317,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           return 0;
         });
 
-      const lastSave = await toPromise(this.workspaceStore.tip);
       if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
         this._commitChanges();
       } else {
-        this._sessionStatus.set({ code: 'ok', lastSave: (lastSave ? new Date(lastSave.action.timestamp).toLocaleTimeString() : 'never') });
+        this._sessionStatus.set({ code: 'ok', lastSave: (currentTip ? new Date(currentTip.action.timestamp).toISOString() : '') });
       }
     }, this.config.commitStrategy.CommitEveryNMs);
     this.intervals.push(commitInterval);
@@ -363,6 +364,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     const currentTip = await toPromise(workspaceStore.tip);
     const currentState: S = await toPromise(workspaceStore.latestSnapshot);
+    const sessionStatus: SessionStatus = { code: 'ok', lastSave: currentTip ? new Date(currentTip.action.timestamp).toISOString() : '' };
 
     return new SessionStore(
       workspaceStore,
@@ -370,6 +372,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       config,
       currentState as Automerge.Doc<S>,
       currentTip,
+      sessionStatus,
       participants.filter(
         p =>
           workspaceStore.documentStore.synStore.client.client.myPubKey.toString() !==
@@ -628,7 +631,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       );
 
       this.deltaCount = 0;
-      this._sessionStatus.set({ code: 'ok', lastSave: new Date(newCommit.action.timestamp).toLocaleTimeString()});
+      this._sessionStatus.set({ code: 'ok', lastSave: new Date(newCommit.action.timestamp).toISOString()});
     } catch (error) {
       console.error('Error committing changes:', error);
       this._previousCommitPromise = undefined;

@@ -155,7 +155,7 @@
         <div>
           <Title />
         </div>
-        <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div>
+        <!-- <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div> -->
       </div>
       <main style="display: flex; height: 400px">
   <profile-prompt>
