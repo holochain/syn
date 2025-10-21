@@ -22,7 +22,7 @@ import { SynConfig } from './config.js';
 import { WorkspaceStore } from './workspace-store.js';
 
 export type SessionStatus = {
-  code: 'ok' | 'error';
+  code: 'ok' | 'error' | 'syncing';
   lastSave?: string;
   error?: string;
 }
@@ -320,7 +320,14 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
         this._commitChanges();
       } else {
-        this._sessionStatus.set({ code: 'ok', lastSave: (currentTip ? new Date(currentTip.action.timestamp).toISOString() : '') });
+        const lastSave = await toPromise(this.workspaceStore.tip);
+        const latestSnapshot = await toPromise(this.workspaceStore.latestSnapshot);
+        const inSync = isEqual(
+          Automerge.save(latestSnapshot as Automerge.Doc<S>),
+          Automerge.save(get(this._state))
+        );
+        const code = inSync ? 'ok' : 'syncing';
+        this._sessionStatus.set({ code, lastSave: (lastSave ? new Date(lastSave.action.timestamp).toISOString() : '') });
       }
     }, this.config.commitStrategy.CommitEveryNMs);
     this.intervals.push(commitInterval);
@@ -404,6 +411,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
         ) {
           this._commitChanges();
+        } else {
+          this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
         }
 
         const participants = get(this._participants).keys();
@@ -459,6 +468,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     if (thereArePendingChanges) {
       this.requestSync(from);
     }
+
+    this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
   }
 
   requestSync(participant: AgentPubKey) {
