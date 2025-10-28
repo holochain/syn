@@ -24,7 +24,7 @@
     "@lit/localize": "^0.12.0",
     "@shoelace-style/shoelace": "^2.3.0",
     "@vanillawc/wc-codemirror": "^2.1.0",
-    "automerge": "^1.0.1-preview.7",
+    "@automerge/automerge":"^3.2.0",
     "lit": "^3.0.0"
   },
   "devDependencies": {

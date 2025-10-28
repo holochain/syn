@@ -1,5 +1,5 @@
 import { AgentPubKey, encodeHashToBase64 } from '@holochain/client';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge'
 
 export interface AgentSelection {
   left: boolean;

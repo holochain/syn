@@ -21,7 +21,7 @@ import {
 } from '@holochain-open-dev/utils';
 import { decode, encode } from '@msgpack/msgpack';
 import { Commit } from '@holochain-syn/client';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge'
 
 import { defaultConfig, LINKS_POLL_INTERVAL_MS, RecursivePartial, SynConfig } from './config.js';
 import { DocumentStore } from './document-store.js';

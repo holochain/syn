@@ -37,7 +37,8 @@
     "new-port-cli": "^1.0.0",
     "prettier": "^2.3.2",
     "typescript": "^4.9.4",
-    "vitepress": "^1.0.0-rc.32"
+    "vitepress": "^1.0.0-rc.32",
+    "vite-plugin-wasm": "^3.5.0"
   },
   "eslintConfig": {
     "extends": ["@open-wc/eslint-config", "eslint-config-prettier"]

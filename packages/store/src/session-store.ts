@@ -13,7 +13,7 @@ import {
   writable,
 } from '@holochain-open-dev/stores';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge, { FreezeObject } from 'automerge';
+import * as Automerge from '@automerge/automerge';
 import { encodeHashToBase64, AgentPubKey } from '@holochain/client';
 import isEqual from 'lodash-es/isEqual.js';
 import { toPromise } from '@holochain-open-dev/stores';

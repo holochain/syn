@@ -1,4 +1,4 @@
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge'
 
 export function elemIdToPosition(
   left: boolean,

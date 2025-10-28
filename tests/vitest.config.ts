@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
+import wasm from 'vite-plugin-wasm';
 
 export default defineConfig({
+  plugins: [wasm()],
   test: {
     include: ['src/lib/*.test.ts'],
     // include: ['src/lib/bloat.test.ts'],

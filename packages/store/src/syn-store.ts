@@ -6,7 +6,7 @@ import {
 } from '@holochain-open-dev/stores';
 import { Commit, Document, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge'
 import { LazyHoloHashMap, LazyMap, slice } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
