@@ -2,7 +2,6 @@ import { assert, test } from 'vitest';
 
 import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 
-import { AdminWebsocket } from '@holochain/client';
 import { get } from '@holochain-open-dev/stores';
 import { SynStore } from '@holochain-syn/store';
 import { SynClient } from '@holochain-syn/client';
@@ -57,7 +56,7 @@ test('check that the state of disconnected agents making changes converges after
     await delay(100);
     console.log('Alice committed changes');
     let currentState = get(aliceSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Alice');
+    assert.equal(currentState.body.text.join(''), 'Alice');
 
     // Now Alice goes offline
 
@@ -93,7 +92,7 @@ test('check that the state of disconnected agents making changes converges after
     let bobSessionStore = await bobWorkspaceStore.joinSession();
     console.log('Bob session store:', bobSessionStore);
     currentState = get(bobSessionStore.state);
-    assert.equal(currentState.body.text.toString(), '');
+    assert.equal(currentState.body.text.join(''), '');
 
     bobSessionStore.change((state, eph) =>
       textEditorGrammar
@@ -102,7 +101,7 @@ test('check that the state of disconnected agents making changes converges after
     );
     console.log('Bob made changes');
     currentState = get(bobSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Bob');
+    assert.equal(currentState.body.text.join(''), 'Bob');
 
     await bobSessionStore.leaveSession();
     console.log('Bob session store left');
@@ -138,8 +137,8 @@ test('check that the state of disconnected agents making changes converges after
     const bobcurrentState = get(bobSessionStore.state);
     // Check that state converges
     assert.equal(
-      currentState.body.text.toString(),
-      bobcurrentState.body.text.toString()
+      currentState.body.text.join(''),
+      bobcurrentState.body.text.join('')
     );
 
     await aliceSessionStore.leaveSession();

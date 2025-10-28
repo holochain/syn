@@ -14,7 +14,7 @@ import { DocumentStore } from './document-store.js';
 import { LINKS_POLL_INTERVAL_MS } from './config.js';
 
 export const stateFromCommit = (commit: Commit) => {
-  const commitState = decode(commit.state) as Automerge.BinaryDocument;
+  const commitState = decode(commit.state) as Uint8Array;
   const state = Automerge.load(commitState);
   return state;
 };
@@ -22,7 +22,7 @@ export const stateFromCommit = (commit: Commit) => {
 export const stateFromDocument = (document: Document) => {
   const documentInitialState = decode(
     document.initial_state
-  ) as Automerge.BinaryDocument;
+  ) as Uint8Array;
   const state = Automerge.load(documentInitialState);
   return state;
 };
@@ -63,7 +63,7 @@ export class SynStore {
       new DocumentStore<any, any>(this, documentHash)
   );
 
-  async createDocument<S>(initialState: S, meta?: any) {
+  async createDocument<S extends Record<string, unknown>>(initialState: S, meta?: any) {
     let doc: Automerge.Doc<any> = Automerge.from(initialState);
 
     const documentRecord = await this.client.createDocument({
@@ -74,9 +74,9 @@ export class SynStore {
     return this.documents.get(documentRecord.actionHash);
   }
 
-  async createDeterministicDocument<S>(initialState: S, meta?: any) {
+  async createDeterministicDocument<S extends Record<string, unknown>>(initialState: S, meta?: any) {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'aa',
+      actor: 'aa',
     });
 
     doc = Automerge.change(doc, { time: 0 }, d =>

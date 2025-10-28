@@ -8,14 +8,14 @@ export interface AgentSelection {
 }
 
 export type TextEditorState = {
-  text: Automerge.Text;
+  text: string[];
 };
 export type TextEditorEphemeralState = { [key: string]: AgentSelection };
 
 export const textEditorGrammar = {
   initialState() {
     return {
-      text: new Automerge.Text(),
+      text: [],
     };
   },
   changes(
@@ -25,8 +25,10 @@ export const textEditorGrammar = {
   ) {
     return {
       insert(from: number, text: string) {
-        state.text.insertAt!(from, ...text);
-        const elementId = (state.text as any).getElemId(from + text.length - 1);
+        // Ensure the insertion position is within bounds
+        const safeFrom = Math.max(0, Math.min(from, state.text.length));
+        state.text.splice(safeFrom, 0, ...text.split(''));
+        const elementId = Automerge.getObjectId(state.text, safeFrom + text.length - 1) || '';
 
         cursors[encodeHashToBase64(myPubKey)] = {
           left: false,
@@ -35,12 +37,15 @@ export const textEditorGrammar = {
         };
       },
       delete(position: number, characterCount: number) {
-        state.text.deleteAt!(position, characterCount);
+        // Ensure the deletion position and count are within bounds
+        const safePosition = Math.max(0, Math.min(position, state.text.length));
+        const safeCount = Math.max(0, Math.min(characterCount, state.text.length - safePosition));
+        state.text.splice(safePosition, safeCount);
 
         if (state.text.length === 0) return;
 
-        if (position === 0) {
-          const elementId = (state.text as any).getElemId(0);
+        if (safePosition === 0) {
+          const elementId = Automerge.getObjectId(state.text, 0) || '';
 
           cursors[encodeHashToBase64(myPubKey)] = {
             left: true,
@@ -48,7 +53,7 @@ export const textEditorGrammar = {
             characterCount: 0,
           };
         } else {
-          const elementId = (state.text as any).getElemId(position - 1);
+          const elementId = Automerge.getObjectId(state.text, safePosition - 1) || '';
 
           cursors[encodeHashToBase64(myPubKey)] = {
             left: false,
@@ -59,18 +64,22 @@ export const textEditorGrammar = {
       },
       changeSelection(from: number, characterCount: number) {
         if (state.text.length === 0) {
-        } else if (from === state.text.length) {
-          cursors[encodeHashToBase64(myPubKey)] = {
-            left: false,
-            position: (state.text as any).getElemId(from - 1),
-            characterCount: characterCount,
-          };
         } else {
-          cursors[encodeHashToBase64(myPubKey)] = {
-            left: true,
-            position: (state.text as any).getElemId(from),
-            characterCount: characterCount,
-          };
+          // Ensure the selection position is within bounds
+          const safeFrom = Math.max(0, Math.min(from, state.text.length));
+          if (safeFrom === state.text.length) {
+            cursors[encodeHashToBase64(myPubKey)] = {
+              left: false,
+              position: Automerge.getObjectId(state.text, safeFrom - 1) || '',
+              characterCount: characterCount,
+            };
+          } else {
+            cursors[encodeHashToBase64(myPubKey)] = {
+              left: true,
+              position: Automerge.getObjectId(state.text, safeFrom) || '',
+              characterCount: characterCount,
+            };
+          }
         }
       },
     };

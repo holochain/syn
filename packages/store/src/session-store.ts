@@ -220,10 +220,10 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           this.handleChangeNotice(
             synSignal.provenance,
             message.payload.state_changes.map(
-              c => decode(c) as Automerge.BinaryChange
+              c => decode(c) as Uint8Array
             ),
             message.payload.ephemeral_changes.map(
-              c => decode(c) as Automerge.BinaryChange
+              c => decode(c) as Uint8Array
             )
           );
         }
@@ -233,12 +233,12 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
             message.payload.sync_message
               ? (decode(
                 message.payload.sync_message
-              ) as Automerge.BinarySyncMessage)
+              ) as Uint8Array)
               : undefined,
             message.payload.ephemeral_sync_message
               ? (decode(
                 message.payload.ephemeral_sync_message
-              ) as Automerge.BinarySyncMessage)
+              ) as Uint8Array)
               : undefined
           );
         }
@@ -350,7 +350,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     this._participants = writable(participantsMap);
 
-    let eph = Automerge.init() as FreezeObject<E>;
+    let eph = Automerge.init() as Automerge.Doc<E>;
 
     this._ephemeral = writable(eph);
 
@@ -436,38 +436,26 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
   }
 
   private handleChangeNotice(
-    from: AgentPubKey,
-    stateChanges: Automerge.BinaryChange[],
-    ephemeralChanges: Automerge.BinaryChange[]
+    _from: AgentPubKey,
+    stateChanges: Uint8Array[],
+    ephemeralChanges: Uint8Array[]
   ) {
     this.deltaCount += stateChanges.length;
 
-    let thereArePendingChanges = false;
-
     this._state.update(state => {
-      const stateChangesInfo = Automerge.applyChanges(state, stateChanges);
+      const [updatedState] = Automerge.applyChanges(state, stateChanges);
 
-      thereArePendingChanges =
-        thereArePendingChanges || stateChangesInfo[1].pendingChanges > 0;
-
-      return stateChangesInfo[0];
+      return updatedState;
     });
 
     this._ephemeral.update(ephemeral => {
-      const ephemeralChangesInfo = Automerge.applyChanges(
+      const [updatedEphemeral] = Automerge.applyChanges(
         ephemeral,
         ephemeralChanges
       );
 
-      thereArePendingChanges =
-        thereArePendingChanges || ephemeralChangesInfo[1].pendingChanges > 0;
-
-      return ephemeralChangesInfo[0];
+      return updatedEphemeral;
     });
-
-    if (thereArePendingChanges) {
-      this.requestSync(from);
-    }
 
     this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
   }
@@ -513,8 +501,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
   private handleSyncRequest(
     from: AgentPubKey,
-    syncMessage: Automerge.BinarySyncMessage | undefined,
-    ephemeralSyncMessage: Automerge.BinarySyncMessage | undefined
+    syncMessage: Uint8Array | undefined,
+    ephemeralSyncMessage: Uint8Array | undefined
   ) {
     this._participants.update(p => {
       const participantInfo = p.get(from);

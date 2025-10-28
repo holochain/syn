@@ -136,10 +136,10 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Hi there');
+    assert.equal(currentState.body.text.join(''), 'Hi there');
 
     currentState = get(bobSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Hi there');
+    assert.equal(currentState.body.text.join(''), 'Hi there');
 
     // Test concurrent
 
@@ -160,8 +160,8 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     const currentStateAlice = get(aliceSessionStore.state);
     const currentStateBob = get(bobSessionStore.state);
     assert.equal(
-      currentStateAlice.body.text.toString(),
-      currentStateBob.body.text.toString()
+      currentStateAlice.body.text.join(''),
+      currentStateBob.body.text.join('')
     );
 
     await aliceSessionStore.commitChanges();

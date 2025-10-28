@@ -90,7 +90,7 @@ test('the state of two agents making lots of concurrent changes converges', asyn
           textEditorGrammar
             .changes(alice.agentPubKey, state.body, eph)
             .insert(
-              alicePosition(get(aliceSessionStore.state).body.text.toString()),
+              alicePosition(get(aliceSessionStore.state).body.text.join('')),
               aliceLine[i]
             )
         );
@@ -124,10 +124,10 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 ${bobLine}${bobLine}${bobLine}`;
 
     let currentState = get(bobSessionStore.state);
-    assert.deepEqual(currentState.body.text.toString(), expectedText);
+    assert.deepEqual(currentState.body.text.join(''), expectedText);
 
     currentState = get(aliceSessionStore.state);
-    assert.deepEqual(currentState.body.text.toString(), expectedText);
+    assert.deepEqual(currentState.body.text.join(''), expectedText);
 
     await aliceSessionStore.leaveSession();
     await bobSessionStore.leaveSession();
