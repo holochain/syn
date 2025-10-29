@@ -149,8 +149,8 @@
     <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
-        {$sessionStatus?.code}
-        {$sessionStatus?.lastSave}
+        {$sessionStatus?.code} -
+        {$sessionStatus?.lastSave} -
         {$sessionStatus?.error}
         <div>
           <Title />

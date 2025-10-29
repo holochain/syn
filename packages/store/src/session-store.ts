@@ -411,7 +411,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
           this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
         ) {
           this._commitChanges();
-        } else {
+        } else if (stateChanges.length > 0) {
           this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
         }
 
@@ -457,7 +457,9 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       return updatedEphemeral;
     });
 
-    this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
+    if (stateChanges.length > 0) {
+      this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
+    }
   }
 
   requestSync(participant: AgentPubKey) {
