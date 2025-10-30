@@ -305,27 +305,26 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     this.intervals.push(heartbeatInterval);
 
     const commitInterval = setInterval(async () => {
-      const activeParticipants = get(this.participants)
-        .active.map(p => encodeHashToBase64(p))
-        .sort((p1, p2) => {
-          if (p1 < p2) {
-            return -1;
-          }
-          if (p1 > p2) {
-            return 1;
-          }
-          return 0;
-        });
-
-      if (activeParticipants[0] === encodeHashToBase64(this.myPubKey)) {
+      if (
+        this.amILeader() ||
+        (get(this._sessionStatus).lastSave && (Date.now() - new Date(get(this._sessionStatus).lastSave!).getTime()) > 1000 * 60)
+      ) {
         this._commitChanges();
       } else {
         const lastSave = await toPromise(this.workspaceStore.tip);
         const latestSnapshot = await toPromise(this.workspaceStore.latestSnapshot);
-        const inSync = isEqual(
+        let inSync = isEqual(
           Automerge.save(latestSnapshot as Automerge.Doc<S>),
           Automerge.save(get(this._state))
         );
+
+        // Double check by comparing the full object trees (more expensive)
+        if (!inSync) {
+          inSync = isEqual(
+            Automerge.toJS(latestSnapshot as Automerge.Doc<S>),
+            Automerge.toJS(get(this._state))
+          );
+        }
         const code = inSync ? 'ok' : 'syncing';
         this._sessionStatus.set({ code, lastSave: (lastSave ? new Date(lastSave.action.timestamp).toISOString() : '') });
       }
@@ -388,6 +387,22 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     );
   }
 
+  amILeader(): boolean {
+    const activeParticipants = get(this.participants)
+      .active.map(p => encodeHashToBase64(p))
+      .sort((p1, p2) => {
+        if (p1 < p2) {
+          return -1;
+        }
+        if (p1 > p2) {
+          return 1;
+        }
+        return 0;
+      });
+
+    return activeParticipants[0] === encodeHashToBase64(this.myPubKey);
+  }
+
   change(updateFn: (state: S, ephemeral: E) => void) {
     this._state.update(state => {
       let newState = state;
@@ -408,7 +423,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
         this.deltaCount += stateChanges.length;
         if (
           this.config.commitStrategy.CommitEveryNDeltas &&
-          this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas
+          this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas &&
+          this.amILeader()
         ) {
           this._commitChanges();
         } else if (stateChanges.length > 0) {
