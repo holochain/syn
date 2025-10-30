@@ -36,9 +36,10 @@ pub fn tag_path_entry_hash(tag: String) -> ExternResult<EntryHash> {
 pub fn get_documents_with_tag(tag: ZomeFnInput<String>) -> ExternResult<Vec<Link>> {
     let strategy = tag.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(tag_path(tag.input).path_entry_hash()?, LinkTypes::TagToDocument)?
-            .get_options(strategy)
-            .build(),
+        LinkQuery::try_new(
+            tag_path(tag.input).path_entry_hash()?,
+            LinkTypes::TagToDocument,
+        )?, strategy
     )
 }
 
@@ -51,17 +52,16 @@ pub struct RemoveDocumentTagInput {
 #[hdk_extern]
 pub fn remove_document_tag(input: RemoveDocumentTagInput) -> ExternResult<()> {
     let links = get_links(
-        GetLinksInputBuilder::try_new(
+        LinkQuery::try_new(
             tag_path(input.tag).path_entry_hash()?,
             LinkTypes::TagToDocument,
-        )?
-        .build(),
+        )?, GetStrategy::default()
     )?;
 
     for link in links {
         if let Some(target) = link.target.into_any_dht_hash() {
             if target.eq(&input.document_hash) {
-                delete_link(link.create_link_hash)?;
+                delete_link(link.create_link_hash, GetOptions::default())?;
             }
         }
     }

@@ -12,7 +12,7 @@ mod workspace;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let mut fns = BTreeSet::new();
+    let mut fns = HashSet::new();
     fns.insert((zome_info()?.name, FunctionName("recv_remote_signal".into())));
     let cap_grant_entry: CapGrantEntry = CapGrantEntry::new(
         String::from("remote signals"), // A string by which to later query for saved grants.

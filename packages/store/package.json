@@ -16,10 +16,10 @@
     "build:watch": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
-    "@holochain-open-dev/stores": "^0.500.3",
-    "@holochain-open-dev/utils": "^0.500.2",
+    "@holochain-open-dev/stores": "^0.600.0-dev.0",
+    "@holochain-open-dev/utils": "^0.600.0-dev.0",
     "@holochain-syn/client": "^0.502.0-dev.3",
-    "@holochain/client": "^0.19.2",
+    "@holochain/client": "^0.20.0-dev.2",
     "@msgpack/msgpack": "^2.7.2",
     "@automerge/automerge":"^3.2.0",
     "lodash-es": "^4.17.21"

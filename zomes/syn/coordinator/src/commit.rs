@@ -58,7 +58,11 @@ pub fn get_commit(commit_hash: ActionHash) -> ExternResult<Option<Record>> {
 
 #[hdk_extern]
 pub fn get_commits_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
+    let strategy = document_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(document_hash.input.clone(), LinkTypes::DocumentToCommits)?.get_options(document_hash.get_strategy()).build(),
+        LinkQuery::try_new(
+            document_hash.input,
+            LinkTypes::DocumentToCommits,
+        )?, strategy
     )
 }

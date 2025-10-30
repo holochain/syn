@@ -29,5 +29,10 @@ pub fn get_document(document_hash: AnyDhtHash) -> ExternResult<Option<Record>> {
 #[hdk_extern]
 pub fn get_authors_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
     let strategy = document_hash.get_strategy();
-    get_links(GetLinksInputBuilder::try_new(document_hash.input, LinkTypes::DocumentToAuthors)?.get_options(strategy).build())
+    get_links(
+        LinkQuery::try_new(
+            document_hash.input,
+            LinkTypes::DocumentToAuthors,
+        )?, strategy
+    )
 }

@@ -67,7 +67,10 @@ pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> 
 pub fn get_workspaces_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
     let strategy = document_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(document_hash.input, LinkTypes::DocumentToWorkspaces)?.get_options(strategy).build(),
+        LinkQuery::try_new(
+            document_hash.input,
+            LinkTypes::DocumentToWorkspaces,
+        )?, strategy
     )
 }
 
@@ -100,7 +103,10 @@ pub fn update_workspace_tip(input: UpdateWorkspaceTipInput) -> ExternResult<()> 
 pub fn get_workspace_tips(workspace_hash: ZomeFnInput<EntryHash>) -> ExternResult<Vec<Link>> {
     let strategy = workspace_hash.get_strategy();
     let links = get_links(
-        GetLinksInputBuilder::try_new(workspace_hash.input, LinkTypes::WorkspaceToTip)?.get_options(strategy).build(),
+        LinkQuery::try_new(
+            workspace_hash.input,
+            LinkTypes::WorkspaceToTip,
+        )?, strategy
     )?;
 
     let mut tips: HashMap<ActionHash, Link> = HashMap::new();
@@ -130,7 +136,10 @@ pub fn get_workspace_tips(workspace_hash: ZomeFnInput<EntryHash>) -> ExternResul
 pub fn get_workspace_session_participants(workspace_hash: ZomeFnInput<EntryHash>) -> ExternResult<Vec<Link>> {
     let strategy = workspace_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(workspace_hash.input, LinkTypes::WorkspaceToParticipant)?.get_options(strategy).build(),
+        LinkQuery::try_new(
+            workspace_hash.input,
+            LinkTypes::WorkspaceToParticipant,
+        )?, strategy
     )
 }
 
@@ -170,8 +179,10 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
     let my_pub_key = agent_info()?.agent_initial_pubkey;
 
     let links = get_links(
-        GetLinksInputBuilder::try_new(workspace_hash.clone(), LinkTypes::WorkspaceToParticipant)?
-            .build(),
+        LinkQuery::try_new(
+            workspace_hash.clone(),
+            LinkTypes::WorkspaceToParticipant,
+        )?, GetStrategy::default(),
     )?;
 
     let my_links: Vec<Link> = links

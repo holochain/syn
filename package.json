@@ -14,7 +14,7 @@
     "test": "npm run build:happ && npm run build:libs && npm test -w tests",
     "build:happ": "npm run build:dna && hc app pack workdir",
     "build:dna": "npm run build:zome && hc dna pack workdir",
-    "build:zome": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown",
+    "build:zome": "CARGO_TARGET_DIR=target RUSTFLAGS='--cfg getrandom_backend=\"custom\"' cargo build --release --target wasm32-unknown-unknown",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -29,7 +29,7 @@
     "demo"
   ],
   "devDependencies": {
-    "@holochain/hc-spin": "^0.500.2",
+    "@holochain/hc-spin": "^0.600.0-dev.0",
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
@@ -46,5 +46,9 @@
   "prettier": {
     "singleQuote": true,
     "arrowParens": "avoid"
+  },
+  "overrides": {
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
+    "@sveltejs/vite-plugin-svelte-inspector": "^2.0.0"
   }
 }
