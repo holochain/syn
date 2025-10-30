@@ -46,9 +46,5 @@
   "prettier": {
     "singleQuote": true,
     "arrowParens": "avoid"
-  },
-  "overrides": {
-    "@sveltejs/vite-plugin-svelte": "^3.1.2",
-    "@sveltejs/vite-plugin-svelte-inspector": "^2.0.0"
   }
 }
