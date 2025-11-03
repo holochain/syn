@@ -630,8 +630,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       console.log('New commit created');
 
       this._currentTip.set(newCommit);
+      const otherParticipants = Array.from(get(this._participants).keys()).filter(
+        p => !isEqual(p, this.myPubKey)
+      );
       this.workspaceStore.documentStore.synStore.client.sendMessage(
-        Array.from(get(this._participants).keys()),
+        Array.from(otherParticipants),
         {
           workspace_hash: this.workspaceStore.workspaceHash,
           payload: {

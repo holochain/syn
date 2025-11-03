@@ -152,9 +152,17 @@
         {$sessionStatus?.code} -
         {$sessionStatus?.lastSave} -
         {$sessionStatus?.error}
-        <div>
+        <!-- <div>
           <Title />
-        </div>
+        </div> -->
+        <!-- leave session -->
+        <button on:click={async ()=>{
+          await sessionStore.leaveSession()
+        }}>Leave Session</button>
+        <!-- join session -->
+        <button on:click={async ()=>{
+          sessionStore = await workspaceStore.joinSession()
+        }}>Join Session</button>
         <!-- <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div> -->
       </div>
       <main style="display: flex; height: 400px">
