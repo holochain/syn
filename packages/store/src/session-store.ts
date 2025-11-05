@@ -288,7 +288,8 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
               info.lastSeen &&
               Date.now() - info.lastSeen < config.outOfSessionTimeout
           )
-          .map(([p, _]) => p);
+          .map(([p, _]) => p)
+          .filter(p => encodeHashToBase64(p) !== encodeHashToBase64(this.myPubKey));
 
         if (p.size > 0) {
           this.synClient.sendMessage(onlineParticipants, {
@@ -379,17 +380,13 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       currentState as Automerge.Doc<S>,
       currentTip,
       sessionStatus,
-      participants.filter(
-        p =>
-          workspaceStore.documentStore.synStore.client.client.myPubKey.toString() !==
-          p.toString()
-      )
+      participants
     );
   }
 
   amILeader(): boolean {
-    const activeParticipants = get(this.participants)
-      .active.map(p => encodeHashToBase64(p))
+    const activeParticipants = get(this.participants).active
+      .map(p => encodeHashToBase64(p))
       .sort((p1, p2) => {
         if (p1 < p2) {
           return -1;
@@ -432,9 +429,12 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
         }
 
         const participants = get(this._participants).keys();
-
+        const participantsArray = Array.from(participants);
+        const otherParticipants = participantsArray.filter(
+          p => encodeHashToBase64(p) !== encodeHashToBase64(this.myPubKey)
+        );
         this.workspaceStore.documentStore.synStore.client.sendMessage(
-          Array.from(participants),
+          otherParticipants,
           {
             workspace_hash: this.workspaceStore.workspaceHash,
             payload: {
