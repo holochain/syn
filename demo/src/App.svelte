@@ -163,6 +163,10 @@
         <button on:click={async ()=>{
           sessionStore = await workspaceStore.joinSession()
         }}>Join Session</button>
+        <!-- force commit -->
+        <button on:click={async ()=>{
+          await sessionStore.commitChanges()
+        }}>Force Commit</button>
         <!-- <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div> -->
       </div>
       <main style="display: flex; height: 400px">

@@ -587,6 +587,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
     
     try {
       await this._previousCommitPromise;
+      console.log('Commit successful in commitChanges');
     } catch (error) {
       console.error('Commit failed in _commitChanges:', error);
     } finally {

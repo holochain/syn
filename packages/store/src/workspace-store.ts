@@ -12,7 +12,7 @@ import {
   Writable,
   writable,
 } from '@holochain-open-dev/stores';
-import { ActionHash, EntryHash, Link } from '@holochain/client';
+import { ActionHash, encodeHashToBase64, EntryHash, Link } from '@holochain/client';
 import {
   EntryRecord,
   HashType,
@@ -29,6 +29,9 @@ import { SessionStore } from './session-store.js';
 import { stateFromCommit, stateFromDocument } from './syn-store.js';
 
 export class WorkspaceStore<S, E> {
+  private _merging = false;
+  private _mergingPromise: Promise<EntryRecord<Commit>> | undefined;
+
   constructor(
     public documentStore: DocumentStore<S, E>,
     public workspaceHash: EntryHash
@@ -67,6 +70,26 @@ export class WorkspaceStore<S, E> {
   );
 
   async merge(commitsHashes: Array<ActionHash>): Promise<EntryRecord<Commit>> {
+    // Check if already merging - return existing promise if so
+    if (this._merging && this._mergingPromise) {
+      console.log('Merge already in progress, waiting for existing merge to complete.');
+      return this._mergingPromise;
+    }
+
+    // Set lock and create promise
+    this._merging = true;
+    this._mergingPromise = this._performMerge(commitsHashes);
+    
+    try {
+      const result = await this._mergingPromise;
+      return result;
+    } finally {
+      this._merging = false;
+      this._mergingPromise = undefined;
+    }
+  }
+
+  private async _performMerge(commitsHashes: Array<ActionHash>): Promise<EntryRecord<Commit>> {
     const commits = await toPromise(
       sliceAndJoin(this.documentStore.commits, commitsHashes)
     );
@@ -101,6 +124,8 @@ export class WorkspaceStore<S, E> {
     const newCommit = await this.documentStore.synStore.client.createCommit(
       commit
     );
+
+    console.log('Updating workspace tip to new merge commit:', encodeHashToBase64(newCommit.actionHash), 'from previous tips:', commitsHashes?.map(h => encodeHashToBase64(h)));
 
     await this.documentStore.synStore.client.updateWorkspaceTip(
       this.workspaceHash,
@@ -140,6 +165,12 @@ export class WorkspaceStore<S, E> {
               ),
           ),
           async commitsLinks => {
+            // Skip merge computation if already merging
+            if (this._merging) {
+              console.log('Merge already in progress, skipping tip computation');
+              return undefined;
+            }
+
             const tipsLinks = new HoloHashMap<ActionHash, Link>();
 
             const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
