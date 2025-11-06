@@ -311,6 +311,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
         (get(this._sessionStatus).lastSave && (Date.now() - new Date(get(this._sessionStatus).lastSave!).getTime()) > 1000 * 60)
       ) {
         this._commitChanges();
+        console.log('Committing changes due to periodic interval');
       } else {
         const lastSave = await toPromise(this.workspaceStore.tip);
         const latestSnapshot = await toPromise(this.workspaceStore.latestSnapshot);
@@ -421,9 +422,11 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
         if (
           this.config.commitStrategy.CommitEveryNDeltas &&
           this.deltaCount > this.config.commitStrategy.CommitEveryNDeltas &&
-          this.amILeader()
+          this.amILeader() &&
+          !this._previousCommitPromise
         ) {
           this._commitChanges();
+          console.log("Committing changes due to delta count.");
         } else if (stateChanges.length > 0) {
           this._sessionStatus.set({ code: 'syncing', lastSave: get(this.sessionStatus).lastSave });
         }
@@ -688,6 +691,7 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
 
     if (participants.length === 1) {
       await this.commitChanges();
+      console.log('Committed changes before leaving session');
     }
 
     await this.synClient.leaveWorkspaceSession(
