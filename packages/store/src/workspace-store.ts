@@ -31,6 +31,7 @@ import { stateFromCommit, stateFromDocument } from './syn-store.js';
 export class WorkspaceStore<S, E> {
   private _merging = false;
   private _mergingPromise: Promise<EntryRecord<Commit>> | undefined;
+  private _mergingCommitsKey: string | undefined;
 
   constructor(
     public documentStore: DocumentStore<S, E>,
@@ -70,14 +71,24 @@ export class WorkspaceStore<S, E> {
   );
 
   async merge(commitsHashes: Array<ActionHash>): Promise<EntryRecord<Commit>> {
-    // Check if already merging - return existing promise if so
-    if (this._merging && this._mergingPromise) {
-      console.log('Merge already in progress, waiting for existing merge to complete.');
+    // Create a unique key for this merge operation
+    const mergeKey = commitsHashes.map(h => encodeHashToBase64(h)).sort().join(',');
+    
+    // Check if already merging the same commits - return existing promise if so
+    if (this._merging && this._mergingPromise && this._mergingCommitsKey === mergeKey) {
+      console.log('Merge already in progress for the same commits, waiting for existing merge to complete.');
       return this._mergingPromise;
+    }
+    
+    // Check if merging different commits - wait for current merge to complete first
+    if (this._merging && this._mergingPromise) {
+      console.log('Different merge in progress, waiting for it to complete before starting new merge.');
+      await this._mergingPromise;
     }
 
     // Set lock and create promise
     this._merging = true;
+    this._mergingCommitsKey = mergeKey;
     this._mergingPromise = this._performMerge(commitsHashes);
     
     try {
@@ -86,6 +97,7 @@ export class WorkspaceStore<S, E> {
     } finally {
       this._merging = false;
       this._mergingPromise = undefined;
+      this._mergingCommitsKey = undefined;
     }
   }
 
