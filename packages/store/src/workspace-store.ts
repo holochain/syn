@@ -32,6 +32,7 @@ export class WorkspaceStore<S, E> {
   private _merging = false;
   private _mergingPromise: Promise<EntryRecord<Commit>> | undefined;
   private _mergingCommitsKey: string | undefined;
+  private _mergeResultCache = new Map<string, ActionHash>();
 
   constructor(
     public documentStore: DocumentStore<S, E>,
@@ -184,7 +185,6 @@ export class WorkspaceStore<S, E> {
             }
 
             const tipsLinks = new HoloHashMap<ActionHash, Link>();
-
             const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
 
             for (const commitLink of commitsLinks) {
@@ -206,12 +206,24 @@ export class WorkspaceStore<S, E> {
 
             if (tipsHashes.length === 1) return tipsHashes[0];
 
+            // Check merge cache before creating new merge
+            const cacheKey = tipsHashes.map(h => encodeHashToBase64(h)).sort().join(',');
+            const cached = this._mergeResultCache.get(cacheKey);
+            if (cached) {
+              console.log('Using cached merge result for tips: ', cacheKey);
+              return cached;
+            }
+
             const newCommit = await this.merge(tipsHashes);
+            
+            // Cache the result (no expiry needed)
+            this._mergeResultCache.set(cacheKey, newCommit.actionHash);
+            
             return newCommit.actionHash;
           },
-          commit =>
-            commit ? this.documentStore.commits.get(commit) : undefined
-        )
+            commit =>
+              commit ? this.documentStore.commits.get(commit) : undefined
+          )
   );
 
   /**
