@@ -33,6 +33,7 @@ export class WorkspaceStore<S, E> {
   private _mergingPromise: Promise<EntryRecord<Commit>> | undefined;
   private _mergingCommitsKey: string | undefined;
   private _mergeResultCache = new Map<string, ActionHash>();
+  private _workspaceStoreId = Math.random().toString(36).substring(2);
 
   constructor(
     public documentStore: DocumentStore<S, E>,
@@ -77,15 +78,17 @@ export class WorkspaceStore<S, E> {
     
     // Check if already merging the same commits - return existing promise if so
     if (this._merging && this._mergingPromise && this._mergingCommitsKey === mergeKey) {
-      console.log('Merge already in progress for the same commits, waiting for existing merge to complete.');
+      console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Merge already in progress for the same commits, waiting for existing merge to complete.');
       return this._mergingPromise;
     }
     
     // Check if merging different commits - wait for current merge to complete first
     if (this._merging && this._mergingPromise) {
-      console.log('Different merge in progress, waiting for it to complete before starting new merge.');
+      console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Different merge in progress, waiting for it to complete before starting new merge.');
       await this._mergingPromise;
     }
+
+    console.log(this._workspaceStoreId, this.documentStore.documentStoreId, "continuing with merge because no other merges are in progress. proof: ", { mergeKey, merging: this._merging, mergingCommitsKey: this._mergingCommitsKey });
 
     // Set lock and create promise
     this._merging = true;
@@ -138,7 +141,7 @@ export class WorkspaceStore<S, E> {
       commit
     );
 
-    console.log('Updating workspace tip to new merge commit:', encodeHashToBase64(newCommit.actionHash), 'from previous tips:', commitsHashes?.map(h => encodeHashToBase64(h)));
+    console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Updating workspace tip to new merge commit:', encodeHashToBase64(newCommit.actionHash), 'from previous tips:', commitsHashes?.map(h => encodeHashToBase64(h)));
 
     await this.documentStore.synStore.client.updateWorkspaceTip(
       this.workspaceHash,
@@ -180,7 +183,7 @@ export class WorkspaceStore<S, E> {
           async commitsLinks => {
             // Skip merge computation if already merging
             if (this._merging) {
-              console.log('Merge already in progress, skipping tip computation');
+              console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Merge already in progress, skipping tip computation');
               return undefined;
             }
 
@@ -210,13 +213,19 @@ export class WorkspaceStore<S, E> {
             const cacheKey = tipsHashes.map(h => encodeHashToBase64(h)).sort().join(',');
             const cached = this._mergeResultCache.get(cacheKey);
             if (cached) {
-              console.log('Using cached merge result for tips: ', cacheKey);
+              console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Using cached merge result for tips: ', cacheKey);
               return cached;
             }
 
+            console.log(this._workspaceStoreId, this.documentStore.documentStoreId, "continuing with merge of tips because no cached result. proof: ", { cacheKey, merging: this._merging, mergingCommitsKey: this._mergingCommitsKey, tipsHashes, cached, mergeResultCache: Array.from(this._mergeResultCache.entries()) });
+
+            this._merging = true;
+            this._mergingCommitsKey = cacheKey;
+            
             const newCommit = await this.merge(tipsHashes);
             
             // Cache the result (no expiry needed)
+            console.log(this._workspaceStoreId, this.documentStore.documentStoreId, "adding merge result to cache: ", { cacheKey, actionHash: encodeHashToBase64(newCommit.actionHash) });
             this._mergeResultCache.set(cacheKey, newCommit.actionHash);
             
             return newCommit.actionHash;
