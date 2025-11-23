@@ -47,7 +47,7 @@ where
 pub fn delete_link_relaxed(address: ActionHash) -> ExternResult<ActionHash> {
     HDK.with(|h| {
         h.borrow()
-            .delete_link(DeleteLinkInput::new(address, GetOptions::default(), ChainTopOrdering::Relaxed))
+            .delete_link(DeleteLinkInput::new(address, GetOptions::local(), ChainTopOrdering::Relaxed))
     })
 }
 
@@ -63,7 +63,7 @@ impl<T> ZomeFnInput<T> {
     }
 
     pub fn get_strategy(&self) -> GetStrategy {
-        let local = self.local.unwrap_or(false);
+        let local = self.local.unwrap_or(true);
         match local {
             true => GetStrategy::Local,
             false => GetStrategy::Network,
@@ -81,7 +81,7 @@ impl<T> ZomeFnInput<T> {
 
 impl<T> Into<GetStrategy> for ZomeFnInput<T> {
     fn into(self) -> GetStrategy {
-        let local = self.local.unwrap_or(false);
+        let local = self.local.unwrap_or(true);
         match local {
             true => GetStrategy::Local,
             false => GetStrategy::Network,
@@ -91,7 +91,7 @@ impl<T> Into<GetStrategy> for ZomeFnInput<T> {
 
 impl<T> Into<GetOptions> for ZomeFnInput<T> {
     fn into(self) -> GetOptions {
-        let local = self.local.unwrap_or(false);
+        let local = self.local.unwrap_or(true);
         match local {
             true => GetOptions::local(),
             false => GetOptions::network(),

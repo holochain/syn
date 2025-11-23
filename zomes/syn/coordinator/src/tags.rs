@@ -55,13 +55,13 @@ pub fn remove_document_tag(input: RemoveDocumentTagInput) -> ExternResult<()> {
         LinkQuery::try_new(
             tag_path(input.tag).path_entry_hash()?,
             LinkTypes::TagToDocument,
-        )?, GetStrategy::default()
+        )?, GetStrategy::Local
     )?;
 
     for link in links {
         if let Some(target) = link.target.into_any_dht_hash() {
             if target.eq(&input.document_hash) {
-                delete_link(link.create_link_hash, GetOptions::default())?;
+                delete_link(link.create_link_hash, GetOptions::local())?;
             }
         }
     }

@@ -26,7 +26,7 @@ pub fn create_commit(commit: Commit) -> ExternResult<Record> {
         }
     }
 
-    let record = get(action_hash, GetOptions::default())?;
+    let record = get(action_hash, GetOptions::local())?;
 
     record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
@@ -53,7 +53,7 @@ pub fn link_document_to_commit(input: LinkDocumentToCommitInput) -> ExternResult
 
 #[hdk_extern]
 pub fn get_commit(commit_hash: ActionHash) -> ExternResult<Option<Record>> {
-    get(commit_hash, GetOptions::default())
+    get(commit_hash, GetOptions::local())
 }
 
 #[hdk_extern]

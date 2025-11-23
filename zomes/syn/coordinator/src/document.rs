@@ -13,7 +13,7 @@ pub fn create_document(document: Document) -> ExternResult<Record> {
         (),
     )?;
 
-    let maybe_record = get(document_hash, GetOptions::default())?;
+    let maybe_record = get(document_hash, GetOptions::local())?;
     let record = maybe_record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
     ))))?;
@@ -23,7 +23,7 @@ pub fn create_document(document: Document) -> ExternResult<Record> {
 
 #[hdk_extern]
 pub fn get_document(document_hash: AnyDhtHash) -> ExternResult<Option<Record>> {
-    get(document_hash, GetOptions::default())
+    get(document_hash, GetOptions::local())
 }
 
 #[hdk_extern]

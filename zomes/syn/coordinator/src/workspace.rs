@@ -51,7 +51,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
         )?;
     }
 
-    let record = get(action_hash, GetOptions::default())?;
+    let record = get(action_hash, GetOptions::local())?;
 
     record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
@@ -60,7 +60,7 @@ pub fn create_workspace(input: CreateWorkspaceInput) -> ExternResult<Record> {
 
 #[hdk_extern]
 pub fn get_workspace(workspace_hash: EntryHash) -> ExternResult<Option<Record>> {
-    get(workspace_hash, GetOptions::default())
+    get(workspace_hash, GetOptions::local())
 }
 
 #[hdk_extern]
@@ -182,7 +182,7 @@ pub fn leave_workspace_session(workspace_hash: EntryHash) -> ExternResult<()> {
         LinkQuery::try_new(
             workspace_hash.clone(),
             LinkTypes::WorkspaceToParticipant,
-        )?, GetStrategy::default(),
+        )?, GetStrategy::Local,
     )?;
 
     let my_links: Vec<Link> = links
