@@ -1,6 +1,6 @@
 {
   "name": "@holochain-syn/store",
-  "version": "0.600.0-rc.1",
+  "version": "0.600.0-rc.2",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -18,7 +18,7 @@
   "dependencies": {
     "@holochain-open-dev/stores": "^0.600.0",
     "@holochain-open-dev/utils": "^0.600.0",
-    "@holochain-syn/client": "^0.600.0-rc.1",
+    "@holochain-syn/client": "^0.600.0-rc.2",
     "@holochain/client": "^0.20.0",
     "@msgpack/msgpack": "^2.7.2",
     "@automerge/automerge":"^3.2.0",

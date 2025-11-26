@@ -99,6 +99,13 @@
   let sessionStore;
   let sessionStatus;
 
+  let config = {
+    hearbeatInterval: 5 * 1000,
+    newPeersDiscoveryInterval: 30 * 1000,
+    outOfSessionTimeout: 60 * 1000,
+    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 30 },
+  };
+
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
     const documentsHashes = Array.from((await toPromise(store.documentsByTag.get("active"))).keys());
@@ -111,14 +118,14 @@
       workspaceStore = await documentStore.createWorkspace(
         'main'
       );
-      sessionStore = await workspaceStore.joinSession();
+      sessionStore = await workspaceStore.joinSession(config);
       synStore = store;
     } else {
       documentStore = store.documents.get(documentsHashes[0]);
       const workspaces = await toPromise(documentStore.allWorkspaces);
 
       workspaceStore = Array.from(workspaces.values())[0];
-      sessionStore = await workspaceStore.joinSession();
+      sessionStore = await workspaceStore.joinSession(config);
       sessionStatus = sessionStore.sessionStatus
       synStore = store;
     }

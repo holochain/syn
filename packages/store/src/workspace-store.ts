@@ -277,13 +277,19 @@ export class WorkspaceStore<S, E> {
   async joinSession(
     config?: RecursivePartial<SynConfig>
   ): Promise<SessionStore<S, E>> {
+    const mergedConfig: SynConfig = {
+      ...defaultConfig(),
+      ...config,
+      commitStrategy: {
+        ...defaultConfig().commitStrategy,
+        ...config?.commitStrategy,
+      },
+    };
+
     const session = await SessionStore.joinSession(
       this,
       () => this._session.set(undefined),
-      {
-        ...config,
-        ...defaultConfig(),
-      }
+      mergedConfig
     );
 
     this._session.set(session);
