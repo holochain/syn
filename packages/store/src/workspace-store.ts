@@ -32,7 +32,6 @@ export class WorkspaceStore<S, E> {
   private _merging = false;
   private _mergingPromise: Promise<EntryRecord<Commit>> | undefined;
   private _mergingCommitsKey: string | undefined;
-  private _mergeResultCache = new Map<string, ActionHash>();
   private _workspaceStoreId = Math.random().toString(36).substring(2);
 
   constructor(
@@ -71,6 +70,35 @@ export class WorkspaceStore<S, E> {
     ),
     links => uniquify(links.map(l => retype(l.target, HashType.AGENT)))
   );
+
+  /**
+   * Get the current workspace tips
+   */
+  async getCurrentTips(): Promise<Array<ActionHash>> {
+    const commitsLinks = await this.documentStore.synStore.client.getWorkspaceTips(
+      this.workspaceHash
+    );
+
+    const tipsLinks = new HoloHashMap<ActionHash, Link>();
+    const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
+
+    for (const commitLink of commitsLinks) {
+      tipsLinks.set(commitLink.target, commitLink);
+      const previousCommitsHashes: Array<ActionHash> = decode(
+        commitLink.tag
+      ) as Array<ActionHash>;
+
+      for (const previousCommitHash of previousCommitsHashes) {
+        tipsPrevious.set(previousCommitHash, true);
+      }
+    }
+
+    for (const overwrittenTip of tipsPrevious.keys()) {
+      tipsLinks.delete(overwrittenTip);
+    }
+    
+    return Array.from(tipsLinks.keys());
+  }
 
   async merge(commitsHashes: Array<ActionHash>): Promise<EntryRecord<Commit>> {
     // Create a unique key for this merge operation
@@ -153,6 +181,8 @@ export class WorkspaceStore<S, E> {
 
   /**
    * Keeps an up to date copy of the tip for this workspace
+   * When there's a session, returns the session's current tip
+   * When there's no session, returns the first workspace tip (may be multiple if not yet merged)
    */
   tip = pipe(
     derived(
@@ -181,12 +211,6 @@ export class WorkspaceStore<S, E> {
               ),
           ),
           async commitsLinks => {
-            // Skip merge computation if already merging
-            if (this._merging) {
-              console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Merge already in progress, skipping tip computation');
-              return undefined;
-            }
-
             const tipsLinks = new HoloHashMap<ActionHash, Link>();
             const tipsPrevious = new HoloHashMap<ActionHash, boolean>();
 
@@ -207,32 +231,13 @@ export class WorkspaceStore<S, E> {
             const tipsHashes = Array.from(tipsLinks.keys());
             if (tipsHashes.length === 0) return undefined;
 
-            if (tipsHashes.length === 1) return tipsHashes[0];
-
-            // Check merge cache before creating new merge
-            const cacheKey = tipsHashes.map(h => encodeHashToBase64(h)).sort().join(',');
-            const cached = this._mergeResultCache.get(cacheKey);
-            if (cached) {
-              console.log(this._workspaceStoreId, this.documentStore.documentStoreId, 'Using cached merge result for tips: ', cacheKey);
-              return cached;
-            }
-
-            console.log(this._workspaceStoreId, this.documentStore.documentStoreId, "continuing with merge of tips because no cached result. proof: ", { cacheKey, merging: this._merging, mergingCommitsKey: this._mergingCommitsKey, tipsHashes, cached, mergeResultCache: Array.from(this._mergeResultCache.entries()) });
-
-            this._merging = true;
-            this._mergingCommitsKey = cacheKey;
-            
-            const newCommit = await this.merge(tipsHashes);
-            
-            // Cache the result (no expiry needed)
-            console.log(this._workspaceStoreId, this.documentStore.documentStoreId, "adding merge result to cache: ", { cacheKey, actionHash: encodeHashToBase64(newCommit.actionHash) });
-            this._mergeResultCache.set(cacheKey, newCommit.actionHash);
-            
-            return newCommit.actionHash;
+            // Return first tip without auto-merging
+            // Merging will happen during session commits
+            return tipsHashes[0];
           },
-            commit =>
-              commit ? this.documentStore.commits.get(commit) : undefined
-          )
+          commit =>
+            commit ? this.documentStore.commits.get(commit) : undefined
+        )
   );
 
   /**

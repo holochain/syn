@@ -615,7 +615,18 @@ export class SessionStore<S, E> implements SliceStore<S, E> {
       meta = encode(meta);
     }
 
-    const currentTip = get(this._currentTip);
+    // Check if there are multiple workspace tips that need to be merged
+    const workspaceTips = await this.workspaceStore.getCurrentTips();
+    let currentTip = get(this._currentTip);
+    
+    if (workspaceTips.length > 1) {
+      console.log('Multiple workspace tips detected during session commit, merging:', workspaceTips.map(h => encodeHashToBase64(h)));
+      // Merge the tips before creating our commit
+      const mergedCommit = await this.workspaceStore.merge(workspaceTips);
+      currentTip = mergedCommit;
+      this._currentTip.set(mergedCommit);
+    }
+
     const previous_commit_hashes = currentTip ? [currentTip.actionHash] : [];
     const commit: Commit = {
       authors: [
