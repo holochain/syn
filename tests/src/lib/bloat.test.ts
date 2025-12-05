@@ -25,7 +25,9 @@ function bobPosition(text: string) {
   return text.length;
 }
 
-test('the state of two agents making lots of concurrent changes converges', async () => {
+const bloatSize = 500;
+
+test('a large amount of changes does not break editing', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
     const appSource = { appBundleSource: { type:"path", value:synHapp }  as AppBundleSource };
@@ -54,14 +56,30 @@ test('the state of two agents making lots of concurrent changes converges', asyn
 
     const aliceSessionStore = await aliceWorkspaceStore.joinSession();
 
+    // insert a newline to make sure alice and bob start at different positions
+    aliceSessionStore.change((state, eph) =>
+      textEditorGrammar
+        .changes(alice.agentPubKey, state.body, eph)
+        .insert(0, '\n')
+    );
+    for (let i = 0; i < bloatSize; i++) {
+      aliceSessionStore.change((state, eph) =>
+        textEditorGrammar
+        .changes(alice.agentPubKey, state.body, eph)
+        .insert(0, `bloat-${i}`)
+      );
+    }
     aliceSessionStore.change((state, eph) =>
       textEditorGrammar
         .changes(alice.agentPubKey, state.body, eph)
         .insert(0, '\n')
     );
 
-    //await delay(5000);
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
+
+
+
+
 
     const bobDocumentStore = bobSyn.documents.get(
       aliceDocumentStore.documentHash
@@ -111,17 +129,12 @@ test('the state of two agents making lots of concurrent changes converges', asyn
     }
 
     await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(4000);
-
-    await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(4000);
-
-    await Promise.all([simulateAlice(), simulateBob()]);
     //await delay(20000);
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-    const expectedText = `${aliceLine}${aliceLine}${aliceLine}
-${bobLine}${bobLine}${bobLine}`;
+    const expectedText = `${aliceLine}
+${Array(bloatSize).fill(0).map((_, i) => `bloat-${bloatSize - 1 - i}`) .join('')}
+${bobLine}`;
 
     let currentState = get(bobSessionStore.state);
     assert.deepEqual(currentState.body.text.join(''), expectedText);

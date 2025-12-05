@@ -2,6 +2,12 @@ module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "import", "html"],
+  experiments: { asyncWebAssembly: true },
+  performance: { // prevents the automerge wasm blob from generating warnings
+     hints: false,
+     maxEntrypointSize: 512000,
+     maxAssetSize: 512000
+  },
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",

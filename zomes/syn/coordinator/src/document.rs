@@ -1,17 +1,19 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
+use crate::utils::ZomeFnInput;
+
 #[hdk_extern]
 pub fn create_document(document: Document) -> ExternResult<Record> {
     let document_hash = create_entry(EntryTypes::Document(document.clone()))?;
     create_link(
         document_hash.clone(),
-        agent_info()?.agent_latest_pubkey,
+        agent_info()?.agent_initial_pubkey,
         LinkTypes::DocumentToAuthors,
         (),
     )?;
 
-    let maybe_record = get(document_hash, GetOptions::default())?;
+    let maybe_record = get(document_hash, GetOptions::local())?;
     let record = maybe_record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
     ))))?;
@@ -21,10 +23,16 @@ pub fn create_document(document: Document) -> ExternResult<Record> {
 
 #[hdk_extern]
 pub fn get_document(document_hash: AnyDhtHash) -> ExternResult<Option<Record>> {
-    get(document_hash, GetOptions::default())
+    get(document_hash, GetOptions::local())
 }
 
 #[hdk_extern]
-pub fn get_authors_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
-    get_links(GetLinksInputBuilder::try_new(document_hash, LinkTypes::DocumentToAuthors)?.build())
+pub fn get_authors_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
+    let strategy = document_hash.get_strategy();
+    get_links(
+        LinkQuery::try_new(
+            document_hash.input,
+            LinkTypes::DocumentToAuthors,
+        )?, strategy
+    )
 }

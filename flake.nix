@@ -1,29 +1,41 @@
 {
-  description = "Template for Holochain app development";
+  description = "Flake for Holochain app development";
 
   inputs = {
-    nixpkgs.follows = "holochain/nixpkgs";
+    holonix.url = "github:holochain/holonix?ref=main-0.6";
 
-    versions.url = "github:holochain/holochain?dir=versions/0_3";
-
-    holochain = {
-      url = "github:holochain/holochain";
-      inputs.versions.follows = "versions";
-    };
+    nixpkgs.follows = "holonix/nixpkgs";
+    flake-parts.follows = "holonix/flake-parts";
   };
 
-  outputs = inputs@{ ... }:
-    inputs.holochain.inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = builtins.attrNames inputs.holochain.devShells;
-      perSystem = { inputs', config, pkgs, system, lib, ... }: {
-        devShells.default = pkgs.mkShell {
-          inputsFrom = [ inputs'.holochain.devShells.holonix ];
-          packages = [
-            pkgs.nodejs-18_x
-            # more packages go here
-            pkgs.cargo-nextest
-          ];
-        };
+  outputs = inputs@{ flake-parts, ... }: flake-parts.lib.mkFlake { inherit inputs; } {
+    systems = builtins.attrNames inputs.holonix.devShells;
+    perSystem = { inputs', pkgs, ... }: {
+      formatter = pkgs.nixpkgs-fmt;
+
+      devShells.default = pkgs.mkShell {
+        inputsFrom = [ inputs'.holonix.devShells ];
+
+        packages = (with inputs'.holonix.packages; [
+          holochain
+          hc
+          bootstrap-srv
+          lair-keystore
+          hc-scaffold
+          hn-introspect
+          rust # For Rust development, with the WASM target included for zome builds
+        ]) ++ (with pkgs; [
+          nodejs_22 # For UI development
+          yarn # Package manager for Node.js
+          binaryen # For WASM optimisation
+          typescript # TypeScript compiler for GraphQL adapter
+          # Add any other packages you need here
+        ]);
+
+        shellHook = ''
+          export PS1='\[\033[1;34m\][holonix:\w]\$\[\033[0m\] '
+        '';
       };
     };
+  };
 }

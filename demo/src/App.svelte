@@ -97,6 +97,14 @@
   let documentStore;
   let workspaceStore;
   let sessionStore;
+  let sessionStatus;
+
+  let config = {
+    hearbeatInterval: 5 * 1000,
+    newPeersDiscoveryInterval: 30 * 1000,
+    outOfSessionTimeout: 60 * 1000,
+    commitStrategy: { CommitEveryNDeltas: 200, CommitEveryNMs: 1000 * 30 },
+  };
 
   async function initSyn(client) {
     const store = new SynStore(new SynClient(client, 'syn-test'));
@@ -110,14 +118,15 @@
       workspaceStore = await documentStore.createWorkspace(
         'main'
       );
-      sessionStore = await workspaceStore.joinSession();
+      sessionStore = await workspaceStore.joinSession(config);
       synStore = store;
     } else {
       documentStore = store.documents.get(documentsHashes[0]);
       const workspaces = await toPromise(documentStore.allWorkspaces);
 
       workspaceStore = Array.from(workspaces.values())[0];
-      sessionStore = await workspaceStore.joinSession();
+      sessionStore = await workspaceStore.joinSession(config);
+      sessionStatus = sessionStore.sessionStatus
       synStore = store;
     }
   }
@@ -147,10 +156,25 @@
     <syn-context synstore={synStore}>
       <div class="toolbar">
         <h1>SynText</h1>
-        <div>
+        {$sessionStatus?.code} -
+        {$sessionStatus?.lastSave} -
+        {$sessionStatus?.error}
+        <!-- <div>
           <Title />
-        </div>
-        <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div>
+        </div> -->
+        <!-- leave session -->
+        <button on:click={async ()=>{
+          await sessionStore.leaveSession()
+        }}>Leave Session</button>
+        <!-- join session -->
+        <button on:click={async ()=>{
+          sessionStore = await workspaceStore.joinSession()
+        }}>Join Session</button>
+        <!-- force commit -->
+        <button on:click={async ()=>{
+          await sessionStore.commitChanges()
+        }}>Force Commit</button>
+        <!-- <div on:click={()=>autoType = !autoType}>autoType: {autoType}</div> -->
       </div>
       <main style="display: flex; height: 400px">
   <profile-prompt>

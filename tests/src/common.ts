@@ -36,7 +36,7 @@ export const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
       - returns the new content with those deltas applied
 */
 
-export interface Content {
+export interface Content extends Record<string, unknown> {
   title: string;
   body: TextEditorState;
 }

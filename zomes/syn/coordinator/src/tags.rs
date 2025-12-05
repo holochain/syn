@@ -1,7 +1,7 @@
 use hc_zome_syn_integrity::*;
 use hdk::prelude::*;
 
-use crate::utils::create_link_relaxed;
+use crate::utils::{create_link_relaxed, ZomeFnInput};
 
 fn tag_path(tag: String) -> Path {
     Path::from(format!("document_tags.{}", tag))
@@ -33,10 +33,13 @@ pub fn tag_path_entry_hash(tag: String) -> ExternResult<EntryHash> {
 }
 
 #[hdk_extern]
-pub fn get_documents_with_tag(tag: String) -> ExternResult<Vec<Link>> {
+pub fn get_documents_with_tag(tag: ZomeFnInput<String>) -> ExternResult<Vec<Link>> {
+    let strategy = tag.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(tag_path(tag).path_entry_hash()?, LinkTypes::TagToDocument)?
-            .build(),
+        LinkQuery::try_new(
+            tag_path(tag.input).path_entry_hash()?,
+            LinkTypes::TagToDocument,
+        )?, strategy
     )
 }
 
@@ -49,17 +52,16 @@ pub struct RemoveDocumentTagInput {
 #[hdk_extern]
 pub fn remove_document_tag(input: RemoveDocumentTagInput) -> ExternResult<()> {
     let links = get_links(
-        GetLinksInputBuilder::try_new(
+        LinkQuery::try_new(
             tag_path(input.tag).path_entry_hash()?,
             LinkTypes::TagToDocument,
-        )?
-        .build(),
+        )?, GetStrategy::Local
     )?;
 
     for link in links {
         if let Some(target) = link.target.into_any_dht_hash() {
             if target.eq(&input.document_hash) {
-                delete_link(link.create_link_hash)?;
+                delete_link(link.create_link_hash, GetOptions::local())?;
             }
         }
     }

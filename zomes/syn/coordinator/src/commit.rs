@@ -8,7 +8,7 @@ pub fn create_commit(commit: Commit) -> ExternResult<Record> {
     let c = EntryTypes::Commit(commit.clone());
     let action_hash = create_relaxed(c, commit.clone().try_into()?)?;
 
-    let current_authors_links = get_authors_for_document(commit.document_hash.clone())?;
+    let current_authors_links = get_authors_for_document(ZomeFnInput::new(commit.document_hash.clone(), Some(true)))?;  // TODO: fix when on sharded DHT
 
     let current_authors: Vec<AgentPubKey> = current_authors_links
         .into_iter()
@@ -26,7 +26,7 @@ pub fn create_commit(commit: Commit) -> ExternResult<Record> {
         }
     }
 
-    let record = get(action_hash, GetOptions::default())?;
+    let record = get(action_hash, GetOptions::local())?;
 
     record.ok_or(wasm_error!(WasmErrorInner::Guest(String::from(
         "Could not get the record created just now"
@@ -53,12 +53,16 @@ pub fn link_document_to_commit(input: LinkDocumentToCommitInput) -> ExternResult
 
 #[hdk_extern]
 pub fn get_commit(commit_hash: ActionHash) -> ExternResult<Option<Record>> {
-    get(commit_hash, GetOptions::default())
+    get(commit_hash, GetOptions::local())
 }
 
 #[hdk_extern]
-pub fn get_commits_for_document(document_hash: AnyDhtHash) -> ExternResult<Vec<Link>> {
+pub fn get_commits_for_document(document_hash: ZomeFnInput<AnyDhtHash>) -> ExternResult<Vec<Link>> {
+    let strategy = document_hash.get_strategy();
     get_links(
-        GetLinksInputBuilder::try_new(document_hash.clone(), LinkTypes::DocumentToCommits)?.build(),
+        LinkQuery::try_new(
+            document_hash.input,
+            LinkTypes::DocumentToCommits,
+        )?, strategy
     )
 }

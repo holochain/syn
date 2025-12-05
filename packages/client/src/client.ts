@@ -6,9 +6,9 @@ import {
   AnyDhtHash,
   Link,
   ActionHash,
+  encodeHashToBase64,
 } from '@holochain/client';
 import { EntryRecord, ZomeClient } from '@holochain-open-dev/utils';
-import { cleanNodeDecoding } from '@holochain-open-dev/utils/dist/clean-node-decoding.js';
 
 import {
   Document,
@@ -37,8 +37,8 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getDocumentsWithTag(tag: string): Promise<Array<Link>> {
-    return this.callZome('get_documents_with_tag', tag);
+  public async getDocumentsWithTag(tag: string, local?: boolean): Promise<Array<Link>> {
+    return this.callZome('get_documents_with_tag', {input: tag, local});
   }
 
   public async getDocument(
@@ -53,10 +53,9 @@ export class SynClient extends ZomeClient<SynSignal> {
     return new EntryRecord(record);
   }
 
-  public async getAuthorsForDocument(
-    documentHash: AnyDhtHash
-  ): Promise<Array<Link>> {
-    return this.callZome('get_authors_for_document', documentHash);
+
+  public async getAuthorsForDocument(documentHash: AnyDhtHash, local?: boolean): Promise<Array<Link>> {
+    return this.callZome('get_authors_for_document', {input: documentHash, local});
   }
 
   public async tagDocument(
@@ -86,26 +85,53 @@ export class SynClient extends ZomeClient<SynSignal> {
   /** Commits */
   public async createCommit(commit: Commit): Promise<EntryRecord<Commit>> {
     return new Promise((resolve, reject) => {
-      const unsubs = this.onSignal(signal => {
+      let timeoutId: NodeJS.Timeout;
+      let unsubs: (() => void) | undefined;
+
+      const cleanup = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (unsubs) unsubs();
+      };
+
+      const rejectWithCleanup = (error: any) => {
+        cleanup();
+        reject(error);
+      };
+
+      const resolveWithCleanup = (result: EntryRecord<Commit>) => {
+        cleanup();
+        resolve(result);
+      };
+
+      unsubs = this.onSignal(signal => {
         // TODO: better check?
         if (
           signal.type === 'EntryCreated' &&
           signal.app_entry.type === 'Commit' &&
-          cleanNodeDecoding(commit.document_hash).toString() ===
-            cleanNodeDecoding(signal.app_entry.document_hash).toString()
+          encodeHashToBase64(commit.document_hash) ===
+          encodeHashToBase64(signal.app_entry.document_hash)
         ) {
-          unsubs();
-
           this.getCommit(signal.action.hashed.hash)
             .then(r => {
-              resolve(r!);
+              if (r) {
+                // check that the previous commit hashes are equal
+                const commitPreviousHashes = commit.previous_commit_hashes || [];
+                const signalPreviousHashes = r.entry.previous_commit_hashes || [];
+                if (commitPreviousHashes.length === signalPreviousHashes.length &&
+                  commitPreviousHashes.every((val, index) => encodeHashToBase64(val) === encodeHashToBase64(signalPreviousHashes[index]))
+                ) {
+                  resolveWithCleanup(r);
+                }
+              } else {
+                rejectWithCleanup(new Error('Commit not found after creation'));
+              }
             })
-            .catch(e => reject(e))
-            .finally(() => unsubs());
+            .catch(e => rejectWithCleanup(e))
         }
       });
-      this.callZome('create_commit', commit).catch(e => reject(e));
-      setTimeout(() => reject('TIMEOUT'), 30000);
+
+      this.callZome('create_commit', commit).catch(e => rejectWithCleanup(e));
+      timeoutId = setTimeout(() => rejectWithCleanup(new Error('Commit creation timed out after 30 seconds')), 30000);
     });
   }
 
@@ -122,12 +148,10 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async getCommitsForDocument(
-    documentHash: AnyDhtHash
+    documentHash: AnyDhtHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    const commits: Array<Link> = await this.callZome(
-      'get_commits_for_document',
-      documentHash
-    );
+    const commits: Array<Link> = await this.callZome('get_commits_for_document', {input: documentHash, local});
 
     if (commits.length > 600) {
       console.warn(
@@ -161,15 +185,17 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public async getWorkspacesForDocument(
-    documentHash: AnyDhtHash
+    documentHash: AnyDhtHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspaces_for_document', documentHash);
+    return this.callZome('get_workspaces_for_document', {input: documentHash, local});
   }
 
   public async getWorkspaceTips(
-    workspaceHash: EntryHash
+    workspaceHash: EntryHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspace_tips', workspaceHash);
+    return this.callZome('get_workspace_tips', {input: workspaceHash, local});
   }
 
   public updateWorkspaceTip(
@@ -185,9 +211,10 @@ export class SynClient extends ZomeClient<SynSignal> {
   }
 
   public getWorkspaceSessionParticipants(
-    workspace_hash: EntryHash
+    workspace_hash: EntryHash,
+    local?: boolean,
   ): Promise<Array<Link>> {
-    return this.callZome('get_workspace_session_participants', workspace_hash);
+    return this.callZome('get_workspace_session_participants', {input: workspace_hash, local});
   }
 
   public async joinWorkspaceSession(

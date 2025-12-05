@@ -6,14 +6,15 @@ import {
 } from '@holochain-open-dev/stores';
 import { Commit, Document, SynClient } from '@holochain-syn/client';
 import { decode, encode } from '@msgpack/msgpack';
-import Automerge from 'automerge';
+import * as Automerge from '@automerge/automerge'
 import { LazyHoloHashMap, LazyMap, slice } from '@holochain-open-dev/utils';
 import { AnyDhtHash, EntryHash } from '@holochain/client';
 
 import { DocumentStore } from './document-store.js';
+import { LINKS_POLL_INTERVAL_MS } from './config.js';
 
 export const stateFromCommit = (commit: Commit) => {
-  const commitState = decode(commit.state) as Automerge.BinaryDocument;
+  const commitState = decode(commit.state) as Uint8Array;
   const state = Automerge.load(commitState);
   return state;
 };
@@ -21,7 +22,7 @@ export const stateFromCommit = (commit: Commit) => {
 export const stateFromDocument = (document: Document) => {
   const documentInitialState = decode(
     document.initial_state
-  ) as Automerge.BinaryDocument;
+  ) as Uint8Array;
   const state = Automerge.load(documentInitialState);
   return state;
 };
@@ -29,7 +30,7 @@ export const stateFromDocument = (document: Document) => {
 export class SynStore {
   /** Public accessors */
 
-  constructor(public client: SynClient) {}
+  constructor(public client: SynClient, public localOnly = false) {}
 
   /**
    * Keeps an up to date array of the entry hashes for all the roots in this network
@@ -41,8 +42,10 @@ export class SynStore {
         liveLinksStore(
           this.client,
           tagPathEntryHash,
-          () => this.client.getDocumentsWithTag(tag),
-          'TagToDocument'
+          () => this.client.getDocumentsWithTag(tag, this.localOnly), // Only fetch local if specified
+          'TagToDocument',
+          LINKS_POLL_INTERVAL_MS,
+          this.localOnly ? undefined : () => this.client.getDocumentsWithTag(tag, true), // Don't do initial local fetch if localOnly
         ),
       links => slice(this.documents, uniquify(links.map(l => l.target)))
     )
@@ -60,7 +63,7 @@ export class SynStore {
       new DocumentStore<any, any>(this, documentHash)
   );
 
-  async createDocument<S>(initialState: S, meta?: any) {
+  async createDocument<S extends Record<string, unknown>>(initialState: S, meta?: any) {
     let doc: Automerge.Doc<any> = Automerge.from(initialState);
 
     const documentRecord = await this.client.createDocument({
@@ -71,9 +74,9 @@ export class SynStore {
     return this.documents.get(documentRecord.actionHash);
   }
 
-  async createDeterministicDocument<S>(initialState: S, meta?: any) {
+  async createDeterministicDocument<S extends Record<string, unknown>>(initialState: S, meta?: any) {
     let doc: Automerge.Doc<any> = Automerge.init({
-      actorId: 'aa',
+      actor: 'aa',
     });
 
     doc = Automerge.change(doc, { time: 0 }, d =>

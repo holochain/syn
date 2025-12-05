@@ -1,24 +1,23 @@
 ---
-manifest_version: "1"
+manifest_version: "0"
 name: syn-test
 
 integrity:
   network_seed: 00000000-0000-0000-0000-000000000000
   properties: ~
-  origin_time: 2022-02-11T23:05:19.470323Z
   zomes:
     - name: syn_integrity
-      bundled: ../target/wasm32-unknown-unknown/release/hc_zome_syn_integrity.wasm
+      path: ../target/wasm32-unknown-unknown/release/hc_zome_syn_integrity.wasm
     - name: profiles_integrity
-      bundled: ../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
+      path: ../target/wasm32-unknown-unknown/release/profiles_integrity.wasm
 
 coordinator:
   zomes:
     - name: syn
-      bundled: ../target/wasm32-unknown-unknown/release/hc_zome_syn_coordinator.wasm
+      path: ../target/wasm32-unknown-unknown/release/hc_zome_syn_coordinator.wasm
       dependencies:
         - name: syn_integrity
     - name: profiles
-      bundled: ../target/wasm32-unknown-unknown/release/profiles_coordinator.wasm
+      path: ../target/wasm32-unknown-unknown/release/profiles_coordinator.wasm
       dependencies:
         - name: profiles_integrity

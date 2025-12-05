@@ -12,7 +12,7 @@ mod workspace;
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let mut fns = BTreeSet::new();
+    let mut fns = HashSet::new();
     fns.insert((zome_info()?.name, FunctionName("recv_remote_signal".into())));
     let cap_grant_entry: CapGrantEntry = CapGrantEntry::new(
         String::from("remote signals"), // A string by which to later query for saved grants.
@@ -85,7 +85,7 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
             Ok(())
         }
         Action::DeleteLink(delete_link) => {
-            let record = get(delete_link.link_add_address.clone(), GetOptions::default())?.ok_or(
+            let record = get(delete_link.link_add_address.clone(), GetOptions::local())?.ok_or(
                 wasm_error!(WasmErrorInner::Guest(
                     "Failed to fetch CreateLink action".to_string()
                 )),
@@ -115,7 +115,7 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
             if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
                 if let EntryTypes::Commit(commit) = &app_entry {
                     let response = call_remote(
-                        agent_info()?.agent_latest_pubkey,
+                        agent_info()?.agent_initial_pubkey,
                         zome_info()?.name,
                         FunctionName::from("link_document_to_commit"),
                         None,
@@ -161,7 +161,7 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
     }
 }
 fn get_entry_for_action(action_hash: &ActionHash) -> ExternResult<Option<EntryTypes>> {
-    let record = match get_details(action_hash.clone(), GetOptions::default())? {
+    let record = match get_details(action_hash.clone(), GetOptions::local())? {
         Some(Details::Record(record_details)) => record_details.record,
         _ => {
             return Ok(None);

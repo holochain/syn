@@ -10,6 +10,28 @@ Install the necessary dependencies:
 npm install @holochain-open-dev/profiles @holochain-syn/core
 ```
 
+**Note:** Syn uses Automerge, which depends on WebAssembly (WASM). Some build tools and bundlers require additional configuration to properly handle WASM modules.
+
+**For Vite users:**
+Add the WASM plugin to your development dependencies in `package.json`:
+```json
+{
+  "devDependencies": {
+    "vite-plugin-wasm": "^3.5.0"
+  }
+}
+```
+
+Configure the plugin in your `vite.config.ts`:
+```ts
+import { defineConfig } from 'vite';
+import wasm from 'vite-plugin-wasm';
+
+export default defineConfig({
+  plugins: [wasm()],
+});
+```
+
 ## Usage
 
 First, you need to have instantiated a `SynStore` from [@holochain-syn/store](https://npmjs.com/package/@holochain-syn/store) and a `ProfilesStore` from [@holochain-open-dev/profiles](https://holochain-open-dev.github.io/profiles/guides/frontend/profiles-store/).

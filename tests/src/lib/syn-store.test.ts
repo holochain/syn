@@ -13,11 +13,12 @@ import {
   sampleGrammar,
   synHapp,
 } from '../common.js';
+import { AppBundleSource } from '@holochain/client';
 
 test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () => {
   await runScenario(async scenario => {
     // Set up the app to be installed
-    const appSource = { appBundleSource: { path: synHapp } };
+    const appSource = { appBundleSource: { type:"path", value: synHapp } as AppBundleSource };
 
     // Add 2 players with the test app to the Scenario. The returned players
     // can be destructured.
@@ -135,10 +136,10 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     await delay(1000);
 
     currentState = get(aliceSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Hi there');
+    assert.equal(currentState.body.text.join(''), 'Hi there');
 
     currentState = get(bobSessionStore.state);
-    assert.equal(currentState.body.text.toString(), 'Hi there');
+    assert.equal(currentState.body.text.join(''), 'Hi there');
 
     // Test concurrent
 
@@ -159,8 +160,8 @@ test('SynStore, DocumentStore, WorkspaceStore and SessionStore work', async () =
     const currentStateAlice = get(aliceSessionStore.state);
     const currentStateBob = get(bobSessionStore.state);
     assert.equal(
-      currentStateAlice.body.text.toString(),
-      currentStateBob.body.text.toString()
+      currentStateAlice.body.text.join(''),
+      currentStateBob.body.text.join('')
     );
 
     await aliceSessionStore.commitChanges();
