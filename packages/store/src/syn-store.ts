@@ -30,7 +30,7 @@ export const stateFromDocument = (document: Document) => {
 export class SynStore {
   /** Public accessors */
 
-  constructor(public client: SynClient) {}
+  constructor(public client: SynClient, public localOnly = false) {}
 
   /**
    * Keeps an up to date array of the entry hashes for all the roots in this network
@@ -42,10 +42,10 @@ export class SynStore {
         liveLinksStore(
           this.client,
           tagPathEntryHash,
-          () => this.client.getDocumentsWithTag(tag),
+          () => this.client.getDocumentsWithTag(tag, this.localOnly), // Only fetch local if specified
           'TagToDocument',
           LINKS_POLL_INTERVAL_MS,
-          () => this.client.getDocumentsWithTag(tag, true),
+          this.localOnly ? undefined : () => this.client.getDocumentsWithTag(tag, true), // Don't do initial local fetch if localOnly
         ),
       links => slice(this.documents, uniquify(links.map(l => l.target)))
     )

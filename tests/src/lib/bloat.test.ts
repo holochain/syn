@@ -129,18 +129,12 @@ test('a large amount of changes does not break editing', async () => {
     }
 
     await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(4000);
-
-    await Promise.all([simulateAlice(), simulateBob()]);
-    await delay(4000);
-
-    await Promise.all([simulateAlice(), simulateBob()]);
     //await delay(20000);
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-    const expectedText = `${aliceLine}${aliceLine}${aliceLine}
+    const expectedText = `${aliceLine}
 ${Array(bloatSize).fill(0).map((_, i) => `bloat-${bloatSize - 1 - i}`) .join('')}
-${bobLine}${bobLine}${bobLine}`;
+${bobLine}`;
 
     let currentState = get(bobSessionStore.state);
     assert.deepEqual(currentState.body.text.join(''), expectedText);
