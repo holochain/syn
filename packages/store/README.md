@@ -200,6 +200,18 @@ const sessionStore = await workspaceStore.joinSession({
 
 Within a session, participants derive a **leadership rank** from the participant list — all of them computing it the same way — and rank 0 does the committing, so the workspace doesn't fill with one redundant entry per participant. Higher ranks take over in staggered windows if changes stay uncommitted, which covers the leader disappearing mid-session. Merge commits are exempt: they are derived entirely from the tips being merged, so two agents merging the same tips produce byte-identical entries that the DHT deduplicates.
 
+## Migration notes (0.700.0 → 0.700.1)
+
+Dependency bump only; no syn API change. `@holochain-open-dev/profiles`
+moves to `^0.701.0`, which fixes a profile create/update path that hit the
+network and could fail the whole zome call on a freshly joined DHT.
+
+If your hApp bundles the profiles zome, **move the Rust dependency at the
+same time** — `hc_zome_profiles_{coordinator,integrity}` to tag `v0.701.0`.
+The 0.701.0 release changes the `create_profile` / `update_profile` payload
+to `{ input, local }`, so a 0.701.0 UI talking to a 0.700.0 coordinator
+fails on profile creation. The two halves have to move together.
+
 ## Migration notes (0.603.x → 0.700.0)
 
 **Another fully breaking release, and this time the break is wider than the

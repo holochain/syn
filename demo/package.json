@@ -6,7 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@holochain-open-dev/profiles": "^0.700.0",
+    "@holochain-open-dev/profiles": "^0.701.0",
     "@holochain-open-dev/stores": "^0.700.0",
     "@holochain-syn/core": "file:../packages/core",
     "@holochain-syn/text-editor": "file:../packages/text-editor",
